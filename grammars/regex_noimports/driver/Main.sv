@@ -1,5 +1,6 @@
 grammar regex_noimports:driver;
-imports lmr:lang;
+
+imports regex_noimports:resolution;
 
 function main
 IO<Integer> ::= largs::[String]
