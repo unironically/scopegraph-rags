@@ -21,7 +21,7 @@ top::Regex ::= l::Label
 }
 
 abstract production regexStar
-top::Regex ::= r::Regex
+top::Regex ::= r::Decorated Regex
 {
   local initial :: Integer = genInt();
   local final   :: Integer = genInt();
@@ -43,7 +43,7 @@ top::Regex ::= r::Regex
 }
 
 abstract production regexCat
-top::Regex ::= r1::Regex r2::Regex
+top::Regex ::= r1::Decorated Regex r2::Decorated Regex
 {
   top.nfa = case (r1.nfa, r2.nfa) of
               ((fstStates, fstTrans, fstInitial, fstFinal),
@@ -51,7 +51,7 @@ top::Regex ::= r1::Regex r2::Regex
               ->
                 (
                   fstStates ++ sndStates,
-                  (fstFinal, nothing(), sndFinal)::(fstTrans ++ sndTrans),
+                  (fstFinal, nothing(), sndInitial)::(fstTrans ++ sndTrans),
                   fstInitial,
                   sndFinal
                 )
@@ -68,3 +68,118 @@ top::Label ::= { top.pp = "LEX"; }
 
 abstract production labelVar
 top::Label ::= { top.pp = "VAR"; }
+
+instance Eq Label {
+  eq = \l1::Label l2::Label -> 
+         case (l1, l2) of
+           (labelLex(), labelLex()) -> true
+         | (labelVar(), labelVar()) -> true
+         | _ -> false
+         end;
+}
+
+global globLabs::[Label] = [labelLex(), labelVar()];
+type NFA = ([Integer], [NFATrans], Integer, Integer);
+type DFA = ([Integer], [DFATrans], Integer, [Integer]);
+type NFATrans = (Integer, Maybe<Label>, Integer);
+type DFATrans = (Integer, Label, Integer); 
+
+
+function nfaToDFA
+DFA ::= n::NFA
+{
+  return
+    case n of
+      (states, trans, start, final) ->
+        
+        let s0::[Integer] = eClosure (trans, [start]) in
+        let states_moves::([[Integer]], [([Integer], Label, [Integer])]) = dfaMoves (trans, [], [s0]) in
+        
+        let states::[[Integer]] = fst(states_moves) in
+        let moves::[([Integer], Label, [Integer])] = snd(states_moves) in
+
+        let statesNums::[(Integer, [Integer])] = map ((\is::[Integer] -> (genInt(), is)), states) in 
+        let movesNums::[DFATrans] = getDFATrans (moves, statesNums) in 
+
+        let states::[Integer] = map ((fst(_)), statesNums) in 
+        let startSt::Integer = fst(head(filter ((\pair::(Integer, [Integer]) -> contains(start, snd(pair))), statesNums))) in
+        let endSt::[Integer] = map ((fst(_)), filter ((\pair::(Integer, [Integer]) -> contains(final, snd(pair))), statesNums)) in 
+
+        (states, movesNums, startSt, endSt)
+
+        end end end end end end end end end
+
+    end;
+}
+
+function getDFATrans
+[DFATrans] ::= dfaTransVerbose::[([Integer], Label, [Integer])] assgn::[(Integer, [Integer])]
+{
+  return
+    case dfaTransVerbose of
+      [] -> []
+    | (from, lab, final)::t -> (getStateNum(from, assgn), lab, getStateNum(final, assgn)) :: getDFATrans (t, assgn)
+    end;
+}
+
+function getStateNum
+Integer ::= st::[Integer] states::[(Integer, [Integer])]
+{
+  return
+    case states of
+      [] -> -1
+    | (hI, hS)::t -> if hS == st then hI else getStateNum (st, t)
+    end;
+}
+
+function dfaMoves
+([[Integer]], [([Integer], Label, [Integer])]) ::= trans::[NFATrans] marked::[[Integer]] unmarked::[[Integer]]
+{
+  return
+    case unmarked of
+      [] -> (marked, [])
+    | h::t -> 
+      let transFromCurrent::[([Integer], Label, [Integer])] = transOnAll (trans, h, globLabs) in
+      let unseen::[[Integer]] = filter((\sts::[Integer] -> !contains(sts, marked ++ unmarked)), map ((\t::([Integer], Label, [Integer]) -> snd(snd(t))), transFromCurrent)) in
+      let rest::([[Integer]], [([Integer], Label, [Integer])]) = dfaMoves (trans, h::marked, t ++ unseen) in 
+        (fst(rest), transFromCurrent ++ snd(rest))
+      end end end
+    end;
+}
+
+{- What states can I get to from any state in `from` on all labels in `labs`/ -}
+function transOnAll
+[([Integer], Label, [Integer])] ::= trans::[NFATrans] from::[Integer] labs::[Label]
+{
+  return
+    case labs of
+      [] -> []
+    | h::t -> 
+      let onLab::[Integer] = transOnLabel (trans, from, h) 
+      in if !null (onLab) 
+           then (from, h, eClosure (trans, onLab)) :: transOnAll (trans, from, t) 
+           else transOnAll (trans, from, t)
+      end
+    end;
+}
+
+{- What states can I get to from any state in `from` on label `lab`/ -}
+function transOnLabel
+[Integer] ::= trans::[NFATrans] from::[Integer] lab::Label
+{
+  return 
+    let valid::[NFATrans] = filter ((\t::NFATrans -> contains(fst(t), from) && fst(snd(t)) == just(lab)), trans) 
+    in map ((\t::NFATrans -> snd(snd(t))), valid) end;
+}
+
+function eClosure
+[Integer] ::= trans::[NFATrans] from::[Integer]
+{
+  return
+    let validTrans::[NFATrans] = filter ((\t::NFATrans -> contains(fst(t), from) && !contains((snd(snd(t))), from) && !fst(snd(t)).isJust), trans) in
+    let newStates::[Integer]  = map    ((\t::NFATrans -> snd(snd(t))), validTrans) in
+      if null(newStates) 
+        then sort(from) 
+        else eClosure (trans, from ++ newStates)
+    end end;
+}
