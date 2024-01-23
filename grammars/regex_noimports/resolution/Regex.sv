@@ -4,12 +4,10 @@ grammar regex_noimports:resolution;
 nonterminal Regex;
 
 
-{- NFA for a given regex:   States     Transitions                         Start    Acc -}
-synthesized attribute nfa::([Integer], [(Integer, Maybe<Label>, Integer)], Integer, Integer) occurs on Regex;
-
+synthesized attribute dfa::DFA occurs on Regex;
+synthesized attribute nfa::NFA occurs on Regex;
 
 attribute pp occurs on Regex, Label;
-
 
 abstract production regexSingle
 top::Regex ::= l::Label
@@ -17,6 +15,7 @@ top::Regex ::= l::Label
   local initial :: Integer = genInt();
   local final   :: Integer = genInt();
   top.nfa = ([initial, final], [(initial, just(l), final)], initial, final);
+  top.dfa = nfaToDFA (top.nfa);
   top.pp = l.pp;
 }
 
@@ -39,6 +38,7 @@ top::Regex ::= r::Decorated Regex
                   final                                   -- Accepting state
                 )
             end;
+  top.dfa = nfaToDFA (top.nfa);
   top.pp = "(" ++ r.pp ++ ")*";
 }
 
@@ -56,6 +56,7 @@ top::Regex ::= r1::Decorated Regex r2::Decorated Regex
                   sndFinal
                 )
             end;
+  top.dfa = nfaToDFA (top.nfa);
   top.pp = r1.pp ++ " " ++ r2.pp;
 }
 
@@ -75,6 +76,15 @@ instance Eq Label {
            (labelLex(), labelLex()) -> true
          | (labelVar(), labelVar()) -> true
          | _ -> false
+         end;
+}
+
+instance Ord Label {
+  compare = \l1::Label l2::Label -> 
+         case (l1, l2) of
+           (labelLex(), labelVar()) -> -1
+         | (labelVar(), labelLex()) -> 1
+         | _ -> 0
          end;
 }
 

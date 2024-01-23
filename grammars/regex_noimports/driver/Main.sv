@@ -1,40 +1,58 @@
 grammar regex_noimports:driver;
 
 imports regex_noimports:resolution;
+
+imports lmr:driver;
 imports lmr:lang;
+
+-- java -jar regex_noimports.driver.jar ../lmr/inputs/module-simple.lmr
 
 function main
 IO<Integer> ::= largs::[String]
 {
+  -- return lmr:driver:main (largs);
+
   return do {
     
-    {- NFA -}
+    -- Parse LMR
+    let filePath :: String = head(largs);
+    file :: String <- readFile(filePath);
+    let result :: ParseResult<Program_c> = lmr:driver:parse (file, filePath);
+    let ast :: Program = result.parseTree.ast;
 
+    -- Test regex + DFA
     let r1::Decorated Regex = decorate regexSingle(labelLex()) with {};
     let r2::Decorated Regex = decorate regexSingle(labelVar()) with {};
     let r1star::Decorated Regex = decorate regexStar (r1) with {};
-    let regex::Decorated Regex = decorate regexCat (r1star, r2) with {};
-
-    print ("NFA States: " ++ printIntLst (fst(regex.nfa)) ++ "\n");
-    print ("NFA Trans: " ++ printNFATrans (fst(snd(regex.nfa))) ++ "\n");
-    print ("NFA Start: " ++ toString (fst (snd(snd(regex.nfa)))) ++ "\n");
-    print ("NFA End: " ++ toString (snd (snd(snd(regex.nfa)))) ++ "\n");
-
-    print ("\n");
-
-    {- DFA -}
-
-    let dfa::DFA = nfaToDFA (regex.nfa);
-
+    let r2star::Decorated Regex = decorate regexStar (r2) with {};
+    let regex::Decorated Regex = decorate regexCat (r1, r2star) with {};
+    let dfa::DFA = regex.dfa;
     let dfaTrans::[(Integer, Label, Integer)] = fst (snd (dfa));
 
-    print ("DFA States: " ++ toString(printIntLst(fst(dfa))) ++ "\n");
-    print ("DFA Trans: " ++ printDFATrans (dfaTrans) ++ "\n");
-    print ("DFA Start: " ++ toString(fst(snd(snd(dfa)))) ++ "\n");
-    print ("DFA End: " ++ printIntLst (snd(snd(snd(dfa)))) ++ "\n");
+    -- Prints
+    --print ("DFA States: " ++ toString(printIntLst(fst(dfa))) ++ "\n");
+    --print ("DFA Trans: " ++ printDFATrans (dfaTrans) ++ "\n");
+    --print ("DFA Start: " ++ toString(fst(snd(snd(dfa)))) ++ "\n");
+    --print ("DFA End: " ++ printIntLst (snd(snd(snd(dfa)))) ++ "\n");
+
+    --print ("Sort: " ++ printIntLst(sortBy((\i1::Integer i2::Integer -> i1 < i2), [4,2,4,51,6,3,0])));
+
+    -- monoid attribute binds::[(VarRef, Decl)] with [], ++
+
+    print ("Bindings: " ++ printBinds (ast.binds) ++ "\n");
 
     return 0;
   };
+}
+
+function printBinds
+String ::= binds::[(VarRef, Decl)]
+{
+  return
+    case binds of
+      [] -> ""
+    | (v,d)::t -> "(" ++ v.refname ++ ", " ++ d.defname ++ "), " ++ printBinds(t)
+    end;
 }
 
 function printIntLst
