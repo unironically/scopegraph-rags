@@ -7,9 +7,8 @@ nonterminal Decls_c     with ast<Decls>;
 nonterminal Decl_c      with ast<Decl>;
 nonterminal Super_c     with ast<Super>;
 nonterminal SeqBinds_c  with ast<SeqBinds>;
-nonterminal SeqBind_c   with ast<SeqBind>;
 nonterminal ParBinds_c  with ast<ParBinds>;
-nonterminal ParBind_c   with ast<ParBind>;
+nonterminal Bind_c   with ast<Bind>;
 nonterminal Expr_c      with ast<Expr>;
 nonterminal FldBinds_c  with ast<FldBinds>;
 nonterminal FldBind_c   with ast<FldBind>;
@@ -58,7 +57,7 @@ top::Decl_c ::= 'import' r::ModRef_c
 }
 
 concrete production decl_def_c
-top::Decl_c ::= 'def' b::ParBind_c
+top::Decl_c ::= 'def' b::Bind_c
 {
   top.ast = decl_def (b.ast);
 }
@@ -93,7 +92,7 @@ top::SeqBinds_c ::=
 
 
 concrete production seq_binds_list_c
-top::SeqBinds_c ::= b::SeqBind_c bs::SeqBinds_c
+top::SeqBinds_c ::= b::Bind_c bs::SeqBinds_c
 {
   top.ast = case bs of
             | seq_binds_list_c (_, _) -> seq_binds_list (b.ast, bs.ast)
@@ -103,22 +102,22 @@ top::SeqBinds_c ::= b::SeqBind_c bs::SeqBinds_c
 
 {- Seq_Bind -}
 
-concrete production seq_defbind_c
-top::SeqBind_c ::= x::VarRef_t '=' e::Expr_c
+concrete production bind_c
+top::Bind_c ::= x::VarRef_t '=' e::Expr_c
 {
-  top.ast = seq_defbind (x.lexeme, e.ast);
+  top.ast = bind (x.lexeme, e.ast);
 }
 
-concrete production seq_defbind_typed_c
-top::SeqBind_c ::= x::VarRef_t ':' tyann::Type_c '=' e::Expr_c
+concrete production bind_typed_c
+top::Bind_c ::= x::VarRef_t ':' tyann::Type_c '=' e::Expr_c
 {
-  top.ast = seq_defbind_typed (x.lexeme, tyann.ast, e.ast);
+  top.ast = bind_typed (x.lexeme, tyann.ast, e.ast);
 }
 
 {- Par_Binds -}
 
 concrete production par_binds_list_c
-top::ParBinds_c ::= b::ParBind_c bs::ParBinds_c
+top::ParBinds_c ::= b::Bind_c bs::ParBinds_c
 {
   top.ast = par_binds_list (b.ast, bs.ast);
 }
@@ -129,19 +128,6 @@ top::ParBinds_c ::=
   top.ast = par_binds_empty ();
 }
 
-{- Par_Bind -}
-
-concrete production par_defbind_c
-top::ParBind_c ::= x::VarRef_t '=' e::Expr_c
-{
-  top.ast = par_defbind (x.lexeme, e.ast);
-}
-
-concrete production par_defbind_typed_c
-top::ParBind_c ::= x::VarRef_t ':' tyann::Type_c '=' e::Expr_c
-{
-  top.ast = par_defbind_typed (x.lexeme, tyann.ast, e.ast);
-}
 
 {- Expr -}
 

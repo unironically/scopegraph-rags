@@ -7,9 +7,8 @@ nonterminal Decls;
 nonterminal Decl;
 nonterminal Super;
 nonterminal SeqBinds;
-nonterminal SeqBind;
 nonterminal ParBinds;
-nonterminal ParBind;
+nonterminal Bind;
 nonterminal Expr;
 nonterminal FldBinds;
 nonterminal FldBind;
@@ -25,7 +24,7 @@ nonterminal VarRef;
 
 synthesized attribute pp :: String 
   occurs on Program, Decls, Decl, Super, 
-    SeqBinds, SeqBind, ParBinds, ParBind, Expr, FldBinds, FldBind, 
+    SeqBinds, Bind, ParBinds, Expr, FldBinds, FldBind, 
     FldDecls, FldDecl, ArgDecl, Type, ModRef, TypeRef, VarRef;
 
 {- Program -}
@@ -68,7 +67,7 @@ top::Decl ::= r::ModRef
 }
 
 abstract production decl_def
-top::Decl ::= b::ParBind
+top::Decl ::= b::Bind
 {
   top.pp = "Def (" ++ b.pp ++ ")";
 }
@@ -102,35 +101,35 @@ top::SeqBinds ::=
 }
 
 abstract production seq_binds_single
-top::SeqBinds ::= b::SeqBind
+top::SeqBinds ::= b::Bind
 {
   top.pp = b.pp;
 }
 
 abstract production seq_binds_list
-top::SeqBinds ::= b::SeqBind bs::SeqBinds
+top::SeqBinds ::= b::Bind bs::SeqBinds
 {
   top.pp = b.pp ++ ", " ++ bs.pp;
 }
 
-{- Seq_Bind -}
+{- Bind -}
 
-abstract production seq_defbind
-top::SeqBind ::= x::String e::Expr
+abstract production bind
+top::Bind ::= x::String e::Expr
 {
-  top.pp = "DefBind (\"" ++ x ++ "\", " ++ e.pp ++ ")";
+  top.pp = "Bind (\"" ++ x ++ "\", " ++ e.pp ++ ")";
 }
 
-abstract production seq_defbind_typed
-top::SeqBind ::= x::String tyann::Type e::Expr
+abstract production bind_typed
+top::Bind ::= x::String tyann::Type e::Expr
 {
-  top.pp = "DefBindTyped (\"" ++ x ++ "\", " ++ tyann.pp ++ ", " ++ e.pp ++ ")";
+  top.pp = "BindTyped (\"" ++ x ++ "\", " ++ tyann.pp ++ ", " ++ e.pp ++ ")";
 }
 
 {- Par_Binds -}
 
 abstract production par_binds_list
-top::ParBinds ::= b::ParBind bs::ParBinds
+top::ParBinds ::= b::Bind bs::ParBinds
 {
   top.pp = b.pp ++ (case bs of 
                    | par_binds_empty () -> ""
@@ -142,20 +141,6 @@ abstract production par_binds_empty
 top::ParBinds ::=
 {
   top.pp = "";
-}
-
-{- Par_Bind -}
-
-abstract production par_defbind
-top::ParBind ::= x::String e::Expr
-{
-  top.pp = "DefBind (\"" ++ x ++ "\", " ++ e.pp ++ ")";
-}
-
-abstract production par_defbind_typed
-top::ParBind ::= x::String tyann::Type e::Expr
-{
-  top.pp = "DefBindTyped (\"" ++ x ++ "\", " ++ tyann.pp ++ ", " ++ e.pp ++ ")";
 }
 
 {- Expr -}

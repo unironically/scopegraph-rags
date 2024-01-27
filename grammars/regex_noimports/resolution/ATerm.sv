@@ -4,19 +4,19 @@ imports lmr:lang;
 
 {- Synthesizes all of the bindings found -}
 
-monoid attribute binds::[(VarRef, Decl)] with [], ++
-  occurs on Program, Decls, Decl, ParBind, Expr, VarRef;
-propagate binds on Program, Decls, Decl, ParBind, Expr;
+monoid attribute binds::[(VarRef, Bind)] with [], ++
+  occurs on Program, Decls, Decl, Bind, Expr, VarRef, SeqBinds, ParBinds;
+propagate binds on Program, Decls, Decl, Bind, Expr, SeqBinds, ParBinds;
 
 
 {- Scoping stuff -}
 
 inherited attribute scope::Decorated Scope
-  occurs on Decls, Decl, ParBind, Expr, VarRef;
-propagate scope on Decls, Decl, ParBind, Expr, VarRef;
+  occurs on Decls, Decl, Bind, Expr, VarRef, SeqBinds, ParBinds;
+propagate scope on Decls, Decl, Bind, Expr, VarRef excluding decl_module, expr_let, expr_letrec, expr_letpar;
 
 monoid attribute varScopes::[Decorated Scope] with [], ++
-  occurs on Decls, Decl, ParBind;
+  occurs on Decls, Decl, Bind, ParBinds;
 propagate varScopes on Decls;
 
 
@@ -30,56 +30,116 @@ top::Program ::= h::String ds::Decls
 }
 
 
-{-aspect production decls_list
-top::Decls ::= d::Decl ds::Decls
-{
-  d.scope = top.scope;
-
-}
-
-aspect production decls_empty
-top::Decls ::= 
-{}-}
-
-
 aspect production decl_module
 top::Decl ::= x::String ds::Decls
 {
-  local modScope::Scope = mkScopeNamed ([top.scope], ds.varScopes, top);
+  local modScope::Scope = mkScopeMod ([top.scope], ds.varScopes, top);
   top.varScopes := [modScope];
   top.defname = x;
+  ds.scope = modScope;
 }
 
 aspect production decl_def
-top::Decl ::= b::ParBind
+top::Decl ::= b::Bind
 {
-  local defScope::Scope = mkScopeNamed ([top.scope], [], top);
+  local defScope::Scope = mkScopeBind ([], [], b);
   top.varScopes := [defScope];
   top.defname = b.defname;
 }
 
-synthesized attribute defname::String occurs on ParBind, Decl;
 
-aspect production par_defbind
-top::ParBind ::= x::String e::Expr
+
+
+
+
+
+{- Expressions -}
+
+aspect production expr_let
+top::Expr ::= bs::SeqBinds e::Expr
+{
+  bs.scope = top.scope;
+  e.scope = bs.finalScope;
+}
+
+aspect production expr_letrec
+top::Expr ::= bs::ParBinds e::Expr
+{
+  local letScope::Scope = mkScope([top.scope], bs.varScopes);
+  bs.lookupScope = letScope;
+  bs.scope = letScope;
+}
+
+aspect production expr_letpar
+top::Expr ::= bs::ParBinds e::Expr
+{
+  local letScope::Scope = mkScope([top.scope], bs.varScopes);
+  bs.lookupScope = top.scope;
+  bs.scope = letScope;
+}
+
+{- Seq_Binds -}
+
+synthesized attribute finalScope::Decorated Scope occurs on SeqBinds;
+
+aspect production seq_binds_single
+top::SeqBinds ::= b::Bind
+{
+  local letScope::Scope = mkScope([top.scope], [defScope]);
+  local defScope::Scope = mkScopeBind ([], [], b);
+
+  top.finalScope = letScope;
+  b.scope = top.scope;
+}
+
+aspect production seq_binds_list
+top::SeqBinds ::= b::Bind bs::SeqBinds
+{
+  local letScope::Scope = mkScope([top.scope], [defScope]);
+  local defScope::Scope = mkScopeBind ([], [], b);
+
+  top.finalScope = bs.finalScope;
+  b.scope = top.scope;
+  bs.scope = letScope;
+}
+
+
+{- Par_Binds -}
+
+inherited attribute lookupScope::Decorated Scope occurs on ParBinds;
+
+aspect production par_binds_list
+top::ParBinds ::= b::Bind bs::ParBinds
+{
+  b.scope = top.scope;
+  bs.scope = top.lookupScope;
+
+  local defScope::Scope = mkScopeBind ([], [], b);
+  top.varScopes <- [defScope];
+}
+
+
+
+
+
+
+
+{- Bind -}
+
+aspect production bind
+top::Bind ::= x::String e::Expr
 {
   top.defname = x;
 }
 
+synthesized attribute defname::String occurs on Bind, Decl;
 synthesized attribute refname::String occurs on VarRef;
 
 aspect production var_ref_single
 top::VarRef ::= x::String
 {
   
-  --local regex::Regex = regexCat (regexStar (regexSingle(labelLex())), regexSingle(labelVar()));
-  --local dfa::DFA = regex.dfa;
-
-  -- try above and undecorating regex prod children when resolution working
-  local r1::Decorated Regex = decorate regexSingle(labelLex()) with {};
-  local r2::Decorated Regex = decorate regexSingle(labelVar()) with {};
-  local r1star::Decorated Regex = decorate regexStar (r1) with {};
-  local regex::Decorated Regex = decorate regexCat (r1star, r2) with {};
+  local regex::Regex = regexCat (regexStar (regexSingle(labelLex())), regexSingle(labelVar()));
   local dfa::DFA = regex.dfa;
 
   local resFun::([Decorated Scope] ::= Decorated Scope VarRef) = resolutionFun (dfa);
@@ -88,10 +148,28 @@ top::VarRef ::= x::String
 
   top.binds := 
     let res::[Decorated Scope] = resFun (top.scope, top) in
-      case unsafeTrace (res, printT("Reslen: " ++ toString (length(res)) ++ "\n", unsafeIO())) of
-        mkScopeNamed(_, _, d)::[] -> [(top, d)]    -- restricted to one decl found
+
+      -- allows multiple resolutions
+      concat (
+        map (
+          (\ds::Decorated Scope -> 
+            case ds of
+              mkScopeBind(_, _, d) -> [(top, d)]    
+            | _ -> []
+            end
+          ),
+          res
+        )
+      )
+
+      {-
+      -- allows only one resolution
+      case res of
+        mkScopeNamed(_, _, d) -> [(top, d)]    
       | _ -> []
       end
+      -}  
+
     end;
 
 }

@@ -20,7 +20,7 @@ top::Regex ::= l::Label
 }
 
 abstract production regexStar
-top::Regex ::= r::Decorated Regex
+top::Regex ::= r::Regex
 {
   local initial :: Integer = genInt();
   local final   :: Integer = genInt();
@@ -43,7 +43,7 @@ top::Regex ::= r::Decorated Regex
 }
 
 abstract production regexCat
-top::Regex ::= r1::Decorated Regex r2::Decorated Regex
+top::Regex ::= r1::Regex r2::Regex
 {
   top.nfa = case (r1.nfa, r2.nfa) of
               ((fstStates, fstTrans, fstInitial, fstFinal),

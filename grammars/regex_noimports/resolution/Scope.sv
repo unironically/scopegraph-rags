@@ -18,7 +18,18 @@ top::Scope ::=
   top.name = "";
 }
 
-abstract production mkScopeNamed
+abstract production mkScopeBind
+top::Scope ::=
+  lex::[Decorated Scope]
+  var::[Decorated Scope]
+  decl::Bind
+{
+  top.lexEdges = lex;
+  top.varEdges = var;
+  top.name = decl.defname;
+}
+
+abstract production mkScopeMod
 top::Scope ::=
   lex::[Decorated Scope]
   var::[Decorated Scope]

@@ -46,7 +46,7 @@ function dfaStateToFun
       )
 
       in if contains (state, snd(snd(snd(dfa)))) && v.refname == s.name
-           then [s]
+           then s :: subRes
            else subRes
 
       end;
