@@ -52,7 +52,6 @@ top::Decl ::= x::String ds::Decls
   top.modScopes := [modScope];
   top.varScopes := [];
 
-  top.defname = x;
   ds.scope = modScope;
 
   top.impLookupScope = nothing ();
@@ -66,8 +65,6 @@ top::Decl ::= b::Bind
   top.varScopes := [defScope];
   top.modScopes := [];
   
-  top.defname = b.defname;
-
   top.impLookupScope = nothing ();
 }
 
@@ -77,8 +74,6 @@ top::Decl ::= r::ModRef
   top.modScopes := [];
   top.varScopes := [];
   
-  top.defname = r.refname;
-
   local lookupScope::Scope = mkScope (just(top.scope), [], [], r.impScope, nothing ());
   r.scope = top.scope;
 
@@ -171,11 +166,9 @@ synthesized attribute label::String occurs on Bind, VarRef, ModRef;
 aspect production bind
 top::Bind ::= x::VarRef_t e::Expr
 {
-  top.defname = x.lexeme;
   top.label = x.lexeme ++ "_" ++ toString(x.line) ++ "_" ++ toString(x.column);
 }
 
-synthesized attribute defname::String occurs on Bind, Decl;
 synthesized attribute refname::String occurs on VarRef, ModRef;
 
 aspect production var_ref_single

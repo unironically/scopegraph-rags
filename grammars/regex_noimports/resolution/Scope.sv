@@ -61,11 +61,19 @@ synthesized attribute nameEq::(Boolean ::= String) occurs on Datum;
 abstract production datumVar
 top::Datum ::= d::Decorated Bind
 {
-  top.nameEq = \s::String -> s == d.defname;
+  top.nameEq = \s::String ->
+    case d of
+    | bind (x, _) -> s == x.lexeme
+    | bind_typed (x, _, _) -> s == x
+    end;
 }
 
 abstract production datumMod
 top::Datum ::= d::Decorated Decl
 {
-  top.nameEq = \s::String -> s == d.defname;
+  top.nameEq = \s::String ->
+    case d of
+    | decl_module (x, _) -> s == x
+    | _ -> false
+    end;
 }
