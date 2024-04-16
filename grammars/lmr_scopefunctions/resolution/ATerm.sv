@@ -1,6 +1,6 @@
-grammar regex_noimports:resolution;
+grammar lmr_scopefunctions:resolution;
 imports lmr:lang;
-imports regex_noimports:driver;
+imports lmr_scopefunctions:driver;
 
 {- Synthesizes all of the bindings found -}
 
@@ -23,8 +23,9 @@ monoid attribute modScopes::[Decorated Scope] with [], ++
   occurs on Decls, Decl;
 propagate modScopes on Decls;
 
-synthesized attribute impScope::Maybe<Decorated Scope>
-  occurs on ModRef;
+monoid attribute impScopes::[Decorated Scope] with [], ++
+  occurs on Decls, Decl, ModRef;
+propagate impScopes on Decls;
 
 synthesized attribute impLookupScope::Maybe<Decorated Scope> occurs on Decl;
 
@@ -33,38 +34,44 @@ synthesized attribute impLookupScope::Maybe<Decorated Scope> occurs on Decl;
 aspect production program
 top::Program ::= h::String ds::Decls
 {
-  local initScope::Scope = mkScopeGlobal (ds.varScopes, ds.modScopes);
+  local initScope::Scope = mkScopeGlobal (genInt(), ds.varScopes, ds.modScopes, ds.impScopes);
   ds.scope = initScope;
 }
 
 aspect production decls_list
 top::Decls ::= d::Decl ds::Decls
-{
+{ 
+  propagate scope, modScopes, impScopes, varScopes;
   d.scope = top.scope;
-  ds.scope = case d.impLookupScope of nothing() -> top.scope | just(s) -> s end;
+  ds.scope = top.scope;
+
+  top.modScopes := d.modScopes ++ ds.modScopes;
+  top.impScopes := d.modScopes ++ ds.modScopes;
+  top.varScopes := [];
 }
+
 
 aspect production decl_module
 top::Decl ::= x::String ds::Decls
 {
-  local modScope::Scope = mkScopeMod (top.scope, ds.varScopes, ds.modScopes, top);
+  local modScope::Scope = 
+    mkScopeMod (ds.varScopes, ds.modScopes, ds.impScopes, just(top));
   
   top.modScopes := [modScope];
+  top.impScopes := [];
   top.varScopes := [];
 
-  top.defname = x;
   ds.scope = modScope;
-
-  top.impLookupScope = nothing ();
 }
 
 aspect production decl_def
 top::Decl ::= b::Bind
 {  
-  local defScope::Scope = mkScopeVar (b);
+  local defScope::Scope = mkScopeBind (genInt(), [], [], [], [], b);
 
   top.varScopes := [defScope];
   top.modScopes := [];
+  top.impScopes := [];
   
   top.defname = b.defname;
 
@@ -76,13 +83,14 @@ top::Decl ::= r::ModRef
 {
   top.modScopes := [];
   top.varScopes := [];
+  top.impScopes := r.impScopes;
   
   top.defname = r.refname;
 
-  local lookupScope::Scope = mkScope (just(top.scope), [], [], r.impScope, nothing ());
+  --local lookupScope::Scope = mkScope (genInt(), "", [top.scope], [], [], r.impScopes);
   r.scope = top.scope;
 
-  top.impLookupScope = just(lookupScope);
+  --top.impLookupScope = just(lookupScope);
 }
 
 
@@ -98,7 +106,7 @@ top::Expr ::= bs::SeqBinds e::Expr
 aspect production expr_letrec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local letScope::Scope = mkScope (just(top.scope), bs.varScopes, [], nothing (), nothing ());
+  local letScope::Scope = mkScope(genInt(), "", [top.scope], bs.varScopes, [], []);
   bs.lookupScope = letScope;
   bs.scope = letScope;
   e.scope = letScope;
@@ -107,7 +115,7 @@ top::Expr ::= bs::ParBinds e::Expr
 aspect production expr_letpar
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local letScope::Scope = mkScope (just(top.scope), bs.varScopes, [], nothing (), nothing ());
+  local letScope::Scope = mkScope(genInt(), "", [top.scope], bs.varScopes, [], []);
   bs.lookupScope = top.scope;
   bs.scope = letScope;
   e.scope = letScope;
@@ -123,8 +131,8 @@ synthesized attribute finalScope::Decorated Scope occurs on SeqBinds;
 aspect production seq_binds_single
 top::SeqBinds ::= b::Bind
 {
-  local letScope::Scope = mkScope(just(top.scope), [defScope], [], nothing (), nothing ());
-  local defScope::Scope = mkScopeVar (b);
+  local letScope::Scope = mkScope(genInt(), "", [top.scope], [defScope], [], []);
+  local defScope::Scope = mkScopeBind (genInt(), [], [], [], [], b);
 
   top.finalScope = letScope;
   b.scope = top.scope;
@@ -133,8 +141,8 @@ top::SeqBinds ::= b::Bind
 aspect production seq_binds_list
 top::SeqBinds ::= b::Bind bs::SeqBinds
 {
-  local letScope::Scope = mkScope(just(top.scope), [defScope], [], nothing (), nothing ());
-  local defScope::Scope = mkScopeVar (b);
+  local letScope::Scope = mkScope(genInt(), "", [top.scope], [defScope], [], []);
+  local defScope::Scope = mkScopeBind (genInt(), [], [], [], [], b);
 
   top.finalScope = bs.finalScope;
   b.scope = top.scope;
@@ -159,7 +167,7 @@ top::ParBinds ::= b::Bind bs::ParBinds
   b.scope = top.scope;
   bs.scope = top.lookupScope;
 
-  local defScope::Scope = mkScopeVar (b);
+  local defScope::Scope = mkScopeBind (genInt(), [], [], [], [], b);
   top.varScopes <- [defScope];
 }
 
@@ -170,6 +178,7 @@ synthesized attribute label::String occurs on Bind, VarRef, ModRef;
 
 aspect production bind
 top::Bind ::= x::VarRef_t e::Expr
+
 {
   top.defname = x.lexeme;
   top.label = x.lexeme ++ "_" ++ toString(x.line) ++ "_" ++ toString(x.column);
@@ -181,20 +190,22 @@ synthesized attribute refname::String occurs on VarRef, ModRef;
 aspect production var_ref_single
 top::VarRef ::= x::VarRef_t
 {
-    local regex::Regex = regexCat (regexStar (regexSingle(labelLex())), regexCat (regexOption (regexSingle (labelImp())), regexSingle(labelVar())));
+  
+  local regex::Regex = regexCat (regexStar (regexSingle(labelLex())), regexCat (regexOption (regexSingle (labelImp())), regexSingle(labelVar())));
   
   local dfa::DFA = regex.dfa;
-
-  local resFun::([Decorated Scope] ::= Decorated Scope String [Decorated Scope]) = resolutionFun (dfa);
 
   top.refname = x.lexeme;
   top.label = x.lexeme ++ "_" ++ toString(x.line) ++ "_" ++ toString(x.column);
 
   top.binds := 
-    let res::[Decorated Scope] = resFun (top.scope, x.lexeme, []) in
+    let res::[Decorated Scope] = top.scope.resolve (pathOne(top.scope), dfa, fst(snd(snd(dfa))), \s::String -> s == x.lexeme) in
       case res of
-        mkScopeVar (d)::t -> [(left(top), d)]
-      | _ -> []
+        mkScopeBind(_, _, _, _, _, b)::_ -> unsafeTrace ([(left(top), b)], printT ("Trying to resolve " ++ x.lexeme ++ ". Decl scope at the top\n", unsafeIO()))
+      | mkScopeMod (_, _, _, _, _, _)::_ -> unsafeTrace ([], printT ("Trying to resolve " ++ x.lexeme ++ ". Mod scope at the top\n", unsafeIO()))
+      | mkScopeGlobal (_, _, _, _)::_ -> unsafeTrace ([], printT ("Trying to resolve " ++ x.lexeme ++ ". Global scope at the top\n", unsafeIO()))
+      | mkScope (_, _, _, _, _, _)::_ -> unsafeTrace ([], printT ("Trying to resolve " ++ x.lexeme ++ ". Normal scope at the top\n", unsafeIO()))
+      | [] -> unsafeTrace ([], printT ("Trying to resolve " ++ x.lexeme ++ ". No scope at the top\n", unsafeIO()))
       end
     end;
 }
@@ -207,12 +218,19 @@ top::ModRef ::= x::TypeRef_t
 
   local dfa::DFA = regex.dfa;
 
-  local resFun::([Decorated Scope] ::= Decorated Scope String [Decorated Scope]) = resolutionFun (dfa);
-
   top.refname = x.lexeme;
   top.label = x.lexeme ++ "_" ++ toString(x.line) ++ "_" ++ toString(x.column);
 
-  top.impScope = just (head(resFun (top.scope, x.lexeme, [])));
+  top.impScopes := 
+    let res::[Decorated Scope] = top.scope.resolve (pathOne(top.scope), dfa, fst(snd(snd(dfa))), \s::String -> s == x.lexeme) in
+      case res of
+        mkScopeBind(_, _, _, _, _, b)::_ -> unsafeTrace ([head(res)], printT ("Trying to resolve " ++ x.lexeme ++ ". Decl scope at the top\n", unsafeIO()))
+      | mkScopeMod (_, _, _, _, _, _)::_ -> unsafeTrace ([], printT ("Trying to resolve " ++ x.lexeme ++ ". Mod scope at the top\n", unsafeIO()))
+      | mkScopeGlobal (_, _, _, _)::_ -> unsafeTrace ([], printT ("Trying to resolve " ++ x.lexeme ++ ". Global scope at the top\n", unsafeIO()))
+      | mkScope (_, _, _, _, _, _)::_ -> unsafeTrace ([head(res)], printT ("Trying to resolve " ++ x.lexeme ++ ". Normal scope at the top\n", unsafeIO()))
+      | [] -> unsafeTrace ([], printT ("Trying to resolve " ++ x.lexeme ++ ". No scope at the top\n", unsafeIO()))
+      end
+    end;
 }
 
 abstract production mod_to_varref

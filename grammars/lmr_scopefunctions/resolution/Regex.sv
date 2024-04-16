@@ -1,4 +1,4 @@
-grammar regex_noimports:resolution;
+grammar lmr_scopefunctions:resolution;
 
 
 nonterminal Regex;
@@ -200,6 +200,12 @@ function getDFATrans
       [] -> []
     | (from, lab, final)::t -> (getStateNum(from, assgn), lab, getStateNum(final, assgn)) :: getDFATrans (t, assgn)
     end;
+}
+
+function dfaAccepts
+Boolean ::= dfa::DFA state::Integer
+{
+  return contains (state, snd(snd(snd(dfa))));
 }
 
 function getStateNum

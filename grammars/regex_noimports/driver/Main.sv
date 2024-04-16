@@ -10,8 +10,6 @@ imports lmr:lang;
 function main
 IO<Integer> ::= largs::[String]
 {
-  -- return lmr:driver:main (largs);
-
   return do {
   
     -- Parse LMR
@@ -21,43 +19,10 @@ IO<Integer> ::= largs::[String]
     let ast :: Program = result.parseTree.ast;
 
     -- Program bindings
-    print ("Bindings: " ++ printBinds (ast.binds) ++ "\n");
+    print ("Bindings (name_line_col):\n" ++ printBinds (ast.binds) ++ "\n\n" ++ ast.pp);
+
+    writeFile ("equations.md", implode ("\n", ("# Equations for " ++ filePath)::"### Program:\n```"::file::"\n```\n### AST:\n```"::ast.pp::"```\n"::"### Constraints:"::ast.constraints));
 
     return 0;
   };
-}
-
-function printBinds
-String ::= binds::[(VarRef, Bind)]
-{
-  return
-    case binds of
-      [] -> ""
-    | (v,d)::t -> "(" ++ v.refname ++ ", " ++ d.defname ++ "), " ++ printBinds(t)
-    end;
-}
-
-function printIntLst
-String ::= ints::[Integer]
-{
-  return 
-    "[" ++ concat (map ((\i::Integer -> toString(i) ++ ","), ints)) ++ "]";
-}
-
-function printNFATrans
-String ::= trans::[(Integer, Maybe<Label>, Integer)]
-{
-  return
-    case trans of
-      (start, nothing(), final)::t -> "(" ++ toString (start) ++ ", " ++ "eps, " ++ toString (final) ++ "), " ++ printNFATrans (t)
-    | (start, just(l), final)::t -> "(" ++ toString (start) ++ ", " ++ l.pp ++ ", " ++ toString (final) ++ "), " ++ printNFATrans (t)
-    | [] -> ""
-    end;
-}
-
-function printDFATrans
-String ::= trans::[(Integer, Label, Integer)]
-{
-  return
-    printNFATrans (map ((\p::(Integer, Label, Integer) -> (fst(p), just (fst(snd(p))), snd(snd(p))) ), trans));
 }

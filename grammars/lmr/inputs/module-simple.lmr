@@ -1,6 +1,5 @@
-module A {
-  def a = 1
-  def b = 2
-  def c = 3
-  def d = letpar x = a in x
+module A { def a = 1 }
+module B { 
+  import A
+  def b = a
 }

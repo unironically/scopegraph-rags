@@ -105,7 +105,7 @@ top::SeqBinds_c ::= b::Bind_c bs::SeqBinds_c
 concrete production bind_c
 top::Bind_c ::= x::VarRef_t '=' e::Expr_c
 {
-  top.ast = bind (x.lexeme, e.ast);
+  top.ast = bind (x, e.ast);
 }
 
 concrete production bind_typed_c
@@ -350,13 +350,13 @@ top::Type_c ::= '(' t::Type_c ')'
 concrete production mod_ref_single_c
 top::ModRef_c ::= x::TypeRef_t
 {
-  top.ast = mod_ref_single (x.lexeme);
+  top.ast = mod_ref_single (x);
 }
 
 concrete production mod_ref_dot_c
 top::ModRef_c ::= r::ModRef_c '.' x::TypeRef_t
 {
-  top.ast = mod_ref_dot (r.ast, x.lexeme);
+  top.ast = mod_ref_dot (r.ast, x);
 }
 
 {- Type_Ref -}
@@ -378,11 +378,11 @@ top::TypeRef_c ::= r::ModRef_c '.' x::TypeRef_t
 concrete production var_ref_single_c
 top::VarRef_c ::= x::VarRef_t
 {
-  top.ast = var_ref_single (x.lexeme);
+  top.ast = var_ref_single (x);
 }
 
 concrete production var_ref_dot_c
 top::VarRef_c ::= r::ModRef_c '.' x::VarRef_t
 {
-  top.ast = var_ref_dot (r.ast, x.lexeme);
+  top.ast = var_ref_dot (r.ast, x);
 }
