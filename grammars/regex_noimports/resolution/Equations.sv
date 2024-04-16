@@ -13,7 +13,7 @@ top::Program ::= h::String ds::Decls
   local initScopeName::String = "initScope_" ++ toString (genInt ());
 
   top.constraints := [
-    "##### constraints from program(h = " ++ h ++ ", ds = " ++ dsName ++ ")\n",
+    "##### constraints from `program(h = " ++ h ++ ", ds = " ++ dsName ++ ")`",
     "```",
     "local " ++ initScopeName ++ "::Scope = mkScopeGlobal(" ++ dsName ++ ".varScopes, " ++ dsName ++ ".modScopes);",
     dsName ++ ".scope = " ++ initScopeName ++ ";",
@@ -34,7 +34,7 @@ top::Decls ::= d::Decl ds::Decls
   local dsName::String = "ds_" ++ toString (genInt ());
   
   top.constraints := [
-    "##### constraints from decls_list(d = " ++ dName ++ ", ds = " ++ dsName ++ ")",
+    "##### constraints from `decls_list(d = " ++ dName ++ ", ds = " ++ dsName ++ ")`",
     "```",
     top.topName ++ ".varScopes := " ++ dName ++ ".varScopes ++ " ++ dsName ++ ".varScopes;",
     top.topName ++ ".modScopes := " ++ dName ++ ".modScopes ++ " ++ dsName ++ ".modScopes;",
@@ -55,7 +55,7 @@ top::Decls ::=
   -- propagate varScopes, modScopes;
 
   top.constraints := [
-     "##### constraints from decls_empty()",
+     "##### constraints from `decls_empty()`",
      "```",
     top.topName ++ ".varScopes := [];",
     top.topName ++ ".modScopes := [];",
@@ -79,7 +79,7 @@ top::Decl ::= x::String ds::Decls
   local modScopeName::String = "modScope_" ++ toString (genInt ());
 
   top.constraints := [
-    "##### constraints from decl_module(x = " ++ xName ++ ", ds = " ++ dsName ++ ")",
+    "##### constraints from `decl_module(x = " ++ xName ++ ", ds = " ++ dsName ++ ")`",
     "```",
     "local " ++ modScopeName ++ "::Scope = mkScopeMod (" ++ top.topName ++ ".scope, " ++ dsName ++ ".varScopes, " ++ dsName ++ ".modScopes, " ++ top.topName ++ ");",
     top.topName ++ ".varScopes := [];",
@@ -106,7 +106,7 @@ top::Decl ::= b::Bind
   local bName::String = "b_" ++ toString (genInt ());
 
   top.constraints := [
-    "##### constraints from decl_def(b = " ++ bName ++ ")\n",
+    "##### constraints from `decl_def(b = " ++ bName ++ ")`",
     "```",
     "local " ++ defScopeName ++ "::Scope = mkScopeVar (" ++ bName ++ ");",
     top.topName ++ ".varScopes := [" ++ defScopeName ++ "];",
@@ -133,7 +133,7 @@ top::Decl ::= r::ModRef
   local lookupScopeName::String = "lookupScope_" ++ toString (genInt ());
 
   top.constraints := [
-    "##### constraints from decl_import(r = " ++ rName ++ ")",
+    "##### constraints from `decl_import(r = " ++ rName ++ ")`",
     "```",
     "local " ++ lookupScopeName ++ "::Scope = mkScope(just(" ++ top.topName ++ ".scope), [], [], " ++ rName ++ ".impScope, nothing());",
     top.topName ++ ".varScopes := [];",
@@ -152,7 +152,7 @@ aspect production expr_int
 top::Expr ::= i::Integer
 {
   top.constraints := [
-    "##### constraints from expr_int(i = " ++ toString (i) ++ ")",
+    "##### constraints from `expr_int(i = " ++ toString (i) ++ ")`",
     "```",
     top.topName ++ ".binds = [];",
     "```",
@@ -168,7 +168,7 @@ top::Expr ::= r::VarRef
   local rName::String = "r_" ++ toString (genInt ());
 
   top.constraints := [
-    "##### constraints from expr_var(r = " ++ rName ++ ")",
+    "##### constraints from `expr_var(r = " ++ rName ++ ")`",
     "```",
     top.topName ++ ".binds := " ++ rName ++ ".binds;",
     rName ++ ".scope = " ++ top.topName ++ ".scope;",
@@ -189,7 +189,7 @@ top::Expr ::= e1::Expr e2::Expr
   local e2Name::String = "e_" ++ toString (genInt ());
 
   top.constraints := [
-    "##### constraints from expr_add(e1 = " ++ e1Name ++ ", e2 = " ++ e2Name ++ ")",
+    "##### constraints from `expr_add(e1 = " ++ e1Name ++ ", e2 = " ++ e2Name ++ ")`",
     "```",
     top.topName ++ ".binds := " ++ e1Name ++ ".binds ++ " ++ e2Name ++ ".binds;",
     e1Name ++ ".scope = " ++ top.topName ++ ".scope;",
@@ -211,7 +211,7 @@ top::Bind ::= x::VarRef_t e::Expr
   local xName::String = "\"" ++ x.lexeme ++ "\"";
 
   top.constraints := [
-    "##### constraints from bind(x = " ++ xName ++ ", e = " ++ eName ++ ")",
+    "##### constraints from `bind(x = " ++ xName ++ ", e = " ++ eName ++ ")`",
     "```",
     top.topName ++ ".label = " ++ xName ++ ".lexeme ++ \"_\" ++ toString(" ++ xName ++ ".line) ++ \"_\" ++ toString(" ++ xName ++ ".column);",
     top.topName ++ ".binds := " ++ eName ++ ".binds;",
@@ -246,7 +246,7 @@ top::VarRef ::= x::VarRef_t
   local resFunName::String = "resFun_" ++ toString (genInt ());
 
   top.constraints := [
-    "##### constraints from var_ref_single(x = " ++ xName ++ ")",
+    "##### constraints from `var_ref_single(x = " ++ xName ++ ")`",
     "```",
     "local " ++ regexName ++ "::Regex = regexCat (regexStar (regexSingle(labelLex())), regexCat (regexOption (regexSingle (labelImp())), regexSingle(labelVar())));",
     "local " ++ dfaName ++ "::DFA = " ++ regexName ++ ".dfa;",
@@ -281,7 +281,7 @@ top::ModRef ::= x::TypeRef_t
   local resFunName::String = "resFun_" ++ toString (genInt ());
 
   top.constraints := [
-    "##### constraints from mod_ref_single(x = " ++ xName ++ ")",
+    "##### `constraints from mod_ref_single(x = " ++ xName ++ ")`",
     "```",
     "local " ++ regexName ++ "::Regex = regexCat (regexStar (regexSingle(labelLex())), regexCat (regexOption (regexSingle (labelImp())), regexSingle(labelMod())));",
     "local " ++ dfaName ++ "::DFA = " ++ regexName ++ ".dfa;",
