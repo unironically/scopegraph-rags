@@ -1,3 +1,5 @@
 *.jar
 equations.md
 ministatix.hs
+
+grammars/*/out/
