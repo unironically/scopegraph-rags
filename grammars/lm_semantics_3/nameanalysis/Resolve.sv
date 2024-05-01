@@ -1,4 +1,4 @@
-grammar lm_semantics_2:nameanalysis;
+grammar lm_semantics_3:nameanalysis;
 
 -- Resolution type:
 -- [Decorated Scope] ::= Decorated Scope Either<VarRef ModRef>

@@ -1,5 +1,8 @@
-# LM without modules - language 1
-- An implementation of language 1, where the only LM declarations allowed are `def`s.
+# LM without modules - language 3
+- An implementation of language 3, allowing modules and imports.
+- A scope graph node can only have one import edge originating from it.
+- Each `import _` creates a new scope to which the `IMP` edge to the resolved scope is added.
+- Decl nodes are lifted up this structure to the module or global definition scope.
 
 ### Running:
 ```
