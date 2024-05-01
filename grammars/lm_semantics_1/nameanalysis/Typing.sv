@@ -268,10 +268,7 @@ top::Type ::=
 
 --------------------------------------------------
 
-attribute ty occurs on VarRef;
-
 aspect production varRef
 top::VarRef ::= x::String
 {
-  top.ty = if top.datum.isJust then (top.datum).fromJust.datumTy else tErr();
 }

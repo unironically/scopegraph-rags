@@ -42,7 +42,7 @@ top::Decls ::= d::Decl ds::Decls
   local dsNameSilver::String = "Decls_" ++ toString (genInt());
 
   top.silverEquations = [
-    dsNameSilver ++ ".s = " ++ top.topName ++ ".s;",
+    dNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     dsNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     top.topName ++ ".varScopes = " ++ dNameSilver ++ ".varScopes ++ " ++ dsNameSilver ++ ".varScopes;",
     top.topName ++ ".ok = " ++ dNameSilver ++ ".ok && " ++ dsNameSilver ++ ".ok;"
@@ -652,7 +652,5 @@ top::VarRef ::= x::String
         "\t| s::_ -> s.datum\n" ++ 
         "\t| [] -> nothing()\n" ++
       "\tend;",
-
-    top.topName ++ ".ty = if " ++ top.topName ++ ".datum.isJust then (" ++ top.topName ++ ".datum).fromJust.datumTy else tErr();"
   ];
 }

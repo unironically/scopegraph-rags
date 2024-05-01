@@ -3,9 +3,11 @@ grammar lm_semantics_2:nameanalysis;
 --------------------------------------------------
 
 inherited attribute s::Decorated Scope;
+inherited attribute sLookup::Decorated Scope;
 
 synthesized attribute varScopes::[Decorated Scope];
 synthesized attribute modScopes::[Decorated Scope];
+synthesized attribute impScope::Maybe<Decorated Scope>;
 
 monoid attribute binds::[(String, String)] with [], ++;
 monoid attribute allScopes::[Decorated Scope] with [], ++;
@@ -20,8 +22,9 @@ attribute allScopes occurs on Main;
 aspect production program
 top::Main ::= ds::Decls
 {
-  local globalScope::Scope = mkScopeGlobal (ds.varScopes, location=top.location);
+  local globalScope::Scope = mkScopeGlobal (ds.varScopes, ds.modScopes, location=top.location);
   ds.s = globalScope;
+  ds.sLookup = globalScope;
 
   top.allScopes := globalScope :: ds.allScopes;
 }
@@ -29,6 +32,7 @@ top::Main ::= ds::Decls
 --------------------------------------------------
 
 attribute s occurs on Decls;
+attribute sLookup occurs on Decls;
 attribute varScopes occurs on Decls;
 attribute modScopes occurs on Decls;
 
@@ -41,7 +45,9 @@ aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
   d.s = top.s;
-  ds.s = d.sLookup;
+  d.sLookup = top.sLookup;
+  ds.s = top.s;
+  ds.sLookup = case d.impScope of | just(sImp) -> sImp | _ -> top.sLookup end;
 
   top.varScopes = d.varScopes ++ ds.varScopes;
   top.modScopes = d.modScopes ++ ds.modScopes;
@@ -61,9 +67,10 @@ top::Decls ::=
 --------------------------------------------------
 
 attribute s occurs on Decl;
+attribute sLookup occurs on Decl;
 attribute varScopes occurs on Decl;
 attribute modScopes occurs on Decl;
-synthesized attribute sLookup::Decorated Scope occurs on Decl;
+attribute impScope occurs on Decl;
 
 attribute binds occurs on Decl;
 propagate binds on Decl;
@@ -77,9 +84,10 @@ top::Decl ::= id::String ds::Decls
 
   top.varScopes = [];
   top.modScopes = [modScope];
-  top.sLookup = top.s;
+  top.impScope = nothing();
 
   ds.s = modScope;
+  ds.sLookup = modScope;
 
   top.allScopes := modScope::ds.allScopes;
 }
@@ -87,13 +95,13 @@ top::Decl ::= id::String ds::Decls
 aspect production declImport
 top::Decl ::= r::ModRef
 {
-  local impScope::Scope = mkScopeImpLookup(top.s, r.declScope, location=top.location);
+  local impScope::Scope = mkScopeImpLookup(top.sLookup, r.declScope, location=top.location);
 
   top.varScopes = [];
   top.modScopes = [];
-  top.sLookup = impScope;
+  top.impScope = just(impScope);
 
-  r.s = top.s;
+  r.s = top.sLookup;
 
   top.allScopes := [impScope];
 }
@@ -103,9 +111,9 @@ top::Decl ::= b::ParBind
 {
   top.varScopes = b.varScopes;
   top.modScopes = [];
-  top.sLookup = top.s;
+  top.impScope = nothing();
 
-  b.s = top.s;
+  b.s = top.sLookup;
 
   top.allScopes := b.allScopes;
 }

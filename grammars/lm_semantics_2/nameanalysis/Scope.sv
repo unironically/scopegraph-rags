@@ -36,8 +36,9 @@ top::Scope ::=
 abstract production mkScopeGlobal
 top::Scope ::=
   var::[Decorated Scope]
+  mod::[Decorated Scope]
 {
-  forwards to mkScope(nothing (), var, [], nothing(), nothing(), location=top.location);
+  forwards to mkScope(nothing (), var, mod, nothing(), nothing(), location=top.location);
 }
 
 abstract production mkScopeMod
