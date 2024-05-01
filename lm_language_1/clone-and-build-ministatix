@@ -1,0 +1,20 @@
+#!/bin/bash
+
+orig=$DIR
+
+if [ -d ../ministatix.hs ]; then
+  echo "[✔] Ministatix already cloned, see ../ministatix.hs"
+  exit 0
+fi
+
+git clone https://github.com/metaborg/ministatix.hs.git
+mv ministatix.hs ..
+cd ../ministatix.hs
+
+if make build; then
+  echo "[✔] Ministatix cloned and built at ../ministatix.hs"
+else
+  echo "[✗] Something went wrong when cloning or building Ministatix, see output"
+fi
+
+cd ../$orig

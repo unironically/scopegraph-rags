@@ -174,7 +174,7 @@ synthesized attribute refname::String occurs on VarRef, ModRef;
 aspect production var_ref_single
 top::VarRef ::= x::VarRef_t
 {
-    local regex::Regex = regexCat (regexStar (regexSingle(labelLex())), regexCat (regexOption (regexSingle (labelImp())), regexSingle(labelVar())));
+  local regex::Regex = regexCat (regexStar (regexSingle(labelLex())), regexCat (regexOption (regexSingle (labelImp())), regexSingle(labelVar())));
   
   local dfa::DFA = regex.dfa;
 

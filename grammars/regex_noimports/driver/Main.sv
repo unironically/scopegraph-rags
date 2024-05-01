@@ -23,6 +23,8 @@ IO<Integer> ::= largs::[String]
 
     writeFile ("equations.md", implode ("\n", ("# Equations for " ++ filePath)::"### Program:\n```"::file::"\n```\n### AST:\n```"::ast.pp::"```\n"::"### Constraints:"::ast.constraints));
 
+    writeFile ("coll_equations.md", implode ("\n", ("# Equations for " ++ filePath ++ " as if we used collection attributes")::"### Program:\n```"::file::"\n```\n### AST:\n```"::ast.pp::"```\n"::"### Constraints:"::ast.constraintsColl));
+
     return 0;
   };
 }

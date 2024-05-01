@@ -1,8 +1,6 @@
-grammar regex_noimports:resolution;
-
+grammar lm_resolve1:nameanalysis;
 
 nonterminal Regex;
-
 
 synthesized attribute dfa::DFA occurs on Regex;
 synthesized attribute nfa::NFA occurs on Regex;

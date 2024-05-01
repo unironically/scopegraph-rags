@@ -1,0 +1,3 @@
+#!/bin/sh
+
+rm *.aterm *.lm *.jar out/* > /dev/null 2>&1

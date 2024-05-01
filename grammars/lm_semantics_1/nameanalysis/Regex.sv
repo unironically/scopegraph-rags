@@ -1,13 +1,13 @@
-grammar regex_noimports:resolution;
-
+grammar lm_semantics_1:nameanalysis;
 
 nonterminal Regex;
-
 
 synthesized attribute dfa::DFA occurs on Regex;
 synthesized attribute nfa::NFA occurs on Regex;
 
-attribute pp occurs on Regex, Label;
+synthesized attribute pp::String;
+
+attribute pp occurs on Regex;
 
 abstract production regexEpsilon
 top::Regex ::= 
@@ -101,6 +101,9 @@ top::Regex ::= r::Regex
 }
 
 nonterminal Label;
+
+attribute pp occurs on Label;
+
 synthesized attribute priority::Integer occurs on Label;
 
 {-----------------------------}
@@ -118,19 +121,6 @@ top::Label ::= {
   top.priority = 1;
 }
 
-abstract production labelMod
-top::Label ::= { 
-  top.pp = "MOD";
-  top.priority = 1;
-}
-
-abstract production labelImp
-top::Label ::= { 
-  top.pp = "IMP";
-  top.priority = 1;
-}
-
-
 instance Eq Label {
   eq = \l1::Label l2::Label -> l1.pp == l2.pp;
 }
@@ -145,7 +135,7 @@ instance Ord Label {
 {-----------------------------}
 {-----------------------------}
 
-global globLabs::[Label] = [labelLex(), labelVar(), labelMod(), labelImp()];
+global globLabs::[Label] = [labelLex(), labelVar()];
 type NFA = ([Integer], [NFATrans], Integer, Integer);   -- states, transitions, initial state, accepting state
 type DFA = ([Integer], [DFATrans], Integer, [Integer]); -- states, transitions, inital state, accepting states
 type NFATrans = (Integer, Maybe<Label>, Integer);
