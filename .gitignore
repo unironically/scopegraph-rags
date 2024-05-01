@@ -2,4 +2,5 @@
 equations.md
 ministatix.hs
 
-grammars/*/out/
+*/out/
+*/*/out/
