@@ -199,7 +199,7 @@ top::SeqBind_c ::= id::VarId_t '=' e::Expr_c
 }
 
 concrete production seqBindTyped_c
-top::SeqBind_c ::= ty::Type_c ':' id::VarId_t '=' e::Expr_c
+top::SeqBind_c ::= id::VarId_t ':' ty::Type_c '=' e::Expr_c
 {
   top.ast = seqBindTyped(ty.ast, id.lexeme, e.ast, location=top.location);
 }
@@ -231,7 +231,7 @@ top::ParBind_c ::= id::VarId_t '=' e::Expr_c
 }
 
 concrete production parBindTyped_c
-top::ParBind_c ::= ty::Type_c ':' id::VarId_t '=' e::Expr_c
+top::ParBind_c ::= id::VarId_t ':' ty::Type_c '=' e::Expr_c
 {
   top.ast = parBindTyped(ty.ast, id.lexeme, e.ast, location=top.location);
 }

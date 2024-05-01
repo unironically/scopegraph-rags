@@ -65,3 +65,5 @@ terminal BoolType_t 'bool';
 terminal Arrow_t '->' precedence = 8, association = right;
 
 ignore terminal Whitespace_t /[\n\r\t ]+/;
+ignore terminal Comment_t       /\/\*(\/\*([^\*]|\*+[^\/\*])*\*+\/|[^\*]|\*+[^\/\*])*\*+\//;
+ignore terminal LineComment_t   /\/\/.*/;

@@ -100,7 +100,7 @@ top::Decl ::= r::ModRef
     top.topName ++ ".modScopes = [];",
     top.topName ++ ".impScope = just(" ++ impScopeNameSilver ++ ");",
     rNameSilver ++ ".s = " ++ top.topName ++ ".sLookup;",
-    top.topName ++ ".ok = " ++ rNameSilver ++ ".ok;"
+    top.topName ++ ".ok = true;"
   ] ++ r.silverEquations;
 
   r.topName = rNameSilver;
@@ -113,6 +113,8 @@ top::Decl ::= b::ParBind
 
   top.silverEquations = [
     top.topName ++ ".varScopes = " ++ bNameSilver ++ ".varScopes;",
+    top.topName ++ ".modScopes = [];",
+    top.topName ++ ".impScope = nothing();",
     bNameSilver ++ ".s = " ++ top.topName ++ ".sLookup;",
     top.topName ++ ".ok = " ++ bNameSilver ++ ".ok;"
   ] ++ b.silverEquations;
@@ -467,7 +469,7 @@ top::SeqBind ::= ty::Type id::String e::Expr
     eNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     tyNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];",
-    top.topName ++ ".ok = ty == " ++ eNameSilver ++ ".ty;"
+    top.topName ++ ".ok = " ++ tyNameSilver ++ " == " ++ eNameSilver ++ ".ty;"
   ] ++ ty.silverEquations ++ e.silverEquations;
 
   e.topName = eNameSilver;
@@ -541,7 +543,7 @@ top::ParBind ::= ty::Type id::String e::Expr
     eNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     tyNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];",
-    top.topName ++ ".ok = ty == " ++ eNameSilver ++ ".ty;"
+    top.topName ++ ".ok = " ++ tyNameSilver ++ " == " ++ eNameSilver ++ ".ty;"
   ] ++ ty.silverEquations ++ e.silverEquations;
 
   e.topName = eNameSilver;
@@ -562,7 +564,7 @@ top::ArgDecl ::= id::String tyann::Type
   local tyannNameSilver::String = "Type_" ++ toString (genInt());
 
   top.silverEquations = [
-    "local" ++ varScopeNameSilver ++ "::Scope = mkScopeVar(" ++ idNameSilver ++ ", " ++ tyannNameSilver ++ ");",
+    "local" ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ tyannNameSilver ++ "));",
     tyannNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];",
     top.topName ++ ".ty = " ++ tyannNameSilver ++ ".ty;"
