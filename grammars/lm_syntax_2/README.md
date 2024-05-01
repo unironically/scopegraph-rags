@@ -1,6 +1,6 @@
 # LM with modules
 
-### Cocnrete Syntax:
+### Concrete Syntax:
 ```
 Main_c ::= 
   Decls_c
@@ -41,7 +41,7 @@ SeqBinds_c ::=
 
 SeqBind_c ::= 
     VarId_t '=' Expr_c
-  | Type_c ':' VarId_t '=' Expr_c
+  | VarId_t ':' Type_c '=' Expr_c
 
 ParBinds_c ::=
     ParBind_c ',' ParBinds_c
@@ -49,7 +49,7 @@ ParBinds_c ::=
 
 ParBind_c ::= 
     VarId_t '=' Expr_c
-  | Type_c ':' VarId_t '=' Expr_c
+  | VarId_t ':' Type_c '=' Expr_c
 
 ArgDecl_c ::= 
     VarId_t ':' Type_c
