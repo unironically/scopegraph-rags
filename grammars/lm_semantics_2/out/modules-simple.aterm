@@ -1,1 +1,0 @@
-Program(DeclsCons(DeclModule("A", DeclsCons(DeclDef(DefBind("a", ExprInt("1"))), DeclsNil())), DeclsCons(DeclModule("B", DeclsCons(DeclImport(ModRef("A")), DeclsCons(DeclDef(DefBind("b", ExprVar(VarRef("a")))), DeclsNil()))), DeclsNil())))
