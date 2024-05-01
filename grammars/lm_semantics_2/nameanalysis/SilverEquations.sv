@@ -71,6 +71,18 @@ attribute silverEquations occurs on Decl;
 attribute topName occurs on Decl;
 attribute sNameSilver occurs on Decl;
 
+aspect production declModule
+top::Decl ::= id::String ds::Decls
+{
+  top.silverEquations = []; -- TODO
+}
+
+aspect production declImport
+top::Decl ::= r::ModRef
+{
+  top.silverEquations = []; -- TODO
+}
+
 aspect production declDef
 top::Decl ::= b::ParBind
 {
@@ -628,6 +640,25 @@ top::Type ::=
 
 --------------------------------------------------
 
+attribute silverEquations occurs on ModRef;
+
+attribute topName occurs on ModRef;
+attribute sNameSilver occurs on ModRef;
+
+aspect production modRef
+top::ModRef ::= x::String
+{
+  top.silverEquations = []; -- TODO
+}
+
+aspect production modQRef
+top::ModRef ::= r::ModRef x::String
+{
+  top.silverEquations = []; -- TODO
+}
+
+--------------------------------------------------
+
 attribute silverEquations occurs on VarRef;
 
 attribute topName occurs on VarRef;
@@ -655,4 +686,10 @@ top::VarRef ::= x::String
 
     top.topName ++ ".ty = if " ++ top.topName ++ ".datum.isJust then (" ++ top.topName ++ ".datum).fromJust.datumTy else tErr();"
   ];
+}
+
+aspect production varQRef
+top::VarRef ::= r::ModRef x::String
+{
+  top.silverEquations = []; -- TODO
 }

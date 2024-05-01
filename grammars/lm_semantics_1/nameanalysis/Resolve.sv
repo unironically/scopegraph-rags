@@ -42,7 +42,7 @@ function dfaStateToFun
                   (\new_s::Decorated Scope -> snd(f)(new_s, name)), 
                   
                   case fst(f) of 
-                    labelLex() -> case s.lexEdge of | just(s) -> [s] | nothing () -> [] end
+                  | labelLex() -> case s.lexEdge of | just(s) -> [s] | nothing () -> [] end
                   | labelVar() -> s.varEdges
                   end
 

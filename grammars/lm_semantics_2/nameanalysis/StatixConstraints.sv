@@ -60,6 +60,18 @@ attribute statixConstraints occurs on Decl;
 attribute sName occurs on Decl;
 attribute s_impName occurs on Decl;
 
+aspect production declModule
+top::Decl ::= id::String ds::Decls
+{
+  top.statixConstraints = []; -- TODO
+}
+
+aspect production declImport
+top::Decl ::= r::ModRef
+{
+  top.statixConstraints = []; -- TODO
+}
+
 aspect production declDef
 top::Decl ::= b::ParBind
 {
@@ -506,6 +518,24 @@ top::Type ::= tyann1::Type tyann2::Type
 aspect production tErr
 top::Type ::=
 {
+  top.statixConstraints = [];
+}
+
+--------------------------------------------------
+
+attribute statixConstraints occurs on ModRef;
+attribute sName occurs on ModRef;
+attribute pName occurs on ModRef;
+
+aspect production modRef
+top::ModRef ::= x::String
+{
+  top.statixConstraints = []; -- TODO
+}
+
+aspect production modQRef
+top::ModRef ::= r::ModRef x::String
+{
   top.statixConstraints = []; -- TODO
 }
 
@@ -528,4 +558,10 @@ top::VarRef ::= x::String
     "min-refs(" ++ xmodsName ++ ", " ++ xmodsprimeName ++ ")",
     "only(" ++ xmodsprimeName ++ ", " ++ top.pName ++ ")"
   ];
+}
+
+aspect production varQRef
+top::VarRef ::= r::ModRef x::String
+{
+  top.statixConstraints = []; -- TODO
 }

@@ -109,16 +109,28 @@ synthesized attribute priority::Integer occurs on Label;
 {-----------------------------}
 {----- LANGUAGE SPECIFIC -----}
 
-abstract production labelLex
-top::Label ::= { 
-  top.pp = "LEX";
-  top.priority = 3;
-}
-
 abstract production labelVar
 top::Label ::= { 
   top.pp = "VAR";
   top.priority = 1;
+}
+
+abstract production labelMod
+top::Label ::= { 
+  top.pp = "MOD";
+  top.priority = 1;
+}
+
+abstract production labelImp
+top::Label ::= { 
+  top.pp = "IMP";
+  top.priority = 2;
+}
+
+abstract production labelLex
+top::Label ::= { 
+  top.pp = "LEX";
+  top.priority = 3;
 }
 
 instance Eq Label {
@@ -135,7 +147,7 @@ instance Ord Label {
 {-----------------------------}
 {-----------------------------}
 
-global globLabs::[Label] = [labelLex(), labelVar()];
+global globLabs::[Label] = [labelLex(), labelVar(), labelMod(), labelImp()];
 type NFA = ([Integer], [NFATrans], Integer, Integer);   -- states, transitions, initial state, accepting state
 type DFA = ([Integer], [DFATrans], Integer, [Integer]); -- states, transitions, inital state, accepting states
 type NFATrans = (Integer, Maybe<Label>, Integer);

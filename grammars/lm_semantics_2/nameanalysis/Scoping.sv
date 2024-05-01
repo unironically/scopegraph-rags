@@ -5,6 +5,7 @@ grammar lm_semantics_2:nameanalysis;
 inherited attribute s::Decorated Scope;
 
 synthesized attribute varScopes::[Decorated Scope];
+synthesized attribute modScopes::[Decorated Scope];
 
 monoid attribute binds::[(String, String)] with [], ++;
 monoid attribute allScopes::[Decorated Scope] with [], ++;
@@ -29,6 +30,7 @@ top::Main ::= ds::Decls
 
 attribute s occurs on Decls;
 attribute varScopes occurs on Decls;
+attribute modScopes occurs on Decls;
 
 attribute binds occurs on Decls;
 propagate binds on Decls;
@@ -37,11 +39,12 @@ attribute allScopes occurs on Decls;
 
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
-{  
+{
   d.s = top.s;
-  ds.s = top.s;
+  ds.s = d.sLookup;
 
   top.varScopes = d.varScopes ++ ds.varScopes;
+  top.modScopes = d.modScopes ++ ds.modScopes;
 
   top.allScopes := d.allScopes ++ ds.allScopes;
 }
@@ -50,6 +53,7 @@ aspect production declsNil
 top::Decls ::= 
 {
   top.varScopes = [];
+  top.modScopes = [];
 
   top.allScopes := [];
 }
@@ -58,16 +62,48 @@ top::Decls ::=
 
 attribute s occurs on Decl;
 attribute varScopes occurs on Decl;
+attribute modScopes occurs on Decl;
+synthesized attribute sLookup::Decorated Scope occurs on Decl;
 
 attribute binds occurs on Decl;
 propagate binds on Decl;
 
 attribute allScopes occurs on Decl;
 
+aspect production declModule
+top::Decl ::= id::String ds::Decls
+{
+  local modScope::Scope = mkScopeMod(top.s, ds.varScopes, ds.modScopes, id, location=top.location);
+
+  top.varScopes = [];
+  top.modScopes = [modScope];
+  top.sLookup = top.s;
+
+  ds.s = modScope;
+
+  top.allScopes := modScope::ds.allScopes;
+}
+
+aspect production declImport
+top::Decl ::= r::ModRef
+{
+  local impScope::Scope = mkScopeImpLookup(top.s, r.declScope, location=top.location);
+
+  top.varScopes = [];
+  top.modScopes = [];
+  top.sLookup = impScope;
+
+  r.s = top.s;
+
+  top.allScopes := [impScope];
+}
+
 aspect production declDef
 top::Decl ::= b::ParBind
 {
   top.varScopes = b.varScopes;
+  top.modScopes = [];
+  top.sLookup = top.s;
 
   b.s = top.s;
 
@@ -422,15 +458,16 @@ top::Type ::=
 
 --------------------------------------------------
 
-attribute s occurs on VarRef;
+attribute s occurs on ModRef;
 
-attribute datum occurs on VarRef;
-attribute binds occurs on VarRef;
+synthesized attribute declScope::Maybe<Decorated Scope> occurs on ModRef;
+attribute datum occurs on ModRef;
+attribute binds occurs on ModRef;
 
-aspect production varRef
-top::VarRef ::= x::String
+aspect production modRef
+top::ModRef ::= x::String
 {
-  local regex::Regex = regexCat (regexStar (regexSingle(labelLex())), regexSingle(labelVar()));
+  local regex::Regex = regexCat (regexStar (regexSingle(labelLex())), regexCat (regexOption (regexSingle (labelImp())), regexSingle(labelMod())));
   
   local dfa::DFA = regex.dfa;
   local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (dfa);
@@ -438,17 +475,109 @@ top::VarRef ::= x::String
 
   local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
 
-  top.datum = fst (queryResult);
-  top.binds := snd (queryResult);
+  top.declScope = fst(queryResult);
+  top.datum = fst(snd(queryResult));
+  top.binds := snd(snd (queryResult));
 
-  local queryResult::(Maybe<Datum>, [(String, String)]) = 
+  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) = 
     case result of
       s::_ -> (case s.datum of
-            | just (d) -> (just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
-            | nothing() -> unsafeTrace ((nothing (), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
+            | just (d) -> (just(s), just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
+            | nothing() -> unsafeTrace ((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
             end)
-    | [] ->  unsafeTrace ((nothing (), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
+    | [] ->  unsafeTrace ((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
+    end;
+  
+}
+
+aspect production modQRef
+top::ModRef ::= r::ModRef x::String
+{
+
+  local regex::Regex = regexSingle(labelMod());
+  
+  local dfa::DFA = regex.dfa;
+  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (dfa);
+  local result::[Decorated Scope] = case r.declScope of | just(sMod) -> resFun (sMod, x) | _ -> [] end;
+
+  local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
+
+  top.declScope = fst(queryResult);
+  top.datum = fst(snd(queryResult));
+  top.binds := snd(snd (queryResult));
+
+  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) = 
+    case result of
+      s::_ -> (case s.datum of
+            | just (d) -> (just(s), just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
+            | nothing() -> unsafeTrace ((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
+            end)
+    | [] ->  unsafeTrace ((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
     end;
 
+  r.s = top.s;
+
+}
+
+--------------------------------------------------
+
+attribute s occurs on VarRef;
+
+attribute declScope occurs on VarRef;
+attribute datum occurs on VarRef;
+attribute binds occurs on VarRef;
+
+aspect production varRef
+top::VarRef ::= x::String
+{
+  local regex::Regex = regexCat (regexStar (regexSingle(labelLex())), regexCat (regexOption (regexSingle (labelImp())), regexSingle(labelVar())));
   
+  local dfa::DFA = regex.dfa;
+  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (dfa);
+  local result::[Decorated Scope] = resFun (top.s, x);
+
+  local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
+
+  top.declScope = fst(queryResult);
+  top.datum = fst(snd(queryResult));
+  top.binds := snd(snd (queryResult));
+
+  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) = 
+    case result of
+      s::_ -> (case s.datum of
+            | just (d) -> (just(s), just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
+            | nothing() -> unsafeTrace ((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
+            end)
+    | [] ->  unsafeTrace ((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
+    end;
+  
+}
+
+aspect production varQRef
+top::VarRef ::= r::ModRef x::String
+{
+
+  local regex::Regex = regexSingle(labelVar());
+  
+  local dfa::DFA = regex.dfa;
+  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (dfa);
+  local result::[Decorated Scope] = case r.declScope of | just(sMod) -> resFun (sMod, x) | _ -> [] end;
+
+  local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
+
+  top.declScope = fst(queryResult);
+  top.datum = fst(snd(queryResult));
+  top.binds := snd(snd (queryResult));
+
+  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) = 
+    case result of
+      s::_ -> (case s.datum of
+            | just (d) -> (just(s), just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
+            | nothing() -> unsafeTrace ((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
+            end)
+    | [] ->  unsafeTrace ((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
+    end;
+
+  r.s = top.s;
+
 }

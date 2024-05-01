@@ -35,6 +35,18 @@ top::Decls ::=
 
 attribute ok occurs on Decl;
 
+aspect production declModule
+top::Decl ::= id::String ds::Decls
+{
+  top.ok = ds.ok;
+}
+
+aspect production declImport
+top::Decl ::= r::ModRef
+{
+  top.ok = true; -- ?
+}
+
 aspect production declDef
 top::Decl ::= b::ParBind
 {
@@ -268,10 +280,24 @@ top::Type ::=
 
 --------------------------------------------------
 
-attribute ty occurs on VarRef;
+aspect production modRef
+top::ModRef ::= x::String
+{
+}
+
+aspect production modQRef
+top::ModRef ::= r::ModRef x::String
+{
+}
+
+--------------------------------------------------
 
 aspect production varRef
 top::VarRef ::= x::String
 {
-  top.ty = if top.datum.isJust then (top.datum).fromJust.datumTy else tErr();
+}
+
+aspect production varQRef
+top::VarRef ::= r::ModRef x::String
+{
 }
