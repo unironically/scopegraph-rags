@@ -34,17 +34,17 @@ IO<Integer> ::= largs::[String]
                 return 0;
               }
               else do {
-                print ("[✔] Expected an input file of form [file name].lm\n");
+                print ("[✗] Expected an input file of form [file name].lm\n");
                 return -1;
               };
           }
           else do {
-            print ("[✔] Parse failure\n"); 
+            print ("[✗] Parse failure\n"); 
             return -1;
           };
       }
       else do {
-        print ("[✔] No input file given\n"); 
+        print ("[✗] No input file given\n"); 
             return -1;
       };
 }

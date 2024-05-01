@@ -6,7 +6,7 @@ synthesized attribute statix::String;
 
 --------------------------------------------------
 
-nonterminal Main with statix;
+nonterminal Main with statix, location;
 
 abstract production program
 top::Main ::= ds::Decls
@@ -16,7 +16,7 @@ top::Main ::= ds::Decls
 
 --------------------------------------------------
 
-nonterminal Decls with statix;
+nonterminal Decls with statix, location;
 
 abstract production declsCons
 top::Decls ::= d::Decl ds::Decls
@@ -32,10 +32,10 @@ top::Decls ::=
 
 --------------------------------------------------
 
-nonterminal Decl with statix;
+nonterminal Decl with statix, location;
 
 abstract production declModule
-top::Decl ::= id::String ds::Decls 
+top::Decl ::= id::String ds::Decls
 {
   top.statix = "DeclModule(\"" ++ id ++ "\", " ++ ds.statix ++ ")";
 }
@@ -54,7 +54,7 @@ top::Decl ::= b::ParBind
 
 --------------------------------------------------
 
-nonterminal Expr with statix;
+nonterminal Expr with statix, location;
 
 abstract production exprInt
 top::Expr ::= i::Integer
@@ -160,7 +160,7 @@ top::Expr ::= bs::ParBinds e::Expr
 
 --------------------------------------------------
 
-nonterminal SeqBinds with statix;
+nonterminal SeqBinds with statix, location;
 
 abstract production seqBindsNil
 top::SeqBinds ::=
@@ -182,7 +182,7 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
 
 --------------------------------------------------
 
-nonterminal SeqBind with statix;
+nonterminal SeqBind with statix, location;
 
 abstract production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
@@ -198,7 +198,7 @@ top::SeqBind ::= ty::Type id::String e::Expr
 
 --------------------------------------------------
 
-nonterminal ParBinds with statix;
+nonterminal ParBinds with statix, location;
 
 abstract production parBindsNil
 top::ParBinds ::=
@@ -214,7 +214,7 @@ top::ParBinds ::= s::ParBind ss::ParBinds
 
 --------------------------------------------------
 
-nonterminal ParBind with statix;
+nonterminal ParBind with statix, location;
 
 abstract production parBindUntyped
 top::ParBind ::= id::String e::Expr
@@ -230,7 +230,7 @@ top::ParBind ::= ty::Type id::String e::Expr
 
 --------------------------------------------------
 
-nonterminal ArgDecl with statix;
+nonterminal ArgDecl with statix, location;
 
 abstract production argDecl
 top::ArgDecl ::= id::String ty::Type
@@ -254,15 +254,32 @@ top::Type ::=
   top.statix = "TBool()";
 }
 
-abstract production tArrow
+abstract production tFun
 top::Type ::= tyann1::Type tyann2::Type
 {
-  top.statix = "TArrow(" ++ tyann1.statix ++ ", " ++ tyann2.statix ++ ")";
+  top.statix = "tFun(" ++ tyann1.statix ++ ", " ++ tyann2.statix ++ ")";
+}
+
+abstract production tErr
+top::Type ::=
+{
+  top.statix = "TErr()";
+}
+
+instance Eq Type {
+  eq = \l1::Type l2::Type -> 
+    case l1, l2 of
+    | tInt(), tInt() -> true
+    | tBool(), tBool() -> true
+    | tFun(t1_1, t1_2), tFun(t2_1, t2_2) -> (t1_1 == t2_1) && (t1_2 == t2_2)
+    | tErr(), tErr() -> true
+    | _, _ -> false
+    end;
 }
 
 --------------------------------------------------
 
-nonterminal ModRef with statix;
+nonterminal ModRef with statix, location;
 
 abstract production modRef
 top::ModRef ::= x::String
@@ -278,7 +295,7 @@ top::ModRef ::= r::ModRef x::String
 
 --------------------------------------------------
 
-nonterminal VarRef with statix;
+nonterminal VarRef with statix, location;
 
 abstract production varRef
 top::VarRef ::= x::String

@@ -1,6 +1,6 @@
 # LM without modules
 
-### Concrete Syntax:
+### Cocnrete Syntax:
 ```
 Main_c ::= 
   Decls_c

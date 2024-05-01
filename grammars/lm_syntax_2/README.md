@@ -1,4 +1,4 @@
-# LM with modules and imports
+# LM with modules
 
 ### Cocnrete Syntax:
 ```
@@ -60,7 +60,7 @@ Type_c ::=
   | Type_c '->' Type_c
   | '(' Type_c ')'
 
-ModRef_c ::= 
+ModRef_c ::=
     ModId_t
   | ModRef_c '.' ModId_t
 
@@ -72,7 +72,7 @@ VarRef_c ::=
 
 terminal Int_t /0|[1-9][0-9]*/;
 
-terminal ModId_t /[A-Z][a-zA-Z_0-9]*/
-
 terminal VarId_t /[a-z][a-zA-Z_0-9]*/
+
+terminal ModId_t /[A-Z][a-zA-Z_0-9]*/
 ```
