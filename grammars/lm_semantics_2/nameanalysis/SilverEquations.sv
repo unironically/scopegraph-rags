@@ -82,7 +82,8 @@ top::Decl ::= id::String ds::Decls
     top.topName ++ ".modScopes = [" ++ modScopeNameSilver ++ "];",
     top.topName ++ ".impScope = nothing();",
     dsNameSilver ++ ".s = " ++ modScopeNameSilver ++ ";",
-    dsNameSilver ++ ".sLookup = " ++ modScopeNameSilver ++ ";"
+    dsNameSilver ++ ".sLookup = " ++ modScopeNameSilver ++ ";",
+    top.topName ++ ".ok = " ++ dsNameSilver ++ ".ok;"
   ] ++ ds.silverEquations;
 
   ds.topName = dsNameSilver;
@@ -98,7 +99,8 @@ top::Decl ::= r::ModRef
     top.topName ++ ".varScopes = [];",
     top.topName ++ ".modScopes = [];",
     top.topName ++ ".impScope = just(" ++ impScopeNameSilver ++ ");",
-    rNameSilver ++ ".s = " ++ top.topName ++ ".sLookup;"
+    rNameSilver ++ ".s = " ++ top.topName ++ ".sLookup;",
+    top.topName ++ ".ok = " ++ rNameSilver ++ ".ok;"
   ] ++ r.silverEquations;
 
   r.topName = rNameSilver;
@@ -634,7 +636,8 @@ top::ModRef ::= x::String
       "\tcase " ++ resultNameSilver ++ " of\n" ++
         "\t| s::_ -> just(s)\n" ++ 
         "\t| [] -> nothing()\n" ++
-      "\tend;"
+      "\tend;",
+    top.topName ++ ".ok = " ++ top.topName ++ ".declScope.isJust;"
   ];
 }
 
@@ -657,7 +660,8 @@ top::ModRef ::= r::ModRef x::String
       "\tcase " ++ resultNameSilver ++ " of\n" ++
         "\t| s::_ -> just(s)\n" ++ 
         "\t| [] -> nothing()\n" ++
-      "\tend;"
+      "\tend;",
+    top.topName ++ ".ok = " ++ top.topName ++ ".declScope.isJust;"
   ];
 }
 

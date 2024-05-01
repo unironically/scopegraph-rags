@@ -44,7 +44,7 @@ top::Decl ::= id::String ds::Decls
 aspect production declImport
 top::Decl ::= r::ModRef
 {
-  top.ok = true; -- ?
+  top.ok = r.ok;
 }
 
 aspect production declDef
@@ -280,14 +280,18 @@ top::Type ::=
 
 --------------------------------------------------
 
+attribute ok occurs on ModRef;
+
 aspect production modRef
 top::ModRef ::= x::String
 {
+  top.ok = top.declScope.isJust;
 }
 
 aspect production modQRef
 top::ModRef ::= r::ModRef x::String
 {
+  top.ok = top.declScope.isJust;
 }
 
 --------------------------------------------------
