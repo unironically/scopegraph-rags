@@ -4,7 +4,7 @@ An implementation of language 1, where the only LM declarations allowed are `def
 ### Running:
 ```
 ./clone-and-build-ministatix                        # Build Ministatix
-./fetch-silver-compiler                             # Compile and copy over the silver compiler for language 1
+./build-lm-compiler                                 # Compile and copy over the Silver generated compiler for LM 1
 java -jar lm_language1.jar inputs/letseq.lm         # Compile an example program
 ./run-ministatix out/letseq.aterm                   # Run Ministatix on the Statix aterm which the Silver compiler produces
 ```
@@ -14,7 +14,9 @@ java -jar lm_language1.jar inputs/letseq.lm         # Compile an example program
   - `out/StatixConstraints.md`
 
 ### Directories of interest:
-- `statixspec/`: here lives the Statix specification for language 1.
+- `statix-spec/`: here lives the Statix specification for language 1.
+- `silver-grammar/`: a link to the directory holding the Silver abstract grammar for this language (`../grammars/lm_semantics_1`).
+- `inputs/`: a link to the LM example inputs directory at `../grammars/lm_syntax_1/inputs`.
 - `out/`: dumping ground for the LM compiler output files.
 - `../ministatix.hs/`: where Ministatix is cloned to.
 - `../grammars/`: assorted Silver grammars. Those of interest to this language are `lm_syntax_1/` and `lm_semantics_1/`.
