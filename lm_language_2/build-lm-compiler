@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if ./../grammars/lm_semantics_2/compile; then
+  echo "[✔] LM compiler successfully built"
+else
+  echo "[✗] Something went wrong when building the LM compiler"
+  exit -1
+fi
+
+mv lm_semantics_2.driver.jar lm_language3.jar

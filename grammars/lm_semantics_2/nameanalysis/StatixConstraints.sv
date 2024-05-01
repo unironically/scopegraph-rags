@@ -1,4 +1,4 @@
-grammar lm_semantics_3:nameanalysis;
+grammar lm_semantics_2:nameanalysis;
 
 --------------------------------------------------
 
@@ -39,27 +39,15 @@ top::Decls ::= d::Decl ds::Decls
   local dName::String = "d_" ++ toString (genInt());
   local dsName::String = "ds_" ++ toString (genInt());
   local s_impName::String = "s_imp_" ++ toString (genInt());
-  
-  top.statixConstraints =
-    case d of
-    | declImport(_) -> [
-        "{" ++ s_impName ++ "}",
-        "new " ++ s_impName,
-        s_impName ++ " -[ `LEX ]-> " ++ top.s_lookupName
-      ]
-    | _ -> []
-    end ++ d.statixConstraints ++ ds.statixConstraints;
-
-  local d_and_ds_args::(String, String) = 
-    case d of
-    | declImport(_) -> (top.s_lookupName, s_impName)
-    | _ -> (top.sName, top.s_lookupName)
-    end;
-
-  d.sName = fst(d_and_ds_args);
-  d.s_impName = snd(d_and_ds_args);
+  top.statixConstraints = [
+    "{" ++ s_impName ++ "}",
+    "new " ++ s_impName,
+    s_impName ++ " -[ `LEX ]-> " ++ top.s_lookupName
+  ] ++ d.statixConstraints ++ ds.statixConstraints;
+  d.sName = top.sName;
+  d.s_impName = s_impName;
   ds.sName = top.sName;
-  ds.s_lookupName = snd(d_and_ds_args);
+  ds.s_lookupName = s_impName;
 }
 
 aspect production declsNil

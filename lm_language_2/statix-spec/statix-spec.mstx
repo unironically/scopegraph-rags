@@ -1,0 +1,294 @@
+import statixlib.paths
+import statixlib.sets
+
+
+
+main(p) :- p match { 
+
+    Program(ds):[] ->
+        {s}
+        new s,
+        decls(s, ds, s)
+    
+}.
+
+
+
+decls(s, ds, s_lookup) :- ds match { 
+  
+    DeclsNil() ->
+        true
+  
+  | DeclsCons(d, ds) ->
+        {s_imp}
+        new s_imp,
+        s_imp -[ `LEX ]-> s_lookup,
+        decl(s, d, s_imp),
+        decls(s, ds, s_imp)
+
+}.
+
+
+
+decl(s, d, s_imp) :- d match { 
+    
+    DeclModule(x, ds) -> 
+        {s_mod}
+        new s_mod -> (x, s_mod),
+        s -[ `MOD ]-> s_mod,
+        s_mod -[ `LEX ]-> s,
+        decls(s_mod, ds, s_mod)
+
+  | DeclImport(r) -> 
+        {p, x, s_mod}
+        mod-ref(s, r, p),
+        datum(p, (x, s_mod)),
+        s_imp -[ `IMP ]-> s_mod
+
+  | DeclDef(b) ->
+        par-bind(s_imp, b, s)
+
+}.
+
+
+
+expr(s, e, ty) :- e match { 
+    
+    ExprInt(_) ->
+        ty == INT()
+
+  | ExprTrue() ->
+        ty == BOOL()
+
+  | ExprFalse() ->
+        ty == BOOL()
+
+  | ExprVar(r) -> {p, x}
+        var-ref(s, r, p),
+        datum(p, (x, ty))
+
+  | ExprAdd(e1, e2) ->
+        expr(s, e1, INT()),
+        expr(s, e2, INT()),
+        ty == INT()
+
+  | ExprSub(e1, e2) ->
+        expr(s, e1, INT()),
+        expr(s, e2, INT()),
+        ty == INT()
+
+  | ExprMul(e1, e2) ->
+        expr(s, e1, INT()),
+        expr(s, e2, INT()),
+        ty == INT()
+
+  | ExprDiv(e1, e2) ->
+        expr(s, e1, INT()),
+        expr(s, e2, INT()),
+        ty == INT()
+
+  | ExprAnd(e1, e2) ->
+        expr(s, e1, BOOL()),
+        expr(s, e2, BOOL()),
+        ty == BOOL()
+
+  | ExprOr(e1, e2) ->
+        expr(s, e1, BOOL()),
+        expr(s, e2, BOOL()),
+        ty == BOOL()
+
+  | ExprEq(e1, e2) -> 
+        {ty'}
+        expr(s, e1, ty'),
+        expr(s, e2, ty'),
+        ty == BOOL()
+
+  | ExprApp(e1, e2) -> 
+        {ty1}
+        expr(s, e1, FUN(ty1, ty)),
+        expr(s, e2, ty1)
+
+  | ExprIf(e1, e2, e3) ->
+        expr(s, e1, BOOL()),
+        expr(s, e2, ty),
+        expr(s, e3, ty)
+
+  | ExprFun(d, e) -> 
+        {s_fun, ty1, ty2}
+        new s_fun,
+        s_fun -[ `LEX ]-> s,
+        arg-decl(s_fun, d, ty1),
+        expr(s_fun, e, ty2),
+        ty == FUN(ty1, ty2)
+
+  | ExprLet(bs, e) -> 
+        {s_let}
+        new s_let,
+        seq-binds(s, bs, s_let),
+        expr(s_let, e, ty)
+
+  | ExprLetRec(bs, e) -> 
+        {s_let}
+        new s_let,
+        s_let -[ `LEX ]-> s,
+        par-binds(s_let, bs, s_let),
+        expr(s_let, e, ty)
+
+  | ExprLetPar(bs, e) -> 
+        {s_let}
+        new s_let,
+        s_let -[ `LEX ]-> s,
+        par-binds(s, bs, s_let),
+        expr(s_let, e, ty)
+
+}.
+
+
+
+seq-binds(s, bs, s_def) :- bs match {
+    
+    SeqBindsNil()   ->
+        s_def -[ `LEX ]-> s
+        
+  | SeqBindsOne(b) ->
+        s_def -[ `LEX ]-> s,
+        seq-bind(s, b, s_def)
+
+  | SeqBindsCons(b, bs) -> 
+        {s_def'}
+        new s_def',
+        s_def' -[ `LEX ]-> s,
+        seq-bind(s, b, s_def'),
+        seq-binds(s_def', bs, s_def)
+
+}.
+
+
+
+seq-bind(s, b, s_def) :- b match { 
+    
+    DefBind(x, e) -> 
+        {s_var, ty}
+        new s_var -> (x, ty),
+        s_def -[ `VAR ]-> s_var,
+        expr(s, e, ty)
+  
+  | DefBindTyped(x, tyann, e) -> 
+        {s_var, ty}
+        new s_var -> (x, ty),
+        s_def -[ `VAR ]-> s_var,
+        type(s, tyann, ty),
+        expr(s, e, ty)
+
+}.
+
+
+
+par-binds(s, bs, s_def) :- bs match { 
+    
+    ParBindsNil() -> 
+        true
+  
+  | ParBindsCons(b, bs) -> 
+        par-bind(s, b, s_def), 
+        par-binds(s, bs, s_def)
+  
+}.
+
+
+
+par-bind(s, b, s_def) :- b match { 
+    
+    DefBind(x, e) -> 
+        {s_var, ty}
+        new s_var -> (x, ty),
+        s_def -[ `VAR ]-> s_var,
+        expr(s, e, ty)
+  
+  | DefBindTyped(x, tyann, e) -> 
+        {s_var, ty}
+        new s_var -> (x, ty),
+        s_def -[ `VAR ]-> s_var,
+        type(s, tyann, ty),
+        expr(s, e, ty)
+
+}.
+
+
+
+arg-decl(s, d, ty) :- d match {
+
+    ArgDecl(x, tyann) -> 
+        {s_var}
+        type(s, tyann, ty),
+        new s_var -> (x, ty),
+        s -[ `VAR ]-> s_var
+
+}.
+
+
+
+type(s, tyann, ty) :- tyann match { 
+    
+    TInt() ->
+        ty == INT()
+  
+  | TBool() ->
+        ty == BOOL()
+  
+  | TArrow(tyann1, tyann2) -> 
+        {ty1, ty2}
+        type(s, tyann1, ty1),
+        type(s, tyann2, ty2),
+        ty == FUN(ty1, ty2)
+
+}.
+
+
+
+mod-ref(s, r, p) :- r match { 
+    
+    ModRef(x) -> 
+        {mods, xmods, xmods'}
+        query s `LEX*`IMP? `MOD as mods,
+        filter mods ((x', _) where x' == x) xmods,
+        min-refs(xmods, xmods'),
+        only(xmods', p)
+
+  | ModQRef(r, x) -> 
+        {p_mod, s_mod, mods, xmods}
+        mod-ref(s, r, p_mod),
+        tgt(p_mod, s_mod),
+        query s_mod `MOD as mods,
+        filter mods ((x', _) where x' == x) xmods,
+        only(xmods, p)
+}.
+
+
+
+var-ref(s, r, p) :- r match { 
+    
+    VarRef(x) -> 
+        {vars, xvars, xvars'}
+        query s `LEX*(`EXT*|`IMP?) `VAR as vars,
+        filter vars ((x', _) where x' == x) xvars,
+        min-refs(xvars, xvars'),
+        only(xvars', p)
+
+  | VarQRef(r, x) -> 
+        {p_mod, s_mod, vars, xvars}
+        mod-ref(s, r, p_mod),
+        tgt(p_mod, s_mod),
+        query s_mod `VAR as vars,
+        filter vars ((x', _) where x' == x) xvars,
+        only(xvars, p)
+
+}.
+
+
+
+min-refs(z, z') :-
+  min z lexico( `MOD < `LEX, `MOD < `IMP,
+                `VAR < `LEX, `VAR < `IMP,
+                `IMP < `LEX
+              ) z'.
