@@ -12,6 +12,7 @@ java -jar lm_language1.jar inputs/letseq.lm         # Compile an example program
 - After compiling the example program with silver, the following files will also be produced:
   - `out/SilverEquations.md`
   - `out/StatixConstraints.md`
+- Note that, when the bindings are being printed, each identifier is given in the form `id_line:column`.
 
 ### Directories of interest:
 - `statix-spec/`: here lives the Statix specification for language 1.
