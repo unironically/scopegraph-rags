@@ -113,7 +113,7 @@ top::Expr_c ::= e1::Expr_c '==' e2::Expr_c
 }
 
 concrete production exprApp_c
-top::Expr_c ::= e1::Expr_c App_t e2::Expr_c
+top::Expr_c ::= e1::Expr_c '$' e2::Expr_c
 {
   top.ast = exprApp (e1.ast, e2.ast, location=top.location);
 }

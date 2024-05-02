@@ -193,10 +193,12 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 aspect production exprFun
 top::Expr ::= d::ArgDecl e::Expr 
 {
-  d.s = top.s;
-  e.s = top.s;
+  local funScope::Scope = mkScopeLet(top.s, d.varScopes, location=top.location);
 
-  top.allScopes := e.allScopes;
+  d.s = funScope;
+  e.s = funScope;
+
+  top.allScopes := funScope :: (d.allScopes ++ e.allScopes);
 }
 
 

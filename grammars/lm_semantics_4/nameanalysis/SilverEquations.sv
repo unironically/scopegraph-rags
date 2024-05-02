@@ -312,12 +312,14 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 aspect production exprFun
 top::Expr ::= d::ArgDecl e::Expr 
 {
+  local funScopeNameSilver::String = "funScope_" ++ toString(genInt());
   local dNameSilver::String = "ArgDecl_" ++ toString (genInt());
   local eNameSilver::String = "Expr_" ++ toString (genInt());
 
   top.silverEquations = [
-    dNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    eNameSilver ++ ".s = " ++ top.topName ++ ".s;",
+    "local " ++ funScopeNameSilver ++ "::Scope = mkScopeLet(" ++ top.topName ++ ".s, " ++ dNameSilver ++ ".varScopes);",
+    dNameSilver ++ ".s = " ++ funScopeNameSilver ++ ";",
+    eNameSilver ++ ".s = " ++ funScopeNameSilver ++ ";",
     top.topName ++ ".ty = tFun(" ++ dNameSilver ++ ".ty, " ++ eNameSilver ++ ".ty);"
   ] ++ d.silverEquations ++ e.silverEquations;
 
