@@ -4,12 +4,10 @@ grammar lm_semantics_4:nameanalysis;
 
 synthesized attribute statixConstraints::[String];
 inherited attribute sName::String;
-inherited attribute s_impName::String;
 inherited attribute tyName::String;
 inherited attribute s_defName::String;
 inherited attribute pName::String;
 inherited attribute s_letName::String;
-inherited attribute s_lookupName::String;
 
 --------------------------------------------------
 
@@ -24,42 +22,20 @@ top::Main ::= ds::Decls
     "new " ++ sName
   ] ++ ds.statixConstraints;
   ds.sName = sName;
-  ds.s_lookupName = sName;
 }
 
 --------------------------------------------------
 
 attribute statixConstraints occurs on Decls;
 attribute sName occurs on Decls;
-attribute s_lookupName occurs on Decls;
 
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  local dName::String = "d_" ++ toString (genInt());
-  local dsName::String = "ds_" ++ toString (genInt());
-  local s_impName::String = "s_imp_" ++ toString (genInt());
-  
-  top.statixConstraints =
-    case d of
-    | declImport(_) -> [
-        "{" ++ s_impName ++ "}",
-        "new " ++ s_impName,
-        s_impName ++ " -[ `LEX ]-> " ++ top.s_lookupName
-      ]
-    | _ -> []
-    end ++ d.statixConstraints ++ ds.statixConstraints;
+  top.statixConstraints = d.statixConstraints ++ ds.statixConstraints;
 
-  local d_and_ds_args::(String, String) = 
-    case d of
-    | declImport(_) -> (top.s_lookupName, s_impName)
-    | _ -> (top.sName, top.s_lookupName)
-    end;
-
-  d.sName = fst(d_and_ds_args);
-  d.s_impName = snd(d_and_ds_args);
+  d.sName = top.sName;
   ds.sName = top.sName;
-  ds.s_lookupName = snd(d_and_ds_args);
 }
 
 aspect production declsNil
@@ -74,7 +50,6 @@ top::Decls ::=
 
 attribute statixConstraints occurs on Decl;
 attribute sName occurs on Decl;
-attribute s_impName occurs on Decl;
 
 aspect production declModule
 top::Decl ::= id::String ds::Decls
@@ -90,7 +65,6 @@ top::Decl ::= id::String ds::Decls
   ] ++ ds.statixConstraints;
 
   ds.sName = s_modName;
-  ds.s_lookupName = s_modName;
 }
 
 aspect production declImport
@@ -104,7 +78,7 @@ top::Decl ::= r::ModRef
     "{" ++ pName ++ ", " ++ xName ++ ", " ++ s_modName ++ "}"
   ] ++ r.statixConstraints ++ [
     "datum(" ++ pName ++ ", (" ++ xName ++ ", " ++ s_modName ++ "))",
-    top.s_impName ++ " -[ `IMP ]-> " ++ s_modName
+    top.sName ++ " -[ `IMP ]-> " ++ s_modName
   ];
   r.sName = top.sName;
   r.pName = pName;
@@ -115,7 +89,7 @@ top::Decl ::= b::ParBind
 {
   local bName::String = "b_" ++ toString (genInt());
   top.statixConstraints = b.statixConstraints;
-  b.sName = top.s_impName;
+  b.sName = top.sName;
   b.s_defName = top.sName;
 }
 

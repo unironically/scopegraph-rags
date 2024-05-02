@@ -18,9 +18,8 @@ top::Main ::= ds::Decls
   local topName::String = "Main_" ++ toString (genInt());
 
   top.silverEquations = [
-    "local " ++ globalScopeName ++ "::Scope = mkScopeGlobal(" ++ dsNameSilver ++ ".varScopes, " ++ dsNameSilver ++ ".modScopes);",
+    "local " ++ globalScopeName ++ "::Scope = mkScopeGlobal(" ++ dsNameSilver ++ ".varScopes, " ++ dsNameSilver ++ ".modScopes" ++ dsNameSilver ++ ".impScopes);",
     ds.topName ++ ".s = " ++ globalScopeName ++ ";",
-    ds.topName ++ ".sLookup = " ++ globalScopeName ++ ";",
     topName ++ ".ok = " ++ dsNameSilver ++ ".ok;"
   ] ++ ds.silverEquations;
 
@@ -41,11 +40,10 @@ top::Decls ::= d::Decl ds::Decls
 
   top.silverEquations = [
     dNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    dNameSilver ++ ".sLookup = " ++ top.topName ++ ".sLookup;",
     dsNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    dsNameSilver ++ ".sLookup = case " ++ dNameSilver ++ ".impScope of | just(sImp) -> sImp | _ -> " ++ top.topName ++ ".sLookup end;",
     top.topName ++ ".varScopes = " ++ dNameSilver ++ ".varScopes ++ " ++ dsNameSilver ++ ".varScopes;",
     top.topName ++ ".modScopes = " ++ dNameSilver ++ ".modScopes ++ " ++ dsNameSilver ++ ".modScopes;",
+    top.topName ++ ".impScopes = " ++ dNameSilver ++ ".impScopes ++ " ++ dsNameSilver ++ ".impScopes;",
     top.topName ++ ".ok = " ++ dNameSilver ++ ".ok && " ++ dsNameSilver ++ ".ok;"
   ] ++ d.silverEquations ++ ds.silverEquations;
 
@@ -60,6 +58,7 @@ top::Decls ::=
   top.silverEquations = [
     top.topName ++ ".varScopes = [];",
     top.topName ++ ".modScopes = [];",
+    top.topName ++ ".impScopes = [];",
     top.topName ++ ".ok = true;"
   ];
 }
@@ -77,12 +76,11 @@ top::Decl ::= id::String ds::Decls
   local dsNameSilver::String = "Decls_" ++ toString(genInt());
   local modScopeNameSilver::String = "modScope_" ++ toString(genInt());
   top.silverEquations = [
-    "local " ++ modScopeNameSilver ++ "::Scope = mkScopeMod(" ++ top.topName ++ ".s, " ++ dsNameSilver ++ ".varScopes, " ++ dsNameSilver ++ ".modScopes, " ++ idNameSilver ++ ");",
+    "local " ++ modScopeNameSilver ++ "::Scope = mkScopeMod(" ++ top.topName ++ ".s, " ++ dsNameSilver ++ ".varScopes, " ++ dsNameSilver ++ ".modScopes, " ++ dsNameSilver ++ ".impScopes, " ++ idNameSilver ++ ");",
     top.topName ++ ".varScopes = [];",
     top.topName ++ ".modScopes = [" ++ modScopeNameSilver ++ "];",
-    top.topName ++ ".impScope = nothing();",
+    top.topName ++ ".impScopes = [];",
     dsNameSilver ++ ".s = " ++ modScopeNameSilver ++ ";",
-    dsNameSilver ++ ".sLookup = " ++ modScopeNameSilver ++ ";",
     top.topName ++ ".ok = " ++ dsNameSilver ++ ".ok;"
   ] ++ ds.silverEquations;
 
@@ -95,11 +93,10 @@ top::Decl ::= r::ModRef
   local rNameSilver::String = "ModRef_" ++ toString(genInt());
   local impScopeNameSilver::String = "impScope_" ++ toString(genInt());
   top.silverEquations = [
-    "local " ++ impScopeNameSilver ++ "::Scope = mkScopeImpLookup(" ++ top.topName ++ ".sLookup, " ++ rNameSilver ++ ".declScope);",
     top.topName ++ ".varScopes = [];",
     top.topName ++ ".modScopes = [];",
-    top.topName ++ ".impScope = just(" ++ impScopeNameSilver ++ ");",
-    rNameSilver ++ ".s = " ++ top.topName ++ ".sLookup;",
+    top.topName ++ ".impScope = " ++ rNameSilver ++ ".impScopes;",
+    rNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     top.topName ++ ".ok = true;"
   ] ++ r.silverEquations;
 
@@ -114,8 +111,8 @@ top::Decl ::= b::ParBind
   top.silverEquations = [
     top.topName ++ ".varScopes = " ++ bNameSilver ++ ".varScopes;",
     top.topName ++ ".modScopes = [];",
-    top.topName ++ ".impScope = nothing();",
-    bNameSilver ++ ".s = " ++ top.topName ++ ".sLookup;",
+    top.topName ++ ".impScopes = [];",
+    bNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     top.topName ++ ".ok = " ++ bNameSilver ++ ".ok;"
   ] ++ b.silverEquations;
 
@@ -690,7 +687,8 @@ top::VarRef ::= x::String
       "\tcase " ++ resultNameSilver ++ " of\n" ++
         "\t| s::_ -> just(s)\n" ++ 
         "\t| [] -> nothing()\n" ++
-      "\tend;"
+      "\tend;",
+    top.topName ++ ".impScopes = if " ++ top.topName ++ ".declScope.isJust then [" ++ top.topName ++ ".declScope.fromJust] else [];"
   ];
 }
 
@@ -712,6 +710,7 @@ top::VarRef ::= r::ModRef x::String
       "\tcase " ++ resultNameSilver ++ " of\n" ++
         "\t| s::_ -> just(s)\n" ++ 
         "\t| [] -> nothing()\n" ++
-      "\tend;"
+      "\tend;",
+    top.topName ++ ".impScopes = if " ++ top.topName ++ ".declScope.isJust then [" ++ top.topName ++ ".declScope.fromJust] else [];"
   ];
 }
