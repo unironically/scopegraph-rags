@@ -24,7 +24,7 @@ Expr_c ::=
   | Expr_c '&' Expr_c
   | Expr_c '|' Expr_c
   | Expr_c '==' Expr_c
-  | Expr_c '^' Expr_c
+  | Expr_c '$' Expr_c
   | 'if' Expr_c 'then' Expr_c 'else' Expr_c
   | 'fun' '(' ArgDecl_c ')' '{' Expr_c '}'
   | 'let' SeqBinds_c 'in' Expr_c

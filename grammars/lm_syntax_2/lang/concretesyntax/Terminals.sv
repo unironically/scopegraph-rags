@@ -51,7 +51,7 @@ terminal Dot_t '.' precedence = 16, association = left;
 terminal Colon_t ':' precedence = 15, association = right;
 terminal Semi_t ';';
 
-terminal App_t '^' precedence = 15, association = left;
+terminal App_t '$' precedence = 15, association = left;
 terminal Mul_t '*' precedence = 14, association = left;
 terminal Div_t '/' precedence = 14, association = left;
 terminal Plus_t '+' precedence = 13, association = left;
