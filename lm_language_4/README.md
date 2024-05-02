@@ -5,7 +5,7 @@
 - Both Silver and Ministatix will get stuck when any imports are used.
 
 ### Running:
-```
+```bash
 ./clone-and-build-ministatix                        # Build Ministatix
 ./build-lm-compiler                                 # Compile and copy over the Silver generated compiler for LM 4
 java -jar lm_language4.jar inputs/letseq.lm         # Compile an example program

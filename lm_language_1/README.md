@@ -2,7 +2,7 @@
 - An implementation of language 1, where the only LM declarations allowed are `def`s.
 
 ### Running:
-```
+```bash
 ./clone-and-build-ministatix                        # Build Ministatix
 ./build-lm-compiler                                 # Compile and copy over the Silver generated compiler for LM 1
 java -jar lm_language1.jar inputs/letseq.lm         # Compile an example program

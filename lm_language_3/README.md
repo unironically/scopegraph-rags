@@ -5,7 +5,7 @@
 - Decl nodes are lifted up this structure to the module or global definition scope.
 
 ### Running:
-```
+```bash
 ./clone-and-build-ministatix                        # Build Ministatix
 ./build-lm-compiler                                 # Compile and copy over the Silver generated compiler for LM 3
 java -jar lm_language3.jar inputs/letseq.lm         # Compile an example program
