@@ -1,14 +1,13 @@
-# LM with modules - language 2
-- An implementation of language 2, allowing modules and imports.
-- A scope graph node can only have one import edge originating from it.
-- Each decl creates a new scope to which the `IMP` edge to the resolved scope, the decl is an import, is added.
-- Decl nodes are lifted up this structure to the module or global definition scope.
+# LM with modules - language 4
+- An implementation of language 4, allowing modules and imports.
+- A scope graph node can have any number of import edge originating from it.
+- No new scopes are created in Decls productions, instead a single parent scope is passed down.
 
 ### Running:
 ```
 ./clone-and-build-ministatix                        # Build Ministatix
-./build-lm-compiler                                 # Compile and copy over the Silver generated compiler for LM 2
-java -jar lm_language2.jar inputs/letseq.lm         # Compile an example program
+./build-lm-compiler                                 # Compile and copy over the Silver generated compiler for LM 4
+java -jar lm_language4.jar inputs/letseq.lm         # Compile an example program
 ./run-ministatix out/letseq.aterm                   # Run Ministatix on the Statix aterm which the Silver compiler produces
 ```
 
@@ -18,12 +17,12 @@ java -jar lm_language2.jar inputs/letseq.lm         # Compile an example program
 - Note that, when the bindings are being printed, each identifier is given in the form `id_line:column`.
 
 ### Directories of interest:
-- `statix-spec/`: here lives the Statix specification for language 2.
-- `silver-grammar/`: a link to the directory holding the Silver abstract grammar for this language (`../grammars/lm_semantics_2`).
+- `statix-spec/`: here lives the Statix specification for language 4.
+- `silver-grammar/`: a link to the directory holding the Silver abstract grammar for this language (`../grammars/lm_semantics_3`).
 - `inputs/`: a link to the LM example inputs directory at `../grammars/lm_syntax_2/inputs`.
 - `out/`: dumping ground for the LM compiler output files.
 - `../ministatix.hs/`: where Ministatix is cloned to.
-- `../grammars/`: assorted Silver grammars. Those of interest to this language are `lm_syntax_2/` and `lm_semantics_2/`.
+- `../grammars/`: assorted Silver grammars. Those of interest to this language are `lm_syntax_2/` and `lm_semantics_3/`.
 
 ### Concrete Syntax:
 ```
