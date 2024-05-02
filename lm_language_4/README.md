@@ -2,6 +2,7 @@
 - An implementation of language 4, allowing modules and imports.
 - A scope graph node can have any number of import edge originating from it.
 - No new scopes are created in Decls productions, instead a single parent scope is passed down.
+- Both Silver and Ministatix will get stuck when any imports are used.
 
 ### Running:
 ```
