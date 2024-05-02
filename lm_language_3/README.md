@@ -21,7 +21,7 @@ java -jar lm_language3.jar inputs/letseq.lm         # Compile an example program
 - `statix-spec/`: here lives the Statix specification for language 3.
 - `silver-grammar/`: a link to the directory holding the Silver abstract grammar for this language (`../grammars/lm_semantics_3`).
 - `inputs/`: a link to the LM example inputs directory at `../grammars/lm_syntax_2/inputs`.
-- `out/`: dumping ground for the LM compiler output files.
+- `out/`: dumping ground for the LM compiler output files. This directory is created by the LM compiler if it does not already exist.
 - `../ministatix.hs/`: where Ministatix is cloned to.
 - `../grammars/`: assorted Silver grammars. Those of interest to this language are `lm_syntax_2/` and `lm_semantics_3/`.
 
