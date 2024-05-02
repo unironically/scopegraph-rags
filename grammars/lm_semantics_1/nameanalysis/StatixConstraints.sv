@@ -20,6 +20,7 @@ top::Main ::= ds::Decls
 {
   local sName::String = "s_" ++ toString(genInt());
   top.statixConstraints = [
+    "{" ++ sName ++ "}",
     "new " ++ sName
   ] ++ ds.statixConstraints;
   ds.sName = sName;
@@ -39,6 +40,7 @@ top::Decls ::= d::Decl ds::Decls
   local dsName::String = "ds_" ++ toString (genInt());
   local s_impName::String = "s_imp_" ++ toString (genInt());
   top.statixConstraints = [
+    "{" ++ s_impName ++ "}",
     "new " ++ s_impName,
     s_impName ++ " -[ `LEX ]-> " ++ top.s_lookupName
   ] ++ d.statixConstraints ++ ds.statixConstraints;
@@ -203,6 +205,7 @@ top::Expr ::= e1::Expr e2::Expr
   local e1Name::String = "e1_" ++ toString (genInt());
   local e2Name::String = "e2_" ++ toString (genInt());
   top.statixConstraints = e1.statixConstraints ++ e2.statixConstraints ++ [
+    "{" ++ tyPrimeName ++ "}",
     top.tyName ++ " == BOOL()"
   ];
   e1.sName = top.sName;
@@ -217,7 +220,7 @@ top::Expr ::= e1::Expr e2::Expr
   local ty1Name::String = "ty_" ++ toString(genInt());
   local e1Name::String = "e1_" ++ toString (genInt());
   local e2Name::String = "e2_" ++ toString (genInt());
-  top.statixConstraints = e1.statixConstraints ++ e2.statixConstraints;
+  top.statixConstraints = ("{" ++ ty1Name ++ "}") :: (e1.statixConstraints ++ e2.statixConstraints);
   e1.sName = top.sName;
   e1.tyName = "FUN(" ++ ty1Name ++ ", " ++ top.tyName ++ ")";
   e2.sName = top.sName;
@@ -248,6 +251,7 @@ top::Expr ::= d::ArgDecl e::Expr
   local ty1Name::String = "ty_" ++ toString (genInt());
   local ty2Name::String = "ty_" ++ toString (genInt());
   top.statixConstraints = [
+    "{" ++ s_funName ++ ", " ++ ty1Name ++ ", " ++ ty2Name ++ "}",
     "new " ++ s_funName,
     s_funName ++ " -[ `LEX ]-> " ++ top.sName
   ] ++ d.statixConstraints ++ e.statixConstraints ++ [
@@ -266,6 +270,7 @@ top::Expr ::= bs::SeqBinds e::Expr
   local eName::String = "e_" ++ toString (genInt());
   local s_letName::String = "s_let_" ++ toString (genInt());
   top.statixConstraints = [
+    "{" ++ s_letName ++ "}",
     "new " ++ s_letName
   ] ++ bs.statixConstraints ++ e.statixConstraints;
   bs.sName = top.sName;
@@ -281,6 +286,7 @@ top::Expr ::= bs::ParBinds e::Expr
   local eName::String = "e_" ++ toString (genInt());
   local s_letName::String = "s_let_" ++ toString (genInt());
   top.statixConstraints = [
+    "{" ++ s_letName ++ "}",
     "new " ++ s_letName,
     s_letName ++ " -[ `LEX ]-> " ++ top.sName
   ] ++ bs.statixConstraints ++ e.statixConstraints;
@@ -297,6 +303,7 @@ top::Expr ::= bs::ParBinds e::Expr
   local eName::String = "e_" ++ toString (genInt());
   local s_letName::String = "s_let_" ++ toString (genInt());
   top.statixConstraints = [
+    "{" ++ s_letName ++ "}",
     "new " ++ s_letName,
     s_letName ++ " -[ `LEX ]-> " ++ top.sName
   ] ++ bs.statixConstraints ++ e.statixConstraints;
@@ -338,6 +345,7 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
   local bsName::String = "bs_" ++ toString (genInt());
   local s_defprimeName::String = "s_def_" ++ toString (genInt());
   top.statixConstraints = [
+    "{" ++ s_defprimeName ++ "}",
     "new " ++ s_defprimeName,
     s_defprimeName ++ " -[ `LEX ]-> " ++ top.sName
   ] ++ s.statixConstraints ++ ss.statixConstraints;
@@ -361,6 +369,7 @@ top::SeqBind ::= id::String e::Expr
   local s_varName::String = "s_var_" ++ toString (genInt());
   local tyName::String = "ty_" ++ toString (genInt());
   top.statixConstraints = [
+    "{" ++ s_varName ++ ", " ++ tyName ++ "}",
     "new " ++ s_varName ++ " -> (" ++ xName ++ ", " ++ tyName ++ ")",
     top.s_defName ++ " -[ `VAR ]-> " ++ s_varName
   ] ++ e.statixConstraints;
@@ -376,6 +385,7 @@ top::SeqBind ::= ty::Type id::String e::Expr
   local s_varName::String = "s_var_" ++ toString (genInt());
   local tyName::String = "ty_" ++ toString (genInt());
   top.statixConstraints = [
+    "{" ++ s_varName ++ ", " ++ tyName ++ "}",
     "new " ++ s_varName ++ " -> (" ++ xName ++ ", " ++ tyName ++ ")",
     top.s_defName ++ " -[ `VAR ]-> " ++ s_varName
   ] ++ ty.statixConstraints ++ e.statixConstraints;
@@ -423,6 +433,7 @@ top::ParBind ::= id::String e::Expr
   local s_varName::String = "s_var_" ++ toString (genInt());
   local tyName::String = "ty_" ++ toString (genInt());
   top.statixConstraints = [
+    "{" ++ s_varName ++ ", " ++ tyName ++ "}",
     "new " ++ s_varName ++ " -> (" ++ xName ++ ", " ++ tyName ++ ")",
     top.s_defName ++ " -[ `VAR ]-> " ++ s_varName
   ] ++ e.statixConstraints;
@@ -438,6 +449,7 @@ top::ParBind ::= ty::Type id::String e::Expr
   local s_varName::String = "s_var_" ++ toString (genInt());
   local tyName::String = "ty_" ++ toString (genInt());
   top.statixConstraints = [
+    "{" ++ s_varName ++ ", " ++ tyName ++ "}",
     "new " ++ s_varName ++ " -> (" ++ xName ++ ", " ++ tyName ++ ")",
     top.s_defName ++ " -[ `VAR ]-> " ++ s_varName
   ] ++ ty.statixConstraints ++ e.statixConstraints;
@@ -460,6 +472,7 @@ top::ArgDecl ::= id::String ty::Type
   local tyannName::String = "tyann_" ++ toString (genInt());
   local s_varName::String = "s_var_" ++ toString (genInt());
   top.statixConstraints = ty.statixConstraints ++ [
+    "{" ++ s_varName ++ "}",
     "new " ++ s_varName ++ " -> (" ++ xName ++ ", " ++ top.tyName ++ ")",
     top.sName ++ " -[ `VAR ]-> " ++ s_varName
   ];
@@ -495,6 +508,7 @@ top::Type ::= tyann1::Type tyann2::Type
   local ty1Name::String = "ty_" ++ toString (genInt());
   local ty2Name::String = "ty_" ++ toString (genInt());
   top.statixConstraints = tyann1.statixConstraints ++ tyann2.statixConstraints ++ [
+    "{" ++ ty1Name ++ ", " ++ ty2Name ++ "}",
     top.tyName ++ " == FUN(" ++ ty1Name ++ ", " ++ ty2Name ++ ")"
   ];
   tyann1.sName = top.sName;
@@ -519,13 +533,14 @@ aspect production varRef
 top::VarRef ::= x::String
 {
   local xName::String = "\"" ++ x ++ "\"";
-  local modsName::String = "mods_" ++ toString (genInt());
-  local xmodsName::String = "xmods_" ++ toString (genInt());
-  local xmodsprimeName::String = "xmods_" ++ toString (genInt());
+  local varsName::String = "vars_" ++ toString (genInt());
+  local xvarsName::String = "xvars_" ++ toString (genInt());
+  local xvarsprimeName::String = "xvars_" ++ toString (genInt());
   top.statixConstraints = [
-    "query " ++ top.sName ++ " `LEX*`IMP? `VAR as " ++ modsName,
-    "filter " ++ modsName ++ " ((x, _) where x == " ++ xName ++ ") " ++ xmodsName,
-    "min-refs(" ++ xmodsName ++ ", " ++ xmodsprimeName ++ ")",
-    "only(" ++ xmodsprimeName ++ ", " ++ top.pName ++ ")"
+    "{" ++ varsName ++ ", " ++ xvarsName ++ ", " ++ xvarsprimeName ++ "}",
+    "query " ++ top.sName ++ " `LEX*`IMP? `VAR as " ++ varsName,
+    "filter " ++ varsName ++ " ((x, _) where x == " ++ xName ++ ") " ++ xvarsName,
+    "min-refs(" ++ xvarsName ++ ", " ++ xvarsprimeName ++ ")",
+    "only(" ++ xvarsprimeName ++ ", " ++ top.pName ++ ")"
   ];
 }

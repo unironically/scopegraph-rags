@@ -471,7 +471,6 @@ top::ParBinds ::= s::ParBind ss::ParBinds
 attribute silverEquations occurs on ParBind;
 
 attribute topName occurs on ParBind;
-attribute sNameSilver occurs on ParBind;
 
 aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
@@ -515,7 +514,6 @@ top::ParBind ::= ty::Type id::String e::Expr
 attribute silverEquations occurs on ArgDecl;
 
 attribute topName occurs on ArgDecl;
-attribute sNameSilver occurs on ArgDecl;
 
 aspect production argDecl
 top::ArgDecl ::= id::String tyann::Type
@@ -525,7 +523,7 @@ top::ArgDecl ::= id::String tyann::Type
   local tyannNameSilver::String = "Type_" ++ toString (genInt());
 
   top.silverEquations = [
-    "local" ++ varScopeNameSilver ++ "::Scope = mkScopeVar(" ++ idNameSilver ++ ", " ++ tyannNameSilver ++ ");",
+    "local" ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ tyannNameSilver ++ "));",
     tyannNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];",
     top.topName ++ ".ty = " ++ tyannNameSilver ++ ".ty;"
