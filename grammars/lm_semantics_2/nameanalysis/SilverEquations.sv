@@ -18,9 +18,8 @@ top::Main ::= ds::Decls
   local topName::String = "Main_" ++ toString (genInt());
 
   top.silverEquations = [
-    "local " ++ globalScopeName ++ "::Scope = mkScopeGlobal(" ++ dsNameSilver ++ ".varScopes, " ++ dsNameSilver ++ ".modScopes);",
+    "local " ++ globalScopeName ++ "::Scope = mkScopeGlobal([], []);",
     ds.topName ++ ".s = " ++ globalScopeName ++ ";",
-    ds.topName ++ ".sLookup = " ++ globalScopeName ++ ";",
     topName ++ ".ok = " ++ dsNameSilver ++ ".ok;"
   ] ++ ds.silverEquations;
 
@@ -41,11 +40,9 @@ top::Decls ::= d::Decl ds::Decls
   local dsNameSilver::String = "Decls_" ++ toString (genInt());
 
   top.silverEquations = [
-    "local " ++ lookupScopeNameSilver ++ "::Scope = mkScopeImpLookup(" ++ top.topName ++ ".sLookup, " ++ dNameSilver ++ ".impScope);",
+    "local " ++ lookupScopeNameSilver ++ "::Scope = mkScopeImpLookup(" ++ top.topName ++ ".s, " ++ dNameSilver ++ ".varScopes, " ++ dName ++ ".modScopes, " ++ dNameSilver ++ ".impScope);",
     dNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    dNameSilver ++ ".sLookup = " ++ lookupScopeNameSilver ++ ";",
-    dsNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    dsNameSilver ++ ".sLookup = " ++ lookupScopeNameSilver ++ ";",
+    dsNameSilver ++ ".s = " ++ lookupScopeNameSilver ++ ";",
     top.topName ++ ".varScopes = " ++ dNameSilver ++ ".varScopes ++ " ++ dsNameSilver ++ ".varScopes;",
     top.topName ++ ".modScopes = " ++ dNameSilver ++ ".modScopes ++ " ++ dsNameSilver ++ ".modScopes;",
     top.topName ++ ".ok = " ++ dNameSilver ++ ".ok && " ++ dsNameSilver ++ ".ok;"
@@ -83,8 +80,7 @@ top::Decl ::= id::String ds::Decls
     top.topName ++ ".varScopes = [];",
     top.topName ++ ".modScopes = [" ++ modScopeNameSilver ++ "];",
     top.topName ++ ".impScope = nothing();",
-    dsNameSilver ++ ".s = " ++ modScopeNameSilver ++ ";",
-    dsNameSilver ++ ".sLookup = " ++ modScopeNameSilver ++ ";",
+    dsNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     top.topName ++ ".ok = " ++ dsNameSilver ++ ".ok;"
   ] ++ ds.silverEquations;
 
@@ -115,7 +111,7 @@ top::Decl ::= b::ParBind
     top.topName ++ ".varScopes = " ++ bNameSilver ++ ".varScopes;",
     top.topName ++ ".modScopes = [];",
     top.topName ++ ".impScope = nothing();",
-    bNameSilver ++ ".s = " ++ top.topName ++ ".sLookup;",
+    bNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     top.topName ++ ".ok = " ++ bNameSilver ++ ".ok;"
   ] ++ b.silverEquations;
 

@@ -1,8 +1,10 @@
 # LM with modules - language 2
-- An implementation of language 2, allowing modules and imports.
+- An implementation of language 2, allowing modules and imports, but disallowing forward referencing.
 - A scope graph node can only have one import edge originating from it.
-- Each decl creates a new scope to which the `IMP` edge to the resolved scope, the decl is an import, is added.
-- Decl nodes are lifted up this structure to the module or global definition scope.
+- Each decl creates a new scope to which the `VAR`, `MOD` or `IMP` edge from the decl, if it exists, is added.
+- Decl nodes are lifted up this structure to the module a definition scope if they are inside a module, creating two edges for each variable or module declaration inside of a module.
+- This is so that scopes which import the module can access all definitions inside of it.
+- However, declarations made outside of a scope are not lifted to the global scope.
 
 ### Running:
 ```bash

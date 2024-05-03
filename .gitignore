@@ -2,5 +2,5 @@
 equations.md
 ministatix.hs
 
-*/out/
-*/*/out/
+out
+.statix

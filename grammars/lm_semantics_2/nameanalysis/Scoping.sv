@@ -22,9 +22,8 @@ attribute allScopes occurs on Main;
 aspect production program
 top::Main ::= ds::Decls
 {
-  local globalScope::Scope = mkScopeGlobal (ds.varScopes, ds.modScopes, location=top.location);
+  local globalScope::Scope = mkScopeGlobal ([], [], location=top.location);
   ds.s = globalScope;
-  ds.sLookup = globalScope;
 
   top.allScopes := globalScope :: ds.allScopes;
 }
@@ -32,7 +31,6 @@ top::Main ::= ds::Decls
 --------------------------------------------------
 
 attribute s occurs on Decls;
-attribute sLookup occurs on Decls;
 attribute varScopes occurs on Decls;
 attribute modScopes occurs on Decls;
 
@@ -44,12 +42,10 @@ attribute allScopes occurs on Decls;
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  local lookupScope::Scope = mkScopeImpLookup(top.sLookup, d.impScope, location=top.location);
+  local lookupScope::Scope = mkScopeImpLookup(top.s, d.varScopes, d.modScopes, d.impScope, location=top.location);
 
   d.s = top.s;
-  d.sLookup = lookupScope;
-  ds.s = top.s;
-  ds.sLookup = lookupScope;
+  ds.s = lookupScope;
 
   top.varScopes = d.varScopes ++ ds.varScopes;
   top.modScopes = d.modScopes ++ ds.modScopes;
@@ -69,7 +65,6 @@ top::Decls ::=
 --------------------------------------------------
 
 attribute s occurs on Decl;
-attribute sLookup occurs on Decl;
 attribute varScopes occurs on Decl;
 attribute modScopes occurs on Decl;
 attribute impScope occurs on Decl;
@@ -88,8 +83,7 @@ top::Decl ::= id::String ds::Decls
   top.modScopes = [modScope];
   top.impScope = nothing();
 
-  ds.s = modScope;
-  ds.sLookup = modScope;
+  ds.s = top.s;
 
   top.allScopes := modScope::ds.allScopes;
 }
@@ -113,7 +107,7 @@ top::Decl ::= b::ParBind
   top.modScopes = [];
   top.impScope = nothing();
 
-  b.s = top.sLookup;
+  b.s = top.s;
 
   top.allScopes := b.allScopes;
 }

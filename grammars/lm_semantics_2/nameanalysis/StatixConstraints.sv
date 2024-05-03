@@ -4,12 +4,13 @@ grammar lm_semantics_2:nameanalysis;
 
 synthesized attribute statixConstraints::[String];
 inherited attribute sName::String;
-inherited attribute s_impName::String;
 inherited attribute tyName::String;
 inherited attribute s_defName::String;
 inherited attribute pName::String;
 inherited attribute s_letName::String;
 inherited attribute s_lookupName::String;
+inherited attribute s_globName::String;
+inherited attribute s_modName::String;
 
 --------------------------------------------------
 
@@ -19,35 +20,45 @@ aspect production program
 top::Main ::= ds::Decls
 {
   local sName::String = "s_" ++ toString(genInt());
+
   top.statixConstraints = [
     "{" ++ sName ++ "}",
     "new " ++ sName
   ] ++ ds.statixConstraints;
+
   ds.sName = sName;
-  ds.s_lookupName = sName;
+  ds.s_modName = sName;
+  ds.s_globName = sName;
 }
 
 --------------------------------------------------
 
 attribute statixConstraints occurs on Decls;
 attribute sName occurs on Decls;
-attribute s_lookupName occurs on Decls;
+attribute s_modName occurs on Decls;
+attribute s_globName occurs on Decls;
 
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
   local dName::String = "d_" ++ toString (genInt());
   local dsName::String = "ds_" ++ toString (genInt());
-  local s_impName::String = "s_imp_" ++ toString (genInt());
+  local sPrimeName::String = "s_" ++ toString(genInt());
+
   top.statixConstraints = [
-    "{" ++ s_impName ++ "}",
-    "new " ++ s_impName,
-    s_impName ++ " -[ `LEX ]-> " ++ top.s_lookupName
+    "{" ++ sPrimeName ++ "}",
+    "new " ++ sPrimeName,
+    sPrimeName ++ " -[ `LEX ]-> " ++ top.sName
   ] ++ d.statixConstraints ++ ds.statixConstraints;
-  d.sName = top.sName;
-  d.s_impName = s_impName;
-  ds.sName = top.sName;
-  ds.s_lookupName = s_impName;
+
+  d.sName = sPrimeName;
+  d.s_lookupName = top.sName;
+  d.s_modName = top.s_modName;
+  d.s_globName = top.s_globName;
+  
+  ds.sName = sPrimeName;
+  ds.s_modName = top.s_modName;
+  ds.s_globName = top.s_globName;
 }
 
 aspect production declsNil
@@ -62,7 +73,9 @@ top::Decls ::=
 
 attribute statixConstraints occurs on Decl;
 attribute sName occurs on Decl;
-attribute s_impName occurs on Decl;
+attribute s_lookupName occurs on Decl;
+attribute s_modName occurs on Decl;
+attribute s_globName occurs on Decl;
 
 aspect production declModule
 top::Decl ::= id::String ds::Decls
@@ -77,8 +90,9 @@ top::Decl ::= id::String ds::Decls
     s_modName ++ " -[ `LEX ]-> " ++ top.sName
   ] ++ ds.statixConstraints;
 
-  ds.sName = s_modName;
-  ds.s_lookupName = s_modName;
+  ds.sName = top.sName;
+  ds.s_modName = s_modName;
+  ds.s_globName = top.s_globName;
 }
 
 aspect production declImport
@@ -88,13 +102,15 @@ top::Decl ::= r::ModRef
   local pName::String = "p_" ++ toString(genInt());
   local xName::String = "x_" ++ toString(genInt());
   local s_modName::String = "s_mod_" ++ toString(genInt());
+
   top.statixConstraints = [
     "{" ++ pName ++ ", " ++ xName ++ ", " ++ s_modName ++ "}"
   ] ++ r.statixConstraints ++ [
     "datum(" ++ pName ++ ", (" ++ xName ++ ", " ++ s_modName ++ "))",
-    top.s_impName ++ " -[ `IMP ]-> " ++ s_modName
+    top.sName ++ " -[ `IMP ]-> " ++ s_modName
   ];
-  r.sName = top.sName;
+
+  r.sName = top.s_lookupName;
   r.pName = pName;
 }
 
@@ -102,9 +118,14 @@ aspect production declDef
 top::Decl ::= b::ParBind
 {
   local bName::String = "b_" ++ toString (genInt());
+
   top.statixConstraints = b.statixConstraints;
-  b.sName = top.s_impName;
+
+  b.sName = top.s_lookupName;
   b.s_defName = top.sName;
+  b.s_modName = top.s_modName;
+  b.s_globName = top.s_globName;
+  b.isDeclDef = true;
 }
 
 --------------------------------------------------
@@ -452,8 +473,13 @@ aspect production parBindsCons
 top::ParBinds ::= s::ParBind ss::ParBinds
 {
   top.statixConstraints = s.statixConstraints ++ ss.statixConstraints;
+
   s.sName = top.sName;
   s.s_defName = top.s_defName;
+  s.s_globName = top.sName;
+  s.s_modName = top.sName;
+  s.isDeclDef = false;
+
   ss.sName = top.sName;
   ss.s_defName = top.s_defName;
 }
@@ -463,6 +489,9 @@ top::ParBinds ::= s::ParBind ss::ParBinds
 attribute statixConstraints occurs on ParBind;
 attribute sName occurs on ParBind;
 attribute s_defName occurs on ParBind;
+attribute s_modName occurs on ParBind;
+attribute s_globName occurs on ParBind;
+inherited attribute isDeclDef::Boolean occurs on ParBind;
 
 aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
@@ -471,11 +500,13 @@ top::ParBind ::= id::String e::Expr
   local eName::String = "e_" ++ toString (genInt());
   local s_varName::String = "s_var_" ++ toString (genInt());
   local tyName::String = "ty_" ++ toString (genInt());
+
   top.statixConstraints = [
     "{" ++ s_varName ++ ", " ++ tyName ++ "}",
     "new " ++ s_varName ++ " -> (" ++ xName ++ ", " ++ tyName ++ ")",
     top.s_defName ++ " -[ `VAR ]-> " ++ s_varName
-  ] ++ e.statixConstraints;
+  ] ++ (if top.isDeclDef && top.s_globName != top.s_modName then [top.s_modName ++ " -[ `VAR ]-> " ++ s_varName] else []) ++ e.statixConstraints;
+
   e.sName = top.sName;
   e.tyName = tyName;
 }
@@ -487,13 +518,16 @@ top::ParBind ::= ty::Type id::String e::Expr
   local eName::String = "e_" ++ toString (genInt());
   local s_varName::String = "s_var_" ++ toString (genInt());
   local tyName::String = "ty_" ++ toString (genInt());
+
   top.statixConstraints = [
     "{" ++ s_varName ++ ", " ++ tyName ++ "}",
     "new " ++ s_varName ++ " -> (" ++ xName ++ ", " ++ tyName ++ ")",
     top.s_defName ++ " -[ `VAR ]-> " ++ s_varName
-  ] ++ ty.statixConstraints ++ e.statixConstraints;
+  ] ++ (if top.isDeclDef && top.s_globName != top.s_modName then [top.s_modName ++ " -[ `VAR ]-> " ++ s_varName] else []) ++ ty.statixConstraints ++ e.statixConstraints;
+
   ty.sName = top.sName;
   ty.tyName = tyName;
+
   e.sName = top.sName;
   e.tyName = tyName;
 }

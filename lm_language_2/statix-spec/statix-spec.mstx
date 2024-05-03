@@ -8,46 +8,77 @@ main(p) :- p match {
     Program(ds):[] ->
         {s}
         new s,
-        decls(s, ds, s)
+        decls(s, ds, s, s)
     
 }.
 
 
 
-decls(s, ds, s_lookup) :- ds match { 
+decls(s, ds, s_mod, s_glob) :- ds match { 
   
     DeclsNil() ->
         true
   
   | DeclsCons(d, ds) ->
-        {s_imp}
-        new s_imp,
-        s_imp -[ `LEX ]-> s_lookup,
-        decl(s, d, s_imp),
-        decls(s, ds, s_imp)
+        {s'}
+        new s',
+        s' -[ `LEX ]-> s,
+        decl(s', d, s, s_mod, s_glob),
+        decls(s', ds, s_mod, s_glob)
 
 }.
 
 
 
-decl(s, d, s_imp) :- d match { 
+decl(s, d, s_lookup, s_mod, s_glob) :- d match { 
     
     DeclModule(x, ds) -> 
         {s_mod}
         new s_mod -> (x, s_mod),
         s -[ `MOD ]-> s_mod,
         s_mod -[ `LEX ]-> s,
-        decls(s_mod, ds, s_mod)
+        decls(s, ds, s_mod, s_glob)
 
   | DeclImport(r) -> 
-        {p, x, s_mod}
-        mod-ref(s, r, p),
-        datum(p, (x, s_mod)),
-        s_imp -[ `IMP ]-> s_mod
+        {p, x, s_mod'}
+        mod-ref(s_lookup, r, p),
+        datum(p, (x, s_mod')),
+        s -[ `IMP ]-> s_mod'
 
   | DeclDef(b) ->
-        par-bind(s_imp, b, s)
+        def-bind(s_lookup, b, s, s_mod, s_glob)
 
+}.
+
+
+
+def-bind(s, b, s_def, s_mod, s_glob) :- b match { 
+    
+    DefBind(x, e) where s_mod == s_glob -> 
+        {s_var, ty}
+        new s_var -> (x, ty),
+        s_def -[ `VAR ]-> s_var,
+        expr(s, e, ty)
+  | DefBind(x, e) -> 
+        {s_var, ty}
+        new s_var -> (x, ty),
+        s_def -[ `VAR ]-> s_var,
+        s_mod -[ `VAR ]-> s_var,
+        expr(s, e, ty)
+  
+  | DefBindTyped(x, tyann, e) where s_mod == s_glob -> 
+        {s_var, ty}
+        new s_var -> (x, ty),
+        s_def -[ `VAR ]-> s_var,
+        type(s, tyann, ty),
+        expr(s, e, ty)
+  | DefBindTyped(x, tyann, e) -> 
+        {s_var, ty}
+        new s_var -> (x, ty),
+        s_def -[ `VAR ]-> s_var,
+        s_mod -[ `VAR ]-> s_var,  // add var edge to module scope
+        type(s, tyann, ty),
+        expr(s, e, ty)
 }.
 
 

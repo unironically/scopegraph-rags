@@ -54,9 +54,11 @@ top::Scope ::=
 abstract production mkScopeImpLookup
 top::Scope ::=
   lex::Decorated Scope
+  var::[Decorated Scope]
+  mod::[Decorated Scope]
   imp::Maybe<Decorated Scope>
 {
-  forwards to mkScope(just(lex), [], [], imp, nothing(), location=top.location);
+  forwards to mkScope(just(lex), var, mod, imp, nothing(), location=top.location);
 }
 
 
