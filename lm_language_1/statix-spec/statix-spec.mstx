@@ -235,7 +235,7 @@ var-ref(s, r, p) :- r match {
     VarRef(x) ->
         {vars, xvars, xvars'}
         query s `LEX* `VAR as vars,
-        filter vars ((x', _) where x' == x) xvars,
+        filter vars((x', _) where x' == x) xvars,
         min-refs(xvars, xvars'),
         only(xvars', p)
 

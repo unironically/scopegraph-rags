@@ -11,9 +11,9 @@ attribute jastEquations occurs on Main;
 aspect production program
 top::Main ::= ds::Decls
 {
-  local dsNameSilver::String = "Decls_" ++ toString (genInt());
+  local dsNameSilver::String = "Decls_" ++ toString(genInt());
   local globalScopeName::String = "globalScope";
-  local topName::String = "Main_" ++ toString (genInt());
+  local topName::String = "Main_" ++ toString(genInt());
 
   top.jastEquations = [
     "local " ++ globalScopeName ++ "::Scope = mkScope();",
@@ -220,7 +220,7 @@ top::Expr ::= d::ArgDecl e::Expr
 aspect production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
-  local letScopeNameSilver::String = "letScope_" ++ toString (genInt());
+  local letScopeNameSilver::String = "letScope_" ++ toString(genInt());
 
   top.jastEquations = [
     "local " ++ letScopeNameSilver ++ "::Scope = mkScopeLet();",
@@ -235,7 +235,7 @@ top::Expr ::= bs::SeqBinds e::Expr
 aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local letScopeNameSilver::String = "letScope_" ++ toString (genInt());
+  local letScopeNameSilver::String = "letScope_" ++ toString(genInt());
 
   top.jastEquations = [
     "local " ++ letScopeNameSilver ++ "::Scope = mkScopeLet();",
@@ -251,7 +251,7 @@ top::Expr ::= bs::ParBinds e::Expr
 aspect production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local letScopeNameSilver::String = "letScope_" ++ toString (genInt());
+  local letScopeNameSilver::String = "letScope_" ++ toString(genInt());
 
   top.jastEquations = [
     "local " ++ letScopeNameSilver ++ "::Scope = mkScopeLet();",
@@ -293,7 +293,7 @@ top::SeqBinds ::= s::SeqBind
 aspect production seqBindsCons
 top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
-  local letBindScopeNameSilver::String = "letBindScope_" ++ toString (genInt());
+  local letBindScopeNameSilver::String = "letBindScope_" ++ toString(genInt());
 
   top.jastEquations = [
     "local " ++ letBindScopeNameSilver ++ "::Scope = mkScopeSeqBind();",
@@ -316,7 +316,7 @@ aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
 {
   local idNameSilver::String = "\"" ++ id ++ "\"";
-  local varScopeNameSilver::String = "varScope_" ++ toString (genInt());
+  local varScopeNameSilver::String = "varScope_" ++ toString(genInt());
 
   top.jastEquations = [
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ e.topName ++ ".ty));",
@@ -331,7 +331,7 @@ aspect production seqBindTyped
 top::SeqBind ::= ty::Type id::String e::Expr
 {
   local idNameSilver::String = "\"" ++ id ++ "\"";
-  local varScopeNameSilver::String = "varScope_" ++ toString (genInt());
+  local varScopeNameSilver::String = "varScope_" ++ toString(genInt());
 
   top.jastEquations = [
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ ty.topName ++ "));",
@@ -378,7 +378,7 @@ aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
 {
   local idNameSilver::String = "\"" ++ id ++ "\"";
-  local varScopeNameSilver::String = "varScope_" ++ toString (genInt());
+  local varScopeNameSilver::String = "varScope_" ++ toString(genInt());
 
   top.jastEquations = [
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ e.topName ++ ".ty));",
@@ -393,7 +393,7 @@ aspect production parBindTyped
 top::ParBind ::= ty::Type id::String e::Expr
 {
   local idNameSilver::String = "\"" ++ id ++ "\"";
-  local varScopeNameSilver::String = "varScope_" ++ toString (genInt());
+  local varScopeNameSilver::String = "varScope_" ++ toString(genInt());
 
   top.jastEquations = [
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ ty.topName ++ "));",
@@ -414,7 +414,7 @@ aspect production argDecl
 top::ArgDecl ::= id::String tyann::Type
 {
   local idNameSilver::String = "\"" ++ id ++ "\"";
-  local varScopeNameSilver::String = "varScope_" ++ toString (genInt());
+  local varScopeNameSilver::String = "varScope_" ++ toString(genInt());
 
   top.jastEquations = [
     "local" ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ tyann.topName ++ "));",
@@ -470,11 +470,11 @@ attribute jastEquations occurs on VarRef;
 aspect production varRef
 top::VarRef ::= x::String
 {
-  local regexNameSilver::String = "regex_" ++ toString (genInt());
-  local dfaNameSilver::String = "dfa_" ++ toString (genInt());
-  local resFunNameSilver::String = "resFun_" ++ toString (genInt());
-  local resultNameSilver::String = "result_" ++ toString (genInt());
-  local declNameSilver::String = "decl_" ++ toString (genInt());
+  local regexNameSilver::String = "regex_" ++ toString(genInt());
+  local dfaNameSilver::String = "dfa_" ++ toString(genInt());
+  local resFunNameSilver::String = "resFun_" ++ toString(genInt());
+  local resultNameSilver::String = "result_" ++ toString(genInt());
+  local declNameSilver::String = "decl_" ++ toString(genInt());
 
   top.jastEquations = [
     "local " ++ regexNameSilver ++ "::Regex = `LEX* VAR`;",

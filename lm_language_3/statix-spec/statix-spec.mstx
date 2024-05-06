@@ -257,7 +257,7 @@ mod-ref(s, r, p) :- r match {
     ModRef(x) ->
         {mods, xmods, xmods'}
         query s `LEX*`IMP? `MOD as mods,
-        filter mods ((x', _) where x' == x) xmods,
+        filter mods((x', _) where x' == x) xmods,
         min-refs(xmods, xmods'),
         only(xmods', p)
 
@@ -266,7 +266,7 @@ mod-ref(s, r, p) :- r match {
         mod-ref(s, r, p_mod),
         tgt(p_mod, s_mod),
         query s_mod `MOD as mods,
-        filter mods ((x', _) where x' == x) xmods,
+        filter mods((x', _) where x' == x) xmods,
         only(xmods, p)
 }.
 
@@ -277,7 +277,7 @@ var-ref(s, r, p) :- r match {
     VarRef(x) ->
         {vars, xvars, xvars'}
         query s `LEX*(`EXT*|`IMP?) `VAR as vars,
-        filter vars ((x', _) where x' == x) xvars,
+        filter vars((x', _) where x' == x) xvars,
         min-refs(xvars, xvars'),
         only(xvars', p)
 
@@ -286,7 +286,7 @@ var-ref(s, r, p) :- r match {
         mod-ref(s, r, p_mod),
         tgt(p_mod, s_mod),
         query s_mod `VAR as vars,
-        filter vars ((x', _) where x' == x) xvars,
+        filter vars((x', _) where x' == x) xvars,
         only(xvars, p)
 
 }.

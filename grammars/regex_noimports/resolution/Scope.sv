@@ -33,14 +33,14 @@ top::Scope ::=
   var::[Decorated Scope]
   mod::[Decorated Scope]
 {
-  forwards to mkScope (nothing (), var, mod, nothing (), nothing ());
+  forwards to mkScope(nothing(), var, mod, nothing(), nothing());
 }
 
 abstract production mkScopeVar
 top::Scope ::=
   decl::Decorated Bind
 {
-  forwards to mkScope (nothing (), [], [], nothing (), just(datumVar (decl)));
+  forwards to mkScope(nothing(), [], [], nothing(), just(datumVar(decl)));
 }
 
 abstract production mkScopeMod
@@ -50,7 +50,7 @@ top::Scope ::=
   mod::[Decorated Scope]
   decl::Decorated Decl
 {
-  forwards to mkScope (just(lex), var, mod, nothing (), just(datumMod (decl)));
+  forwards to mkScope(just(lex), var, mod, nothing(), just(datumMod(decl)));
 }
 
 
@@ -63,8 +63,8 @@ top::Datum ::= d::Decorated Bind
 {
   top.nameEq = \s::String ->
     case d of
-    | bind (x, _) -> s == x.lexeme
-    | bind_typed (x, _, _) -> s == x
+    | bind(x, _) -> s == x.lexeme
+    | bind_typed(x, _, _) -> s == x
     end;
 }
 
@@ -73,7 +73,7 @@ top::Datum ::= d::Decorated Decl
 {
   top.nameEq = \s::String ->
     case d of
-    | decl_module (x, _) -> s == x
+    | decl_module(x, _) -> s == x
     | _ -> false
     end;
 }

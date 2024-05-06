@@ -19,7 +19,7 @@ attribute allScopes occurs on Main;
 aspect production program
 top::Main ::= ds::Decls
 {
-  local globalScope::Scope = mkScopeGlobal (ds.varScopes, location=top.location);
+  local globalScope::Scope = mkScopeGlobal(ds.varScopes, location=top.location);
   ds.s = globalScope;
 
   top.allScopes := globalScope :: ds.allScopes;
@@ -294,7 +294,7 @@ propagate binds on SeqBind;
 aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
 {
-  local varScope::Scope = mkScopeVar ((id, e.ty), location=top.location);
+  local varScope::Scope = mkScopeVar((id, e.ty), location=top.location);
 
   e.s = top.s;
 
@@ -305,7 +305,7 @@ top::SeqBind ::= id::String e::Expr
 aspect production seqBindTyped
 top::SeqBind ::= ty::Type id::String e::Expr
 {
-  local varScope::Scope = mkScopeVar ((id, ty), location=top.location);
+  local varScope::Scope = mkScopeVar((id, ty), location=top.location);
 
   e.s = top.s;
   ty.s = top.s;
@@ -432,24 +432,24 @@ attribute binds occurs on VarRef;
 aspect production varRef
 top::VarRef ::= x::String
 {
-  local regex::Regex = regexCat (regexStar (regexSingle(labelLex())), regexSingle(labelVar()));
+  local regex::Regex = regexCat(regexStar(regexSingle(labelLex())), regexSingle(labelVar()));
   
   local dfa::DFA = regex.dfa;
-  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (dfa);
-  local result::[Decorated Scope] = resFun (top.s, x);
+  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun(dfa);
+  local result::[Decorated Scope] = resFun(top.s, x);
 
   local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
 
-  top.datum = fst (queryResult);
-  top.binds := snd (queryResult);
+  top.datum = fst(queryResult);
+  top.binds := snd(queryResult);
 
   local queryResult::(Maybe<Datum>, [(String, String)]) =
     case result of
       s::_ -> (case s.datum of
-            | just (d) -> (just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
-            | nothing() -> unsafeTrace ((nothing (), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
+            | just(d) -> (just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
+            | nothing() -> unsafeTrace((nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
             end)
-    | [] ->  unsafeTrace ((nothing (), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
+    | [] ->  unsafeTrace((nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
     end;
 
   

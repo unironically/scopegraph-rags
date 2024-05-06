@@ -17,44 +17,44 @@ IO<Integer> ::= largs::[String]
 
         let fileName::String = head(explode(".", last(explode("/", filePath))));
 
-        let result :: ParseResult<Main_c> = lm_syntax_2:driver:parse (file, filePath);
+        let result :: ParseResult<Main_c> = lm_syntax_2:driver:parse(file, filePath);
         let ast :: Main = result.parseTree.ast;
 
         let fileNameExt::String = last(explode("/", filePath));
-        let fileNameExplode::[String] = explode (".", fileNameExt);
+        let fileNameExplode::[String] = explode(".", fileNameExt);
         let fileName::String = head(fileNameExplode);
 
         if result.parseSuccess
           then do {
             if length(fileNameExplode) >= 2 && last(fileNameExplode) == "lm"
               then do {
-                print ("[✔] Parse success\n");
+                print("[✔] Parse success\n");
                 mkdir("out");
                 writeStatixConstraints(filePath, file, ast.statixConstraints);
                 writeSilverEquations(filePath, file, ast.silverEquations);
                 writeStatixAterm(fileName, ast.statix);
-                res::Integer <- printBinds (ast.binds);
+                res::Integer <- printBinds(ast.binds);
                 programOk(ast.ok);
                 return res;
               }
               else do {
-                print ("[✗] Expected an input file of form [file name].lm\n");
+                print("[✗] Expected an input file of form [file name].lm\n");
                 return -1;
               };
           }
           else do {
-            print ("[✗] Parse failure\n");
+            print("[✗] Parse failure\n");
             return -1;
           };
       }
       else do {
-        print ("[✗] No input file given\n");
+        print("[✗] No input file given\n");
             return -1;
       };
 }
 
 fun writeStatixAterm IO<Integer> ::= fileN::String aterm::String = do {
-  writeFile ("out/" ++ fileN ++ ".aterm", aterm ++ "\n");
+  writeFile("out/" ++ fileN ++ ".aterm", aterm ++ "\n");
   print("[✔] See out/" ++ fileN ++ ".aterm for the resulting Ministatix term\n");
 };
 
@@ -64,7 +64,7 @@ fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[Strin
     ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
     ("### Constraints:\n```\n") ::
     (cs ++ ["\n```\n"]);
-  writeFile("out/StatixConstraints.md", implode ("\n", toWrite));
+  writeFile("out/StatixConstraints.md", implode("\n", toWrite));
   print("[✔] See out/SilverEquations.md for the resulting flattened Statix constraints\n");
 };
 
@@ -74,14 +74,14 @@ fun writeSilverEquations IO<Integer> ::= fname::String code::String es::[String]
     ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
     ("### Equations:\n```\n") ::
     (es ++ ["\n```\n"]);
-  writeFile("out/SilverEquations.md", implode ("\n", toWrite));
+  writeFile("out/SilverEquations.md", implode("\n", toWrite));
   print("[✔] See out/SilverEquations.md for the resulting flattened Silver equations\n");
 };
 
 fun printBinds IO<Integer> ::= binds::[(String, String)] = do {
-  let bindEachStr::[String] = map ((\p::(String, String) -> "\t" ++ fst(p) ++ "\t-[binds to]->\t" ++ snd(p)), binds);
-  let bindsStr::String = implode ("\n", bindEachStr);
-  let anyUnfound::Boolean = length (filter ((\p::(String, String) -> snd(p) == "?"), binds)) != 0;
+  let bindEachStr::[String] = map((\p::(String, String) -> "\t" ++ fst(p) ++ "\t-[binds to]->\t" ++ snd(p)), binds);
+  let bindsStr::String = implode("\n", bindEachStr);
+  let anyUnfound::Boolean = length(filter((\p::(String, String) -> snd(p) == "?"), binds)) != 0;
   print("[" ++ (if anyUnfound then "✗" else "✔") ++ "] Resulting program bindings:\n" ++ bindsStr ++ "\n");
   return if anyUnfound then -1 else 0;
 };

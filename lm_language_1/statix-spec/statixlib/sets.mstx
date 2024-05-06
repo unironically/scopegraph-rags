@@ -1,1 +1,1 @@
-empty(set) :- every set (x -> false).
+empty(set) :- every set(x -> false).

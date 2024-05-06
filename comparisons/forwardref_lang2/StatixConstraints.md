@@ -18,7 +18,7 @@ def b = 1
 08: s_1 -[ `VAR ]-> s_var_2
 09: {vars_4, xvars_5, xvars_6}
 10: query s_0 `LEX*`IMP? `VAR as vars_4
-11: filter vars_4 ((x, _) where x == "b") xvars_5
+11: filter vars_4((x, _) where x == "b") xvars_5
 12: min-refs(xvars_5, xvars_6)
 13: only(xvars_6, p_7)
 14: datum(p_7, (x_8, ty_3))

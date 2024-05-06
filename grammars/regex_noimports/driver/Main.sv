@@ -15,15 +15,15 @@ IO<Integer> ::= largs::[String]
     -- Parse LMR
     let filePath :: String = head(largs);
     file :: String <- readFile(filePath);
-    let result :: ParseResult<Program_c> = lmr:driver:parse (file, filePath);
+    let result :: ParseResult<Program_c> = lmr:driver:parse(file, filePath);
     let ast :: Program = result.parseTree.ast;
 
     -- Program bindings
-    print ("Bindings (name_line_col):\n" ++ printBinds (ast.binds) ++ "\n\n" ++ ast.pp);
+    print("Bindings(name_line_col):\n" ++ printBinds(ast.binds) ++ "\n\n" ++ ast.pp);
 
-    writeFile ("equations.md", implode ("\n", ("# Equations for " ++ filePath)::"### Program:\n```"::file::"\n```\n### AST:\n```"::ast.pp::"```\n"::"### Constraints:"::ast.constraints));
+    writeFile("equations.md", implode("\n", ("# Equations for " ++ filePath)::"### Program:\n```"::file::"\n```\n### AST:\n```"::ast.pp::"```\n"::"### Constraints:"::ast.constraints));
 
-    writeFile ("coll_equations.md", implode ("\n", ("# Equations for " ++ filePath ++ " as if we used collection attributes")::"### Program:\n```"::file::"\n```\n### AST:\n```"::ast.pp::"```\n"::"### Constraints:"::ast.constraintsColl));
+    writeFile("coll_equations.md", implode("\n", ("# Equations for " ++ filePath ++ " as if we used collection attributes")::"### Program:\n```"::file::"\n```\n### AST:\n```"::ast.pp::"```\n"::"### Constraints:"::ast.constraintsColl));
 
     return 0;
   };

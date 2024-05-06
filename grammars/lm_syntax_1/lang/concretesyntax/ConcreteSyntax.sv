@@ -67,85 +67,85 @@ top::Expr_c ::= 'false'
 concrete production exprVar_c
 top::Expr_c ::= r::VarRef_c
 {
-  top.ast = exprVar (r.ast, location=top.location);
+  top.ast = exprVar(r.ast, location=top.location);
 }
 
 concrete production exprAdd_c
 top::Expr_c ::= e1::Expr_c '+' e2::Expr_c
 {
-  top.ast = exprAdd (e1.ast, e2.ast, location=top.location);
+  top.ast = exprAdd(e1.ast, e2.ast, location=top.location);
 }
 
 concrete production exprSub_c
 top::Expr_c ::= e1::Expr_c '-' e2::Expr_c
 {
-  top.ast = exprSub (e1.ast, e2.ast, location=top.location);
+  top.ast = exprSub(e1.ast, e2.ast, location=top.location);
 }
 
 concrete production exprMul_c
 top::Expr_c ::= e1::Expr_c '*' e2::Expr_c
 {
-  top.ast = exprMul (e1.ast, e2.ast, location=top.location);
+  top.ast = exprMul(e1.ast, e2.ast, location=top.location);
 }
 
 concrete production exprDiv_c
 top::Expr_c ::= e1::Expr_c '/' e2::Expr_c
 {
-  top.ast = exprDiv (e1.ast, e2.ast, location=top.location);
+  top.ast = exprDiv(e1.ast, e2.ast, location=top.location);
 }
 
 concrete production exprAnd_c
 top::Expr_c ::= e1::Expr_c '&' e2::Expr_c
 {
-  top.ast = exprAnd (e1.ast, e2.ast, location=top.location);
+  top.ast = exprAnd(e1.ast, e2.ast, location=top.location);
 }
 
 concrete production exprOr_c
 top::Expr_c ::= e1::Expr_c '|' e2::Expr_c
 {
-  top.ast = exprOr (e1.ast, e2.ast, location=top.location);
+  top.ast = exprOr(e1.ast, e2.ast, location=top.location);
 }
 
 concrete production exprEq_c
 top::Expr_c ::= e1::Expr_c '==' e2::Expr_c
 {
-  top.ast = exprEq (e1.ast, e2.ast, location=top.location);
+  top.ast = exprEq(e1.ast, e2.ast, location=top.location);
 }
 
 concrete production exprApp_c
 top::Expr_c ::= e1::Expr_c '$' e2::Expr_c
 {
-  top.ast = exprApp (e1.ast, e2.ast, location=top.location);
+  top.ast = exprApp(e1.ast, e2.ast, location=top.location);
 }
 
 concrete production exprIf_c
 top::Expr_c ::= 'if' e1::Expr_c 'then' e2::Expr_c 'else' e3::Expr_c
 {
-  top.ast = exprIf (e1.ast, e2.ast, e3.ast, location=top.location);
+  top.ast = exprIf(e1.ast, e2.ast, e3.ast, location=top.location);
 }
 
 concrete production exprFun_c
 top::Expr_c ::= 'fun' '(' d::ArgDecl_c ')' '{' e::Expr_c '}'
 {
-  top.ast = exprFun (d.ast, e.ast, location=top.location);
+  top.ast = exprFun(d.ast, e.ast, location=top.location);
 }
 
 concrete production exprLet_c
 top::Expr_c ::= 'let' bs::SeqBinds_c 'in' e::Expr_c
 {
-  top.ast = exprLet (bs.ast, e.ast, location=top.location);
+  top.ast = exprLet(bs.ast, e.ast, location=top.location);
 }
 
 concrete production exprLetRec_c
 top::Expr_c ::= 'letrec' bs::ParBinds_c 'in' e::Expr_c
 {
-  top.ast = exprLetRec (bs.ast, e.ast, location=top.location);
+  top.ast = exprLetRec(bs.ast, e.ast, location=top.location);
 }
 
 concrete production exprLetPar_c
 top::Expr_c ::= 'letpar' bs::ParBinds_c 'in' e::Expr_c
 {
-  top.ast = exprLetPar (bs.ast, e.ast, location=top.location);
+  top.ast = exprLetPar(bs.ast, e.ast, location=top.location);
 }
 
 concrete production exprParens_c
@@ -237,7 +237,7 @@ nonterminal ArgDecl_c with ast<ArgDecl>, location;
 concrete production argDecl_c
 top::ArgDecl_c ::= id::VarId_t ':' ty::Type_c
 {
-  top.ast = argDecl (id.lexeme, ty.ast, location=top.location);
+  top.ast = argDecl(id.lexeme, ty.ast, location=top.location);
 }
 
 --------------------------------------------------
@@ -247,19 +247,19 @@ nonterminal Type_c with ast<Type>, location;
 concrete production tInt_c
 top::Type_c ::= 'int'
 {
-  top.ast = tInt ();
+  top.ast = tInt();
 }
 
 concrete production tBool_c
 top::Type_c ::= 'bool'
 {
-  top.ast = tBool ();
+  top.ast = tBool();
 }
 
 concrete production tFun_c
 top::Type_c ::= tyann1::Type_c '->' tyann2::Type_c
 {
-  top.ast = tFun (tyann1.ast, tyann2.ast);
+  top.ast = tFun(tyann1.ast, tyann2.ast);
 }
 
 concrete production typeParens_c
@@ -275,5 +275,5 @@ nonterminal VarRef_c with ast<VarRef>, location;
 concrete production varRef_c
 top::VarRef_c ::= x::VarId_t
 {
-  top.ast = varRef (x.lexeme, location=top.location);
+  top.ast = varRef(x.lexeme, location=top.location);
 }

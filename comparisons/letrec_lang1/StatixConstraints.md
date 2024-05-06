@@ -36,20 +36,20 @@ def a =
 21: true
 22: {vars_10, xvars_11, xvars_12}
 23: query s_let_3 `LEX*`IMP? `VAR as vars_10
-24: filter vars_10 ((x, _) where x == "x") xvars_11
+24: filter vars_10((x, _) where x == "x") xvars_11
 25: min-refs(xvars_11, xvars_12)
 26: only(xvars_12, p_13)
 27: datum(p_13, (x_14, INT()))
 28: {vars_15, xvars_16, xvars_17}
 29: query s_let_3 `LEX*`IMP? `VAR as vars_15
-30: filter vars_15 ((x, _) where x == "y") xvars_16
+30: filter vars_15((x, _) where x == "y") xvars_16
 31: min-refs(xvars_16, xvars_17)
 32: only(xvars_17, p_18)
 33: datum(p_18, (x_19, INT()))
 34: INT() == INT()
 35: {vars_20, xvars_21, xvars_22}
 36: query s_let_3 `LEX*`IMP? `VAR as vars_20
-37: filter vars_20 ((x, _) where x == "z") xvars_21
+37: filter vars_20((x, _) where x == "z") xvars_21
 38: min-refs(xvars_21, xvars_22)
 39: only(xvars_22, p_23)
 40: datum(p_23, (x_24, INT()))

@@ -24,7 +24,7 @@ attribute allScopes occurs on Main;
 aspect production program
 top::Main ::= ds::Decls
 {
-  local globalScope::Scope = mkScopeGlobal (ds.varScopes, ds.modScopes);
+  local globalScope::Scope = mkScopeGlobal(ds.varScopes, ds.modScopes);
   ds.s = globalScope;
   ds.s_lookup = globalScope;
 
@@ -87,7 +87,7 @@ attribute allScopes occurs on Decl;
 aspect production declModule
 top::Decl ::= id::String ds::Decls
 {
-  local s_mod::Scope = mkScopeMod (top.s, ds.varScopes, ds.modScopes, top);
+  local s_mod::Scope = mkScopeMod(top.s, ds.varScopes, ds.modScopes, top);
 
   top.varScopes = [];
   top.modScopes = [s_mod];
@@ -341,7 +341,7 @@ propagate binds on SeqBind;
 aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
 {
-  local varScope::Scope = mkScopeSeqVar (top);
+  local varScope::Scope = mkScopeSeqVar(top);
 
   e.s = top.s;
 
@@ -352,7 +352,7 @@ top::SeqBind ::= id::String e::Expr
 aspect production seqBindTyped
 top::SeqBind ::= ty::Type id::String e::Expr
 {
-  local varScope::Scope = mkScopeSeqVar (top);
+  local varScope::Scope = mkScopeSeqVar(top);
 
   e.s = top.s;
   ty.s = top.s;
@@ -473,15 +473,15 @@ attribute binds occurs on ModRef;
 aspect production modRef
 top::ModRef ::= x::String
 {
-  local regex::Regex = regexCat (regexStar (regexSingle(labelLex())), regexCat (regexOption (regexSingle (labelImp())), regexSingle(labelMod())));
+  local regex::Regex = regexCat(regexStar(regexSingle(labelLex())), regexCat(regexOption(regexSingle(labelImp())), regexSingle(labelMod())));
   local dfa::DFA = regex.dfa;
-  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (dfa);
-  local result::[Decorated Scope] = resFun (top.s, x);
+  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun(dfa);
+  local result::[Decorated Scope] = resFun(top.s, x);
 
   local impXbind::(Maybe<Decorated Scope>, [(String, String)]) =
     case result of
       s::_ -> (case s.datum of
-              | just (d) -> (just(s), [(x, d.datumId)])
+              | just(d) -> (just(s), [(x, d.datumId)])
               | nothing() -> (nothing(), [])
               end)
     | [] -> (nothing(), [])
@@ -507,18 +507,18 @@ attribute binds occurs on VarRef;
 aspect production varRef
 top::VarRef ::= x::String
 {
-  local regex::Regex = regexCat (regexStar (regexSingle(labelLex())), regexCat (regexOption (regexSingle (labelImp())), regexSingle(labelVar())));
+  local regex::Regex = regexCat(regexStar(regexSingle(labelLex())), regexCat(regexOption(regexSingle(labelImp())), regexSingle(labelVar())));
   local dfa::DFA = regex.dfa;
-  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (dfa);
-  local result::[Decorated Scope] = resFun (top.s, x);
+  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun(dfa);
+  local result::[Decorated Scope] = resFun(top.s, x);
 
   top.binds :=
     case result of
       s::_ -> (case s.datum of
-            | just (d) -> [(x, d.datumId)]
-            | nothing() -> unsafeTrace ([], printT("Oh crap (var 1)...\n", unsafeIO()))
+            | just(d) -> [(x, d.datumId)]
+            | nothing() -> unsafeTrace([], printT("Oh crap(var 1)...\n", unsafeIO()))
             end)
-    | [] ->  unsafeTrace ([], printT("Oh crap (var 2)...\n", unsafeIO()))
+    | [] ->  unsafeTrace([], printT("Oh crap(var 2)...\n", unsafeIO()))
     end;
 }
 

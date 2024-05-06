@@ -16,7 +16,7 @@ IO<Integer> ::= largs::[String]
     -- Parse LMR
     let filePath :: String = head(largs);
     file :: String <- readFile(filePath);
-    let result :: ParseResult<Main_c> = lm:driver:parse (file, filePath);
+    let result :: ParseResult<Main_c> = lm:driver:parse(file, filePath);
     let ast :: Main = result.parseTree.ast;
 
     
@@ -25,12 +25,12 @@ IO<Integer> ::= largs::[String]
         --writeFile("StatixConstraints.md", implode("\n", ast.statixConstraints));
         writeStatixConstraints(filePath, file, ast.statixConstraints);
         writeSilverEquations(filePath, file, ast.silverEquations);
-        print ("Success!\n" ++ ast.statix ++ "\n");
-        printBinds (ast.binds);
-        --printSg (ast.allScopes);
+        print("Success!\n" ++ ast.statix ++ "\n");
+        printBinds(ast.binds);
+        --printSg(ast.allScopes);
         return 0;
       }
-      else do {print ("Failure!\n"); return -1;};
+      else do {print("Failure!\n"); return -1;};
 
     return 0;
   };
@@ -42,7 +42,7 @@ fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[Strin
     ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
     ("### Constraints:\n```\n") ::
     (cs ++ ["\n```\n"]);
-  writeFile("StatixConstraints.md", implode ("\n", toWrite));
+  writeFile("StatixConstraints.md", implode("\n", toWrite));
 };
 
 fun writeSilverEquations IO<Integer> ::= fname::String code::String es::[String] = do {
@@ -51,14 +51,14 @@ fun writeSilverEquations IO<Integer> ::= fname::String code::String es::[String]
     ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
     ("### Equations:\n```\n") ::
     (es ++ ["\n```\n"]);
-  writeFile("SilverEquations.md", implode ("\n", toWrite));
+  writeFile("SilverEquations.md", implode("\n", toWrite));
 };
 
 
 
 fun printBinds IO<Integer> ::= binds::[(String, String)] = do {
-  let bindEachStr::[String] = map ((\p::(String, String) -> " - " ++ fst(p) ++ " |-> " ++ snd(p)), binds);
-  let bindsStr::String = implode ("\n", bindEachStr);
+  let bindEachStr::[String] = map((\p::(String, String) -> " - " ++ fst(p) ++ " |-> " ++ snd(p)), binds);
+  let bindsStr::String = implode("\n", bindEachStr);
   print("Bindings:\n" ++ bindsStr ++ "\n");
 };
 

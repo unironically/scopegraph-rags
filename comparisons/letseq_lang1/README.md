@@ -47,7 +47,7 @@ globalScope
     └── Decls_70.s
 ```
 
-#### Equations involving the last let scope (defined in exprLet and passed down to the bind list)
+#### Equations involving the last let scope(defined in exprLet and passed down to the bind list)
 ###### Interesting equations
 ```
 local letScope_74::Scope = mkScopeLet();				-- Constraint 7

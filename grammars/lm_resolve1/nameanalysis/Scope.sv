@@ -34,7 +34,7 @@ top::Scope ::=
   var::[Decorated Scope]
   mod::[Decorated Scope]
 {
-  forwards to mkScope (nothing (), var, mod, nothing (), nothing ());
+  forwards to mkScope(nothing(), var, mod, nothing(), nothing());
 }
 
 
@@ -42,21 +42,21 @@ abstract production mkScopeParVar
 top::Scope ::=
   decl::Decorated ParBind
 {
-  forwards to mkScope (nothing (), [], [], nothing (), just(datumVar (decl)));
+  forwards to mkScope(nothing(), [], [], nothing(), just(datumVar(decl)));
 }
 
 abstract production mkScopeSeqVar
 top::Scope ::=
   decl::Decorated SeqBind
 {
-  forwards to mkScope (nothing (), [], [], nothing (), just(datumLetVar (decl)));
+  forwards to mkScope(nothing(), [], [], nothing(), just(datumLetVar(decl)));
 }
 
 abstract production mkScopeArgVar
 top::Scope ::=
   decl::Decorated ArgDecl
 {
-  forwards to mkScope (nothing (), [], [], nothing (), just(datumArgVar (decl)));
+  forwards to mkScope(nothing(), [], [], nothing(), just(datumArgVar(decl)));
 }
 
 
@@ -67,7 +67,7 @@ top::Scope ::=
   mod::[Decorated Scope]
   decl::Decorated Decl
 {
-  forwards to mkScope (just(lex), var, mod, nothing (), just(datumMod (decl)));
+  forwards to mkScope(just(lex), var, mod, nothing(), just(datumMod(decl)));
 }
 
 abstract production mkLookupScope
@@ -75,7 +75,7 @@ top::Scope ::=
   lex::Decorated Scope
   imp::Maybe<Decorated Scope>
 {
-  forwards to mkScope (just(lex), [], [], imp, nothing());
+  forwards to mkScope(just(lex), [], [], imp, nothing());
 }
 
 abstract production mkScopeSeqBind
@@ -83,7 +83,7 @@ top::Scope ::=
   lex::Decorated Scope
   var::[Decorated Scope]
 {
-  forwards to mkScope (just(lex), var, [], nothing(), nothing());
+  forwards to mkScope(just(lex), var, [], nothing(), nothing());
 }
 
 --------------------------------------------------
@@ -98,8 +98,8 @@ top::Datum ::= d::Decorated ParBind
 {
   top.datumId =
     case d of
-    | parBindUntyped (x, _) -> x
-    | parBindTyped (_, x, _) -> x
+    | parBindUntyped(x, _) -> x
+    | parBindTyped(_, x, _) -> x
     end;
   top.nameEq = \s::String -> s == top.datumId;
 }
@@ -109,8 +109,8 @@ top::Datum ::= d::Decorated SeqBind
 {
   top.datumId =
     case d of
-    | seqBindUntyped (x, _) -> x
-    | seqBindTyped (_, x, _) -> x
+    | seqBindUntyped(x, _) -> x
+    | seqBindTyped(_, x, _) -> x
     end;
   top.nameEq = \s::String -> s == top.datumId;
 }
@@ -120,7 +120,7 @@ top::Datum ::= d::Decorated ArgDecl
 {
   top.datumId =
     case d of
-    | argDecl (x, _) -> x
+    | argDecl(x, _) -> x
     end;
   top.nameEq = \s::String -> s == top.datumId;
 }
@@ -131,7 +131,7 @@ top::Datum ::= d::Decorated Decl
 {
   top.datumId =
     case d of
-    | declModule (x, _) -> x
+    | declModule(x, _) -> x
     | _ -> ""
     end;
   top.nameEq = \s::String -> s == top.datumId;
@@ -151,10 +151,10 @@ String ::=
     end;
   
   local varEdges::[String] =
-    map ((\tgt::Decorated Scope -> " -[ `VAR ]-> " ++ toString(tgt.id)), s.varEdges);
+    map((\tgt::Decorated Scope -> " -[ `VAR ]-> " ++ toString(tgt.id)), s.varEdges);
 
   local modEdges::[String] =
-    map ((\tgt::Decorated Scope -> " -[ `MOD ]-> " ++ toString(tgt.id)), s.modEdges);
+    map((\tgt::Decorated Scope -> " -[ `MOD ]-> " ++ toString(tgt.id)), s.modEdges);
 
   local impEdge::String =
     case s.impEdge of
@@ -162,7 +162,7 @@ String ::=
     | nothing() -> ""
     end;
 
-  local edgesPrint::[String] = map ((\s::String -> s ++ "\t"), [lexEdge] ++ varEdges ++ modEdges ++ [impEdge]);
+  local edgesPrint::[String] = map((\s::String -> s ++ "\t"), [lexEdge] ++ varEdges ++ modEdges ++ [impEdge]);
 
   return "- Scope " ++ toString(s.id) ++ "\n" ++ implode("\n", edgesPrint);
 

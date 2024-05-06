@@ -5,11 +5,11 @@ monoid attribute constraintsColl::[String] occurs on Program, Decls, Decl, Expr,
 aspect production program
 top::Program ::= h::String ds::Decls
 {
-  --local initScope::Scope = mkScopeGlobal (ds.varScopes, ds.modScopes);
+  --local initScope::Scope = mkScopeGlobal(ds.varScopes, ds.modScopes);
   --ds.scope = initScope;
 
-  local dsName::String = "ds_" ++ toString (genInt ());
-  local initScopeName::String = "initScope_" ++ toString (genInt ());
+  local dsName::String = "ds_" ++ toString(genInt());
+  local initScopeName::String = "initScope_" ++ toString(genInt());
 
   top.constraintsColl := [
     "##### constraints from `program(h = " ++ h ++ ", ds = " ++ dsName ++ ")`",
@@ -29,9 +29,9 @@ top::Decls ::= d::Decl ds::Decls
   --d.scope = top.scope;
   --ds.scope = case d.impLookupScope of nothing() -> top.scope | just(s) -> s end;
 
-  local dName::String = "d_" ++ toString (genInt ());
-  local dsName::String = "ds_" ++ toString (genInt ());
-  local impScopeName::String = "impScope_" ++ toString (genInt ());
+  local dName::String = "d_" ++ toString(genInt());
+  local dsName::String = "ds_" ++ toString(genInt());
+  local impScopeName::String = "impScope_" ++ toString(genInt());
   
   top.constraintsColl := [
     "##### constraints from `" ++ top.topName ++ " = decls_list(d = " ++ dName ++ ", ds = " ++ dsName ++ ")`",
@@ -65,20 +65,20 @@ top::Decls ::=
 aspect production decl_module
 top::Decl ::= x::String ds::Decls
 {
-  --local modScope::Scope = mkScopeMod (top.scope, ds.varScopes, ds.modScopes, top);
+  --local modScope::Scope = mkScopeMod(top.scope, ds.varScopes, ds.modScopes, top);
   --top.modScopes := [modScope];
   --top.varScopes := [];
-  --top.impLookupScope = nothing ();
+  --top.impLookupScope = nothing();
   --ds.scope = modScope;
 
   local xName::String = "\"" ++ x ++ "\"";
-  local dsName::String = "ds_" ++ toString (genInt ());
-  local modScopeName::String = "modScope_" ++ toString (genInt ());
+  local dsName::String = "ds_" ++ toString(genInt());
+  local modScopeName::String = "modScope_" ++ toString(genInt());
 
   top.constraintsColl := [
     "##### constraints from `" ++ top.topName ++ " = decl_module(x = " ++ xName ++ ", ds = " ++ dsName ++ ")`",
     "```",
-    "local " ++ modScopeName ++ "::Scope = mkScopeMod (" ++ top.topName ++ ");",
+    "local " ++ modScopeName ++ "::Scope = mkScopeMod(" ++ top.topName ++ ");",
     modScopeName ++ ".lexEdge = " ++ top.topName ++ ".scope;",
     top.topName ++ ".scope.modEdges <- [" ++ modScopeName ++ "];",
     dsName ++ ".scope = " ++ modScopeName ++ ";",
@@ -92,18 +92,18 @@ top::Decl ::= x::String ds::Decls
 aspect production decl_def
 top::Decl ::= b::Bind
 {
-  --local defScope::Scope = mkScopeVar (b);
+  --local defScope::Scope = mkScopeVar(b);
   --top.varScopes := [defScope];
   --top.modScopes := [];
-  --top.impLookupScope = nothing ();
+  --top.impLookupScope = nothing();
 
-  local defScopeName::String = "defScope_" ++ toString (genInt ());
-  local bName::String = "b_" ++ toString (genInt ());
+  local defScopeName::String = "defScope_" ++ toString(genInt());
+  local bName::String = "b_" ++ toString(genInt());
 
   top.constraintsColl := [
     "##### constraints from `" ++ top.topName ++ " = decl_def(b = " ++ bName ++ ")`",
     "```",
-    "local " ++ defScopeName ++ "::Scope = mkScopeVar (" ++ bName ++ ");",
+    "local " ++ defScopeName ++ "::Scope = mkScopeVar(" ++ bName ++ ");",
     top.topName ++ ".scope.varEdges <- [" ++ defScopeName ++ "];",
     "```",
     "\n"
@@ -115,14 +115,14 @@ top::Decl ::= b::Bind
 aspect production decl_import
 top::Decl ::= r::ModRef
 {
-  --local lookupScope::Scope = mkScope (just(top.scope), [], [], r.impScope, nothing ());
+  --local lookupScope::Scope = mkScope(just(top.scope), [], [], r.impScope, nothing());
   --top.modScopes := [];
   --top.varScopes := [];
   --top.impLookupScope = just(lookupScope);
   --r.scope = top.scope;
 
-  local rName::String = "r_" ++ toString (genInt ());
-  local lookupScopeName::String = "lookupScope_" ++ toString (genInt ());
+  local rName::String = "r_" ++ toString(genInt());
+  local lookupScopeName::String = "lookupScope_" ++ toString(genInt());
 
   top.constraintsColl := [
     "##### constraints from `" ++ top.topName ++ " = decl_import(r = " ++ rName ++ ")`",
@@ -140,7 +140,7 @@ aspect production expr_int
 top::Expr ::= i::Integer
 {
   top.constraintsColl := [
-    "##### constraints from `" ++ top.topName ++ " = expr_int(i = " ++ toString (i) ++ ")`",
+    "##### constraints from `" ++ top.topName ++ " = expr_int(i = " ++ toString(i) ++ ")`",
     "```",
     "```",
     "\n"
@@ -152,7 +152,7 @@ top::Expr ::= r::VarRef
 {
   -- r.scope = top.scope;
 
-  local rName::String = "r_" ++ toString (genInt ());
+  local rName::String = "r_" ++ toString(genInt());
 
   top.constraintsColl := [
     "##### constraints from `" ++ top.topName ++ " = expr_var(r = " ++ rName ++ ")`",
@@ -170,8 +170,8 @@ top::Expr ::= e1::Expr e2::Expr
   -- e1.scope = top.scope;
   -- e2.scope = top.scope;
 
-  local e1Name::String = "e_" ++ toString (genInt ());
-  local e2Name::String = "e_" ++ toString (genInt ());
+  local e1Name::String = "e_" ++ toString(genInt());
+  local e2Name::String = "e_" ++ toString(genInt());
 
   top.constraintsColl := [
     "##### constraints from `" ++ top.topName ++ " = expr_add(e1 = " ++ e1Name ++ ", e2 = " ++ e2Name ++ ")`",
@@ -191,7 +191,7 @@ top::Bind ::= x::VarRef_t e::Expr
 {
   --top.label = x.lexeme ++ "_" ++ toString(x.line) ++ "_" ++ toString(x.column);
 
-  local eName::String = "e_" ++ toString (genInt ());
+  local eName::String = "e_" ++ toString(genInt());
   local xName::String = "\"" ++ x.lexeme ++ "\"";
 
   top.constraintsColl := [
@@ -213,30 +213,30 @@ top::VarRef ::= x::VarRef_t
   {-
   local regex::Regex = `LEX* IMP? VAR`;
   local dfa::DFA = regex.dfa;
-  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (dfa);
+  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun(dfa);
 
   local decl::Maybe<Decorated Decl> =
-    case resFun (top.scope, x.lexeme) of
-    | mkScopeVar (d)::_ -> just(d)
+    case resFun(top.scope, x.lexeme) of
+    | mkScopeVar(d)::_ -> just(d)
     | _ -> nothing()
     end;
   -}
 
   local xName::String = "\"" ++ x.lexeme ++ "\"";
-  local regexName::String = "regex_" ++ toString (genInt ());
-  local dfaName::String = "dfa_" ++ toString (genInt ());
-  local resFunName::String = "resFun_" ++ toString (genInt ());
-  local declName::String = "decl_" ++ toString (genInt ());
+  local regexName::String = "regex_" ++ toString(genInt());
+  local dfaName::String = "dfa_" ++ toString(genInt());
+  local resFunName::String = "resFun_" ++ toString(genInt());
+  local declName::String = "decl_" ++ toString(genInt());
 
   top.constraintsColl := [
     "##### constraints from `" ++ top.topName ++ " = var_ref_single(x = " ++ xName ++ ")`",
     "```",
     "local " ++ regexName ++ "::Regex = `LEX* IMP VAR`;",
     "local " ++ dfaName ++ "::DFA = " ++ regexName ++ ".dfa;",
-    "local " ++ resFunName ++ "::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (" ++ dfaName ++ ");",
+    "local " ++ resFunName ++ "::([Decorated Scope] ::= Decorated Scope String) = resolutionFun(" ++ dfaName ++ ");",
     "local " ++ declName ++ " = \n" ++
                    "\tcase " ++ resFunName ++ "(" ++ top.topName ++ ".scope, " ++ xName ++ ".lexeme) of\n" ++
-                     "\t\tmkScopeVar (d)::_ -> just(d)\n" ++
+                     "\t\tmkScopeVar(d)::_ -> just(d)\n" ++
                    "\t| _ -> nothing()\n" ++
                  "\tend;",
     "```",
@@ -250,29 +250,29 @@ top::ModRef ::= x::TypeRef_t
   {-
   local regex::Regex = `LEX* IMP MOD`;
   local dfa::DFA = regex.dfa;
-  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (dfa);
+  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun(dfa);
 
   top.impScope =
-    case resFun (top.scope, x.lexeme) of
-    | mkScopeMod (_, _, _d)::_ -> just(d)
+    case resFun(top.scope, x.lexeme) of
+    | mkScopeMod(_, _, _d)::_ -> just(d)
     | _ -> nothing()
     end;
   -}
 
   local xName::String = "\"" ++ x.lexeme ++ "\"";
-  local regexName::String = "regex_" ++ toString (genInt ());
-  local dfaName::String = "dfa_" ++ toString (genInt ());
-  local resFunName::String = "resFun_" ++ toString (genInt ());
+  local regexName::String = "regex_" ++ toString(genInt());
+  local dfaName::String = "dfa_" ++ toString(genInt());
+  local resFunName::String = "resFun_" ++ toString(genInt());
 
   top.constraintsColl := [
     "##### constraints from `" ++ top.topName ++ " = mod_ref_single(x = " ++ xName ++ ")`",
     "```",
     "local " ++ regexName ++ "::Regex = `LEX* IMP MOD`;",
     "local " ++ dfaName ++ "::DFA = " ++ regexName ++ ".dfa;",
-    "local " ++ resFunName ++ "::([Decorated Scope] ::= Decorated Scope String [Decorated Scope]) = resolutionFun (" ++ dfaName ++ ");",
+    "local " ++ resFunName ++ "::([Decorated Scope] ::= Decorated Scope String [Decorated Scope]) = resolutionFun(" ++ dfaName ++ ");",
     top.topName ++ ".impScope = \n" ++
                 "\tcase " ++ resFunName ++ "(" ++ top.topName ++ ".scope, " ++ xName ++ ".lexeme) of\n" ++
-                   "\t\tmkScopeMod (_, _, _, d)::_ -> just(d)\n" ++
+                   "\t\tmkScopeMod(_, _, _, d)::_ -> just(d)\n" ++
                    "\t| _ -> nothing()\n" ++
                 "\tend;",
     "```",

@@ -12,10 +12,10 @@ attribute pp occurs on Regex;
 abstract production regexEpsilon
 top::Regex ::=
 {
-  local initial :: Integer = genInt ();
-  local final :: Integer = genInt ();
+  local initial :: Integer = genInt();
+  local final :: Integer = genInt();
   top.nfa = ([initial, final], [(initial, nothing(), final)], initial, final);
-  top.dfa = nfaToDFA (top.nfa);
+  top.dfa = nfaToDFA(top.nfa);
   top.pp = "eps";
 }
 
@@ -25,7 +25,7 @@ top::Regex ::= l::Label
   local initial :: Integer = genInt();
   local final   :: Integer = genInt();
   top.nfa = ([initial, final], [(initial, just(l), final)], initial, final);
-  top.dfa = nfaToDFA (top.nfa);
+  top.dfa = nfaToDFA(top.nfa);
   top.pp = l.pp;
 }
 
@@ -48,14 +48,14 @@ top::Regex ::= r::Regex
                   final                                   -- Accepting state
                 )
             end;
-  top.dfa = nfaToDFA (top.nfa);
+  top.dfa = nfaToDFA(top.nfa);
   top.pp = "(" ++ r.pp ++ ")*";
 }
 
 abstract production regexCat
 top::Regex ::= r1::Regex r2::Regex
 {
-  top.nfa = case (r1.nfa, r2.nfa) of
+  top.nfa = case(r1.nfa, r2.nfa) of
               ((fstStates, fstTrans, fstInitial, fstFinal),
                (sndStates, sndTrans, sndInitial, sndFinal))
               ->
@@ -66,7 +66,7 @@ top::Regex ::= r1::Regex r2::Regex
                   sndFinal
                 )
             end;
-  top.dfa = nfaToDFA (top.nfa);
+  top.dfa = nfaToDFA(top.nfa);
   top.pp = r1.pp ++ " " ++ r2.pp;
 }
 
@@ -75,7 +75,7 @@ top::Regex ::= r1::Regex r2::Regex
 {
   local initial :: Integer = genInt();
   local final   :: Integer = genInt();
-  top.nfa = case (r1.nfa, r2.nfa) of
+  top.nfa = case(r1.nfa, r2.nfa) of
               ((fstStates, fstTrans, fstInitial, fstFinal),
                (sndStates, sndTrans, sndInitial, sndFinal))
               ->
@@ -90,14 +90,14 @@ top::Regex ::= r1::Regex r2::Regex
                   final
                 )
             end;
-  top.dfa = nfaToDFA (top.nfa);
+  top.dfa = nfaToDFA(top.nfa);
   top.pp = r1.pp ++ " " ++ r2.pp;
 }
 
 abstract production regexOption
 top::Regex ::= r::Regex
 {
-  forwards to regexAlt (r, regexEpsilon());
+  forwards to regexAlt(r, regexEpsilon());
 }
 
 nonterminal Label;
@@ -161,20 +161,20 @@ DFA ::= n::NFA
     case n of
       (states, trans, start, final) ->
         
-        let s0::[Integer] = eClosure (trans, [start]) in
-        let states_moves::([[Integer]], [([Integer], Label, [Integer])]) = dfaMoves (trans, [], [s0]) in
+        let s0::[Integer] = eClosure(trans, [start]) in
+        let states_moves::([[Integer]], [([Integer], Label, [Integer])]) = dfaMoves(trans, [], [s0]) in
         
         let states::[[Integer]] = fst(states_moves) in
         let moves::[([Integer], Label, [Integer])] = snd(states_moves) in
 
-        let statesNums::[(Integer, [Integer])] = map ((\is::[Integer] -> (genInt(), is)), states) in
-        let movesNums::[DFATrans] = getDFATrans (moves, statesNums) in
+        let statesNums::[(Integer, [Integer])] = map((\is::[Integer] -> (genInt(), is)), states) in
+        let movesNums::[DFATrans] = getDFATrans(moves, statesNums) in
 
-        let states::[Integer] = map ((fst(_)), statesNums) in
+        let states::[Integer] = map((fst(_)), statesNums) in
         
-        let startSt::Integer = fst(head(filter ((\pair::(Integer, [Integer]) -> contains(start, snd(pair))), statesNums))) in
+        let startSt::Integer = fst(head(filter((\pair::(Integer, [Integer]) -> contains(start, snd(pair))), statesNums))) in
 
-        let endSt::[Integer] = map ((fst(_)), filter ((\pair::(Integer, [Integer]) -> contains(final, snd(pair))), statesNums)) in
+        let endSt::[Integer] = map((fst(_)), filter((\pair::(Integer, [Integer]) -> contains(final, snd(pair))), statesNums)) in
 
         (states, movesNums, startSt, endSt)
 
@@ -189,14 +189,14 @@ function getDFATrans
   return
     case dfaTransVerbose of
       [] -> []
-    | (from, lab, final)::t -> (getStateNum(from, assgn), lab, getStateNum(final, assgn)) :: getDFATrans (t, assgn)
+    | (from, lab, final)::t -> (getStateNum(from, assgn), lab, getStateNum(final, assgn)) :: getDFATrans(t, assgn)
     end;
 }
 
 function dfaAccepts
 Boolean ::= dfa::DFA state::Integer
 {
-  return contains (state, snd(snd(snd(dfa))));
+  return contains(state, snd(snd(snd(dfa))));
 }
 
 function getStateNum
@@ -205,7 +205,7 @@ Integer ::= st::[Integer] states::[(Integer, [Integer])]
   return
     case states of
       [] -> -1
-    | (hI, hS)::t -> if hS == st then hI else getStateNum (st, t)
+    | (hI, hS)::t -> if hS == st then hI else getStateNum(st, t)
     end;
 }
 
@@ -216,9 +216,9 @@ function dfaMoves
     case unmarked of
       [] -> (marked, [])
     | h::t ->
-      let transFromCurrent::[([Integer], Label, [Integer])] = transOnAll (trans, h, globLabs) in
-      let unseen::[[Integer]] = filter((\sts::[Integer] -> !contains(sts, marked ++ unmarked)), map ((\t::([Integer], Label, [Integer]) -> snd(snd(t))), transFromCurrent)) in
-      let rest::([[Integer]], [([Integer], Label, [Integer])]) = dfaMoves (trans, h::marked, t ++ unseen) in
+      let transFromCurrent::[([Integer], Label, [Integer])] = transOnAll(trans, h, globLabs) in
+      let unseen::[[Integer]] = filter((\sts::[Integer] -> !contains(sts, marked ++ unmarked)), map((\t::([Integer], Label, [Integer]) -> snd(snd(t))), transFromCurrent)) in
+      let rest::([[Integer]], [([Integer], Label, [Integer])]) = dfaMoves(trans, h::marked, t ++ unseen) in
         (fst(rest), transFromCurrent ++ snd(rest))
       end end end
     end;
@@ -232,10 +232,10 @@ function transOnAll
     case labs of
       [] -> []
     | h::t ->
-      let onLab::[Integer] = transOnLabel (trans, from, h)
-      in if !null (onLab)
-           then (from, h, eClosure (trans, onLab)) :: transOnAll (trans, from, t)
-           else transOnAll (trans, from, t)
+      let onLab::[Integer] = transOnLabel(trans, from, h)
+      in if !null(onLab)
+           then(from, h, eClosure(trans, onLab)) :: transOnAll(trans, from, t)
+           else transOnAll(trans, from, t)
       end
     end;
 }
@@ -245,18 +245,18 @@ function transOnLabel
 [Integer] ::= trans::[NFATrans] from::[Integer] lab::Label
 {
   return
-    let valid::[NFATrans] = filter ((\t::NFATrans -> contains(fst(t), from) && fst(snd(t)) == just(lab)), trans)
-    in map ((\t::NFATrans -> snd(snd(t))), valid) end;
+    let valid::[NFATrans] = filter((\t::NFATrans -> contains(fst(t), from) && fst(snd(t)) == just(lab)), trans)
+    in map((\t::NFATrans -> snd(snd(t))), valid) end;
 }
 
 function eClosure
 [Integer] ::= trans::[NFATrans] from::[Integer]
 {
   return
-    let validTrans::[NFATrans] = filter ((\t::NFATrans -> contains(fst(t), from) && !contains((snd(snd(t))), from) && !fst(snd(t)).isJust), trans) in
-    let newStates::[Integer]  = map    ((\t::NFATrans -> snd(snd(t))), validTrans) in
+    let validTrans::[NFATrans] = filter((\t::NFATrans -> contains(fst(t), from) && !contains((snd(snd(t))), from) && !fst(snd(t)).isJust), trans) in
+    let newStates::[Integer]  = map((\t::NFATrans -> snd(snd(t))), validTrans) in
       if null(newStates)
         then sort(from)
-        else eClosure (trans, from ++ newStates)
+        else eClosure(trans, from ++ newStates)
     end end;
 }

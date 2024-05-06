@@ -13,9 +13,9 @@ attribute silverEquations occurs on Main;
 aspect production program
 top::Main ::= ds::Decls
 {
-  local dsNameSilver::String = "Decls_" ++ toString (genInt());
+  local dsNameSilver::String = "Decls_" ++ toString(genInt());
   local globalScopeName::String = "globalScope";
-  local topName::String = "Main_" ++ toString (genInt());
+  local topName::String = "Main_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ globalScopeName ++ "::Scope = mkScopeGlobal(" ++ dsNameSilver ++ ".varScopes, " ++ dsNameSilver ++ ".modScopes);",
@@ -36,8 +36,8 @@ attribute topName occurs on Decls;
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  local dNameSilver::String = "Decl_" ++ toString (genInt());
-  local dsNameSilver::String = "Decls_" ++ toString (genInt());
+  local dNameSilver::String = "Decl_" ++ toString(genInt());
+  local dsNameSilver::String = "Decls_" ++ toString(genInt());
 
   top.silverEquations = [
     dNameSilver ++ ".s = " ++ top.topName ++ ".s;",
@@ -109,7 +109,7 @@ top::Decl ::= r::ModRef
 aspect production declDef
 top::Decl ::= b::ParBind
 {
-  local bNameSilver::String = "ParBind_" ++ toString (genInt());
+  local bNameSilver::String = "ParBind_" ++ toString(genInt());
 
   top.silverEquations = [
     top.topName ++ ".varScopes = " ++ bNameSilver ++ ".varScopes;",
@@ -155,7 +155,7 @@ top::Expr ::=
 aspect production exprVar
 top::Expr ::= r::VarRef
 {
-  local rNameSilver::String = "VarRef_" ++ toString (genInt());
+  local rNameSilver::String = "VarRef_" ++ toString(genInt());
 
   top.silverEquations = [
     rNameSilver ++ ".s = " ++ top.topName ++ ".s;",
@@ -168,8 +168,8 @@ top::Expr ::= r::VarRef
 aspect production exprAdd
 top::Expr ::= e1::Expr e2::Expr
 {
-  local e1NameSilver::String = "Expr_" ++ toString (genInt());
-  local e2NameSilver::String = "Expr_" ++ toString (genInt());
+  local e1NameSilver::String = "Expr_" ++ toString(genInt());
+  local e2NameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
@@ -184,8 +184,8 @@ top::Expr ::= e1::Expr e2::Expr
 aspect production exprSub
 top::Expr ::= e1::Expr e2::Expr
 {
-  local e1NameSilver::String = "Expr_" ++ toString (genInt());
-  local e2NameSilver::String = "Expr_" ++ toString (genInt());
+  local e1NameSilver::String = "Expr_" ++ toString(genInt());
+  local e2NameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
@@ -200,8 +200,8 @@ top::Expr ::= e1::Expr e2::Expr
 aspect production exprMul
 top::Expr ::= e1::Expr e2::Expr
 {
-  local e1NameSilver::String = "Expr_" ++ toString (genInt());
-  local e2NameSilver::String = "Expr_" ++ toString (genInt());
+  local e1NameSilver::String = "Expr_" ++ toString(genInt());
+  local e2NameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
@@ -216,8 +216,8 @@ top::Expr ::= e1::Expr e2::Expr
 aspect production exprDiv
 top::Expr ::= e1::Expr e2::Expr
 {
-  local e1NameSilver::String = "Expr_" ++ toString (genInt());
-  local e2NameSilver::String = "Expr_" ++ toString (genInt());
+  local e1NameSilver::String = "Expr_" ++ toString(genInt());
+  local e2NameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
@@ -232,8 +232,8 @@ top::Expr ::= e1::Expr e2::Expr
 aspect production exprAnd
 top::Expr ::= e1::Expr e2::Expr
 {
-  local e1NameSilver::String = "Expr_" ++ toString (genInt());
-  local e2NameSilver::String = "Expr_" ++ toString (genInt());
+  local e1NameSilver::String = "Expr_" ++ toString(genInt());
+  local e2NameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
@@ -248,8 +248,8 @@ top::Expr ::= e1::Expr e2::Expr
 aspect production exprOr
 top::Expr ::= e1::Expr e2::Expr
 {
-  local e1NameSilver::String = "Expr_" ++ toString (genInt());
-  local e2NameSilver::String = "Expr_" ++ toString (genInt());
+  local e1NameSilver::String = "Expr_" ++ toString(genInt());
+  local e2NameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
@@ -264,8 +264,8 @@ top::Expr ::= e1::Expr e2::Expr
 aspect production exprEq
 top::Expr ::= e1::Expr e2::Expr
 {
-  local e1NameSilver::String = "Expr_" ++ toString (genInt());
-  local e2NameSilver::String = "Expr_" ++ toString (genInt());
+  local e1NameSilver::String = "Expr_" ++ toString(genInt());
+  local e2NameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
@@ -280,8 +280,8 @@ top::Expr ::= e1::Expr e2::Expr
 aspect production exprApp
 top::Expr ::= e1::Expr e2::Expr
 {
-  local e1NameSilver::String = "Expr_" ++ toString (genInt());
-  local e2NameSilver::String = "Expr_" ++ toString (genInt());
+  local e1NameSilver::String = "Expr_" ++ toString(genInt());
+  local e2NameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
@@ -296,9 +296,9 @@ top::Expr ::= e1::Expr e2::Expr
 aspect production exprIf
 top::Expr ::= e1::Expr e2::Expr e3::Expr
 {
-  local e1NameSilver::String = "Expr_" ++ toString (genInt());
-  local e2NameSilver::String = "Expr_" ++ toString (genInt());
-  local e3NameSilver::String = "Expr_" ++ toString (genInt());
+  local e1NameSilver::String = "Expr_" ++ toString(genInt());
+  local e2NameSilver::String = "Expr_" ++ toString(genInt());
+  local e3NameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
@@ -316,8 +316,8 @@ aspect production exprFun
 top::Expr ::= d::ArgDecl e::Expr
 {
   local funScopeNameSilver::String = "funScope_" ++ toString(genInt());
-  local dNameSilver::String = "ArgDecl_" ++ toString (genInt());
-  local eNameSilver::String = "Expr_" ++ toString (genInt());
+  local dNameSilver::String = "ArgDecl_" ++ toString(genInt());
+  local eNameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ funScopeNameSilver ++ "::Scope = mkScopeLet(" ++ top.topName ++ ".s, " ++ dNameSilver ++ ".varScopes);",
@@ -333,9 +333,9 @@ top::Expr ::= d::ArgDecl e::Expr
 aspect production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
-  local letScopeNameSilver::String = "letScope_" ++ toString (genInt());
-  local bsNameSilver::String = "SeqBinds_" ++ toString (genInt());
-  local eNameSilver::String = "Expr_" ++ toString (genInt());
+  local letScopeNameSilver::String = "letScope_" ++ toString(genInt());
+  local bsNameSilver::String = "SeqBinds_" ++ toString(genInt());
+  local eNameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ letScopeNameSilver ++ "::Scope = mkScopeLet(" ++ bsNameSilver ++ ".lastScope, " ++ bsNameSilver ++ ".varScopes);",
@@ -351,9 +351,9 @@ top::Expr ::= bs::SeqBinds e::Expr
 aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local letScopeNameSilver::String = "letScope_" ++ toString (genInt());
-  local bsNameSilver::String = "ParBinds_" ++ toString (genInt());
-  local eNameSilver::String = "Expr_" ++ toString (genInt());
+  local letScopeNameSilver::String = "letScope_" ++ toString(genInt());
+  local bsNameSilver::String = "ParBinds_" ++ toString(genInt());
+  local eNameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ letScopeNameSilver ++ "::Scope = mkScopeLet(" ++ top.topName ++ ".s, " ++ bsNameSilver ++ ".varScopes);",
@@ -369,9 +369,9 @@ top::Expr ::= bs::ParBinds e::Expr
 aspect production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local letScopeNameSilver::String = "letScope_" ++ toString (genInt());
-  local bsNameSilver::String = "ParBinds_" ++ toString (genInt());
-  local eNameSilver::String = "Expr_" ++ toString (genInt());
+  local letScopeNameSilver::String = "letScope_" ++ toString(genInt());
+  local bsNameSilver::String = "ParBinds_" ++ toString(genInt());
+  local eNameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ letScopeNameSilver ++ "::Scope = mkScopeLet(" ++ top.topName ++ ".s, " ++ bsNameSilver ++ ".varScopes);",
@@ -403,7 +403,7 @@ top::SeqBinds ::=
 aspect production seqBindsOne
 top::SeqBinds ::= s::SeqBind
 {
-  local sNameSilver::String = "SeqBind_" ++ toString (genInt());
+  local sNameSilver::String = "SeqBind_" ++ toString(genInt());
 
   top.silverEquations = [
     sNameSilver ++ ".s = " ++ top.topName ++ ".s;",
@@ -418,9 +418,9 @@ top::SeqBinds ::= s::SeqBind
 aspect production seqBindsCons
 top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
-  local letBindScopeNameSilver::String = "letBindScope_" ++ toString (genInt());
-  local sNameSilver::String = "SeqBind_" ++ toString (genInt());
-  local ssNameSilver::String = "SeqBinds_" ++ toString (genInt());
+  local letBindScopeNameSilver::String = "letBindScope_" ++ toString(genInt());
+  local sNameSilver::String = "SeqBind_" ++ toString(genInt());
+  local ssNameSilver::String = "SeqBinds_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ letBindScopeNameSilver ++ "::Scope = mkScopeSeqBind(" ++ top.topName ++ ".s, " ++ sNameSilver ++ ".varScopes);",
@@ -445,8 +445,8 @@ aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
 {
   local idNameSilver::String = "\"" ++ id ++ "\"";
-  local varScopeNameSilver::String = "varScope_" ++ toString (genInt());
-  local eNameSilver::String = "Expr_" ++ toString (genInt());
+  local varScopeNameSilver::String = "varScope_" ++ toString(genInt());
+  local eNameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ eNameSilver ++ ".ty));",
@@ -461,10 +461,10 @@ top::SeqBind ::= id::String e::Expr
 aspect production seqBindTyped
 top::SeqBind ::= ty::Type id::String e::Expr
 {
-  local tyNameSilver::String = "Type_" ++ toString (genInt());
+  local tyNameSilver::String = "Type_" ++ toString(genInt());
   local idNameSilver::String = "\"" ++ id ++ "\"";
-  local varScopeNameSilver::String = "varScope_" ++ toString (genInt());
-  local eNameSilver::String = "Expr_" ++ toString (genInt());
+  local varScopeNameSilver::String = "varScope_" ++ toString(genInt());
+  local eNameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ tyNameSilver ++ "));",
@@ -496,8 +496,8 @@ top::ParBinds ::=
 aspect production parBindsCons
 top::ParBinds ::= s::ParBind ss::ParBinds
 {
-  local sNameSilver::String = "ParBind_" ++ toString (genInt());
-  local ssNameSilver::String = "ParBinds_" ++ toString (genInt());
+  local sNameSilver::String = "ParBind_" ++ toString(genInt());
+  local ssNameSilver::String = "ParBinds_" ++ toString(genInt());
 
   top.silverEquations = [
     sNameSilver ++ ".s = " ++ top.topName ++ ".s;",
@@ -519,8 +519,8 @@ aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
 {
   local idNameSilver::String = "\"" ++ id ++ "\"";
-  local varScopeNameSilver::String = "varScope_" ++ toString (genInt());
-  local eNameSilver::String = "Expr_" ++ toString (genInt());
+  local varScopeNameSilver::String = "varScope_" ++ toString(genInt());
+  local eNameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ eNameSilver ++ ".ty));",
@@ -535,10 +535,10 @@ top::ParBind ::= id::String e::Expr
 aspect production parBindTyped
 top::ParBind ::= ty::Type id::String e::Expr
 {
-  local tyNameSilver::String = "Type_" ++ toString (genInt());
+  local tyNameSilver::String = "Type_" ++ toString(genInt());
   local idNameSilver::String = "\"" ++ id ++ "\"";
-  local varScopeNameSilver::String = "varScope_" ++ toString (genInt());
-  local eNameSilver::String = "Expr_" ++ toString (genInt());
+  local varScopeNameSilver::String = "varScope_" ++ toString(genInt());
+  local eNameSilver::String = "Expr_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ tyNameSilver ++ "));",
@@ -562,8 +562,8 @@ aspect production argDecl
 top::ArgDecl ::= id::String tyann::Type
 {
   local idNameSilver::String = "\"" ++ id ++ "\"";
-  local varScopeNameSilver::String = "varScope_" ++ toString (genInt());
-  local tyannNameSilver::String = "Type_" ++ toString (genInt());
+  local varScopeNameSilver::String = "varScope_" ++ toString(genInt());
+  local tyannNameSilver::String = "Type_" ++ toString(genInt());
 
   top.silverEquations = [
     "local" ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ tyannNameSilver ++ "));",
@@ -600,8 +600,8 @@ top::Type ::=
 aspect production tFun
 top::Type ::= tyann1::Type tyann2::Type
 {
-  local tyann1NameSilver::String = "Type_" ++ toString (genInt());
-  local tyann2NameSilver::String = "Type_" ++ toString (genInt());
+  local tyann1NameSilver::String = "Type_" ++ toString(genInt());
+  local tyann2NameSilver::String = "Type_" ++ toString(genInt());
   top.silverEquations = [
     top.topName ++ ".ty = tFun(" ++ tyann1NameSilver ++ ".ty, " ++ tyann2NameSilver ++ ".ty);"
   ] ++ tyann1.silverEquations ++ tyann2.silverEquations;
@@ -626,10 +626,10 @@ attribute topName occurs on ModRef;
 aspect production modRef
 top::ModRef ::= x::String
 {
-  local regexNameSilver::String = "regex_" ++ toString (genInt());
-  local dfaNameSilver::String = "dfa_" ++ toString (genInt());
-  local resFunNameSilver::String = "resFun_" ++ toString (genInt());
-  local resultNameSilver::String = "result_" ++ toString (genInt());
+  local regexNameSilver::String = "regex_" ++ toString(genInt());
+  local dfaNameSilver::String = "dfa_" ++ toString(genInt());
+  local resFunNameSilver::String = "resFun_" ++ toString(genInt());
+  local resultNameSilver::String = "result_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ regexNameSilver ++ "::Regex = `LEX* IMP? MOD`;",
@@ -650,16 +650,16 @@ aspect production modQRef
 top::ModRef ::= r::ModRef x::String
 {
   local rNameSilver::String = "ModRef_" ++ toString(genInt());
-  local regexNameSilver::String = "regex_" ++ toString (genInt());
-  local dfaNameSilver::String = "dfa_" ++ toString (genInt());
-  local resFunNameSilver::String = "resFun_" ++ toString (genInt());
-  local resultNameSilver::String = "result_" ++ toString (genInt());
+  local regexNameSilver::String = "regex_" ++ toString(genInt());
+  local dfaNameSilver::String = "dfa_" ++ toString(genInt());
+  local resFunNameSilver::String = "resFun_" ++ toString(genInt());
+  local resultNameSilver::String = "result_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ regexNameSilver ++ "::Regex = `MOD`;",
     "local " ++ dfaNameSilver ++ "::DFA = " ++ regexNameSilver ++ ".dfa;",
     "local " ++ resFunNameSilver ++ "::ResFunTy = resolutionFun(" ++ dfaNameSilver ++ ");",
-    "local " ++ resultNameSilver ++ "::[Decorated Scope] = case " ++ rNameSilver ++ ".declScope of just (sMod) -> " ++ resFunNameSilver ++ "(sMod, \"" ++ x ++ "\") | _ -> [] end;",
+    "local " ++ resultNameSilver ++ "::[Decorated Scope] = case " ++ rNameSilver ++ ".declScope of just(sMod) -> " ++ resFunNameSilver ++ "(sMod, \"" ++ x ++ "\") | _ -> [] end;",
     top.topName ++ ".declScope = \n" ++
       "\tcase " ++ resultNameSilver ++ " of\n" ++
         "\t| s::_ -> just(s)\n" ++
@@ -678,10 +678,10 @@ attribute topName occurs on VarRef;
 aspect production varRef
 top::VarRef ::= x::String
 {
-  local regexNameSilver::String = "regex_" ++ toString (genInt());
-  local dfaNameSilver::String = "dfa_" ++ toString (genInt());
-  local resFunNameSilver::String = "resFun_" ++ toString (genInt());
-  local resultNameSilver::String = "result_" ++ toString (genInt());
+  local regexNameSilver::String = "regex_" ++ toString(genInt());
+  local dfaNameSilver::String = "dfa_" ++ toString(genInt());
+  local resFunNameSilver::String = "resFun_" ++ toString(genInt());
+  local resultNameSilver::String = "result_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ regexNameSilver ++ "::Regex = `LEX* IMP? VAR`;",
@@ -700,16 +700,16 @@ aspect production varQRef
 top::VarRef ::= r::ModRef x::String
 {
   local rNameSilver::String = "ModRef_" ++ toString(genInt());
-  local regexNameSilver::String = "regex_" ++ toString (genInt());
-  local dfaNameSilver::String = "dfa_" ++ toString (genInt());
-  local resFunNameSilver::String = "resFun_" ++ toString (genInt());
-  local resultNameSilver::String = "result_" ++ toString (genInt());
+  local regexNameSilver::String = "regex_" ++ toString(genInt());
+  local dfaNameSilver::String = "dfa_" ++ toString(genInt());
+  local resFunNameSilver::String = "resFun_" ++ toString(genInt());
+  local resultNameSilver::String = "result_" ++ toString(genInt());
 
   top.silverEquations = [
     "local " ++ regexNameSilver ++ "::Regex = `VAR`;",
     "local " ++ dfaNameSilver ++ "::DFA = " ++ regexNameSilver ++ ".dfa;",
     "local " ++ resFunNameSilver ++ "::ResFunTy = resolutionFun(" ++ dfaNameSilver ++ ");",
-    "local " ++ resultNameSilver ++ "::[Decorated Scope] = case " ++ rNameSilver ++ ".declScope of just (sMod) -> " ++ resFunNameSilver ++ "(sMod, \"" ++ x ++ "\") | _ -> [] end;",
+    "local " ++ resultNameSilver ++ "::[Decorated Scope] = case " ++ rNameSilver ++ ".declScope of just(sMod) -> " ++ resFunNameSilver ++ "(sMod, \"" ++ x ++ "\") | _ -> [] end;",
     top.topName ++ ".declScope = \n" ++
       "\tcase " ++ resultNameSilver ++ " of\n" ++
         "\t| s::_ -> just(s)\n" ++
