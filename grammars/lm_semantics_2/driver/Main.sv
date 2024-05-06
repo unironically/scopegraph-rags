@@ -71,21 +71,23 @@ fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[Strin
 };
 
 fun writeSilverEquations IO<Integer> ::= fname::String code::String es::[String] = do {
+  let numberedLines::[String] = snd (foldr (eqsNumbered, (length(es), []), es));
   let toWrite::[String] = 
     ("## Silver equations for " ++ fname ++ "\n") ::
     ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
     ("### Equations:\n```\n") ::
-    (es ++ ["\n```\n"]);
+    (numberedLines ++ ["\n```\n"]);
   writeFile("out/SilverEquations.md", implode ("\n", toWrite));
   print("[✔] See out/SilverEquations.md for the resulting flattened Silver equations\n");
 };
 
 fun writeJastEquations IO<Integer> ::= fname::String code::String es::[String] = do {
+  let numberedLines::[String] = snd (foldr (eqsNumbered, (length(es), []), es));
   let toWrite::[String] = 
     ("## Jast equations for " ++ fname ++ "\n") ::
     ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
     ("### Equations:\n```\n") ::
-    (es ++ ["\n```\n"]);
+    (numberedLines ++ ["\n```\n"]);
   writeFile("out/JastEquations.md", implode ("\n", toWrite));
   print("[✔] See out/JastEquations.md for the resulting flattened Silver equations\n");
 };
