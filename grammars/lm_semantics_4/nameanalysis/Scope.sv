@@ -91,3 +91,4 @@ top::Datum ::= id::String ty::Type
   top.datumTy = ty;
   top.nameEq = \s::String -> s == id;
 }
+

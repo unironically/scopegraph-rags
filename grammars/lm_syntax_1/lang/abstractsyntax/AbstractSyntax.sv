@@ -233,13 +233,13 @@ nonterminal Type with statix;
 abstract production tInt
 top::Type ::= 
 {
-  top.statix = "TInt()";
+  top.statix = "tInt()";
 }
 
 abstract production tBool
 top::Type ::= 
 {
-  top.statix = "TBool()";
+  top.statix = "tBool()";
 }
 
 abstract production tFun
@@ -251,7 +251,7 @@ top::Type ::= tyann1::Type tyann2::Type
 abstract production tErr
 top::Type ::=
 {
-  top.statix = "TErr()";
+  top.statix = "tErr()";
 }
 
 instance Eq Type {

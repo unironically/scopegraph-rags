@@ -1,0 +1,7 @@
+def a = 
+  letpar
+    x = let a = 1, b = 2 in a + b,
+    y = 2,
+    z = 3
+  in 
+    x + y + z

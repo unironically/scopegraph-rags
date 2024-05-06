@@ -202,6 +202,12 @@ top::ParBinds_c ::=
   top.ast = parBindsNil(location=top.location);
 }
 
+concrete production parBindsOne_c
+top::ParBinds_c ::= s::ParBind_c
+{
+  forwards to parBindsCons_c(s, ',', parBindsNil_c(location=top.location), location=top.location);
+}
+
 concrete production parBindsCons_c
 top::ParBinds_c ::= s::ParBind_c ',' ss::ParBinds_c
 {

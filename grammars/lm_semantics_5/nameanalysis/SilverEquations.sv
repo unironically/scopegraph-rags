@@ -1,4 +1,4 @@
-grammar lm_semantics_2:nameanalysis;
+grammar lm_semantics_5:nameanalysis;
 
 --------------------------------------------------
 
@@ -18,7 +18,7 @@ top::Main ::= ds::Decls
   local topName::String = "Main_" ++ toString (genInt());
 
   top.silverEquations = [
-    "local " ++ globalScopeName ++ "::Scope = mkScopeGlobal([], []);",
+    "local " ++ globalScopeName ++ "::Scope = mkScopeGlobal(" ++ ds.topName ++ ".varScopes);",
     ds.topName ++ ".s = " ++ globalScopeName ++ ";",
     topName ++ ".ok = " ++ dsNameSilver ++ ".ok;"
   ] ++ ds.silverEquations;
@@ -35,16 +35,13 @@ attribute topName occurs on Decls;
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  local lookupScopeNameSilver::String = "lookupScope_" ++ toString(genInt());
   local dNameSilver::String = "Decl_" ++ toString (genInt());
   local dsNameSilver::String = "Decls_" ++ toString (genInt());
 
   top.silverEquations = [
-    "local " ++ lookupScopeNameSilver ++ "::Scope = mkScopeImpLookup(" ++ top.topName ++ ".s, " ++ dNameSilver ++ ".varScopes, " ++ dNameSilver ++ ".modScopes, " ++ dNameSilver ++ ".impScope);",
     dNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    dsNameSilver ++ ".s = " ++ lookupScopeNameSilver ++ ";",
+    dsNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     top.topName ++ ".varScopes = " ++ dNameSilver ++ ".varScopes ++ " ++ dsNameSilver ++ ".varScopes;",
-    top.topName ++ ".modScopes = " ++ dNameSilver ++ ".modScopes ++ " ++ dsNameSilver ++ ".modScopes;",
     top.topName ++ ".ok = " ++ dNameSilver ++ ".ok && " ++ dsNameSilver ++ ".ok;"
   ] ++ d.silverEquations ++ ds.silverEquations;
 
@@ -58,7 +55,6 @@ top::Decls ::=
 {
   top.silverEquations = [
     top.topName ++ ".varScopes = [];",
-    top.topName ++ ".modScopes = [];",
     top.topName ++ ".ok = true;"
   ];
 }
@@ -69,39 +65,6 @@ attribute silverEquations occurs on Decl;
 
 attribute topName occurs on Decl;
 
-aspect production declModule
-top::Decl ::= id::String ds::Decls
-{
-  local idNameSilver::String = "\"" ++ id ++ "\"";
-  local dsNameSilver::String = "Decls_" ++ toString(genInt());
-  local modScopeNameSilver::String = "modScope_" ++ toString(genInt());
-  top.silverEquations = [
-    "local " ++ modScopeNameSilver ++ "::Scope = mkScopeMod(" ++ top.topName ++ ".s, " ++ dsNameSilver ++ ".varScopes, " ++ dsNameSilver ++ ".modScopes, " ++ idNameSilver ++ ");",
-    top.topName ++ ".varScopes = [];",
-    top.topName ++ ".modScopes = [" ++ modScopeNameSilver ++ "];",
-    top.topName ++ ".impScope = nothing();",
-    dsNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ok = " ++ dsNameSilver ++ ".ok;"
-  ] ++ ds.silverEquations;
-
-  ds.topName = dsNameSilver;
-}
-
-aspect production declImport
-top::Decl ::= r::ModRef
-{
-  local rNameSilver::String = "ModRef_" ++ toString(genInt());
-  top.silverEquations = [
-    top.topName ++ ".varScopes = [];",
-    top.topName ++ ".modScopes = [];",
-    top.topName ++ ".impScope = " ++ rNameSilver ++ ".declScope;",
-    rNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ok = true;"
-  ] ++ r.silverEquations;
-
-  r.topName = rNameSilver;
-}
-
 aspect production declDef
 top::Decl ::= b::ParBind
 {
@@ -109,8 +72,6 @@ top::Decl ::= b::ParBind
 
   top.silverEquations = [
     top.topName ++ ".varScopes = " ++ bNameSilver ++ ".varScopes;",
-    top.topName ++ ".modScopes = [];",
-    top.topName ++ ".impScope = nothing();",
     bNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     top.topName ++ ".ok = " ++ bNameSilver ++ ".ok;"
   ] ++ b.silverEquations;
@@ -615,58 +576,6 @@ top::Type ::=
 
 --------------------------------------------------
 
-attribute silverEquations occurs on ModRef;
-
-attribute topName occurs on ModRef;
-
-aspect production modRef
-top::ModRef ::= x::String
-{
-  local regexNameSilver::String = "regex_" ++ toString (genInt());
-  local dfaNameSilver::String = "dfa_" ++ toString (genInt());
-  local resFunNameSilver::String = "resFun_" ++ toString (genInt());
-  local resultNameSilver::String = "result_" ++ toString (genInt());
-
-  top.silverEquations = [
-    "local " ++ regexNameSilver ++ "::Regex = `LEX* IMP? MOD`;",
-    "local " ++ dfaNameSilver ++ "::DFA = " ++ regexNameSilver ++ ".dfa;",
-    "local " ++ resFunNameSilver ++ "::ResFunTy = resolutionFun(" ++ dfaNameSilver ++ ");",
-    "local " ++ resultNameSilver ++ "::[Decorated Scope] = " ++ resFunNameSilver ++ "(" ++ top.topName ++ ".s, \"" ++ x ++ "\");",
-    top.topName ++ ".declScope = \n" ++
-      "\tcase " ++ resultNameSilver ++ " of\n" ++
-        "\t| s::_ -> just(s)\n" ++ 
-        "\t| [] -> nothing()\n" ++
-      "\tend;",
-    top.topName ++ ".ok = " ++ top.topName ++ ".declScope.isJust;"
-  ];
-}
-
-
-aspect production modQRef
-top::ModRef ::= r::ModRef x::String
-{
-  local rNameSilver::String = "ModRef_" ++ toString(genInt());
-  local regexNameSilver::String = "regex_" ++ toString (genInt());
-  local dfaNameSilver::String = "dfa_" ++ toString (genInt());
-  local resFunNameSilver::String = "resFun_" ++ toString (genInt());
-  local resultNameSilver::String = "result_" ++ toString (genInt());
-
-  top.silverEquations = [
-    "local " ++ regexNameSilver ++ "::Regex = `MOD`;",
-    "local " ++ dfaNameSilver ++ "::DFA = " ++ regexNameSilver ++ ".dfa;",
-    "local " ++ resFunNameSilver ++ "::ResFunTy = resolutionFun(" ++ dfaNameSilver ++ ");",
-    "local " ++ resultNameSilver ++ "::[Decorated Scope] = case " ++ rNameSilver ++ ".declScope of just (sMod) -> " ++ resFunNameSilver ++ "(sMod, \"" ++ x ++ "\") | _ -> [] end;",
-    top.topName ++ ".declScope = \n" ++
-      "\tcase " ++ resultNameSilver ++ " of\n" ++
-        "\t| s::_ -> just(s)\n" ++ 
-        "\t| [] -> nothing()\n" ++
-      "\tend;",
-    top.topName ++ ".ok = " ++ top.topName ++ ".declScope.isJust;"
-  ];
-}
-
---------------------------------------------------
-
 attribute silverEquations occurs on VarRef;
 
 attribute topName occurs on VarRef;
@@ -678,37 +587,16 @@ top::VarRef ::= x::String
   local dfaNameSilver::String = "dfa_" ++ toString (genInt());
   local resFunNameSilver::String = "resFun_" ++ toString (genInt());
   local resultNameSilver::String = "result_" ++ toString (genInt());
+  local declNameSilver::String = "decl_" ++ toString (genInt());
 
   top.silverEquations = [
-    "local " ++ regexNameSilver ++ "::Regex = `LEX* IMP? VAR`;",
+    "local " ++ regexNameSilver ++ "::Regex = `LEX* VAR`;",
     "local " ++ dfaNameSilver ++ "::DFA = " ++ regexNameSilver ++ ".dfa;",
     "local " ++ resFunNameSilver ++ "::ResFunTy = resolutionFun(" ++ dfaNameSilver ++ ");",
     "local " ++ resultNameSilver ++ "::[Decorated Scope] = " ++ resFunNameSilver ++ "(" ++ top.topName ++ ".s, \"" ++ x ++ "\");",
-    top.topName ++ ".declScope = \n" ++
+    top.topName ++ ".datum = \n" ++
       "\tcase " ++ resultNameSilver ++ " of\n" ++
-        "\t| s::_ -> just(s)\n" ++ 
-        "\t| [] -> nothing()\n" ++
-      "\tend;"
-  ];
-}
-
-aspect production varQRef
-top::VarRef ::= r::ModRef x::String
-{
-  local rNameSilver::String = "ModRef_" ++ toString(genInt());
-  local regexNameSilver::String = "regex_" ++ toString (genInt());
-  local dfaNameSilver::String = "dfa_" ++ toString (genInt());
-  local resFunNameSilver::String = "resFun_" ++ toString (genInt());
-  local resultNameSilver::String = "result_" ++ toString (genInt());
-
-  top.silverEquations = [
-    "local " ++ regexNameSilver ++ "::Regex = `VAR`;",
-    "local " ++ dfaNameSilver ++ "::DFA = " ++ regexNameSilver ++ ".dfa;",
-    "local " ++ resFunNameSilver ++ "::ResFunTy = resolutionFun(" ++ dfaNameSilver ++ ");",
-    "local " ++ resultNameSilver ++ "::[Decorated Scope] = case " ++ rNameSilver ++ ".declScope of just (sMod) -> " ++ resFunNameSilver ++ "(sMod, \"" ++ x ++ "\") | _ -> [] end;",
-    top.topName ++ ".declScope = \n" ++
-      "\tcase " ++ resultNameSilver ++ " of\n" ++
-        "\t| s::_ -> just(s)\n" ++ 
+        "\t| s::_ -> s.datum\n" ++ 
         "\t| [] -> nothing()\n" ++
       "\tend;"
   ];
