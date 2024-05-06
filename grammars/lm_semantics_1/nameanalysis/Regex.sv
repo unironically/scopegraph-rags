@@ -10,7 +10,7 @@ synthesized attribute pp::String;
 attribute pp occurs on Regex;
 
 abstract production regexEpsilon
-top::Regex ::= 
+top::Regex ::=
 {
   local initial :: Integer = genInt ();
   local final :: Integer = genInt ();
@@ -35,7 +35,7 @@ top::Regex ::= r::Regex
   local initial :: Integer = genInt();
   local final   :: Integer = genInt();
   top.nfa = case r.nfa of
-              (subStates, subTrans, subInitial, subFinal) 
+              (subStates, subTrans, subInitial, subFinal)
               ->
                 (
                   initial::final::subStates,              -- States
@@ -57,7 +57,7 @@ top::Regex ::= r1::Regex r2::Regex
 {
   top.nfa = case (r1.nfa, r2.nfa) of
               ((fstStates, fstTrans, fstInitial, fstFinal),
-               (sndStates, sndTrans, sndInitial, sndFinal)) 
+               (sndStates, sndTrans, sndInitial, sndFinal))
               ->
                 (
                   fstStates ++ sndStates,
@@ -77,7 +77,7 @@ top::Regex ::= r1::Regex r2::Regex
   local final   :: Integer = genInt();
   top.nfa = case (r1.nfa, r2.nfa) of
               ((fstStates, fstTrans, fstInitial, fstFinal),
-               (sndStates, sndTrans, sndInitial, sndFinal)) 
+               (sndStates, sndTrans, sndInitial, sndFinal))
               ->
                 (
                   initial::final::(fstStates ++ sndStates),
@@ -110,13 +110,13 @@ synthesized attribute priority::Integer occurs on Label;
 {----- LANGUAGE SPECIFIC -----}
 
 abstract production labelLex
-top::Label ::= { 
+top::Label ::= {
   top.pp = "LEX";
   top.priority = 3;
 }
 
 abstract production labelVar
-top::Label ::= { 
+top::Label ::= {
   top.pp = "VAR";
   top.priority = 1;
 }
@@ -126,7 +126,7 @@ instance Eq Label {
 }
 
 instance Ord Label {
-  compare = \l1::Label l2::Label -> 
+  compare = \l1::Label l2::Label ->
               if      l1.priority < l2.priority then 1
               else if l1.priority > l2.priority then -1
               else    0;
@@ -139,7 +139,7 @@ global globLabs::[Label] = [labelLex(), labelVar()];
 type NFA = ([Integer], [NFATrans], Integer, Integer);   -- states, transitions, initial state, accepting state
 type DFA = ([Integer], [DFATrans], Integer, [Integer]); -- states, transitions, inital state, accepting states
 type NFATrans = (Integer, Maybe<Label>, Integer);
-type DFATrans = (Integer, Label, Integer); 
+type DFATrans = (Integer, Label, Integer);
 
 
 function nfaToDFA
@@ -155,14 +155,14 @@ DFA ::= n::NFA
         let states::[[Integer]] = fst(states_moves) in
         let moves::[([Integer], Label, [Integer])] = snd(states_moves) in
 
-        let statesNums::[(Integer, [Integer])] = map ((\is::[Integer] -> (genInt(), is)), states) in 
-        let movesNums::[DFATrans] = getDFATrans (moves, statesNums) in 
+        let statesNums::[(Integer, [Integer])] = map ((\is::[Integer] -> (genInt(), is)), states) in
+        let movesNums::[DFATrans] = getDFATrans (moves, statesNums) in
 
-        let states::[Integer] = map ((fst(_)), statesNums) in 
+        let states::[Integer] = map ((fst(_)), statesNums) in
         
         let startSt::Integer = fst(head(filter ((\pair::(Integer, [Integer]) -> contains(start, snd(pair))), statesNums))) in
 
-        let endSt::[Integer] = map ((fst(_)), filter ((\pair::(Integer, [Integer]) -> contains(final, snd(pair))), statesNums)) in 
+        let endSt::[Integer] = map ((fst(_)), filter ((\pair::(Integer, [Integer]) -> contains(final, snd(pair))), statesNums)) in
 
         (states, movesNums, startSt, endSt)
 
@@ -203,10 +203,10 @@ function dfaMoves
   return
     case unmarked of
       [] -> (marked, [])
-    | h::t -> 
+    | h::t ->
       let transFromCurrent::[([Integer], Label, [Integer])] = transOnAll (trans, h, globLabs) in
       let unseen::[[Integer]] = filter((\sts::[Integer] -> !contains(sts, marked ++ unmarked)), map ((\t::([Integer], Label, [Integer]) -> snd(snd(t))), transFromCurrent)) in
-      let rest::([[Integer]], [([Integer], Label, [Integer])]) = dfaMoves (trans, h::marked, t ++ unseen) in 
+      let rest::([[Integer]], [([Integer], Label, [Integer])]) = dfaMoves (trans, h::marked, t ++ unseen) in
         (fst(rest), transFromCurrent ++ snd(rest))
       end end end
     end;
@@ -219,10 +219,10 @@ function transOnAll
   return
     case labs of
       [] -> []
-    | h::t -> 
-      let onLab::[Integer] = transOnLabel (trans, from, h) 
-      in if !null (onLab) 
-           then (from, h, eClosure (trans, onLab)) :: transOnAll (trans, from, t) 
+    | h::t ->
+      let onLab::[Integer] = transOnLabel (trans, from, h)
+      in if !null (onLab)
+           then (from, h, eClosure (trans, onLab)) :: transOnAll (trans, from, t)
            else transOnAll (trans, from, t)
       end
     end;
@@ -232,8 +232,8 @@ function transOnAll
 function transOnLabel
 [Integer] ::= trans::[NFATrans] from::[Integer] lab::Label
 {
-  return 
-    let valid::[NFATrans] = filter ((\t::NFATrans -> contains(fst(t), from) && fst(snd(t)) == just(lab)), trans) 
+  return
+    let valid::[NFATrans] = filter ((\t::NFATrans -> contains(fst(t), from) && fst(snd(t)) == just(lab)), trans)
     in map ((\t::NFATrans -> snd(snd(t))), valid) end;
 }
 
@@ -243,7 +243,7 @@ function eClosure
   return
     let validTrans::[NFATrans] = filter ((\t::NFATrans -> contains(fst(t), from) && !contains((snd(snd(t))), from) && !fst(snd(t)).isJust), trans) in
     let newStates::[Integer]  = map    ((\t::NFATrans -> snd(snd(t))), validTrans) in
-      if null(newStates) 
+      if null(newStates)
         then sort(from)
         else eClosure (trans, from ++ newStates)
     end end;

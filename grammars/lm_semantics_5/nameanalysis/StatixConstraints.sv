@@ -51,7 +51,7 @@ top::Decls ::= d::Decl ds::Decls
 }
 
 aspect production declsNil
-top::Decls ::= 
+top::Decls ::=
 {
   top.statixConstraints = ["true"];
 }
@@ -86,7 +86,7 @@ top::Expr ::= i::Integer
 }
 
 aspect production exprTrue
-top::Expr ::= 
+top::Expr ::=
 {
   top.statixConstraints = [
     top.tyName ++ " == BOOL()"
@@ -94,7 +94,7 @@ top::Expr ::=
 }
 
 aspect production exprFalse
-top::Expr ::= 
+top::Expr ::=
 {
   top.statixConstraints = [
     top.tyName ++ " == BOOL()"
@@ -243,7 +243,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 }
 
 aspect production exprFun
-top::Expr ::= d::ArgDecl e::Expr 
+top::Expr ::= d::ArgDecl e::Expr
 {
   local dName::String = "d_" ++ toString (genInt());
   local eName::String = "e_" ++ toString (genInt());
@@ -487,7 +487,7 @@ attribute sName occurs on Type;
 attribute tyName occurs on Type;
 
 aspect production tInt
-top::Type ::= 
+top::Type ::=
 {
   top.statixConstraints = [
     top.tyName ++ " == INT()"
@@ -495,7 +495,7 @@ top::Type ::=
 }
 
 aspect production tBool
-top::Type ::= 
+top::Type ::=
 {
   top.statixConstraints = [
     top.tyName ++ " == BOOL()"

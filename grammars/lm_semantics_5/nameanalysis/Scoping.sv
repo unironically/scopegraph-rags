@@ -37,7 +37,7 @@ attribute allScopes occurs on Decls;
 
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
-{  
+{
   d.s = top.s;
   ds.s = top.s;
 
@@ -47,7 +47,7 @@ top::Decls ::= d::Decl ds::Decls
 }
 
 aspect production declsNil
-top::Decls ::= 
+top::Decls ::=
 {
   top.varScopes = [];
 
@@ -90,13 +90,13 @@ top::Expr ::= i::Integer
 }
 
 aspect production exprTrue
-top::Expr ::= 
+top::Expr ::=
 {
   top.allScopes := [];
 }
 
 aspect production exprFalse
-top::Expr ::= 
+top::Expr ::=
 {
   top.allScopes := [];
 }
@@ -191,7 +191,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 }
 
 aspect production exprFun
-top::Expr ::= d::ArgDecl e::Expr 
+top::Expr ::= d::ArgDecl e::Expr
 {
   local funScope::Scope = mkScopeLet(top.s, d.varScopes, location=top.location);
 
@@ -401,13 +401,13 @@ top::ArgDecl ::= id::String ty::Type
 attribute s occurs on Type;
 
 aspect production tInt
-top::Type ::= 
+top::Type ::=
 {
 
 }
 
 aspect production tBool
-top::Type ::= 
+top::Type ::=
 {
 
 }
@@ -446,7 +446,7 @@ top::VarRef ::= x::String
   top.varRefDatum = fst(queryResult);
   top.binds := snd (queryResult);
 
-  local queryResult::(Maybe<Datum>, [(String, String)]) = 
+  local queryResult::(Maybe<Datum>, [(String, String)]) =
     case result of
       s::_ -> (case s.datum of
             | just (d) -> (just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])

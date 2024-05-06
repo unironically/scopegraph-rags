@@ -1,7 +1,7 @@
 grammar regex_noimports:resolution;
 
 inherited attribute topName::String occurs on Decls, Decl, Expr, Bind, VarRef, ModRef;
-monoid attribute constraints::[String] occurs on Program, Decls, Decl, Expr, Bind, VarRef, ModRef; 
+monoid attribute constraints::[String] occurs on Program, Decls, Decl, Expr, Bind, VarRef, ModRef;
 
 aspect production program
 top::Program ::= h::String ds::Decls
@@ -96,7 +96,7 @@ top::Decl ::= x::String ds::Decls
 
 aspect production decl_def
 top::Decl ::= b::Bind
-{  
+{
   --local defScope::Scope = mkScopeVar (b);
   --top.varScopes := [defScope];
   --top.modScopes := [];
@@ -137,7 +137,7 @@ top::Decl ::= r::ModRef
     "```",
     "local " ++ lookupScopeName ++ "::Scope = mkScope(just(" ++ top.topName ++ ".scope), [], [], " ++ rName ++ ".impScope, nothing());",
     top.topName ++ ".varScopes := [];",
-    top.topName ++ ".modScopes := [];",   
+    top.topName ++ ".modScopes := [];",
     top.topName ++ ".impLookupScope = just(" ++ lookupScopeName ++ ");",
     top.topName ++ ".binds := [];",
     rName ++ ".scope = " ++ top.topName ++ ".scope;",
@@ -232,7 +232,7 @@ top::VarRef ::= x::VarRef_t
   --local resFun::([Decorated Scope] ::= Decorated Scope String [Decorated Scope]) = resolutionFun (dfa);
   --top.refname = x.lexeme;
   --top.label = x.lexeme ++ "_" ++ toString(x.line) ++ "_" ++ toString(x.column);
-  --top.binds := 
+  --top.binds :=
   --  let res::[Decorated Scope] = resFun (top.scope, x.lexeme, []) in
   --    case res of
   --      mkScopeVar (d)::t -> [(left(top), d)]

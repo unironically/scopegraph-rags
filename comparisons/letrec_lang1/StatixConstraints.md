@@ -2,12 +2,12 @@
 
 ### Input program:
 ```
-def a = 
+def a =
   letrec
     x = 1,
     y = 2,
     z = 3
-  in 
+  in
     x + y + z
 ```
 

@@ -3,7 +3,7 @@ import statixlib.sets
 
 
 
-main(p) :- p match { 
+main(p) :- p match {
 
     Program(ds):[] ->
         {s}
@@ -14,7 +14,7 @@ main(p) :- p match {
 
 
 
-decls(s, ds) :- ds match { 
+decls(s, ds) :- ds match {
   
     DeclsNil() ->
         true
@@ -27,7 +27,7 @@ decls(s, ds) :- ds match {
 
 
 
-decl(s, d) :- d match { 
+decl(s, d) :- d match {
     
     DeclDef(b) ->
         par-bind(s, b, s)
@@ -36,7 +36,7 @@ decl(s, d) :- d match {
 
 
 
-expr(s, e, ty) :- e match { 
+expr(s, e, ty) :- e match {
     
     ExprInt(_) ->
         ty == INT()
@@ -81,13 +81,13 @@ expr(s, e, ty) :- e match {
         expr(s, e2, BOOL()),
         ty == BOOL()
 
-  | ExprEq(e1, e2) -> 
+  | ExprEq(e1, e2) ->
         {ty'}
         expr(s, e1, ty'),
         expr(s, e2, ty'),
         ty == BOOL()
 
-  | ExprApp(e1, e2) -> 
+  | ExprApp(e1, e2) ->
         {ty1}
         expr(s, e1, FUN(ty1, ty)),
         expr(s, e2, ty1)
@@ -97,7 +97,7 @@ expr(s, e, ty) :- e match {
         expr(s, e2, ty),
         expr(s, e3, ty)
 
-  | ExprFun(d, e) -> 
+  | ExprFun(d, e) ->
         {s_fun, ty1, ty2}
         new s_fun,
         s_fun -[ `LEX ]-> s,
@@ -105,20 +105,20 @@ expr(s, e, ty) :- e match {
         expr(s_fun, e, ty2),
         ty == FUN(ty1, ty2)
 
-  | ExprLet(bs, e) -> 
+  | ExprLet(bs, e) ->
         {s_let}
         new s_let,
         seq-binds(s, bs, s_let),
         expr(s_let, e, ty)
 
-  | ExprLetRec(bs, e) -> 
+  | ExprLetRec(bs, e) ->
         {s_let}
         new s_let,
         s_let -[ `LEX ]-> s,
         par-binds(s_let, bs, s_let),
         expr(s_let, e, ty)
 
-  | ExprLetPar(bs, e) -> 
+  | ExprLetPar(bs, e) ->
         {s_let}
         new s_let,
         s_let -[ `LEX ]-> s,
@@ -138,7 +138,7 @@ seq-binds(s, bs, s_def) :- bs match {
         s_def -[ `LEX ]-> s,
         seq-bind(s, b, s_def)
 
-  | SeqBindsCons(b, bs) -> 
+  | SeqBindsCons(b, bs) ->
         {s_def'}
         new s_def',
         s_def' -[ `LEX ]-> s,
@@ -149,15 +149,15 @@ seq-binds(s, bs, s_def) :- bs match {
 
 
 
-seq-bind(s, b, s_def) :- b match { 
+seq-bind(s, b, s_def) :- b match {
     
-    DefBind(x, e) -> 
+    DefBind(x, e) ->
         {s_var, ty}
         new s_var -> (x, ty),
         s_def -[ `VAR ]-> s_var,
         expr(s, e, ty)
   
-  | DefBindTyped(x, tyann, e) -> 
+  | DefBindTyped(x, tyann, e) ->
         {s_var, ty}
         new s_var -> (x, ty),
         s_def -[ `VAR ]-> s_var,
@@ -168,28 +168,28 @@ seq-bind(s, b, s_def) :- b match {
 
 
 
-par-binds(s, bs, s_def) :- bs match { 
+par-binds(s, bs, s_def) :- bs match {
     
-    ParBindsNil() -> 
+    ParBindsNil() ->
         true
   
-  | ParBindsCons(b, bs) -> 
-        par-bind(s, b, s_def), 
+  | ParBindsCons(b, bs) ->
+        par-bind(s, b, s_def),
         par-binds(s, bs, s_def)
   
 }.
 
 
 
-par-bind(s, b, s_def) :- b match { 
+par-bind(s, b, s_def) :- b match {
     
-    DefBind(x, e) -> 
+    DefBind(x, e) ->
         {s_var, ty}
         new s_var -> (x, ty),
         s_def -[ `VAR ]-> s_var,
         expr(s, e, ty)
   
-  | DefBindTyped(x, tyann, e) -> 
+  | DefBindTyped(x, tyann, e) ->
         {s_var, ty}
         new s_var -> (x, ty),
         s_def -[ `VAR ]-> s_var,
@@ -202,7 +202,7 @@ par-bind(s, b, s_def) :- b match {
 
 arg-decl(s, d, ty) :- d match {
 
-    ArgDecl(x, tyann) -> 
+    ArgDecl(x, tyann) ->
         {s_var}
         type(s, tyann, ty),
         new s_var -> (x, ty),
@@ -212,7 +212,7 @@ arg-decl(s, d, ty) :- d match {
 
 
 
-type(s, tyann, ty) :- tyann match { 
+type(s, tyann, ty) :- tyann match {
     
     TInt() ->
         ty == INT()
@@ -220,7 +220,7 @@ type(s, tyann, ty) :- tyann match {
   | TBool() ->
         ty == BOOL()
   
-  | TArrow(tyann1, tyann2) -> 
+  | TArrow(tyann1, tyann2) ->
         {ty1, ty2}
         type(s, tyann1, ty1),
         type(s, tyann2, ty2),
@@ -230,9 +230,9 @@ type(s, tyann, ty) :- tyann match {
 
 
 
-var-ref(s, r, p) :- r match { 
+var-ref(s, r, p) :- r match {
     
-    VarRef(x) -> 
+    VarRef(x) ->
         {vars, xvars, xvars'}
         query s `LEX* `VAR as vars,
         filter vars ((x', _) where x' == x) xvars,

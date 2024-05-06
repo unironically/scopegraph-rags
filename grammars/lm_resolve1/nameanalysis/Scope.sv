@@ -96,7 +96,7 @@ synthesized attribute nameEq::(Boolean ::= String) occurs on Datum;
 abstract production datumVar
 top::Datum ::= d::Decorated ParBind
 {
-  top.datumId = 
+  top.datumId =
     case d of
     | parBindUntyped (x, _) -> x
     | parBindTyped (_, x, _) -> x
@@ -107,7 +107,7 @@ top::Datum ::= d::Decorated ParBind
 abstract production datumLetVar
 top::Datum ::= d::Decorated SeqBind
 {
-  top.datumId = 
+  top.datumId =
     case d of
     | seqBindUntyped (x, _) -> x
     | seqBindTyped (_, x, _) -> x
@@ -118,7 +118,7 @@ top::Datum ::= d::Decorated SeqBind
 abstract production datumArgVar
 top::Datum ::= d::Decorated ArgDecl
 {
-  top.datumId = 
+  top.datumId =
     case d of
     | argDecl (x, _) -> x
     end;
@@ -129,7 +129,7 @@ top::Datum ::= d::Decorated ArgDecl
 abstract production datumMod
 top::Datum ::= d::Decorated Decl
 {
-  top.datumId = 
+  top.datumId =
     case d of
     | declModule (x, _) -> x
     | _ -> ""
@@ -144,19 +144,19 @@ String ::=
   s::Decorated Scope
 {
 
-  local lexEdge::String = 
+  local lexEdge::String =
     case s.lexEdge of
     | just(par) -> " -[ `LEX ]-> " ++ toString(par.id)
     | nothing() -> ""
     end;
   
-  local varEdges::[String] = 
+  local varEdges::[String] =
     map ((\tgt::Decorated Scope -> " -[ `VAR ]-> " ++ toString(tgt.id)), s.varEdges);
 
-  local modEdges::[String] = 
+  local modEdges::[String] =
     map ((\tgt::Decorated Scope -> " -[ `MOD ]-> " ++ toString(tgt.id)), s.modEdges);
 
-  local impEdge::String = 
+  local impEdge::String =
     case s.impEdge of
     | just(imp) -> " -[ `IMP ]-> " ++ toString(imp.id)
     | nothing() -> ""

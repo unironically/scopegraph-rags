@@ -39,7 +39,7 @@ function nodeStyle
 String ::= s::Decorated Scope
 {
 
-  local datumString::String = 
+  local datumString::String =
     case s.datum of
     | just(d) -> d.str
     | _ -> "()"

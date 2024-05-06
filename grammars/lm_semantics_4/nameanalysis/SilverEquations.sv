@@ -53,7 +53,7 @@ top::Decls ::= d::Decl ds::Decls
 }
 
 aspect production declsNil
-top::Decls ::= 
+top::Decls ::=
 {
   top.silverEquations = [
     top.topName ++ ".varScopes = [];",
@@ -134,7 +134,7 @@ top::Expr ::= i::Integer
 }
 
 aspect production exprTrue
-top::Expr ::= 
+top::Expr ::=
 {
   top.silverEquations = [
     top.topName ++ ".ty = tBool();"
@@ -142,7 +142,7 @@ top::Expr ::=
 }
 
 aspect production exprFalse
-top::Expr ::= 
+top::Expr ::=
 {
   top.silverEquations = [
     top.topName ++ ".ty = tBool();"
@@ -310,7 +310,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 }
 
 aspect production exprFun
-top::Expr ::= d::ArgDecl e::Expr 
+top::Expr ::= d::ArgDecl e::Expr
 {
   local funScopeNameSilver::String = "funScope_" ++ toString(genInt());
   local dNameSilver::String = "ArgDecl_" ++ toString (genInt());
@@ -391,7 +391,7 @@ aspect production seqBindsNil
 top::SeqBinds ::=
 {
   top.silverEquations = [
-    top.topName ++ ".varScopes = [];", 
+    top.topName ++ ".varScopes = [];",
     top.topName ++ ".lastScope = " ++ top.topName ++ ".s;",
     top.topName ++ ".ok = true;"
   ];
@@ -415,7 +415,7 @@ top::SeqBinds ::= s::SeqBind
 aspect production seqBindsCons
 top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
-  local letBindScopeNameSilver::String = "letBindScope_" ++ toString (genInt()); 
+  local letBindScopeNameSilver::String = "letBindScope_" ++ toString (genInt());
   local sNameSilver::String = "SeqBind_" ++ toString (genInt());
   local ssNameSilver::String = "SeqBinds_" ++ toString (genInt());
 
@@ -579,7 +579,7 @@ attribute silverEquations occurs on Type;
 attribute topName occurs on Type;
 
 aspect production tInt
-top::Type ::= 
+top::Type ::=
 {
   top.silverEquations = [
     top.topName ++ ".ty = tInt();"
@@ -587,7 +587,7 @@ top::Type ::=
 }
 
 aspect production tBool
-top::Type ::= 
+top::Type ::=
 {
   top.silverEquations = [
     top.topName ++ ".ty = tBool();"
@@ -635,7 +635,7 @@ top::ModRef ::= x::String
     "local " ++ resultNameSilver ++ "::[Decorated Scope] = " ++ resFunNameSilver ++ "(" ++ top.topName ++ ".s, \"" ++ x ++ "\");",
     top.topName ++ ".declScope = \n" ++
       "\tcase " ++ resultNameSilver ++ " of\n" ++
-        "\t| s::_ -> just(s)\n" ++ 
+        "\t| s::_ -> just(s)\n" ++
         "\t| [] -> nothing()\n" ++
       "\tend;",
     top.topName ++ ".ok = " ++ top.topName ++ ".declScope.isJust;"
@@ -659,7 +659,7 @@ top::ModRef ::= r::ModRef x::String
     "local " ++ resultNameSilver ++ "::[Decorated Scope] = case " ++ rNameSilver ++ ".declScope of just (sMod) -> " ++ resFunNameSilver ++ "(sMod, \"" ++ x ++ "\") | _ -> [] end;",
     top.topName ++ ".declScope = \n" ++
       "\tcase " ++ resultNameSilver ++ " of\n" ++
-        "\t| s::_ -> just(s)\n" ++ 
+        "\t| s::_ -> just(s)\n" ++
         "\t| [] -> nothing()\n" ++
       "\tend;",
     top.topName ++ ".ok = " ++ top.topName ++ ".declScope.isJust;"
@@ -687,7 +687,7 @@ top::VarRef ::= x::String
     "local " ++ resultNameSilver ++ "::[Decorated Scope] = " ++ resFunNameSilver ++ "(" ++ top.topName ++ ".s, \"" ++ x ++ "\");",
     top.topName ++ ".declScope = \n" ++
       "\tcase " ++ resultNameSilver ++ " of\n" ++
-        "\t| s::_ -> just(s)\n" ++ 
+        "\t| s::_ -> just(s)\n" ++
         "\t| [] -> nothing()\n" ++
       "\tend;",
     top.topName ++ ".impScopes = if " ++ top.topName ++ ".declScope.isJust then [" ++ top.topName ++ ".declScope.fromJust] else [];"
@@ -710,7 +710,7 @@ top::VarRef ::= r::ModRef x::String
     "local " ++ resultNameSilver ++ "::[Decorated Scope] = case " ++ rNameSilver ++ ".declScope of just (sMod) -> " ++ resFunNameSilver ++ "(sMod, \"" ++ x ++ "\") | _ -> [] end;",
     top.topName ++ ".declScope = \n" ++
       "\tcase " ++ resultNameSilver ++ " of\n" ++
-        "\t| s::_ -> just(s)\n" ++ 
+        "\t| s::_ -> just(s)\n" ++
         "\t| [] -> nothing()\n" ++
       "\tend;",
     top.topName ++ ".impScopes = if " ++ top.topName ++ ".declScope.isJust then [" ++ top.topName ++ ".declScope.fromJust] else [];"

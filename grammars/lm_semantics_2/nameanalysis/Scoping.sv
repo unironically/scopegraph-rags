@@ -54,7 +54,7 @@ top::Decls ::= d::Decl ds::Decls
 }
 
 aspect production declsNil
-top::Decls ::= 
+top::Decls ::=
 {
   top.varScopes = [];
   top.modScopes = [];
@@ -128,13 +128,13 @@ top::Expr ::= i::Integer
 }
 
 aspect production exprTrue
-top::Expr ::= 
+top::Expr ::=
 {
   top.allScopes := [];
 }
 
 aspect production exprFalse
-top::Expr ::= 
+top::Expr ::=
 {
   top.allScopes := [];
 }
@@ -229,7 +229,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 }
 
 aspect production exprFun
-top::Expr ::= d::ArgDecl e::Expr 
+top::Expr ::= d::ArgDecl e::Expr
 {
   local funScope::Scope = mkScopeLet(top.s, d.varScopes, location=top.location);
 
@@ -436,13 +436,13 @@ top::ArgDecl ::= id::String ty::Type
 attribute s occurs on Type;
 
 aspect production tInt
-top::Type ::= 
+top::Type ::=
 {
 
 }
 
 aspect production tBool
-top::Type ::= 
+top::Type ::=
 {
 
 }
@@ -483,7 +483,7 @@ top::ModRef ::= x::String
   top.datum = fst(snd(queryResult));
   top.binds := snd(snd (queryResult));
 
-  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) = 
+  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) =
     case result of
       s::_ -> (case s.datum of
             | just (d) -> (just(s), just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
@@ -510,7 +510,7 @@ top::ModRef ::= r::ModRef x::String
   top.datum = fst(snd(queryResult));
   top.binds := snd(snd (queryResult));
 
-  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) = 
+  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) =
     case result of
       s::_ -> (case s.datum of
             | just (d) -> (just(s), just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
@@ -546,7 +546,7 @@ top::VarRef ::= x::String
   top.datum = fst(snd(queryResult));
   top.binds := snd(snd (queryResult));
 
-  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) = 
+  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) =
     case result of
       s::_ -> (case s.datum of
             | just (d) -> (just(s), just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
@@ -573,7 +573,7 @@ top::VarRef ::= r::ModRef x::String
   top.datum = fst(snd(queryResult));
   top.binds := snd(snd (queryResult));
 
-  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) = 
+  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) =
     case result of
       s::_ -> (case s.datum of
             | just (d) -> (just(s), just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])

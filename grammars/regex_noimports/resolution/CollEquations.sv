@@ -91,7 +91,7 @@ top::Decl ::= x::String ds::Decls
 
 aspect production decl_def
 top::Decl ::= b::Bind
-{  
+{
   --local defScope::Scope = mkScopeVar (b);
   --top.varScopes := [defScope];
   --top.modScopes := [];
@@ -215,7 +215,7 @@ top::VarRef ::= x::VarRef_t
   local dfa::DFA = regex.dfa;
   local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (dfa);
 
-  local decl::Maybe<Decorated Decl> = 
+  local decl::Maybe<Decorated Decl> =
     case resFun (top.scope, x.lexeme) of
     | mkScopeVar (d)::_ -> just(d)
     | _ -> nothing()
@@ -252,7 +252,7 @@ top::ModRef ::= x::TypeRef_t
   local dfa::DFA = regex.dfa;
   local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (dfa);
 
-  top.impScope = 
+  top.impScope =
     case resFun (top.scope, x.lexeme) of
     | mkScopeMod (_, _, _d)::_ -> just(d)
     | _ -> nothing()

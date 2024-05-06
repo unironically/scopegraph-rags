@@ -10,7 +10,7 @@ parser parse :: Main_c {
 function main
 IO<Integer> ::= largs::[String]
 {
-  return 
+  return
     if !null(largs)
       then do {
         let filePath :: String = head(largs);
@@ -39,12 +39,12 @@ IO<Integer> ::= largs::[String]
               };
           }
           else do {
-            print ("[✗] Parse failure\n"); 
+            print ("[✗] Parse failure\n");
             return -1;
           };
       }
       else do {
-        print ("[✗] No input file given\n"); 
+        print ("[✗] No input file given\n");
             return -1;
       };
 }

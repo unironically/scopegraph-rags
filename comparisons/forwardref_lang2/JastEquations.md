@@ -35,7 +35,7 @@ def b = 1
 24: local dfa_40::DFA = regex_39.dfa;
 25: local resFun_41::ResFunTy = resolutionFun(dfa_40);
 26: local result_42::[Decorated Scope] = resFun_41(VarRef_38.s, "b");
-27: VarRef_38.datum = 
+27: VarRef_38.datum =
 	case result_42 of
 	| s::_ -> s.datum
 	| [] -> nothing()

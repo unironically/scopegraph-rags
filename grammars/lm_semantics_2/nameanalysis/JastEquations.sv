@@ -43,7 +43,7 @@ top::Decls ::= d::Decl ds::Decls
     d.topName ++ ".s = " ++ lookupScopeName ++ ";",
     d.topName ++ ".s_lookup = " ++ top.topName ++ ".s;",
     d.topName ++ ".s_mod = " ++ top.topName ++ ".s_mod;",
-    d.topName ++ ".s_glob = " ++ top.topName ++ ".s_glob;", 
+    d.topName ++ ".s_glob = " ++ top.topName ++ ".s_glob;",
 
     ds.topName ++ ".s = " ++ lookupScopeName ++ ";",
     ds.topName ++ ".s_mod = " ++ top.topName ++ ".s_mod;",
@@ -55,7 +55,7 @@ top::Decls ::= d::Decl ds::Decls
 }
 
 aspect production declsNil
-top::Decls ::= 
+top::Decls ::=
 {
   top.jastEquations = [
     --top.topName ++ ".ok = true;"
@@ -123,7 +123,7 @@ top::Expr ::= i::Integer
 }
 
 aspect production exprTrue
-top::Expr ::= 
+top::Expr ::=
 {
   top.jastEquations = [
     top.topName ++ ".ty = tBool();"
@@ -131,7 +131,7 @@ top::Expr ::=
 }
 
 aspect production exprFalse
-top::Expr ::= 
+top::Expr ::=
 {
   top.jastEquations = [
     top.topName ++ ".ty = tBool();"
@@ -250,7 +250,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 }
 
 aspect production exprFun
-top::Expr ::= d::ArgDecl e::Expr 
+top::Expr ::= d::ArgDecl e::Expr
 {
   local funScopeNameSilver::String = "funScope_" ++ toString(genInt());
 
@@ -339,7 +339,7 @@ top::SeqBinds ::= s::SeqBind
 aspect production seqBindsCons
 top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
-  local letBindScopeNameSilver::String = "letBindScope_" ++ toString (genInt()); 
+  local letBindScopeNameSilver::String = "letBindScope_" ++ toString (genInt());
 
   top.jastEquations = [
     "local " ++ letBindScopeNameSilver ++ "::Scope = mkScopeSeqBind();",
@@ -485,7 +485,7 @@ attribute jastEquations occurs on Type;
 
 
 aspect production tInt
-top::Type ::= 
+top::Type ::=
 {
   top.jastEquations = [
     top.topName ++ ".ty = tInt();"
@@ -493,7 +493,7 @@ top::Type ::=
 }
 
 aspect production tBool
-top::Type ::= 
+top::Type ::=
 {
   top.jastEquations = [
     top.topName ++ ".ty = tBool();"
@@ -554,7 +554,7 @@ top::VarRef ::= x::String
     "local " ++ resultNameSilver ++ "::[Decorated Scope] = " ++ resFunNameSilver ++ "(" ++ top.topName ++ ".s, \"" ++ x ++ "\");",
     top.topName ++ ".datum = \n" ++
       "\tcase " ++ resultNameSilver ++ " of\n" ++
-        "\t| s::_ -> s.datum\n" ++ 
+        "\t| s::_ -> s.datum\n" ++
         "\t| [] -> nothing()\n" ++
       "\tend;"
   ];

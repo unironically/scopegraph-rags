@@ -2,7 +2,7 @@
 
 #### Implementations
 Note that the syntax for languages 2, 3 and 4 are identical, whereas the syntax for 1 is a subset.
-- 1: 
+- 1:
   - The only declarations allowed are `def`s. No modules or imports.
   - Scope graphs only have `LEX` and `VAR` as edge labels
   - See [lm_language_1/](lm_language_1/)

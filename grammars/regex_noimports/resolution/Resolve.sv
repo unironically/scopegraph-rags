@@ -10,7 +10,7 @@ function getOrderedTransForState
 [DFATrans] ::= moves::[DFATrans] state::Integer
 {
   return
-    let validTrans::[DFATrans] = filter ((\t::DFATrans -> fst(t) == state), moves) 
+    let validTrans::[DFATrans] = filter ((\t::DFATrans -> fst(t) == state), moves)
     in sortBy ((\t1::DFATrans t2::DFATrans -> fst(snd(t1)) > fst(snd(t2))), validTrans) end;
 }
 
@@ -40,9 +40,9 @@ function dfaStateToFun
               concat (
                 map (
                   
-                  (\new_s::Decorated Scope -> snd(f)(new_s, name, s::seen)), 
+                  (\new_s::Decorated Scope -> snd(f)(new_s, name, s::seen)),
                   
-                  case fst(f) of 
+                  case fst(f) of
                     labelLex() -> case s.lexEdge of | just(s) -> [s] | nothing () -> [] end
                   | labelVar() -> s.varEdges
                   | labelMod() -> s.modEdges

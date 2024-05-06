@@ -16,8 +16,8 @@ String ::= binds::[(Either<VarRef ModRef>, Bind)]
 function printBind
 String ::= bind::(Either<VarRef ModRef>, Bind)
 {
-  return 
-    "ref " ++ (case fst(bind) of left(v) -> v.label | right(v) -> v.label end) ++ 
+  return
+    "ref " ++ (case fst(bind) of left(v) -> v.label | right(v) -> v.label end) ++
     " resolves to decl " ++ snd(bind).label;
 }
 
@@ -44,6 +44,6 @@ String ::= trans::[(Integer, Label, Integer)]
 function printIntLst
 String ::= ints::[Integer]
 {
-  return 
+  return
     "[" ++ concat (map ((\i::Integer -> toString(i) ++ ","), ints)) ++ "]";
 }

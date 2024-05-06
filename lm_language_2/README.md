@@ -29,19 +29,19 @@ java -jar lm_language2.jar inputs/letseq.lm         # Compile an example program
 
 ### Concrete Syntax:
 ```
-Main_c ::= 
+Main_c ::=
   Decls_c
 
-Decls_c ::= 
+Decls_c ::=
   Decl_c Decls_c
-  | 
+  |
 
-Decl_c ::= 
+Decl_c ::=
     'module' ModId_t '{' Decls_c '}'
   | 'import' ModRef_c
   | 'def' ParBind_c
 
-Expr_c ::= 
+Expr_c ::=
     Int_t
   | 'true'
   | 'false'
@@ -66,7 +66,7 @@ SeqBinds_c ::=
   | SeqBind_c
   |
 
-SeqBind_c ::= 
+SeqBind_c ::=
     VarId_t '=' Expr_c
   | VarId_t ':' Type_c '=' Expr_c
 
@@ -74,14 +74,14 @@ ParBinds_c ::=
     ParBind_c ',' ParBinds_c
   |
 
-ParBind_c ::= 
+ParBind_c ::=
     VarId_t '=' Expr_c
   | VarId_t ':' Type_c '=' Expr_c
 
-ArgDecl_c ::= 
+ArgDecl_c ::=
     VarId_t ':' Type_c
 
-Type_c ::= 
+Type_c ::=
     'int'
   | 'bool'
   | Type_c '->' Type_c
@@ -91,7 +91,7 @@ ModRef_c ::=
     ModId_t
   | ModRef_c '.' ModId_t
 
-VarRef_c ::= 
+VarRef_c ::=
     VarId_t
   | ModRef_c '.' VarId_t
 

@@ -27,7 +27,7 @@ top::Decls_c ::= d::Decl_c ds::Decls_c
 }
 
 concrete production declsNil_c
-top::Decls_c ::= 
+top::Decls_c ::=
 {
   top.ast = declsNil(location=top.location);
 }

@@ -2,12 +2,12 @@
 
 ### Input program:
 ```
-def a = 
+def a =
   let
     x = 1,
     y = 2,
     z = 3
-  in 
+  in
     x + y + z
 ```
 
@@ -67,7 +67,7 @@ def a =
 51: local dfa_96::DFA = regex_95.dfa;
 52: local resFun_97::ResFunTy = resolutionFun(dfa_96);
 53: local result_98::[Decorated Scope] = resFun_97(VarRef_94.s, "x");
-54: VarRef_94.datum = 
+54: VarRef_94.datum =
 	case result_98 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -78,7 +78,7 @@ def a =
 58: local dfa_101::DFA = regex_100.dfa;
 59: local resFun_102::ResFunTy = resolutionFun(dfa_101);
 60: local result_103::[Decorated Scope] = resFun_102(VarRef_99.s, "y");
-61: VarRef_99.datum = 
+61: VarRef_99.datum =
 	case result_103 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -89,7 +89,7 @@ def a =
 65: local dfa_106::DFA = regex_105.dfa;
 66: local resFun_107::ResFunTy = resolutionFun(dfa_106);
 67: local result_108::[Decorated Scope] = resFun_107(VarRef_104.s, "z");
-68: VarRef_104.datum = 
+68: VarRef_104.datum =
 	case result_108 of
 	| s::_ -> s.datum
 	| [] -> nothing()

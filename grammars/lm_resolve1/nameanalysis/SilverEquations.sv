@@ -63,7 +63,7 @@ top::Decls ::= d::Decl ds::Decls
 }
 
 aspect production declsNil
-top::Decls ::= 
+top::Decls ::=
 {
   top.silverEquations = [
     top.topName ++ ".varScopes = [];",
@@ -80,7 +80,7 @@ attribute sNameSilver occurs on Decl;
 attribute s_lookupNameSilver occurs on Decl;
 
 aspect production declModule
-top::Decl ::= id::String ds::Decls 
+top::Decl ::= id::String ds::Decls
 {
   local dsNameSilver::String = "Decls_" ++ toString (genInt());
   local s_modNameSilver::String = "s_mod_" ++ toString (genInt());
@@ -144,13 +144,13 @@ top::Expr ::= i::Integer
 }
 
 aspect production exprTrue
-top::Expr ::= 
+top::Expr ::=
 {
   top.silverEquations = [];
 }
 
 aspect production exprFalse
-top::Expr ::= 
+top::Expr ::=
 {
   top.silverEquations = [];
 }
@@ -326,7 +326,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 }
 
 aspect production exprFun
-top::Expr ::= d::ArgDecl e::Expr 
+top::Expr ::= d::ArgDecl e::Expr
 {
   local dNameSilver::String = "ArgDecl_" ++ toString (genInt());
   local eNameSilver::String = "Expr_" ++ toString (genInt());
@@ -410,7 +410,7 @@ aspect production seqBindsNil
 top::SeqBinds ::=
 {
   top.silverEquations = [
-    top.topName ++ ".varScopes = [];", 
+    top.topName ++ ".varScopes = [];",
     top.topName ++ ".lastScope = " ++ top.topName ++ ".s;"
   ];
 }
@@ -433,7 +433,7 @@ top::SeqBinds ::= s::SeqBind
 aspect production seqBindsCons
 top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
-  local letBindScopeNameSilver::String = "letBindScope_" ++ toString (genInt()); 
+  local letBindScopeNameSilver::String = "letBindScope_" ++ toString (genInt());
   local sNameSilver::String = "SeqBind_" ++ toString (genInt());
   local ssNameSilver::String = "SeqBinds_" ++ toString (genInt());
 
@@ -541,7 +541,7 @@ top::ParBind ::= id::String e::Expr
     "local " ++ s_varNameSilver ++ "::Scope = mkScopeParVar(" ++ top.topName ++ ");",
     top.topName ++ ".varScopes = [" ++ s_varNameSilver ++ "];",
     eNameSilver ++ ".s = " ++ top.topName ++ ".s;"
-  ] ++ e.silverEquations; 
+  ] ++ e.silverEquations;
 
   e.topName = eNameSilver;
   e.sNameSilver = top.sNameSilver;
@@ -559,7 +559,7 @@ top::ParBind ::= ty::Type id::String e::Expr
     top.topName ++ ".varScopes = [" ++ s_varNameSilver ++ "];",
     eNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     tyNameSilver ++ ".s = " ++ top.topName ++ ".s;"
-  ] ++ ty.silverEquations ++ e.silverEquations; 
+  ] ++ ty.silverEquations ++ e.silverEquations;
 
   ty.topName = tyNameSilver;
   ty.sNameSilver = top.sNameSilver;
@@ -598,13 +598,13 @@ attribute topName occurs on Type;
 attribute sNameSilver occurs on Type;
 
 aspect production tInt
-top::Type ::= 
+top::Type ::=
 {
   top.silverEquations = [];
 }
 
 aspect production tBool
-top::Type ::= 
+top::Type ::=
 {
   top.silverEquations = [];
 }
@@ -652,7 +652,7 @@ top::ModRef ::= x::String
         "\t\t| s::_ ->\n\t\t\t(case s.datum of\n" ++
           "\t\t\t| just (datumMod(d)) -> (just(s), [(x, d.datumId)])\n" ++
           "\t\t\t| nothing () -> (nothing(), [])\n" ++
-        "\t\t\tend)\n" ++ 
+        "\t\t\tend)\n" ++
         "\t\t| [] -> (nothing(), [])\n" ++
       "\tend;",
     top.topName ++ ".impScope = fst(" ++ impXbindNameSilver ++ ");"
@@ -691,7 +691,7 @@ top::VarRef ::= x::String
         "\t| s::_ ->\n\t\t(case s.datum of\n" ++
           "\t\t| just (datumVar(d)) -> just(d)\n" ++
           "\t\t| _ -> nothing()\n" ++
-        "\t\tend)\n" ++ 
+        "\t\tend)\n" ++
         "\t| [] -> nothing()\n" ++
       "\tend;"
   ];

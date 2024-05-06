@@ -25,7 +25,7 @@ top::Decls ::= d::Decl ds::Decls
 }
 
 abstract production declsNil
-top::Decls ::= 
+top::Decls ::=
 {
   top.statix = "DeclsNil()";
 }
@@ -51,13 +51,13 @@ top::Expr ::= i::Integer
 }
 
 abstract production exprTrue
-top::Expr ::= 
+top::Expr ::=
 {
   top.statix = "ExprTrue()";
 }
 
 abstract production exprFalse
-top::Expr ::= 
+top::Expr ::=
 {
   top.statix = "ExprFalse()";
 }
@@ -123,7 +123,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 }
 
 abstract production exprFun
-top::Expr ::= d::ArgDecl e::Expr 
+top::Expr ::= d::ArgDecl e::Expr
 {
   top.statix = "ExprFun(" ++ d.statix ++ ", " ++ e.statix ++ ")";
 }
@@ -231,13 +231,13 @@ top::ArgDecl ::= id::String ty::Type
 nonterminal Type with statix;
 
 abstract production tInt
-top::Type ::= 
+top::Type ::=
 {
   top.statix = "tInt()";
 }
 
 abstract production tBool
-top::Type ::= 
+top::Type ::=
 {
   top.statix = "tBool()";
 }
@@ -255,7 +255,7 @@ top::Type ::=
 }
 
 instance Eq Type {
-  eq = \l1::Type l2::Type -> 
+  eq = \l1::Type l2::Type ->
     case l1, l2 of
     | tInt(), tInt() -> true
     | tBool(), tBool() -> true

@@ -5,7 +5,7 @@ import statixlib.sets
 
 main(p) :- p match {
 
-    Program(ds):[] -> 
+    Program(ds):[] ->
       {s}
       new s,
       decls(s, ds)
@@ -14,20 +14,20 @@ main(p) :- p match {
 
 
 
-decls(s, ds) :- ds match { 
+decls(s, ds) :- ds match {
   
     DeclsNil() ->
         true
 
-  | DeclsCons(d, ds) -> 
-        decl(s, d), 
+  | DeclsCons(d, ds) ->
+        decl(s, d),
         decls(s, ds)
 
 }.
 
 
 
-decl(s, d) :- d match { 
+decl(s, d) :- d match {
     
     DeclModule(x, ds) ->
       {s_mod}
@@ -60,7 +60,7 @@ expr(s, e, ty) :- e match {
   | ExprFalse() ->
       ty == BOOL()
 
-  | ExprVar(r) -> 
+  | ExprVar(r) ->
       {p, x}
       var-ref(s, r, p),
       datum(p, (x, ty))
@@ -95,13 +95,13 @@ expr(s, e, ty) :- e match {
       expr(s, e2, BOOL()),
       ty == BOOL()
 
-  | ExprEq(e1, e2) -> 
+  | ExprEq(e1, e2) ->
       {ty'}
       expr(s, e1, ty'),
       expr(s, e2, ty'),
       ty == BOOL()
 
-  | ExprApp(e1, e2) -> 
+  | ExprApp(e1, e2) ->
       {ty1}
       expr(s, e1, FUN(ty1, ty)),
       expr(s, e2, ty1)
@@ -119,20 +119,20 @@ expr(s, e, ty) :- e match {
       expr(s_fun, e, ty2),
       ty == FUN(ty1, ty2)
 
-  | ExprLet(bs, e) -> 
+  | ExprLet(bs, e) ->
       {s_let}
       new s_let,
       seq-binds(s, bs, s_let),
       expr(s_let, e, ty)
 
-  | ExprLetRec(bs, e) -> 
+  | ExprLetRec(bs, e) ->
       {s_let}
       new s_let,
       s_let -[ `LEX ]-> s,
       par-binds(s_let, bs, s_let),
       expr(s_let, e, ty)
 
-  | ExprLetPar(bs, e) -> 
+  | ExprLetPar(bs, e) ->
       {s_let}
       new s_let,
       s_let -[ `LEX ]-> s,
@@ -152,7 +152,7 @@ seq-binds(s, bs, s_def) :- bs match {
         s_def -[ `LEX ]-> s,
         seq-bind(s, b, s_def)
 
-  | SeqBindsCons(b, bs) -> 
+  | SeqBindsCons(b, bs) ->
         {s_def'}
         new s_def',
         s_def' -[ `LEX ]-> s,
@@ -163,15 +163,15 @@ seq-binds(s, bs, s_def) :- bs match {
 
 
 
-seq-bind(s, b, s_def) :- b match { 
+seq-bind(s, b, s_def) :- b match {
     
-    DefBind(x, e) -> 
+    DefBind(x, e) ->
         {s_var, ty}
         new s_var -> (x, ty),
         s_def -[ `VAR ]-> s_var,
         expr(s, e, ty)
   
-  | DefBindTyped(x, tyann, e) -> 
+  | DefBindTyped(x, tyann, e) ->
         {s_var, ty}
         new s_var -> (x, ty),
         s_def -[ `VAR ]-> s_var,
@@ -182,28 +182,28 @@ seq-bind(s, b, s_def) :- b match {
 
 
 
-par-binds(s, bs, s_def) :- bs match { 
+par-binds(s, bs, s_def) :- bs match {
     
-    ParBindsNil() -> 
+    ParBindsNil() ->
         true
   
-  | ParBindsCons(b, bs) -> 
-        par-bind(s, b, s_def), 
+  | ParBindsCons(b, bs) ->
+        par-bind(s, b, s_def),
         par-binds(s, bs, s_def)
   
 }.
 
 
 
-par-bind(s, b, s_def) :- b match { 
+par-bind(s, b, s_def) :- b match {
     
-    DefBind(x, e) -> 
+    DefBind(x, e) ->
         {s_var, ty}
         new s_var -> (x, ty),
         s_def -[ `VAR ]-> s_var,
         expr(s, e, ty)
   
-  | DefBindTyped(x, tyann, e) -> 
+  | DefBindTyped(x, tyann, e) ->
         {s_var, ty}
         new s_var -> (x, ty),
         s_def -[ `VAR ]-> s_var,
@@ -216,7 +216,7 @@ par-bind(s, b, s_def) :- b match {
 
 arg-decl(s, d, ty) :- d match {
 
-    ArgDecl(x, tyann) -> 
+    ArgDecl(x, tyann) ->
         {s_var}
         type(s, tyann, ty),
         new s_var -> (x, ty),
@@ -226,7 +226,7 @@ arg-decl(s, d, ty) :- d match {
 
 
 
-type(s, tyann, ty) :- tyann match { 
+type(s, tyann, ty) :- tyann match {
     
     TInt() ->
         ty == INT()
@@ -234,7 +234,7 @@ type(s, tyann, ty) :- tyann match {
   | TBool() ->
         ty == BOOL()
   
-  | TArrow(tyann1, tyann2) -> 
+  | TArrow(tyann1, tyann2) ->
         {ty1, ty2}
         type(s, tyann1, ty1),
         type(s, tyann2, ty2),
@@ -244,16 +244,16 @@ type(s, tyann, ty) :- tyann match {
 
 
 
-mod-ref(s, r, p) :- r match { 
+mod-ref(s, r, p) :- r match {
     
-    ModRef(x) -> 
+    ModRef(x) ->
         {mods, xmods, xmods'}
         query s `LEX*`IMP? `MOD as mods,
         filter mods ((x', _) where x' == x) xmods,
         min-refs(xmods, xmods'),
         only(xmods', p)
 
-  | ModQRef(r, x) -> 
+  | ModQRef(r, x) ->
         {p_mod, s_mod, mods, xmods}
         mod-ref(s, r, p_mod),
         tgt(p_mod, s_mod),
@@ -264,16 +264,16 @@ mod-ref(s, r, p) :- r match {
 
 
 
-var-ref(s, r, p) :- r match { 
+var-ref(s, r, p) :- r match {
     
-    VarRef(x) -> 
+    VarRef(x) ->
         {vars, xvars, xvars'}
         query s `LEX*(`EXT*|`IMP?) `VAR as vars,
         filter vars ((x', _) where x' == x) xvars,
         min-refs(xvars, xvars'),
         only(xvars', p)
 
-  | VarQRef(r, x) -> 
+  | VarQRef(r, x) ->
         {p_mod, s_mod, vars, xvars}
         mod-ref(s, r, p_mod),
         tgt(p_mod, s_mod),

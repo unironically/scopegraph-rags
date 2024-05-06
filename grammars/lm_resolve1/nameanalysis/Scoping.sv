@@ -62,7 +62,7 @@ top::Decls ::= d::Decl ds::Decls
 }
 
 aspect production declsNil
-top::Decls ::= 
+top::Decls ::=
 {
   top.varScopes = [];
   top.modScopes = [];
@@ -85,7 +85,7 @@ propagate binds on Decl;
 attribute allScopes occurs on Decl;
 
 aspect production declModule
-top::Decl ::= id::String ds::Decls 
+top::Decl ::= id::String ds::Decls
 {
   local s_mod::Scope = mkScopeMod (top.s, ds.varScopes, ds.modScopes, top);
 
@@ -139,13 +139,13 @@ top::Expr ::= i::Integer
 }
 
 aspect production exprTrue
-top::Expr ::= 
+top::Expr ::=
 {
   top.allScopes := [];
 }
 
 aspect production exprFalse
-top::Expr ::= 
+top::Expr ::=
 {
   top.allScopes := [];
 }
@@ -240,7 +240,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 }
 
 aspect production exprFun
-top::Expr ::= d::ArgDecl e::Expr 
+top::Expr ::= d::ArgDecl e::Expr
 {
   d.s = top.s;
   e.s = top.s;
@@ -445,13 +445,13 @@ top::ArgDecl ::= id::String ty::Type
 attribute s occurs on Type;
 
 aspect production tInt
-top::Type ::= 
+top::Type ::=
 {
 
 }
 
 aspect production tBool
-top::Type ::= 
+top::Type ::=
 {
 
 }
@@ -478,7 +478,7 @@ top::ModRef ::= x::String
   local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (dfa);
   local result::[Decorated Scope] = resFun (top.s, x);
 
-  local impXbind::(Maybe<Decorated Scope>, [(String, String)]) = 
+  local impXbind::(Maybe<Decorated Scope>, [(String, String)]) =
     case result of
       s::_ -> (case s.datum of
               | just (d) -> (just(s), [(x, d.datumId)])
@@ -512,7 +512,7 @@ top::VarRef ::= x::String
   local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun (dfa);
   local result::[Decorated Scope] = resFun (top.s, x);
 
-  top.binds := 
+  top.binds :=
     case result of
       s::_ -> (case s.datum of
             | just (d) -> [(x, d.datumId)]

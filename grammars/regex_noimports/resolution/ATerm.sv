@@ -59,7 +59,7 @@ top::Decl ::= x::String ds::Decls
 
 aspect production decl_def
 top::Decl ::= b::Bind
-{  
+{
   local defScope::Scope = mkScopeVar (b);
 
   top.varScopes := [defScope];
@@ -183,7 +183,7 @@ top::VarRef ::= x::VarRef_t
   top.refname = x.lexeme;
   top.label = x.lexeme ++ "_" ++ toString(x.line) ++ "_" ++ toString(x.column);
 
-  top.binds := 
+  top.binds :=
     let res::[Decorated Scope] = resFun (top.scope, x.lexeme, []) in
       case res of
         mkScopeVar (d)::t -> [(left(top), d)]

@@ -12,7 +12,7 @@ top::Scope ::=
 abstract production mkScopeGlobal
 top::Scope ::=
   var::[Decorated Scope]
-{ 
+{
   forwards to mkScope (nothing(), var, [], [], nothing(), location=top.location);
 }
 

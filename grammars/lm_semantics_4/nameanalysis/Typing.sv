@@ -26,7 +26,7 @@ top::Decls ::= d::Decl ds::Decls
 }
 
 aspect production declsNil
-top::Decls ::= 
+top::Decls ::=
 {
   top.ok = true;
 }
@@ -64,13 +64,13 @@ top::Expr ::= i::Integer
 }
 
 aspect production exprTrue
-top::Expr ::= 
+top::Expr ::=
 {
   top.ty = tBool();
 }
 
 aspect production exprFalse
-top::Expr ::= 
+top::Expr ::=
 {
   top.ty = tBool();
 }
@@ -79,7 +79,7 @@ aspect production exprVar
 top::Expr ::= r::VarRef
 {
   top.ty =
-    case r.datum of 
+    case r.datum of
     | just(datumVar(id, ty)) -> ty
     | _ -> tErr()
     end;
@@ -130,7 +130,7 @@ top::Expr ::= e1::Expr e2::Expr
 aspect production exprApp
 top::Expr ::= e1::Expr e2::Expr
 {
-  top.ty = 
+  top.ty =
     case e1.ty, e2.ty of
     | tFun(t1, t2), t3 when t1 == t3 -> t3
     | _, _ -> tErr()
@@ -144,7 +144,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 }
 
 aspect production exprFun
-top::Expr ::= d::ArgDecl e::Expr 
+top::Expr ::= d::ArgDecl e::Expr
 {
   top.ty = tFun(d.ty, e.ty);
 }
@@ -255,13 +255,13 @@ attribute ty occurs on Type;
 -- A little absurd, but doing this to make equations look closer to the statix constraints
 
 aspect production tInt
-top::Type ::= 
+top::Type ::=
 {
   top.ty = tInt();
 }
 
 aspect production tBool
-top::Type ::= 
+top::Type ::=
 {
   top.ty = tBool();
 }

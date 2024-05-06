@@ -21,7 +21,7 @@ terminal False_t 'false';
 
 terminal Module_t 'module';
 terminal Import_t 'import';
-terminal Record_t 'record'; 
+terminal Record_t 'record';
 terminal Def_t 'def';
 terminal Bind_t '=' precedence = 8, association = left;
 

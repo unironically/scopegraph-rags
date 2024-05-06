@@ -9,7 +9,7 @@ imports lm_semantics_1:nameanalysis;
 function main
 IO<Integer> ::= largs::[String]
 {
-  return 
+  return
     if !null(largs)
       then do {
         let filePath :: String = head(largs);
@@ -44,12 +44,12 @@ IO<Integer> ::= largs::[String]
               };
           }
           else do {
-            print ("[✗] Parse failure\n"); 
+            print ("[✗] Parse failure\n");
             return -1;
           };
       }
       else do {
-        print ("[✗] No input file given\n"); 
+        print ("[✗] No input file given\n");
             return -1;
       };
 }
@@ -61,7 +61,7 @@ fun writeStatixAterm IO<Integer> ::= fileN::String aterm::String = do {
 
 fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[String] = do {
   let numberedLines::[String] = snd (foldr (eqsNumbered, (length(cs), []), cs));
-  let toWrite::[String] = 
+  let toWrite::[String] =
     ("## Statix core constraints for " ++ fname ++ "\n") ::
     ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
     ("### Constraints:\n```") ::
@@ -72,7 +72,7 @@ fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[Strin
 
 fun writeSilverEquations IO<Integer> ::= fname::String code::String es::[String] = do {
   let numberedLines::[String] = snd (foldr (eqsNumbered, (length(es), []), es));
-  let toWrite::[String] = 
+  let toWrite::[String] =
     ("## Silver equations for " ++ fname ++ "\n") ::
     ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
     ("### Equations:\n```\n") ::
@@ -83,7 +83,7 @@ fun writeSilverEquations IO<Integer> ::= fname::String code::String es::[String]
 
 fun writeJastEquations IO<Integer> ::= fname::String code::String es::[String] = do {
   let numberedLines::[String] = snd (foldr (eqsNumbered, (length(es), []), es));
-  let toWrite::[String] = 
+  let toWrite::[String] =
     ("## Jast equations for " ++ fname ++ "\n") ::
     ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
     ("### Equations:\n```\n") ::
