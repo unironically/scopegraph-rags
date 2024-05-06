@@ -1,4 +1,4 @@
-# Jast equations for inputs/letrec.lm
+# Jast equations for language 1 on inputs/letrec.lm
 
 ## Input program:
 ```
@@ -283,30 +283,30 @@ s_let_3 -[ `LEX ]-> s_0
 ##### Node assertions
 ###### Without datum
 ````
-local <scope_name>::Scope = mkScope();		-- Jast
+local <scope_name>::Scope = mkScope();					-- Jast
 ≡
-new <scope_name>				-- Statix
+new <scope_name>							-- Statix
 ````
 ###### With datum
 ````
-local <scope_name>::Scope = mkScopeVar(("y", <type_ref_jast>));
+local <scope_name>::Scope = mkScopeVar((<id>, <type_ref_jast>));	-- Jast
 ≡
-new <scope_name> -> ("y", <type_ref_statix>)
+new <scope_name> -> (<id>, <type_ref_statix>)				-- Statix
 ````
 Where `<type_ref_jast>` is some qualified reference to a `Scope` AST node and `<type_ref_statix>` is a simple reference to some asserted scope.
 
 ##### Edge assertions
 - LEX edge
 ```
-<src_ref_jast>.lexScopes <- [ <tgt_ref_jast> ];
+<src_ref_jast>.lexScopes <- [ <tgt_ref_jast> ];				-- Jast
 ≡
-<src_ref_statix> -[ `LEX ]-> <tgt_ref_statix>
+<src_ref_statix> -[ `LEX ]-> <tgt_ref_statix>				-- Statix
 ```
 - VAR edge
 ```
-<src_ref_jast>.varScopes <- [ <tgt_ref_jast> ];
+<src_ref_jast>.varScopes <- [ <tgt_ref_jast> ];				-- Jast
 ≡
-<src_ref_statix> -[ `VAR ]-> <tgt_ref_statix>
+<src_ref_statix> -[ `VAR ]-> <tgt_ref_statix>				-- Statix
 ```
 Where `<srr/tgt_ref_jast>` is some qualified reference to a `Scope` AST node and `<src/tgt_ref_statix>` is a simple reference to some asserted scope.
 
