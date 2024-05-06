@@ -45,7 +45,7 @@ globalScope
 │           └── Expr_36.s
 │               └── VarRef_38.s
 ├── Decls_30.s_mod
-│   ├── Decl_32.s_mod 
+│   ├── Decl_32.s_mod
 │   │   └── ParBind_34.s_mod
 │   └── Decls_33.s_mod
 │       ├── Decl_44.s_mod
@@ -66,7 +66,7 @@ local regex_39::Regex = `LEX* VAR`;					-- Constraints 10-14
 local dfa_40::DFA = regex_39.dfa;
 local resFun_41::ResFunTy = resolutionFun(dfa_40);
 local result_42::[Decorated Scope] = resFun_41(VarRef_38.s, "b");
-VarRef_38.datum = 
+VarRef_38.datum =
 	case result_42 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -274,7 +274,7 @@ local regex_39::Regex = `LEX* VAR`;
 local dfa_40::DFA = regex_39.dfa;
 local resFun_41::ResFunTy = resolutionFun(dfa_40);
 local result_42::[Decorated Scope] = resFun_41(VarRef_38.s, "b");
-VarRef_38.datum = 
+VarRef_38.datum =
 	case result_42 of
 	| s::_ -> s.datum
 	| [] -> nothing()

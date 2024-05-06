@@ -4,12 +4,12 @@
 
 ## Input program:
 ```
-def a = 
+def a =
   let
     x = 1,
     y = 2,
     z = 3
-  in 
+  in
     x + y + z
 ```
 
@@ -92,8 +92,8 @@ Query equations
 local regex_95::Regex = `LEX* VAR`;					--Constraints 28-32
 local dfa_96::DFA = regex_95.dfa;
 local resFun_97::ResFunTy = resolutionFun(dfa_96);
-local result_98::[Decorated Scope] = resFun_97(VarRef_94.s, "x");	
-VarRef_94.datum = 
+local result_98::[Decorated Scope] = resFun_97(VarRef_94.s, "x");
+VarRef_94.datum =
 	case result_98 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -103,7 +103,7 @@ local regex_100::Regex = `LEX* VAR`;					-- Constraint 34-38
 local dfa_101::DFA = regex_100.dfa;
 local resFun_102::ResFunTy = resolutionFun(dfa_101);
 local result_103::[Decorated Scope] = resFun_102(VarRef_99.s, "y");
-VarRef_99.datum = 
+VarRef_99.datum =
 	case result_103 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -113,7 +113,7 @@ local regex_105::Regex = `LEX* VAR`;					-- Constraints 41-45
 local dfa_106::DFA = regex_105.dfa;
 local resFun_107::ResFunTy = resolutionFun(dfa_106);
 local result_108::[Decorated Scope] = resFun_107(VarRef_104.s, "z");
-VarRef_104.datum = 
+VarRef_104.datum =
 	case result_108 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -430,7 +430,7 @@ local regex_95::Regex = `LEX* VAR`;
 local dfa_96::DFA = regex_95.dfa;
 local resFun_97::ResFunTy = resolutionFun(dfa_96);
 local result_98::[Decorated Scope] = resFun_97(VarRef_94.s, "x");
-VarRef_94.datum = 
+VarRef_94.datum =
 	case result_98 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -441,7 +441,7 @@ local regex_100::Regex = `LEX* VAR`;
 local dfa_101::DFA = regex_100.dfa;
 local resFun_102::ResFunTy = resolutionFun(dfa_101);
 local result_103::[Decorated Scope] = resFun_102(VarRef_99.s, "y");
-VarRef_99.datum = 
+VarRef_99.datum =
 	case result_103 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -452,7 +452,7 @@ local regex_105::Regex = `LEX* VAR`;
 local dfa_106::DFA = regex_105.dfa;
 local resFun_107::ResFunTy = resolutionFun(dfa_106);
 local result_108::[Decorated Scope] = resFun_107(VarRef_104.s, "z");
-VarRef_104.datum = 
+VarRef_104.datum =
 	case result_108 of
 	| s::_ -> s.datum
 	| [] -> nothing()

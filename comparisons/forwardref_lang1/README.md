@@ -58,7 +58,7 @@ local regex_33::Regex = `LEX* VAR`;				        -- Constraints 7-11
 local dfa_34::DFA = regex_33.dfa;
 local resFun_35::ResFunTy = resolutionFun(dfa_34);
 local result_36::[Decorated Scope] = resFun_35(VarRef_32.s, "b");
-VarRef_32.datum = 
+VarRef_32.datum =
 	case result_36 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -172,7 +172,7 @@ local regex_33::Regex = `LEX* VAR`;
 local dfa_34::DFA = regex_33.dfa;
 local resFun_35::ResFunTy = resolutionFun(dfa_34);
 local result_36::[Decorated Scope] = resFun_35(VarRef_32.s, "b");
-VarRef_32.datum = 
+VarRef_32.datum =
 	case result_36 of
 	| s::_ -> s.datum
 	| [] -> nothing()

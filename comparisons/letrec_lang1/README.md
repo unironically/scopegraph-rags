@@ -4,12 +4,12 @@
 
 ## Input program:
 ```
-def a = 
+def a =
   letrec
     x = 1,
     y = 2,
     z = 3
-  in 
+  in
     x + y + z
 ```
 
@@ -119,7 +119,7 @@ local regex_91::Regex = `LEX* VAR`;					-- Constraints 23-27
 local dfa_92::DFA = regex_91.dfa;
 local resFun_93::ResFunTy = resolutionFun(dfa_92);
 local result_94::[Decorated Scope] = resFun_93(VarRef_90.s, "x");
-VarRef_90.datum = 
+VarRef_90.datum =
 	case result_94 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -129,7 +129,7 @@ local regex_96::Regex = `LEX* VAR`;					-- Constraints 29-33
 local dfa_97::DFA = regex_96.dfa;
 local resFun_98::ResFunTy = resolutionFun(dfa_97);
 local result_99::[Decorated Scope] = resFun_98(VarRef_95.s, "y");
-VarRef_95.datum = 
+VarRef_95.datum =
 	case result_99 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -139,7 +139,7 @@ local regex_101::Regex = `LEX* VAR`;					-- Constraints 36-40
 local dfa_102::DFA = regex_101.dfa;
 local resFun_103::ResFunTy = resolutionFun(dfa_102);
 local result_104::[Decorated Scope] = resFun_103(VarRef_100.s, "z");
-VarRef_100.datum = 
+VarRef_100.datum =
 	case result_104 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -208,7 +208,7 @@ new s_var_4 -> ("x", ty_5)
 ##### Var node for `y`
 ```
 -- Jast
-local varScope_80::Scope = mkScopeVar(("y", Expr_81.ty));	
+local varScope_80::Scope = mkScopeVar(("y", Expr_81.ty));
 
 -- Statix
 new s_var_6 -> ("y", ty_7)
@@ -369,7 +369,7 @@ local regex_91::Regex = `LEX* VAR`;
 local dfa_92::DFA = regex_91.dfa;
 local resFun_93::ResFunTy = resolutionFun(dfa_92);
 local result_94::[Decorated Scope] = resFun_93(VarRef_90.s, "x");
-VarRef_90.datum = 
+VarRef_90.datum =
 	case result_94 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -380,7 +380,7 @@ local regex_96::Regex = `LEX* VAR`;
 local dfa_97::DFA = regex_96.dfa;
 local resFun_98::ResFunTy = resolutionFun(dfa_97);
 local result_99::[Decorated Scope] = resFun_98(VarRef_95.s, "y");
-VarRef_95.datum = 
+VarRef_95.datum =
 	case result_99 of
 	| s::_ -> s.datum
 	| [] -> nothing()
@@ -391,7 +391,7 @@ local regex_101::Regex = `LEX* VAR`;
 local dfa_102::DFA = regex_101.dfa;
 local resFun_103::ResFunTy = resolutionFun(dfa_102);
 local result_104::[Decorated Scope] = resFun_103(VarRef_100.s, "z");
-VarRef_100.datum = 
+VarRef_100.datum =
 	case result_104 of
 	| s::_ -> s.datum
 	| [] -> nothing()
