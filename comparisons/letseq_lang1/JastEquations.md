@@ -202,6 +202,16 @@ local globalScope::Scope = mkScope();
 -- Statix
 new s_0
 ```
+
+##### Var node for `a`
+```
+-- Jast
+local varScope_72::Scope = mkScopeVar(("a", Expr_73.ty));
+
+-- Statix
+new s_var_1 -> ("a", ty_2)
+```
+
 ##### Last let scope
 ```
 -- Jast

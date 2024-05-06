@@ -239,6 +239,7 @@ top::Expr ::= bs::ParBinds e::Expr
 
   top.jastEquations = [
     "local " ++ letScopeNameSilver ++ "::Scope = mkScopeLet();",
+    letScopeNameSilver ++ ".lexScopes <- [" ++ top.topName ++ ".s];",
     bs.topName ++ ".s = " ++ letScopeNameSilver ++ ";",
     bs.topName ++ ".s_def = " ++ letScopeNameSilver ++ ";",
     e.topName ++ ".s = " ++ letScopeNameSilver ++ ";",

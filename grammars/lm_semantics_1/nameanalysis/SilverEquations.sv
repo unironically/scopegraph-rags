@@ -463,7 +463,7 @@ top::ParBinds ::= s::ParBind ss::ParBinds
   ] ++ s.silverEquations ++ ss.silverEquations;
 
   s.topName = sNameSilver;
-  ss.topName = sNameSilver;
+  ss.topName = ssNameSilver;
 }
 
 --------------------------------------------------
