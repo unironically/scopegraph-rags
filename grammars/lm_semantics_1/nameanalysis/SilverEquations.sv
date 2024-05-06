@@ -19,8 +19,8 @@ top::Main ::= ds::Decls
 
   top.silverEquations = [
     "local " ++ globalScopeName ++ "::Scope = mkScopeGlobal(" ++ ds.topName ++ ".varScopes);",
-    ds.topName ++ ".s = " ++ globalScopeName ++ ";",
-    topName ++ ".ok = " ++ dsNameSilver ++ ".ok;"
+    ds.topName ++ ".s = " ++ globalScopeName ++ ";"
+    --topName ++ ".ok = " ++ dsNameSilver ++ ".ok;"
   ] ++ ds.silverEquations;
 
   ds.topName = dsNameSilver;
@@ -41,8 +41,8 @@ top::Decls ::= d::Decl ds::Decls
   top.silverEquations = [
     dNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     dsNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".varScopes = " ++ dNameSilver ++ ".varScopes ++ " ++ dsNameSilver ++ ".varScopes;",
-    top.topName ++ ".ok = " ++ dNameSilver ++ ".ok && " ++ dsNameSilver ++ ".ok;"
+    top.topName ++ ".varScopes = " ++ dNameSilver ++ ".varScopes ++ " ++ dsNameSilver ++ ".varScopes;"
+    --top.topName ++ ".ok = " ++ dNameSilver ++ ".ok && " ++ dsNameSilver ++ ".ok;"
   ] ++ d.silverEquations ++ ds.silverEquations;
 
   d.topName = dNameSilver;
@@ -54,8 +54,8 @@ aspect production declsNil
 top::Decls ::= 
 {
   top.silverEquations = [
-    top.topName ++ ".varScopes = [];",
-    top.topName ++ ".ok = true;"
+    top.topName ++ ".varScopes = [];"
+    --top.topName ++ ".ok = true;"
   ];
 }
 
@@ -72,8 +72,8 @@ top::Decl ::= b::ParBind
 
   top.silverEquations = [
     top.topName ++ ".varScopes = " ++ bNameSilver ++ ".varScopes;",
-    bNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ok = " ++ bNameSilver ++ ".ok;"
+    bNameSilver ++ ".s = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ok = " ++ bNameSilver ++ ".ok;"
   ] ++ b.silverEquations;
 
   b.topName = bNameSilver;
@@ -89,7 +89,7 @@ aspect production exprInt
 top::Expr ::= i::Integer
 {
   top.silverEquations = [
-    top.topName ++ ".ty = tInt();"
+    --top.topName ++ ".ty = tInt();"
   ];
 }
 
@@ -97,7 +97,7 @@ aspect production exprTrue
 top::Expr ::= 
 {
   top.silverEquations = [
-    top.topName ++ ".ty = tBool();"
+    --top.topName ++ ".ty = tBool();"
   ];
 }
 
@@ -105,7 +105,7 @@ aspect production exprFalse
 top::Expr ::= 
 {
   top.silverEquations = [
-    top.topName ++ ".ty = tBool();"
+    --top.topName ++ ".ty = tBool();"
   ];
 }
 
@@ -115,8 +115,8 @@ top::Expr ::= r::VarRef
   local rNameSilver::String = "VarRef_" ++ toString (genInt());
 
   top.silverEquations = [
-    rNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ty = case " ++ rNameSilver ++ ".datum of | just(datumVar(id, ty)) -> ty | _ -> tErr() end;"
+    rNameSilver ++ ".s = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ty = case " ++ rNameSilver ++ ".datum of | just(datumVar(id, ty)) -> ty | _ -> tErr() end;"
   ] ++ r.silverEquations;
 
   r.topName = rNameSilver;
@@ -130,8 +130,8 @@ top::Expr ::= e1::Expr e2::Expr
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tInt() && " ++ e2NameSilver ++ ".ty == tInt() then tInt() else tErr();"
+    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tInt() && " ++ e2NameSilver ++ ".ty == tInt() then tInt() else tErr();"
   ] ++ e1.silverEquations ++ e2.silverEquations;
 
   e1.topName = e1NameSilver;
@@ -146,8 +146,8 @@ top::Expr ::= e1::Expr e2::Expr
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tInt() && " ++ e2NameSilver ++ ".ty == tInt() then tInt() else tErr();"
+    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tInt() && " ++ e2NameSilver ++ ".ty == tInt() then tInt() else tErr();"
   ] ++ e1.silverEquations ++ e2.silverEquations;
 
   e1.topName = e1NameSilver;
@@ -162,8 +162,8 @@ top::Expr ::= e1::Expr e2::Expr
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tInt() && " ++ e2NameSilver ++ ".ty == tInt() then tInt() else tErr();"
+    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tInt() && " ++ e2NameSilver ++ ".ty == tInt() then tInt() else tErr();"
   ] ++ e1.silverEquations ++ e2.silverEquations;
 
   e1.topName = e1NameSilver;
@@ -178,8 +178,8 @@ top::Expr ::= e1::Expr e2::Expr
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tInt() && " ++ e2NameSilver ++ ".ty == tInt() then tInt() else tErr();"
+    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tInt() && " ++ e2NameSilver ++ ".ty == tInt() then tInt() else tErr();"
   ] ++ e1.silverEquations ++ e2.silverEquations;
 
   e1.topName = e1NameSilver;
@@ -194,8 +194,8 @@ top::Expr ::= e1::Expr e2::Expr
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tBool() && " ++ e2NameSilver ++ ".ty == tBool() then tBool() else tErr();"
+    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tBool() && " ++ e2NameSilver ++ ".ty == tBool() then tBool() else tErr();"
   ] ++ e1.silverEquations ++ e2.silverEquations;
 
   e1.topName = e1NameSilver;
@@ -210,8 +210,8 @@ top::Expr ::= e1::Expr e2::Expr
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tBool() && " ++ e2NameSilver ++ ".ty == tBool() then tBool() else tErr();"
+    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tBool() && " ++ e2NameSilver ++ ".ty == tBool() then tBool() else tErr();"
   ] ++ e1.silverEquations ++ e2.silverEquations;
 
   e1.topName = e1NameSilver;
@@ -226,8 +226,8 @@ top::Expr ::= e1::Expr e2::Expr
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == " ++ e2NameSilver ++ ".ty then tBool() else tErr();"
+    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == " ++ e2NameSilver ++ ".ty then tBool() else tErr();"
   ] ++ e1.silverEquations ++ e2.silverEquations;
 
   e1.topName = e1NameSilver;
@@ -242,8 +242,8 @@ top::Expr ::= e1::Expr e2::Expr
 
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ty = case " ++ e1NameSilver ++ ".ty, " ++ e2NameSilver ++ ".ty of | tFun(t1, t2), t3 when t1 == t3 -> t3 | _, _ -> tErr() end;"
+    e2NameSilver ++ ".s = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ty = case " ++ e1NameSilver ++ ".ty, " ++ e2NameSilver ++ ".ty of | tFun(t1, t2), t3 when t1 == t3 -> t3 | _, _ -> tErr() end;"
   ] ++ e1.silverEquations ++ e2.silverEquations;
 
   e1.topName = e1NameSilver;
@@ -260,8 +260,8 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
   top.silverEquations = [
     e1NameSilver ++ ".s = " ++ top.topName ++ ".s;",
     e2NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    e3NameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tBool() && " ++ e2NameSilver ++ ".ty == " ++ e3NameSilver ++ ".ty then " ++ e2NameSilver ++ ".ty else tErr();"
+    e3NameSilver ++ ".s = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ty = if " ++ e1NameSilver ++ ".ty == tBool() && " ++ e2NameSilver ++ ".ty == " ++ e3NameSilver ++ ".ty then " ++ e2NameSilver ++ ".ty else tErr();"
   ] ++ e1.silverEquations ++ e2.silverEquations ++ e3.silverEquations;
 
   e1.topName = e1NameSilver;
@@ -279,8 +279,8 @@ top::Expr ::= d::ArgDecl e::Expr
   top.silverEquations = [
     "local " ++ funScopeNameSilver ++ "::Scope = mkScopeLet(" ++ top.topName ++ ".s, " ++ dNameSilver ++ ".varScopes);",
     dNameSilver ++ ".s = " ++ funScopeNameSilver ++ ";",
-    eNameSilver ++ ".s = " ++ funScopeNameSilver ++ ";",
-    top.topName ++ ".ty = tFun(" ++ dNameSilver ++ ".ty, " ++ eNameSilver ++ ".ty);"
+    eNameSilver ++ ".s = " ++ funScopeNameSilver ++ ";"
+    --top.topName ++ ".ty = tFun(" ++ dNameSilver ++ ".ty, " ++ eNameSilver ++ ".ty);"
   ] ++ d.silverEquations ++ e.silverEquations;
 
   d.topName = dNameSilver;
@@ -297,8 +297,8 @@ top::Expr ::= bs::SeqBinds e::Expr
   top.silverEquations = [
     "local " ++ letScopeNameSilver ++ "::Scope = mkScopeLet(" ++ bsNameSilver ++ ".lastScope, " ++ bsNameSilver ++ ".varScopes);",
     bsNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    eNameSilver ++ ".s = " ++ letScopeNameSilver ++ ";",
-    top.topName ++ ".ty = " ++ eNameSilver ++ ".ty;"
+    eNameSilver ++ ".s = " ++ letScopeNameSilver ++ ";"
+    --top.topName ++ ".ty = " ++ eNameSilver ++ ".ty;"
   ] ++ bs.silverEquations ++ e.silverEquations;
 
   bs.topName = bsNameSilver;
@@ -315,8 +315,8 @@ top::Expr ::= bs::ParBinds e::Expr
   top.silverEquations = [
     "local " ++ letScopeNameSilver ++ "::Scope = mkScopeLet(" ++ top.topName ++ ".s, " ++ bsNameSilver ++ ".varScopes);",
     bsNameSilver ++ ".s = " ++ letScopeNameSilver ++ ";",
-    eNameSilver ++ ".s = " ++ letScopeNameSilver ++ ";",
-    top.topName ++ ".ty = " ++ eNameSilver ++ ".ty;"
+    eNameSilver ++ ".s = " ++ letScopeNameSilver ++ ";"
+    --top.topName ++ ".ty = " ++ eNameSilver ++ ".ty;"
   ] ++ bs.silverEquations ++ e.silverEquations;
 
   bs.topName = bsNameSilver;
@@ -333,8 +333,8 @@ top::Expr ::= bs::ParBinds e::Expr
   top.silverEquations = [
     "local " ++ letScopeNameSilver ++ "::Scope = mkScopeLet(" ++ top.topName ++ ".s, " ++ bsNameSilver ++ ".varScopes);",
     bsNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    eNameSilver ++ ".s = " ++ letScopeNameSilver ++ ";",
-    top.topName ++ ".ty = " ++ eNameSilver ++ ".ty;"
+    eNameSilver ++ ".s = " ++ letScopeNameSilver ++ ";"
+    --top.topName ++ ".ty = " ++ eNameSilver ++ ".ty;"
   ] ++ bs.silverEquations ++ e.silverEquations;
 
   bs.topName = bsNameSilver;
@@ -352,8 +352,8 @@ top::SeqBinds ::=
 {
   top.silverEquations = [
     top.topName ++ ".varScopes = [];", 
-    top.topName ++ ".lastScope = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ok = true;"
+    top.topName ++ ".lastScope = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ok = true;"
   ];
 }
 
@@ -365,8 +365,8 @@ top::SeqBinds ::= s::SeqBind
   top.silverEquations = [
     sNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     top.topName ++ ".varScopes = " ++ sNameSilver ++ ".varScopes;",
-    top.topName ++ ".lastScope = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ok = " ++ sNameSilver ++ ".ok;"
+    top.topName ++ ".lastScope = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ok = " ++ sNameSilver ++ ".ok;"
   ] ++ s.silverEquations;
 
   s.topName = sNameSilver;
@@ -384,8 +384,8 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
     sNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     ssNameSilver ++ ".s = " ++ letBindScopeNameSilver ++ ";",
     top.topName ++ ".varScopes = " ++ ssNameSilver ++ ".varScopes;",
-    top.topName ++ ".lastScope = " ++ ssNameSilver ++ ".lastScope;",
-    top.topName ++ ".ok = " ++ sNameSilver ++ ".ok && " ++ ssNameSilver ++ ".ok;"
+    top.topName ++ ".lastScope = " ++ ssNameSilver ++ ".lastScope;"
+    --top.topName ++ ".ok = " ++ sNameSilver ++ ".ok && " ++ ssNameSilver ++ ".ok;"
   ] ++ s.silverEquations ++ ss.silverEquations;
 
   s.topName = sNameSilver;
@@ -408,8 +408,8 @@ top::SeqBind ::= id::String e::Expr
   top.silverEquations = [
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ eNameSilver ++ ".ty));",
     eNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];",
-    top.topName ++ ".ok = " ++ eNameSilver ++ ".ty != tErr();"
+    top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];"
+    --top.topName ++ ".ok = " ++ eNameSilver ++ ".ty != tErr();"
   ] ++ e.silverEquations;
 
   e.topName = eNameSilver;
@@ -427,8 +427,8 @@ top::SeqBind ::= ty::Type id::String e::Expr
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ tyNameSilver ++ "));",
     eNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     tyNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];",
-    top.topName ++ ".ok = " ++ tyNameSilver ++ " == " ++ eNameSilver ++ ".ty;"
+    top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];"
+    --top.topName ++ ".ok = " ++ tyNameSilver ++ " == " ++ eNameSilver ++ ".ty;"
   ] ++ ty.silverEquations ++ e.silverEquations;
 
   e.topName = eNameSilver;
@@ -445,8 +445,8 @@ aspect production parBindsNil
 top::ParBinds ::=
 {
   top.silverEquations = [
-    top.topName ++ ".varScopes = [];",
-    top.topName ++ "ok = true;"
+    top.topName ++ ".varScopes = [];"
+    --top.topName ++ "ok = true;"
   ];
 }
 
@@ -458,8 +458,8 @@ top::ParBinds ::= s::ParBind ss::ParBinds
 
   top.silverEquations = [
     sNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    ssNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".ok = " ++ sNameSilver ++ ".ok && " ++ ssNameSilver ++ ".ok;"
+    ssNameSilver ++ ".s = " ++ top.topName ++ ".s;"
+    --top.topName ++ ".ok = " ++ sNameSilver ++ ".ok && " ++ ssNameSilver ++ ".ok;"
   ] ++ s.silverEquations ++ ss.silverEquations;
 
   s.topName = sNameSilver;
@@ -482,8 +482,8 @@ top::ParBind ::= id::String e::Expr
   top.silverEquations = [
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ eNameSilver ++ ".ty));",
     eNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];",
-    top.topName ++ ".ok = " ++ eNameSilver ++ ".ty != tErr();"
+    top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];"
+    --top.topName ++ ".ok = " ++ eNameSilver ++ ".ty != tErr();"
   ] ++ e.silverEquations;
 
   e.topName = eNameSilver;
@@ -501,8 +501,8 @@ top::ParBind ::= ty::Type id::String e::Expr
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ tyNameSilver ++ "));",
     eNameSilver ++ ".s = " ++ top.topName ++ ".s;",
     tyNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];",
-    top.topName ++ ".ok = " ++ tyNameSilver ++ " == " ++ eNameSilver ++ ".ty;"
+    top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];"
+    --top.topName ++ ".ok = " ++ tyNameSilver ++ " == " ++ eNameSilver ++ ".ty;"
   ] ++ ty.silverEquations ++ e.silverEquations;
 
   e.topName = eNameSilver;
@@ -525,8 +525,8 @@ top::ArgDecl ::= id::String tyann::Type
   top.silverEquations = [
     "local" ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ tyannNameSilver ++ "));",
     tyannNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];",
-    top.topName ++ ".ty = " ++ tyannNameSilver ++ ".ty;"
+    top.topName ++ ".varScopes = [" ++ varScopeNameSilver ++ "];"
+    --top.topName ++ ".ty = " ++ tyannNameSilver ++ ".ty;"
   ] ++ tyann.silverEquations;
 
   tyann.topName = tyannNameSilver;
@@ -542,7 +542,7 @@ aspect production tInt
 top::Type ::= 
 {
   top.silverEquations = [
-    top.topName ++ ".ty = tInt();"
+    --top.topName ++ ".ty = tInt();"
   ];
 }
 
@@ -550,7 +550,7 @@ aspect production tBool
 top::Type ::= 
 {
   top.silverEquations = [
-    top.topName ++ ".ty = tBool();"
+    --top.topName ++ ".ty = tBool();"
   ];
 }
 
@@ -560,17 +560,17 @@ top::Type ::= tyann1::Type tyann2::Type
   local tyann1NameSilver::String = "Type_" ++ toString (genInt());
   local tyann2NameSilver::String = "Type_" ++ toString (genInt());
   top.silverEquations = [
-    top.topName ++ ".ty = tFun(" ++ tyann1NameSilver ++ ".ty, " ++ tyann2NameSilver ++ ".ty);"
+    --top.topName ++ ".ty = tFun(" ++ tyann1NameSilver ++ ".ty, " ++ tyann2NameSilver ++ ".ty);"
   ] ++ tyann1.silverEquations ++ tyann2.silverEquations;
-  tyann1.topName = tyann1NameSilver;
-  tyann2.topName = tyann2NameSilver;
+  --tyann1.topName = tyann1NameSilver;
+  --tyann2.topName = tyann2NameSilver;
 }
 
 aspect production tErr
 top::Type ::=
 {
   top.silverEquations = [
-    top.topName ++ ".ty = tErr();"
+    --top.topName ++ ".ty = tErr();"
   ];
 }
 

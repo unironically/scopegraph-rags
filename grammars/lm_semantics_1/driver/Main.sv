@@ -32,6 +32,7 @@ IO<Integer> ::= largs::[String]
                 mkdir("out");
                 writeStatixConstraints(filePath, file, ast.statixConstraints);
                 writeSilverEquations(filePath, file, ast.silverEquations);
+                writeJastEquations(filePath, file, ast.jastEquations);
                 writeStatixAterm(fileName, ast.statix);
                 res::Integer <- printBinds (ast.binds);
                 programOk(ast.ok);
@@ -76,6 +77,16 @@ fun writeSilverEquations IO<Integer> ::= fname::String code::String es::[String]
     (es ++ ["\n```\n"]);
   writeFile("out/SilverEquations.md", implode ("\n", toWrite));
   print("[✔] See out/SilverEquations.md for the resulting flattened Silver equations\n");
+};
+
+fun writeJastEquations IO<Integer> ::= fname::String code::String es::[String] = do {
+  let toWrite::[String] = 
+    ("## Jast equations for " ++ fname ++ "\n") ::
+    ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
+    ("### Equations:\n```\n") ::
+    (es ++ ["\n```\n"]);
+  writeFile("out/JastEquations.md", implode ("\n", toWrite));
+  print("[✔] See out/JastEquations.md for the resulting flattened Silver equations\n");
 };
 
 fun printBinds IO<Integer> ::= binds::[(String, String)] = do {
