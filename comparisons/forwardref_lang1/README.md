@@ -1,4 +1,6 @@
 ## Jast equations vs. Statix constraints for language 1 on inputs/forwardvarref.lm
+- Jast equations at: [JastEquations.md](JastEquations.md)
+- Statix constraints at: [StatixConstraints.md](StatixConstraints.md)
 
 ### Input program:
 ```
