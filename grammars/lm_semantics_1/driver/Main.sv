@@ -60,11 +60,12 @@ fun writeStatixAterm IO<Integer> ::= fileN::String aterm::String = do {
 };
 
 fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[String] = do {
+  let numberedLines::[String] = snd (foldr (eqsNumbered, (length(cs), []), cs));
   let toWrite::[String] = 
     ("## Statix core constraints for " ++ fname ++ "\n") ::
     ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
-    ("### Constraints:\n```\n") ::
-    (cs ++ ["\n```\n"]);
+    ("### Constraints:\n```") ::
+    (numberedLines ++ ["```\n"]);
   writeFile("out/StatixConstraints.md", implode ("\n", toWrite));
   print("[✔] See out/SilverEquations.md for the resulting flattened Statix constraints\n");
 };
@@ -100,3 +101,10 @@ fun printBinds IO<Integer> ::= binds::[(String, String)] = do {
 fun programOk IO<Integer> ::= ok::Boolean = do {
   print(if ok then "[✔] Program is well-typed\n" else "[✗] Program is not well-typed (TODO: better messages..)\n");
 };
+
+fun eqsNumbered (Integer, [String]) ::= line::String acc::(Integer, [String]) =
+  let num::Integer = fst(acc) in
+  let numStr::String = toString(fst(acc)) in
+  let numPad::String = if num < 10 then "0" ++ numStr else numStr in
+    (num - 1, (numPad ++ ": " ++ line)::snd(acc))
+  end end end;

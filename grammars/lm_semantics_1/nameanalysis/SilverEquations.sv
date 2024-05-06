@@ -562,8 +562,8 @@ top::Type ::= tyann1::Type tyann2::Type
   top.silverEquations = [
     --top.topName ++ ".ty = tFun(" ++ tyann1NameSilver ++ ".ty, " ++ tyann2NameSilver ++ ".ty);"
   ] ++ tyann1.silverEquations ++ tyann2.silverEquations;
-  --tyann1.topName = tyann1NameSilver;
-  --tyann2.topName = tyann2NameSilver;
+  tyann1.topName = tyann1NameSilver;
+  tyann2.topName = tyann2NameSilver;
 }
 
 aspect production tErr

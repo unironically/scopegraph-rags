@@ -20,7 +20,6 @@ decls(s, ds) :- ds match {
         true
   
   | DeclsCons(d, ds) ->
-        {s_imp}
         decl(s, d),
         decls(s, ds)
 
