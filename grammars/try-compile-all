@@ -17,11 +17,11 @@ for d in */ ; do
     exit=$?
 
     if [ "$exit" -eq "0" ]; then
-      echo "[✔] LM compiler for grammar $d successfully built, cleaning dir $d/"
+      echo "[✔] LM compiler for grammar $d successfully built, executing ./$d/clean"
       ./"$d"/clean
     else
       echo "[✗] Something went wrong when building the LM compiler for grammar $d"
-      echo -en "$out\n"
+      echo -e -n "$out\n"
       break
     fi
 

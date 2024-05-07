@@ -101,7 +101,7 @@ fun printBinds IO<Integer> ::= binds::[(String, String)] = do {
 };
 
 fun programOk IO<Integer> ::= ok::Boolean = do {
-  print(if ok then "[✔] Program is well-typed\n" else "[✗] Program is not well-typed (TODO: better messages..)\n");
+  print(if ok then "[✔] Program is well-typed\n" else "[✗] Program is not well-typed [TODO: better messages..]\n");
 };
 
 fun eqsNumbered(Integer, [String]) ::= line::String acc::(Integer, [String]) =

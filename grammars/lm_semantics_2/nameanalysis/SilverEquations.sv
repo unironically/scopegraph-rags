@@ -655,14 +655,16 @@ top::ModRef ::= r::ModRef x::String
     "local " ++ regexNameSilver ++ "::Regex = `MOD`;",
     "local " ++ dfaNameSilver ++ "::DFA = " ++ regexNameSilver ++ ".dfa;",
     "local " ++ resFunNameSilver ++ "::ResFunTy = resolutionFun(" ++ dfaNameSilver ++ ");",
-    "local " ++ resultNameSilver ++ "::[Decorated Scope] = case " ++ rNameSilver ++ ".declScope of just(sMod) -> " ++ resFunNameSilver ++ "(sMod, \"" ++ x ++ "\") | _ -> [] end;",
+    "local " ++ resultNameSilver ++ "::[Decorated Scope] = case " ++ rNameSilver ++ ".declScope of just(p_mod) -> " ++ resFunNameSilver ++ "(p_mod, \"" ++ x ++ "\") | _ -> [] end;",
     top.topName ++ ".declScope = \n" ++
       "\tcase " ++ resultNameSilver ++ " of\n" ++
         "\t| s::_ -> just(s)\n" ++
         "\t| [] -> nothing()\n" ++
       "\tend;",
     top.topName ++ ".ok = " ++ top.topName ++ ".declScope.isJust;"
-  ];
+  ] ++ r.silverEquations;
+
+  r.topName = rNameSilver;
 }
 
 --------------------------------------------------
@@ -688,7 +690,8 @@ top::VarRef ::= x::String
       "\tcase " ++ resultNameSilver ++ " of\n" ++
         "\t| s::_ -> just(s)\n" ++
         "\t| [] -> nothing()\n" ++
-      "\tend;"
+      "\tend;",
+    top.topName ++ ".ok = " ++ top.topName ++ ".declScope.isJust;"
   ];
 }
 
@@ -705,11 +708,14 @@ top::VarRef ::= r::ModRef x::String
     "local " ++ regexNameSilver ++ "::Regex = `VAR`;",
     "local " ++ dfaNameSilver ++ "::DFA = " ++ regexNameSilver ++ ".dfa;",
     "local " ++ resFunNameSilver ++ "::ResFunTy = resolutionFun(" ++ dfaNameSilver ++ ");",
-    "local " ++ resultNameSilver ++ "::[Decorated Scope] = case " ++ rNameSilver ++ ".declScope of just(sMod) -> " ++ resFunNameSilver ++ "(sMod, \"" ++ x ++ "\") | _ -> [] end;",
+    "local " ++ resultNameSilver ++ "::[Decorated Scope] = case " ++ rNameSilver ++ ".declScope of just(p_mod) -> " ++ resFunNameSilver ++ "(p_mod, \"" ++ x ++ "\") | _ -> [] end;",
     top.topName ++ ".declScope = \n" ++
       "\tcase " ++ resultNameSilver ++ " of\n" ++
         "\t| s::_ -> just(s)\n" ++
         "\t| [] -> nothing()\n" ++
-      "\tend;"
-  ];
+      "\tend;",
+    top.topName ++ ".ok = " ++ top.topName ++ ".declScope.isJust;"
+  ] ++ r.silverEquations;
+
+  r.topName = rNameSilver;
 }

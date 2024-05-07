@@ -666,7 +666,9 @@ top::ModRef ::= r::ModRef x::String
         "\t| [] -> nothing()\n" ++
       "\tend;",
     top.topName ++ ".ok = " ++ top.topName ++ ".declScope.isJust;"
-  ];
+  ] ++ r.silverEquations;
+
+  r.topName = rNameSilver;
 }
 
 --------------------------------------------------
@@ -715,5 +717,7 @@ top::VarRef ::= r::ModRef x::String
         "\t| s::_ -> just(s)\n" ++
         "\t| [] -> nothing()\n" ++
       "\tend;"
-  ];
+  ] ++ r.silverEquations;
+
+  r.topName = rNameSilver;
 }

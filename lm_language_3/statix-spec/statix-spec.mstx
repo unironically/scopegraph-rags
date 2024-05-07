@@ -36,7 +36,7 @@ decls(s, ds, s_lookup) :- ds match {
 
 
 
-decl(s, d, s_imp) :- d match {
+decl(s, d, s_lookup) :- d match {
     
     DeclModule(x, ds) ->
         {s_mod}
@@ -49,10 +49,10 @@ decl(s, d, s_imp) :- d match {
         {p, x, s_mod}
         mod-ref(s, r, p),
         datum(p, (x, s_mod)),
-        s_imp -[ `IMP ]-> s_mod
+        s_lookup -[ `IMP ]-> s_mod
 
   | DeclDef(b) ->
-        par-bind(s_imp, b, s)
+        par-bind(s_lookup, b, s)
 
 }.
 
