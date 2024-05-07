@@ -1,4 +1,4 @@
-grammar lm_semantics_2:nameanalysis;
+grammar lm_semantics_6:nameanalysis;
 
 --------------------------------------------------
 
@@ -42,7 +42,6 @@ top::Decls ::= d::Decl ds::Decls
   top.silverEquations = [
     "local " ++ lookupScopeNameSilver ++ "::Scope = mkScopeImpLookup(" ++ top.topName ++ ".s, " ++ dNameSilver ++ ".varScopes, " ++ dNameSilver ++ ".modScopes, " ++ dNameSilver ++ ".impScope);",
     dNameSilver ++ ".s = " ++ top.topName ++ ".s;",
-    dNameSilver ++ ".sLooukp = " ++ lookupScopeNameSilver ++ ";",
     dsNameSilver ++ ".s = " ++ lookupScopeNameSilver ++ ";",
     top.topName ++ ".varScopes = " ++ dNameSilver ++ ".varScopes ++ " ++ dsNameSilver ++ ".varScopes;",
     top.topName ++ ".modScopes = " ++ dNameSilver ++ ".modScopes ++ " ++ dsNameSilver ++ ".modScopes;"
@@ -112,7 +111,7 @@ top::Decl ::= b::ParBind
     top.topName ++ ".varScopes = " ++ bNameSilver ++ ".varScopes;",
     top.topName ++ ".modScopes = [];",
     top.topName ++ ".impScope = nothing();",
-    bNameSilver ++ ".s = " ++ top.topName ++ ".sLookup;"
+    bNameSilver ++ ".s = " ++ top.topName ++ ".s;"
     --top.topName ++ ".ok = " ++ bNameSilver ++ ".ok;"
   ] ++ b.silverEquations;
 
