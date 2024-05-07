@@ -93,7 +93,7 @@ top::Decl ::= r::ModRef
   top.jastEquations = [
     
     "local " ++ datumMayb ++ "::[Decorated Scope] = case " ++ r.topName ++ ".datum of | datumMod((_, s)) -> [s] | _ -> [] end;",
-    top.topName ++ ".s_lookup.impScopes <- " ++ datumMayb ++ ";",
+    top.topName ++ ".s.impScopes <- " ++ datumMayb ++ ";",
     r.topName ++ ".s = " ++ top.topName ++ ".s;"
 
   ] ++ r.jastEquations;
