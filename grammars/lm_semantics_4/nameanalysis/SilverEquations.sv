@@ -664,6 +664,8 @@ top::ModRef ::= r::ModRef x::String
       "\tend;",
     top.topName ++ ".ok = " ++ top.topName ++ ".declScope.isJust;"
   ];
+
+  r.topName = rNameSilver;
 }
 
 --------------------------------------------------
@@ -715,4 +717,6 @@ top::VarRef ::= r::ModRef x::String
       "\tend;",
     top.topName ++ ".impScopes = if " ++ top.topName ++ ".declScope.isJust then [" ++ top.topName ++ ".declScope.fromJust] else [];"
   ];
+
+  r.topName = rNameSilver;
 }

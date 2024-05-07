@@ -1,4 +1,4 @@
-grammar lm_semantics_2:nameanalysis;
+grammar lm_semantics_4:nameanalysis;
 
 --------------------------------------------------
 
@@ -17,10 +17,7 @@ top::Main ::= ds::Decls
 
   top.jastEquations = [
     "local " ++ globalScopeName ++ "::Scope = mkScope();",
-    ds.topName ++ ".s = " ++ globalScopeName ++ ";",
-    ds.topName ++ ".s_mod = " ++ globalScopeName ++ ";",
-    ds.topName ++ ".s_glob = " ++ globalScopeName ++ ";"
-    --topName ++ ".ok = " ++ dsNameSilver ++ ".ok;"
+    ds.topName ++ ".s = " ++ globalScopeName ++ ";"
   ] ++ ds.jastEquations;
 
 }
@@ -33,33 +30,16 @@ attribute jastEquations occurs on Decls;
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  local lookupScopeName::String = "lookupScope_" ++ toString(genInt());
-
   top.jastEquations = [
-
-    "local " ++ lookupScopeName ++ "::Scope = mkScopeImpLookup()",
-    lookupScopeName ++ ".lexScopes <- [" ++ top.topName ++ ".s];",
-    
-    d.topName ++ ".s = " ++ lookupScopeName ++ ";",
-    d.topName ++ ".s_lookup = " ++ top.topName ++ ".s;",
-    d.topName ++ ".s_mod = " ++ top.topName ++ ".s_mod;",
-    d.topName ++ ".s_glob = " ++ top.topName ++ ".s_glob;",
-
-    ds.topName ++ ".s = " ++ lookupScopeName ++ ";",
-    ds.topName ++ ".s_mod = " ++ top.topName ++ ".s_mod;",
-    ds.topName ++ ".s_glob = " ++ top.topName ++ ".s_glob;"
-
-    --top.topName ++ ".ok = " ++ dNameSilver ++ ".ok && " ++ dsNameSilver ++ ".ok;"
+    d.topName ++ ".s = " ++ top.topName ++ ".s;",
+    ds.topName ++ ".s = " ++ top.topName ++ ".s;"
   ] ++ d.jastEquations ++ ds.jastEquations;
-
 }
 
 aspect production declsNil
 top::Decls ::=
 {
-  top.jastEquations = [
-    --top.topName ++ ".ok = true;"
-  ];
+  top.jastEquations = [];
 }
 
 --------------------------------------------------
@@ -78,10 +58,7 @@ top::Decl ::= id::String ds::Decls
     "local " ++ s_modName ++ "::Scope = mkScopeMod((" ++ idName ++ ", " ++ s_modName ++ "));",
     top.topName ++ ".s.modScopes <- [" ++ s_modName ++ "];",
     s_modName ++ ".lexScopes <- [" ++ top.topName ++ ".s];",
-    
-    ds.topName ++ ".s = " ++ top.topName ++ ".s;",
-    ds.topName ++ ".s_mod = " ++ s_modName ++ ";",
-    ds.topName ++ ".s_glob = " ++ top.topName ++ ".s_glob;"
+    ds.topName ++ ".s = " ++ s_modName ++ ".s;"
 
   ] ++ ds.jastEquations;
 }
@@ -93,19 +70,18 @@ top::Decl ::= r::ModRef
   top.jastEquations = [
     
     "local " ++ datumMayb ++ "::[Decorated Scope] = case " ++ r.topName ++ ".datum of | datumMod((_, s)) -> [s] | _ -> [] end;",
-    top.topName ++ ".s_lookup.impScopes <- " ++ datumMayb ++ ";",
+    top.topName ++ ".s.impScopes <- " ++ datumMayb ++ ";",
     r.topName ++ ".s = " ++ top.topName ++ ".s;"
 
   ] ++ r.jastEquations;
 }
+
 aspect production declDef
 top::Decl ::= b::ParBind
 {
   top.jastEquations = [
-    b.topName ++ ".s = " ++ top.topName ++ ".s_lookup;",
-    b.topName ++ ".s_def = " ++ top.topName ++ ".s;",
-    b.topName ++ ".s_mod = " ++ top.topName ++ ".s_mod",
-    b.topName ++ ".s_glob = " ++ top.topName ++ ".s_glob;"
+    b.topName ++ ".s = " ++ top.topName ++ ".s;",
+    b.topName ++ ".s_def = " ++ top.topName ++ ".s;"
     --top.topName ++ ".ok = " ++ b.topName ++ ".ok;"
   ] ++ b.jastEquations;
 
@@ -431,10 +407,8 @@ top::ParBind ::= id::String e::Expr
   top.jastEquations = [
     
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ e.topName ++ ".ty));",
-    e.topName ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".s_def.varScopes <- [" ++ varScopeNameSilver ++ "];"
-
-  ] ++ (if top.isDeclDef && top.s_globName != top.s_modName then [top.topName ++ ".s_mod.varScopes <- [" ++ varScopeNameSilver ++ "];"] else []) ++ [
+    top.topName ++ ".s_def.varScopes <- [" ++ varScopeNameSilver ++ "];",
+    e.topName ++ ".s = " ++ top.topName ++ ".s;"
 
     --top.topName ++ ".ok = " ++ e.topName ++ ".ty != tErr();"
   ] ++ e.jastEquations;
@@ -450,11 +424,9 @@ top::ParBind ::= ty::Type id::String e::Expr
   top.jastEquations = [
     
     "local " ++ varScopeNameSilver ++ "::Scope = mkScopeVar((" ++ idNameSilver ++ ", " ++ ty.topName ++ "));",
+    top.topName ++ ".s_def.varScopes <- [" ++ varScopeNameSilver ++ "];",
     e.topName ++ ".s = " ++ top.topName ++ ".s;",
-    ty.topName ++ ".s = " ++ top.topName ++ ".s;",
-    top.topName ++ ".s_def.varScopes <- [" ++ varScopeNameSilver ++ "];"
-
-  ] ++ (if top.isDeclDef && top.s_globName != top.s_modName then [top.topName ++ ".s_mod.varScopes <- [" ++ varScopeNameSilver ++ "];"] else []) ++ [
+    ty.topName ++ ".s = " ++ top.topName ++ ".s;"
 
     --top.topName ++ ".ok = " ++ ty.topName ++ " == " ++ e.topName ++ ".ty;"
   ] ++ ty.jastEquations ++ e.jastEquations;
@@ -563,7 +535,7 @@ top::ModRef ::= r::ModRef x::String
 
     top.topName ++ ".datum = \n\tcase " ++ resultNameSilver ++ " of\n\t| s::_ -> s.datum\n\t| [] -> nothing()\n\tend;"
     
-  ];
+  ] ++ r.silverEquations;
 }
 
 --------------------------------------------------
@@ -611,5 +583,5 @@ top::VarRef ::= r::ModRef x::String
 
     top.topName ++ ".datum = \n\tcase " ++ resultNameSilver ++ " of\n\t| s::_ -> s.datum\n\t| [] -> nothing()\n\tend;"
     
-  ];
+  ] ++ r.silverEquations;
 }

@@ -82,7 +82,7 @@ top::Decl ::= id::String ds::Decls
     
     "local " ++ s_modName ++ "::Scope = mkScopeMod((" ++ idName ++ ", " ++ s_modName ++ "));",
     top.topName ++ ".s.modScopes <- [" ++ s_modName ++ "];",
-    s_modName ++ ".lexScope <- [" ++ top.topName ++ ".s];",
+    s_modName ++ ".lexScopes <- [" ++ top.topName ++ ".s];",
     
     ds.topName ++ ".s = " ++ s_modName ++ ".s;",
     ds.topName ++ ".s_lookup = " ++ s_modName ++ ";"
