@@ -11,7 +11,7 @@ Note that the syntax for languages 2, 3 and 4 are identical, whereas the syntax 
   - Only one import edge is allowed per scope graph node.
   - A new "lookup" scope is created for every declaration in a declaration list, as well as any scopes created for those declarations (such as the scope for a `module`). This "lookup" scope is the origin of the `IMP` edge we get from resolving the `import` declaration at the head of the declaration list (if it is one), however the resolution of that import occurs in the lexical parent of the "lookup" scope.
   - The global or latest module scope a declaration list falls under is maintained as we descend through the list, despite these new "lookup" scopes being created. New declaration scope graph nodes are associated with this scope instead of the "lookup" one, allowing queries from elsewhere in the program to find declarations within a module scope.
-  - Forward referencing is allowed so long as there is not an `import` between the LM reference and declaration in question, since lookup occurs on the "lookup" scopes.
+  - Forward referencing is not allowed in any instance.
   - See [lm_language_2/](lm_language_2/)
 - 3:
   - Module and import declarations are allowed.
