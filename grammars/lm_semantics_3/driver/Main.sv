@@ -5,6 +5,7 @@ imports lm_syntax_2:lang:concretesyntax;
 imports lm_syntax_2:lang:abstractsyntax;
 
 imports lm_semantics_3:nameanalysis;
+imports sg_lib;
 
 function main
 IO<Integer> ::= largs::[String]
@@ -24,14 +25,18 @@ IO<Integer> ::= largs::[String]
         let fileNameExplode::[String] = explode(".", fileNameExt);
         let fileName::String = head(fileNameExplode);
 
+        let viz::String = graphvizScopes(ast.allScopes);
+
         if result.parseSuccess
           then do {
             if length(fileNameExplode) >= 2 && last(fileNameExplode) == "lm"
               then do {
                 print("[✔] Parse success\n");
                 mkdir("out");
+                system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
                 writeStatixConstraints(filePath, file, ast.statixConstraints);
                 writeSilverEquations(filePath, file, ast.silverEquations);
+                writeJastEquations(filePath, file, ast.jastEquations);
                 writeStatixAterm(fileName, ast.statix);
                 res::Integer <- printBinds(ast.binds);
                 programOk(ast.ok);
@@ -59,23 +64,36 @@ fun writeStatixAterm IO<Integer> ::= fileN::String aterm::String = do {
 };
 
 fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[String] = do {
+  let numberedLines::[String] = snd(foldr(eqsNumbered, (length(cs), []), cs));
   let toWrite::[String] =
     ("## Statix core constraints for " ++ fname ++ "\n") ::
     ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
-    ("### Constraints:\n```\n") ::
-    (cs ++ ["\n```\n"]);
+    ("### Constraints:\n```") ::
+    (numberedLines ++ ["```\n"]);
   writeFile("out/StatixConstraints.md", implode("\n", toWrite));
   print("[✔] See out/SilverEquations.md for the resulting flattened Statix constraints\n");
 };
 
 fun writeSilverEquations IO<Integer> ::= fname::String code::String es::[String] = do {
+  let numberedLines::[String] = snd(foldr(eqsNumbered, (length(es), []), es));
   let toWrite::[String] =
     ("## Silver equations for " ++ fname ++ "\n") ::
     ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
     ("### Equations:\n```\n") ::
-    (es ++ ["\n```\n"]);
+    (numberedLines ++ ["\n```\n"]);
   writeFile("out/SilverEquations.md", implode("\n", toWrite));
   print("[✔] See out/SilverEquations.md for the resulting flattened Silver equations\n");
+};
+
+fun writeJastEquations IO<Integer> ::= fname::String code::String es::[String] = do {
+  let numberedLines::[String] = snd(foldr(eqsNumbered, (length(es), []), es));
+  let toWrite::[String] =
+    ("## Jast equations for " ++ fname ++ "\n") ::
+    ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
+    ("### Equations:\n```\n") ::
+    (numberedLines ++ ["\n```\n"]);
+  writeFile("out/JastEquations.md", implode("\n", toWrite));
+  print("[✔] See out/JastEquations.md for the resulting flattened Silver equations\n");
 };
 
 fun printBinds IO<Integer> ::= binds::[(String, String)] = do {
@@ -89,3 +107,10 @@ fun printBinds IO<Integer> ::= binds::[(String, String)] = do {
 fun programOk IO<Integer> ::= ok::Boolean = do {
   print(if ok then "[✔] Program is well-typed\n" else "[✗] Program is not well-typed [TODO: better messages..]\n");
 };
+
+fun eqsNumbered(Integer, [String]) ::= line::String acc::(Integer, [String]) =
+  let num::Integer = fst(acc) in
+  let numStr::String = toString(fst(acc)) in
+  let numPad::String = if num < 10 then "0" ++ numStr else numStr in
+    (num - 1, (numPad ++ ": " ++ line)::snd(acc))
+  end end end;

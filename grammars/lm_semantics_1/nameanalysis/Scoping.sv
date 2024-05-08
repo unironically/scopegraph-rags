@@ -221,7 +221,7 @@ top::Expr ::= bs::ParBinds e::Expr
   bs.s = letScope;
   e.s = letScope;
 
-  top.allScopes := letScope :: e.allScopes;
+  top.allScopes := letScope :: (bs.allScopes ++ e.allScopes);
 }
 
 aspect production exprLetPar
@@ -232,7 +232,7 @@ top::Expr ::= bs::ParBinds e::Expr
   bs.s = top.s;
   e.s = letScope;
 
-  top.allScopes := letScope :: e.allScopes;
+  top.allScopes := letScope :: (bs.allScopes ++ e.allScopes);
 }
 
 --------------------------------------------------
@@ -264,7 +264,7 @@ top::SeqBinds ::= s::SeqBind
   top.varScopes = s.varScopes;
   top.lastScope = top.s;
 
-  top.allScopes := [];
+  top.allScopes := s.allScopes;
 }
 
 aspect production seqBindsCons
@@ -319,6 +319,7 @@ top::SeqBind ::= ty::Type id::String e::Expr
 attribute s occurs on ParBinds;
 
 attribute varScopes occurs on ParBinds;
+attribute allScopes occurs on ParBinds;
 
 attribute binds occurs on ParBinds;
 propagate binds on ParBinds;
@@ -327,6 +328,7 @@ aspect production parBindsNil
 top::ParBinds ::=
 {
   top.varScopes = [];
+  top.allScopes := [];
 }
 
 aspect production parBindsCons
@@ -336,6 +338,7 @@ top::ParBinds ::= s::ParBind ss::ParBinds
   ss.s = top.s;
 
   top.varScopes = s.varScopes ++ ss.varScopes;
+  top.allScopes := s.allScopes ++ ss.allScopes;
 }
 
 --------------------------------------------------
@@ -426,8 +429,8 @@ top::Type ::=
 
 attribute s occurs on VarRef;
 
-attribute datum occurs on VarRef;
 attribute binds occurs on VarRef;
+synthesized attribute varRefDatum::Maybe<Datum> occurs on VarRef;
 
 aspect production varRef
 top::VarRef ::= x::String
@@ -440,7 +443,7 @@ top::VarRef ::= x::String
 
   local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
 
-  top.datum = fst(queryResult);
+  top.varRefDatum = fst(queryResult);
   top.binds := snd(queryResult);
 
   local queryResult::(Maybe<Datum>, [(String, String)]) =

@@ -191,7 +191,6 @@ Expr_92.ty = case VarRef_94.datum of | just(datumVar(id, ty)) -> ty | _ -> tErr(
 Expr_93.ty = case VarRef_99.datum of | just(datumVar(id, ty)) -> ty | _ -> tErr() end;
 
 Expr_91.ty = case VarRef_104.datum of | just(datumVar(id, ty)) -> ty | _ -> tErr() end;
-
 ```
 
 ## Correspondence pairs

@@ -471,7 +471,7 @@ top::Type ::=
 attribute s occurs on ModRef;
 
 synthesized attribute declScope::Maybe<Decorated Scope> occurs on ModRef;
-attribute datum occurs on ModRef;
+synthesized attribute varRefDatum::Maybe<Datum> occurs on ModRef;
 attribute binds occurs on ModRef;
 
 aspect production modRef
@@ -486,7 +486,7 @@ top::ModRef ::= x::String
   local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
 
   top.declScope = fst(queryResult);
-  top.datum = fst(snd(queryResult));
+  top.varRefDatum = fst(snd(queryResult));
   top.binds := snd(snd(queryResult));
 
   local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) =
@@ -513,7 +513,7 @@ top::ModRef ::= r::ModRef x::String
   local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
 
   top.declScope = fst(queryResult);
-  top.datum = fst(snd(queryResult));
+  top.varRefDatum = fst(snd(queryResult));
   top.binds := snd(snd(queryResult));
 
   local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) =
@@ -534,7 +534,7 @@ top::ModRef ::= r::ModRef x::String
 attribute s occurs on VarRef;
 
 attribute declScope occurs on VarRef;
-attribute datum occurs on VarRef;
+attribute varRefDatum occurs on VarRef;
 attribute binds occurs on VarRef;
 
 aspect production varRef
@@ -549,7 +549,7 @@ top::VarRef ::= x::String
   local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
 
   top.declScope = fst(queryResult);
-  top.datum = fst(snd(queryResult));
+  top.varRefDatum = fst(snd(queryResult));
   top.binds := snd(snd(queryResult));
 
   local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) =
@@ -576,7 +576,7 @@ top::VarRef ::= r::ModRef x::String
   local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
 
   top.declScope = fst(queryResult);
-  top.datum = fst(snd(queryResult));
+  top.varRefDatum = fst(snd(queryResult));
   top.binds := snd(snd(queryResult));
 
   local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) =

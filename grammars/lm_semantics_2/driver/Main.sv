@@ -5,6 +5,7 @@ imports lm_syntax_2:lang:concretesyntax;
 imports lm_syntax_2:lang:abstractsyntax;
 
 imports lm_semantics_2:nameanalysis;
+imports sg_lib;
 
 function main
 IO<Integer> ::= largs::[String]
@@ -24,12 +25,15 @@ IO<Integer> ::= largs::[String]
         let fileNameExplode::[String] = explode(".", fileNameExt);
         let fileName::String = head(fileNameExplode);
 
+        let viz::String = graphvizScopes(ast.allScopes);
+
         if result.parseSuccess
           then do {
             if length(fileNameExplode) >= 2 && last(fileNameExplode) == "lm"
               then do {
                 print("[✔] Parse success\n");
                 mkdir("out");
+                system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
                 writeStatixConstraints(filePath, file, ast.statixConstraints);
                 writeSilverEquations(filePath, file, ast.silverEquations);
                 writeJastEquations(filePath, file, ast.jastEquations);

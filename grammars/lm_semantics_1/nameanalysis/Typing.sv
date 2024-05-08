@@ -67,7 +67,7 @@ aspect production exprVar
 top::Expr ::= r::VarRef
 {
   top.ty =
-    case r.datum of
+    case r.varRefDatum of
     | just(datumVar(id, ty)) -> ty
     | _ -> tErr()
     end;

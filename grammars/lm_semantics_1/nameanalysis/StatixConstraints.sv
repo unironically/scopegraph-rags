@@ -4,10 +4,12 @@ grammar lm_semantics_1:nameanalysis;
 
 synthesized attribute statixConstraints::[String];
 inherited attribute sName::String;
+inherited attribute s_impName::String;
 inherited attribute tyName::String;
 inherited attribute s_defName::String;
 inherited attribute pName::String;
 inherited attribute s_letName::String;
+inherited attribute s_lookupName::String;
 
 --------------------------------------------------
 
@@ -22,21 +24,30 @@ top::Main ::= ds::Decls
     "new " ++ sName
   ] ++ ds.statixConstraints;
   ds.sName = sName;
+  ds.s_lookupName = sName;
 }
 
 --------------------------------------------------
 
 attribute statixConstraints occurs on Decls;
 attribute sName occurs on Decls;
+attribute s_lookupName occurs on Decls;
 
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
   local dName::String = "d_" ++ toString(genInt());
   local dsName::String = "ds_" ++ toString(genInt());
-  top.statixConstraints = d.statixConstraints ++ ds.statixConstraints;
+  local s_impName::String = "s_imp_" ++ toString(genInt());
+  top.statixConstraints = [
+    "{" ++ s_impName ++ "}",
+    "new " ++ s_impName,
+    s_impName ++ " -[ `LEX ]-> " ++ top.s_lookupName
+  ] ++ d.statixConstraints ++ ds.statixConstraints;
   d.sName = top.sName;
+  d.s_impName = s_impName;
   ds.sName = top.sName;
+  ds.s_lookupName = s_impName;
 }
 
 aspect production declsNil
@@ -49,13 +60,14 @@ top::Decls ::=
 
 attribute statixConstraints occurs on Decl;
 attribute sName occurs on Decl;
+attribute s_impName occurs on Decl;
 
 aspect production declDef
 top::Decl ::= b::ParBind
 {
   local bName::String = "b_" ++ toString(genInt());
   top.statixConstraints = b.statixConstraints;
-  b.sName = top.sName;
+  b.sName = top.s_impName;
   b.s_defName = top.sName;
 }
 

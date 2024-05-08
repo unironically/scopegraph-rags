@@ -32,7 +32,7 @@ top::Scope ::=
 function graphvizScopes
 String ::= scopes::[Decorated Scope]
 {
-  return "digraph {\n" ++ implode("\n", map(nodeStyle, scopes)) ++ "\n" ++ implode("\n", map((.graphvizString), scopes)) ++ "\n}\n";
+  return "digraph {layout=dot\n" ++ implode("\n", map(nodeStyle, scopes)) ++ "\n" ++ implode("\n", map((.graphvizString), scopes)) ++ "\n}\n";
 }
 
 function nodeStyle
