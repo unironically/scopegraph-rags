@@ -52,6 +52,7 @@ public class Compiler {
 				}
 			} else {*/
 				System.out.println("No errors.");
+				System.out.println(p.prettyPrint());
 			//}
 		} catch (IOException e) {
 			System.err.println("error (PrettyPrint) : " + e.getMessage());

@@ -1,0 +1,91 @@
+aspect PrettyPrint {
+
+	/* Program */
+	public String Program.prettyPrint() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Program (\n");
+		getDs().prettyPrint(sb, 1);
+		sb.append("\n").append(")");
+		return sb.toString();
+	}
+
+	/* Decls */
+	public void Decls.prettyPrint(StringBuilder sb, int t) {}
+	public void DeclsNil.prettyPrint(StringBuilder sb, int t) {
+		sb.append(getIndent(t)).append("DeclsNil ()");
+	}
+	public void DeclsCons.prettyPrint(StringBuilder sb, int t) {
+		sb.append(getIndent(t)).append("DeclsCons (\n");
+		getD().prettyPrint(sb, t+1);
+		sb.append(",\n");
+		getDs().prettyPrint(sb, t+1);
+		sb.append("\n").append(getIndent(t)).append(")");
+	}
+
+	/* Decl */
+	public void Decl.prettyPrint(StringBuilder sb, int t) {}
+	public void ModuleDecl.prettyPrint(StringBuilder sb, int t) {
+		sb.append(getIndent(t)).append("ModuleDecl (\n");
+		sb.append(getIndent(t+1)).append("\"").append(getId()).append("\"");
+		sb.append(",\n");
+		getDs().prettyPrint(sb, t+1);
+		sb.append("\n").append(getIndent(t)).append(")");
+	}
+	public void ImportDecl.prettyPrint(StringBuilder sb, int t) {
+		sb.append(getIndent(t)).append("ImportDecl (\n");
+		getRef().prettyPrint(sb, t+1);
+		sb.append("\n").append(getIndent(t)).append(")");
+	}
+	public void DefDecl.prettyPrint(StringBuilder sb, int t) {
+		sb.append(getIndent(t)).append("DefDecl (\n");
+		getBind().prettyPrint(sb, t+1);
+		sb.append("\n").append(getIndent(t)).append(")");
+	}
+
+	/* Expr */
+	public void Expr.prettyPrint(StringBuilder sb, int t) {}
+	public void VarExpr.prettyPrint(StringBuilder sb, int t) {
+		sb.append(getIndent(t)).append("VarExpr (\n");
+		getRef().prettyPrint(sb, t+1);
+		sb.append("\n").append(getIndent(t)).append(")");
+	}
+	public void IntExpr.prettyPrint(StringBuilder sb, int t) {
+		sb.append(getIndent(t)).append("IntExpr (").append(Integer.toString(getValue())).append(")");
+	}
+	public void AddExpr.prettyPrint(StringBuilder sb, int t) {
+		sb.append(getIndent(t)).append("AddExpr (\n");
+		getLeft().prettyPrint(sb, t+1);
+		sb.append(",\n");
+		getRight().prettyPrint(sb, t+1);
+		sb.append("\n").append(getIndent(t)).append(")");
+	}
+
+	/* ParBind */
+	public void ParBind.prettyPrint(StringBuilder sb, int t) {
+		sb.append(getIndent(t)).append("ParBind (\n");
+		sb.append(getIndent(t+1)).append("\"").append(getId()).append("\"");
+		sb.append(",\n");
+		getValue().prettyPrint(sb, t+1);
+		sb.append("\n").append(getIndent(t)).append(")");
+	}
+
+	/* ModRef */
+	public void ModRef.prettyPrint(StringBuilder sb, int t) {
+		sb.append(getIndent(t)).append("ModRef (\"").append(getId()).append("\")");
+	}
+
+	/* VarRef */
+	public void VarRef.prettyPrint(StringBuilder sb, int t) {
+		sb.append(getIndent(t)).append("VarRef (\"").append(getId()).append("\")");
+	}
+	
+
+	public String ASTNode.getIndent(int t) {
+		String s = "";
+		for (int i = 0; i < t; i++) {
+			s += "  ";
+		}
+		return s;
+	}
+	
+}

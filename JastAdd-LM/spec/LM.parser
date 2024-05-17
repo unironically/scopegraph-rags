@@ -18,7 +18,7 @@ Decl decl =
 
 Expr expr =
     var_ref                                 {: return new VarExpr(var_ref); :}
-  | INTEGER                                 {: return new IntExpr(INTEGER); :}
+  | INTEGER                                 {: return new IntExpr(Integer.valueOf(INTEGER)); :}
   | expr.a PLUS expr.b                      {: return new AddExpr(a, b); :}
   ;
 
