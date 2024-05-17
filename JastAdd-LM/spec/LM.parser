@@ -1,0 +1,38 @@
+Program goal =
+  decls                                     {: return new Program(decls); :}
+  ;
+
+
+Decls decls =
+                                            {: return new DeclsNil(); :}
+  | decl decls                              {: return new DeclsCons(decl, decls); :}
+  ;
+
+
+Decl decl =
+    MODULE IDENTIFIER LBRACE decls RBRACE   {: return new ModuleDecl(IDENTIFIER, decls); :}
+  | IMPORT mod_ref                          {: return new ImportDecl(mod_ref); :}
+  | DEF par_bind                            {: return new DefDecl(par_bind); :}
+  ;
+
+
+Expr expr =
+    var_ref                                 {: return new VarExpr(var_ref); :}
+  | INTEGER                                 {: return new IntExpr(INTEGER); :}
+  | expr.a PLUS expr.b                      {: return new AddExpr(a, b); :}
+  ;
+
+
+ParBind par_bind =
+    IDENTIFIER ASSIGN expr                  {: return new ParBind(IDENTIFIER, expr); :}
+  ;
+
+
+ModRef mod_ref = 
+    IDENTIFIER                              {: return new ModRef(IDENTIFIER); :}
+  ;
+
+
+VarRef var_ref = 
+    IDENTIFIER                              {: return new VarRef(IDENTIFIER); :}
+  ;
