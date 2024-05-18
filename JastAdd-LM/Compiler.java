@@ -31,7 +31,7 @@ public class Compiler {
 	    	System.err.println("error (PrettyPrint) : file does not exist");
 	    	System.exit(2);
 	    }
-	    System.out.println("file : " + args[0]);
+	    //System.out.println("file : " + args[0]);
 	    		
 		try {
 			
@@ -51,7 +51,13 @@ public class Compiler {
 					System.out.println("- " + o.toString());
 				}
 			} else {*/
-				System.out.println("No errors.");
+				//System.out.println("No errors.");
+				if (p.ok()) {
+					System.out.println("[✔] Well-typed :)");
+				} else {
+					System.out.println("[✗] Not well-typed :(");
+				}
+
 				System.out.println(p.prettyPrint());
 			//}
 		} catch (IOException e) {

@@ -52,6 +52,9 @@ aspect PrettyPrint {
 	public void IntExpr.prettyPrint(StringBuilder sb, int t) {
 		sb.append(getIndent(t)).append("IntExpr (").append(Integer.toString(getValue())).append(")");
 	}
+	public void BoolExpr.prettyPrint(StringBuilder sb, int t) {
+		sb.append(getIndent(t)).append("BoolExpr (").append(Boolean.toString(getValue())).append(")");
+	}
 	public void AddExpr.prettyPrint(StringBuilder sb, int t) {
 		sb.append(getIndent(t)).append("AddExpr (\n");
 		getLeft().prettyPrint(sb, t+1);
@@ -65,7 +68,7 @@ aspect PrettyPrint {
 		sb.append(getIndent(t)).append("ParBind (\n");
 		sb.append(getIndent(t+1)).append("\"").append(getId()).append("\"");
 		sb.append(",\n");
-		getValue().prettyPrint(sb, t+1);
+		getExpr().prettyPrint(sb, t+1);
 		sb.append("\n").append(getIndent(t)).append(")");
 	}
 

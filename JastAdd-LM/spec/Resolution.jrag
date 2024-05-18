@@ -1,0 +1,176 @@
+import java.util.*;
+
+aspect Resolution {
+
+
+  syn DFA Ref.dfa();
+
+  eq Ref.dfa() {
+    SinkState sink = new SinkState();
+    return new DFA(sink);
+  }
+
+  /*---------- ModRef ----------*/
+
+  eq RefImport.dfa() {
+
+    // LEX* IMP? MOD
+    
+    State state0 = new State();
+    State state1 = new State();
+    FinalState state2 = new FinalState();
+    SinkState sink = new SinkState();
+
+    state0.setId(0);
+    state0.setLexTrans(state0);
+    state0.setImpTrans(state1);
+    state0.setModTrans(state2);
+    state0.setVarTrans(sink);
+
+    state1.setId(1);
+    state1.setLexTrans(sink);
+    state1.setImpTrans(sink);
+    state1.setModTrans(state2);
+    state1.setVarTrans(sink);
+
+    state2.setId(2);
+    state2.setLexTrans(sink);
+    state2.setImpTrans(sink);
+    state2.setModTrans(sink);
+    state2.setVarTrans(sink);
+
+    sink.setId(-1);
+    sink.setLexTrans(sink);
+    sink.setImpTrans(sink);
+    sink.setModTrans(sink);
+    sink.setVarTrans(sink);
+
+    state0.setFinal(false);
+    state1.setFinal(false);
+    state2.setFinal(false);
+    sink.setFinal(true);
+
+    return new DFA(state0);
+
+  }
+
+
+  /*---------- VarRef ----------*/
+
+  eq RefSimple.dfa() {
+
+    // LEX* IMP? VAR
+    
+    State state0 = new State();
+    State state1 = new State();
+    FinalState state2 = new FinalState();
+    SinkState sink = new SinkState();
+
+    state0.setId(0);
+    state0.setLexTrans(state0);
+    state0.setImpTrans(state1);
+    state0.setModTrans(sink);
+    state0.setVarTrans(state2);
+
+    state1.setId(1);
+    state1.setLexTrans(sink);
+    state1.setImpTrans(sink);
+    state1.setModTrans(sink);
+    state1.setVarTrans(state2);
+
+    state2.setId(2);
+    state2.setLexTrans(sink);
+    state2.setImpTrans(sink);
+    state2.setModTrans(sink);
+    state2.setVarTrans(sink);
+
+    sink.setId(-1);
+    sink.setLexTrans(sink);
+    sink.setImpTrans(sink);
+    sink.setModTrans(sink);
+    sink.setVarTrans(sink);
+
+    state0.setFinal(false);
+    state1.setFinal(false);
+    state2.setFinal(false);
+    sink.setFinal(true);
+
+    return new DFA(state0);
+
+  }
+
+
+  /*---------- DFA/State ----------*/
+
+  syn lazy ArrayList<Scope> DFA.resolve(String id, Scope currentScope);// circular [new ArrayList<Scope>()];
+  eq DFA.resolve(String id, Scope currentScope) = getStart().resolve(id, currentScope);
+
+  syn lazy ArrayList<Scope> State.resolve(String id, Scope currentScope);// circular [new ArrayList<Scope>()];
+
+  eq State.resolve(String id, Scope currentScope) {
+
+    System.out.println("[!] At state " + Integer.toString(getId()) + " and looking for " + id + " from scope " + currentScope.getName());
+
+    ArrayList<Scope> modTrans = new ArrayList<Scope>();
+    System.out.println("\t- I have " + Integer.toString(currentScope.modScopes().size()) + " mod scopes");
+    for (Scope s: currentScope.modScopes()) { System.out.println("mod"); modTrans.addAll(getModTrans().resolve(id, s)); }
+
+    ArrayList<Scope> lexTrans = new ArrayList<Scope>();
+    System.out.println("\t- I have " + Integer.toString(currentScope.lexScopes().size()) + " lex scopes");
+    for (Scope s: currentScope.lexScopes()) { System.out.println("lex"); lexTrans.addAll(getLexTrans().resolve(id, s)); }
+
+    ArrayList<Scope> impTrans = new ArrayList<Scope>();
+    System.out.println("\t- I have " + Integer.toString(currentScope.impScopes().size()) + " imp scopes");
+    for (Scope s: currentScope.lexScopes()) { System.out.println("imp"); impTrans.addAll(getImpTrans().resolve(id, s)); }
+
+    ArrayList<Scope> varTrans = new ArrayList<Scope>();
+    System.out.println("\t- I have " + Integer.toString(currentScope.varScopes().size()) + " var scopes");
+    for (Scope s: currentScope.varScopes()) { System.out.println("var"); varTrans.addAll(getVarTrans().resolve(id, s)); }
+
+    ArrayList<Scope> result;
+
+    if (!varTrans.isEmpty()) { result = lexTrans; }
+    else if (!impTrans.isEmpty()) { result = impTrans; }
+    else if (!modTrans.isEmpty()) { result = modTrans; }
+    else if (!lexTrans.isEmpty()) { result = lexTrans; }
+    else { result = new ArrayList<Scope>(); }
+    
+    return result;
+  }
+
+  eq FinalState.resolve(String id, Scope currentScope) {
+    
+    ArrayList<Scope> result = super.resolve(id, currentScope);
+
+    System.out.println("[!!] At " + currentScope.getName() + " and looking for " + id);
+
+    ScopeDatum thisScope = (ScopeDatum) currentScope;
+    System.out.println("\t The datum here has id " + thisScope.getDatum().getId());
+
+    if (currentScope instanceof ScopeDatum &&
+        ((ScopeDatum) currentScope).getDatum().getId().equals(id)) {
+      System.out.println("\t Found a match! Adding to result...");
+      result.add(0, currentScope); 
+    } 
+
+    return result;
+
+  }
+
+  eq SinkState.resolve(String id, Scope currentScope) {
+    return new ArrayList<Scope>();
+  }
+
+  /*---------- Ref ----------*/
+
+  syn lazy ArrayList<Scope> Ref.res();// circular [new ArrayList<Scope>()];
+
+  eq RefSimple.res() {
+    return dfa().resolve(getId(), getScope());
+  }
+
+  eq RefImport.res() {
+    return dfa().resolve(getId(), getScope());
+  }
+
+}

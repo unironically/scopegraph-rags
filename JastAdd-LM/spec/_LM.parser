@@ -19,6 +19,8 @@ Decl decl =
 Expr expr =
     var_ref                                 {: return new VarExpr(var_ref); :}
   | INTEGER                                 {: return new IntExpr(Integer.valueOf(INTEGER)); :}
+  | TRUE                                    {: return new BoolExpr(true); :}
+  | FALSE                                   {: return new BoolExpr(false); :}
   | expr.a PLUS expr.b                      {: return new AddExpr(a, b); :}
   ;
 

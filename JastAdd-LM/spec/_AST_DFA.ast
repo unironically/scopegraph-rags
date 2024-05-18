@@ -1,0 +1,15 @@
+DFA ::=
+  Start:State
+  ;
+
+State ::= 
+  <Id:Integer>
+  LexTrans:State
+  ImpTrans:State
+  ModTrans:State
+  VarTrans:State
+  <Final:Boolean>
+  ;
+
+SinkState: State ::= ;
+FinalState: State ::= ;

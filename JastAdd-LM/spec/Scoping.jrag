@@ -1,0 +1,149 @@
+import java.util.*;
+
+aspect Scoping {
+
+  coll HashSet<Scope> Scope.lexScopes() [new HashSet<Scope>()] with add root Program;
+  coll HashSet<Scope> Scope.modScopes() [new HashSet<Scope>()] with add root Program;
+  coll HashSet<Scope> Scope.varScopes() [new HashSet<Scope>()] with add root Program;
+  coll HashSet<Scope> Scope.impScopes() [new HashSet<Scope>()] with add root Program;
+
+
+  /*---------- Program ---------*/
+
+  /* Program */
+
+  syn lazy Scope Program.topScope();
+  eq Program.topScope() {
+    Scope topScope =  new ScopeNoDatum();
+    topScope.setName("GlobalScope_" + Integer.toString(Scope.scopeCount++));
+    topScope.setParent(this);
+
+    //System.out.println("Made a new global scope!");
+    return topScope;
+  }
+  
+  eq Program.getDs().scope() { return topScope(); }
+
+
+  /*---------- Decls ----------*/
+
+  inh lazy Scope Decls.scope();
+
+  eq Decls.getChild(int i).scope() { return scope(); }
+
+  /*---------- Module Decl ----------*/
+
+  inh lazy Scope Decl.scope();
+
+  syn lazy Scope ModuleDecl.modScope();
+
+  eq ModuleDecl.modScope() {
+    ScopeDatum s = new ScopeDatum();
+    s.setName("ModScope_" + Integer.toString(Scope.scopeCount++));
+    s.setParent(scope().getParent());
+    s.setDatum(new DatumMod(getId(), s));
+    return s;
+  }
+
+  eq ModuleDecl.getDs().scope() {
+    return modScope();
+  }
+
+  ModuleDecl contributes modScope()
+    to Scope.modScopes()
+    for scope();
+
+  ModuleDecl contributes scope()
+    to Scope.lexScopes()
+    for modScope();
+
+
+  /*---------- Import Decl ----------*/
+
+  eq ImportDecl.getRef().scope() {
+    return scope();
+  }
+
+  ImportDecl contributes getRef().impScope()
+    to Scope.impScopes()
+    for scope();
+
+
+  /*---------- Def Decl ----------*/
+
+  eq DefDecl.getBind().scope() {
+    return scope();
+  }
+
+
+  /*---------- Expr ----------*/
+
+  inh lazy Scope Expr.scope();
+
+  eq VarExpr.getRef().scope() { return scope(); }
+
+  eq AddExpr.getLeft().scope() { return scope(); }
+  eq AddExpr.getRight().scope() { return scope(); }
+
+
+  /*---------- ParBind ----------*/
+
+  inh lazy Scope ParBind.scope();
+
+  syn lazy Scope ParBind.varScope();
+
+  eq ParBind.varScope() {
+    System.out.println("[!] Made a new varScope for " + getId() + "!");
+    ScopeDatum s = new ScopeDatum();
+    s.setName("VarScope_" + Integer.toString(Scope.scopeCount++));
+    s.setParent(scope().getParent());
+    s.setDatum(new DatumVar(getId(), new IntType()));
+    
+    return s;
+  }
+
+  ParBind contributes varScope()
+    to Scope.varScopes()
+    for scope();
+
+  
+  /*---------- ModRef ----------*/
+
+  inh lazy Scope ModRef.scope();
+
+  syn lazy Scope ModRef.impScope();
+
+  eq ModRef.impScope() {
+
+    ArrayList<Scope> queryResult = ref().res();
+
+    try {
+      Scope resScope = queryResult.get(0);
+    } catch (Exception e) { System.out.println("[✗] Couldn't find a resolution for " + getId()); }
+
+    return null;
+
+  }
+
+  syn lazy Ref ModRef.ref();
+
+  eq ModRef.ref() {
+    RefImport r = new RefImport(getId(), scope());
+    r.setParent(scope().getParent());
+    return r;
+  }
+
+
+  /*---------- VarRef ----------*/
+
+  inh lazy Scope VarRef.scope();
+
+  syn lazy Ref VarRef.ref();
+
+  eq VarRef.ref() {
+    RefSimple r = new RefSimple(getId(), scope());
+    r.setParent(scope().getParent());
+    return r;
+  }
+
+}

@@ -66,7 +66,7 @@
 		    <echo message = "Running jflex"/>
 		    
 			<jflex 
-				file   = "${spec.dir}/LM.flex" 
+				file   = "${spec.dir}/_LM.flex" 
 				outdir = "${gen.dir}" 
 				nobak  = "yes" />
 		
@@ -78,8 +78,8 @@
 				force    = "false" >
 						
 				<filelist dir = ".">
-					<file name = "${spec.dir}/preamble.parser" />
-					<file name = "${spec.dir}/LM.parser" />
+					<file name = "${spec.dir}/_preamble.parser" />
+					<file name = "${spec.dir}/_LM.parser" />
 				</filelist>
 			</concat>
 			

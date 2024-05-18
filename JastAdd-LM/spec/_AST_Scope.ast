@@ -1,0 +1,11 @@
+abstract Scope ::= <Name:String>;
+ScopeNoDatum: Scope ::= ;
+ScopeDatum: Scope ::= Datum:Datum;
+
+abstract Datum ::= <Id:String>;
+DatumVar: Datum ::= Type:Type;
+DatumMod: Datum ::= Mod:Scope;
+
+abstract Ref ::= <Id:String> Scope:Scope;
+RefSimple: Ref ::=;
+RefImport: Ref ::=;

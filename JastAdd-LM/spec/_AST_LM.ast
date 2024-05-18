@@ -12,10 +12,17 @@ DefDecl: Decl ::= Bind:ParBind;
 abstract Expr;
 VarExpr: Expr ::= Ref:VarRef;
 IntExpr: Expr ::= <Value:Integer>;
+BoolExpr: Expr ::= <Value:Boolean>;
 AddExpr: Expr ::= Left:Expr Right:Expr;
 
-ParBind ::= <Id:String> Value:Expr;
+ParBind ::= <Id:String> Expr:Expr;
 
 ModRef ::= <Id:String>;
 
 VarRef ::= <Id:String>;
+
+
+abstract Type;
+IntType: Type ::= ;
+BoolType: Type ::= ;
+ErrType: Type ::= ;
