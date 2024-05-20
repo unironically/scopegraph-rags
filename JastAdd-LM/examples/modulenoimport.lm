@@ -1,5 +1,5 @@
 module A {
-  def a = b
+  def a:int = b
 }
 
-def b = 1
+def b:int = 1
