@@ -4,5 +4,5 @@ module A {
 
 module B {
   import A
-  def b = a + 1
+  def b = a
 }

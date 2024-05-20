@@ -4,7 +4,7 @@ ScopeDatum: Scope ::= Datum:Datum;
 
 abstract Datum ::= <Id:String>;
 DatumVar: Datum ::= Type:Type;
-DatumMod: Datum ::= Mod:Scope;
+DatumMod: Datum ::= ;
 
 abstract Ref ::= <Id:String> Scope:Scope;
 RefSimple: Ref ::=;

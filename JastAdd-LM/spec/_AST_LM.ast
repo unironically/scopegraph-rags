@@ -15,7 +15,7 @@ IntExpr: Expr ::= <Value:Integer>;
 BoolExpr: Expr ::= <Value:Boolean>;
 AddExpr: Expr ::= Left:Expr Right:Expr;
 
-ParBind ::= <Id:String> Expr:Expr;
+ParBind ::= <Id:String> Type:Type Expr:Expr;
 
 ModRef ::= <Id:String>;
 

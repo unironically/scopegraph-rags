@@ -47,8 +47,8 @@ aspect Resolution {
 
     state0.setFinal(false);
     state1.setFinal(false);
-    state2.setFinal(false);
-    sink.setFinal(true);
+    state2.setFinal(true);
+    sink.setFinal(false);
 
     return new DFA(state0);
 
@@ -92,8 +92,8 @@ aspect Resolution {
 
     state0.setFinal(false);
     state1.setFinal(false);
-    state2.setFinal(false);
-    sink.setFinal(true);
+    state2.setFinal(true);
+    sink.setFinal(false);
 
     return new DFA(state0);
 
@@ -102,7 +102,7 @@ aspect Resolution {
 
   /*---------- DFA/State ----------*/
 
-  syn lazy ArrayList<Scope> DFA.resolve(String id, Scope currentScope);// circular [new ArrayList<Scope>()];
+  syn lazy ArrayList<Scope> DFA.resolve(String id, Scope currentScope);//circular [new ArrayList<Scope>()];
   eq DFA.resolve(String id, Scope currentScope) = getStart().resolve(id, currentScope);
 
   syn lazy ArrayList<Scope> State.resolve(String id, Scope currentScope);// circular [new ArrayList<Scope>()];
@@ -111,36 +111,38 @@ aspect Resolution {
 
     System.out.println("[!] At state " + Integer.toString(getId()) + " and looking for " + id + " from scope " + currentScope.getName());
 
+    
+    ArrayList<Scope> varTrans = new ArrayList<Scope>();
+    System.out.println("\t- I have " + Integer.toString(currentScope.varScopes().size()) + " var scopes");
+    for (Scope s: currentScope.varScopes()) { varTrans.addAll(getVarTrans().resolve(id, s)); }
+    if (!varTrans.isEmpty()) return varTrans;
+
+
     ArrayList<Scope> modTrans = new ArrayList<Scope>();
     System.out.println("\t- I have " + Integer.toString(currentScope.modScopes().size()) + " mod scopes");
-    for (Scope s: currentScope.modScopes()) { System.out.println("mod"); modTrans.addAll(getModTrans().resolve(id, s)); }
+    for (Scope s: currentScope.modScopes()) { modTrans.addAll(getModTrans().resolve(id, s)); }
+    if (!modTrans.isEmpty()) return modTrans;
 
-    ArrayList<Scope> lexTrans = new ArrayList<Scope>();
-    System.out.println("\t- I have " + Integer.toString(currentScope.lexScopes().size()) + " lex scopes");
-    for (Scope s: currentScope.lexScopes()) { System.out.println("lex"); lexTrans.addAll(getLexTrans().resolve(id, s)); }
 
     ArrayList<Scope> impTrans = new ArrayList<Scope>();
     System.out.println("\t- I have " + Integer.toString(currentScope.impScopes().size()) + " imp scopes");
-    for (Scope s: currentScope.lexScopes()) { System.out.println("imp"); impTrans.addAll(getImpTrans().resolve(id, s)); }
+    for (Scope s: currentScope.impScopes()) { impTrans.addAll(getImpTrans().resolve(id, s)); }
+    if (!impTrans.isEmpty()) return impTrans;
 
-    ArrayList<Scope> varTrans = new ArrayList<Scope>();
-    System.out.println("\t- I have " + Integer.toString(currentScope.varScopes().size()) + " var scopes");
-    for (Scope s: currentScope.varScopes()) { System.out.println("var"); varTrans.addAll(getVarTrans().resolve(id, s)); }
 
-    ArrayList<Scope> result;
+    ArrayList<Scope> lexTrans = new ArrayList<Scope>();
+    System.out.println("\t- I have " + Integer.toString(currentScope.lexScopes().size()) + " lex scopes");
+    for (Scope s: currentScope.lexScopes()) { lexTrans.addAll(getLexTrans().resolve(id, s)); }
+    if (!lexTrans.isEmpty()) return lexTrans;
 
-    if (!varTrans.isEmpty()) { result = lexTrans; }
-    else if (!impTrans.isEmpty()) { result = impTrans; }
-    else if (!modTrans.isEmpty()) { result = modTrans; }
-    else if (!lexTrans.isEmpty()) { result = lexTrans; }
-    else { result = new ArrayList<Scope>(); }
-    
-    return result;
+
+    return new ArrayList<Scope>();
+
   }
 
   eq FinalState.resolve(String id, Scope currentScope) {
     
-    ArrayList<Scope> result = super.resolve(id, currentScope);
+    ArrayList<Scope> result = new ArrayList<Scope>();//super.resolve(id, currentScope);
 
     System.out.println("[!!] At " + currentScope.getName() + " and looking for " + id);
 
@@ -150,8 +152,10 @@ aspect Resolution {
     if (currentScope instanceof ScopeDatum &&
         ((ScopeDatum) currentScope).getDatum().getId().equals(id)) {
       System.out.println("\t Found a match! Adding to result...");
-      result.add(0, currentScope); 
-    } 
+      result.add(currentScope); 
+    } else {
+      System.out.println("\t No match!");
+    }
 
     return result;
 
@@ -166,10 +170,12 @@ aspect Resolution {
   syn lazy ArrayList<Scope> Ref.res();// circular [new ArrayList<Scope>()];
 
   eq RefSimple.res() {
+    System.out.println("[+=+=] Wanting to resolve " + getId() + " now.");
     return dfa().resolve(getId(), getScope());
   }
 
   eq RefImport.res() {
+    System.out.println("[-=-=] Wanting to resolve " + getId() + " now.");
     return dfa().resolve(getId(), getScope());
   }
 

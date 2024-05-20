@@ -18,7 +18,7 @@ aspect Typing {
 
   syn Boolean Decl.ok() = false;
   syn Boolean ModuleDecl.ok() = getDs().ok();
-  syn Boolean ImportDecl.ok() = getRef().impScope() != null;
+  syn Boolean ImportDecl.ok() = !getRef().impScopes().isEmpty();
   syn Boolean DefDecl.ok() = getBind().ok();
 
 
@@ -42,7 +42,7 @@ aspect Typing {
 
   /*---------- ParBind ----------*/
 
-  syn Boolean ParBind.ok() = !(getExpr().type() instanceof ErrType);
+  syn Boolean ParBind.ok() = getExpr().type().getClass().equals(getType().getClass());//!(getExpr().type() instanceof ErrType);
 
 
   /*---------- VarRef ----------*/

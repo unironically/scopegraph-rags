@@ -64,8 +64,13 @@ Integer = 0|[1-9][0-9]*
 "{"           { return sym(Terminals.LBRACE); }
 "}"           { return sym(Terminals.RBRACE); }
 
+":"           { return sym(Terminals.COLON); }
+
 "true"        { return sym(Terminals.TRUE); }
 "false"       { return sym(Terminals.FALSE); }
+
+"int"         { return sym(Terminals.INTTY); }
+"bool"        { return sym(Terminals.BOOLTY); }
 
 {Identifier}  { return sym(Terminals.IDENTIFIER); }
 {Integer}     { return sym(Terminals.INTEGER); }

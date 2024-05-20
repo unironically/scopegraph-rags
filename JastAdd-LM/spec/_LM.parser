@@ -24,9 +24,13 @@ Expr expr =
   | expr.a PLUS expr.b                      {: return new AddExpr(a, b); :}
   ;
 
+Type type =
+    INTTY                                   {: return new IntType(); :}
+  | BOOLTY                                  {: return new BoolType(); :}
+  ;
 
 ParBind par_bind =
-    IDENTIFIER ASSIGN expr                  {: return new ParBind(IDENTIFIER, expr); :}
+    IDENTIFIER COLON type ASSIGN expr                  {: return new ParBind(IDENTIFIER, new IntType(), expr); :}
   ;
 
 

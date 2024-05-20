@@ -5,7 +5,7 @@ aspect Scoping {
   coll HashSet<Scope> Scope.lexScopes() [new HashSet<Scope>()] with add root Program;
   coll HashSet<Scope> Scope.modScopes() [new HashSet<Scope>()] with add root Program;
   coll HashSet<Scope> Scope.varScopes() [new HashSet<Scope>()] with add root Program;
-  coll HashSet<Scope> Scope.impScopes() [new HashSet<Scope>()] with add root Program;
+  coll HashSet<Scope> Scope.impScopes() circular [new HashSet<Scope>()] with addAll root Program;
 
 
   /*---------- Program ---------*/
@@ -40,8 +40,8 @@ aspect Scoping {
   eq ModuleDecl.modScope() {
     ScopeDatum s = new ScopeDatum();
     s.setName("ModScope_" + Integer.toString(Scope.scopeCount++));
-    s.setParent(scope().getParent());
-    s.setDatum(new DatumMod(getId(), s));
+    s.setParent(this);
+    s.setDatum(new DatumMod(getId()));
     return s;
   }
 
@@ -64,7 +64,7 @@ aspect Scoping {
     return scope();
   }
 
-  ImportDecl contributes getRef().impScope()
+  ImportDecl contributes getRef().impScopes()
     to Scope.impScopes()
     for scope();
 
@@ -93,11 +93,10 @@ aspect Scoping {
   syn lazy Scope ParBind.varScope();
 
   eq ParBind.varScope() {
-    System.out.println("[!] Made a new varScope for " + getId() + "!");
     ScopeDatum s = new ScopeDatum();
     s.setName("VarScope_" + Integer.toString(Scope.scopeCount++));
-    s.setParent(scope().getParent());
-    s.setDatum(new DatumVar(getId(), new IntType()));
+    s.setParent(this);
+    s.setDatum(new DatumVar(getId(), getType()));
     
     return s;
   }
@@ -111,17 +110,20 @@ aspect Scoping {
 
   inh lazy Scope ModRef.scope();
 
-  syn lazy Scope ModRef.impScope();
+  syn ArrayList<Scope> ModRef.impScopes() circular [new ArrayList<Scope>()];
 
-  eq ModRef.impScope() {
+  eq ModRef.impScopes() {
+
+    System.out.println("[....] Querying for " + getId() + " from " + scope().getName());
 
     ArrayList<Scope> queryResult = ref().res();
 
-    try {
-      Scope resScope = queryResult.get(0);
-    } catch (Exception e) { System.out.println("[✗] Couldn't find a resolution for " + getId()); }
+    if (!queryResult.isEmpty())
+      System.out.println("[....] Found a ModRef result for " + getId() + " to add to impScopes of " + scope().getName());
+    else  
+      System.out.println("[....] Found no ModRef result for " + getId());
 
-    return null;
+    return queryResult;
 
   }
 
@@ -129,7 +131,7 @@ aspect Scoping {
 
   eq ModRef.ref() {
     RefImport r = new RefImport(getId(), scope());
-    r.setParent(scope().getParent());
+    r.setParent(this);
     return r;
   }
 
@@ -142,7 +144,7 @@ aspect Scoping {
 
   eq VarRef.ref() {
     RefSimple r = new RefSimple(getId(), scope());
-    r.setParent(scope().getParent());
+    r.setParent(this);
     return r;
   }
 
