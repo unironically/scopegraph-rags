@@ -1,8 +1,8 @@
 *.jar
 equations.md
 ministatix.hs
-
 out
 .statix
-
 .old
+
+*.class

@@ -474,6 +474,7 @@ public abstract class Scope extends ASTNode<ASTNode> implements Cloneable {
   }
 
   public HashSet<Scope> getCurrentImpScopesValue() {
+    if (Scope_impScopes_value == null) return new HashSet<Scope>();
     return Scope_impScopes_value;
   }
 }
