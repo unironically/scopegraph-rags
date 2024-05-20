@@ -18,7 +18,6 @@ aspect Scoping {
     topScope.setName("GlobalScope_" + Integer.toString(Scope.scopeCount++));
     topScope.setParent(this);
 
-    //System.out.println("Made a new global scope!");
     return topScope;
   }
   
@@ -110,18 +109,11 @@ aspect Scoping {
 
   inh lazy Scope ModRef.scope();
 
-  syn ArrayList<Scope> ModRef.impScopes() circular [new ArrayList<Scope>()];
+  syn lazy ArrayList<Scope> ModRef.impScopes() circular [new ArrayList<Scope>()];
 
   eq ModRef.impScopes() {
 
-    System.out.println("[....] Querying for " + getId() + " from " + scope().getName());
-
     ArrayList<Scope> queryResult = ref().res();
-
-    if (!queryResult.isEmpty())
-      System.out.println("[....] Found a ModRef result for " + getId() + " to add to impScopes of " + scope().getName());
-    else  
-      System.out.println("[....] Found no ModRef result for " + getId());
 
     return queryResult;
 

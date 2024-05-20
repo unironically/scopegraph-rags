@@ -2,5 +2,17 @@
 aspect Scope {
   
   public static int Scope.scopeCount = 0;
+
+  public static int Scope.subResCount = 0;
+
+  public static String Scope.indentBy(int indent) {
+    String s = "";
+    for (int i = 0; i < indent; i++) s += "\t";
+    return s;
+  }
+  
+  public static String Scope.indent() {
+    return Scope.indentBy(Scope.subResCount);
+  }
   
 }

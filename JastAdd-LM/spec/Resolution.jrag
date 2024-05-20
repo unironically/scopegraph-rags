@@ -2,8 +2,7 @@ import java.util.*;
 
 aspect Resolution {
 
-
-  syn DFA Ref.dfa();
+  syn lazy DFA Ref.dfa();
 
   eq Ref.dfa() {
     SinkState sink = new SinkState();
@@ -102,38 +101,63 @@ aspect Resolution {
 
   /*---------- DFA/State ----------*/
 
-  syn lazy ArrayList<Scope> DFA.resolve(String id, Scope currentScope);//circular [new ArrayList<Scope>()];
+  syn lazy ArrayList<Scope> DFA.resolve(String id, Scope currentScope);
   eq DFA.resolve(String id, Scope currentScope) = getStart().resolve(id, currentScope);
 
-  syn lazy ArrayList<Scope> State.resolve(String id, Scope currentScope);// circular [new ArrayList<Scope>()];
+  syn lazy ArrayList<Scope> State.resolve(String id, Scope currentScope);
 
   eq State.resolve(String id, Scope currentScope) {
 
-    System.out.println("[!] At state " + Integer.toString(getId()) + " and looking for " + id + " from scope " + currentScope.getName());
-
+    System.out.println(Scope.indent() + "At state " + Integer.toString(getId()) + " looking for \"" + id + "\" in scope " + currentScope.getName());
     
     ArrayList<Scope> varTrans = new ArrayList<Scope>();
-    System.out.println("\t- I have " + Integer.toString(currentScope.varScopes().size()) + " var scopes");
-    for (Scope s: currentScope.varScopes()) { varTrans.addAll(getVarTrans().resolve(id, s)); }
-    if (!varTrans.isEmpty()) return varTrans;
+    Scope.subResCount++;
+    System.out.println(Scope.indent() + "Time for var");
+    for (Scope s: currentScope.varScopes()) {
+      if (getVarTrans().getId() == -1) continue;
+      System.out.println(Scope.indent() + "Folliwng a var edge to state " + Integer.toString(getVarTrans().getId()));
+      Scope.subResCount++;
+      varTrans.addAll(getVarTrans().resolve(id, s));
+      Scope.subResCount--;
+    }
+    if (!varTrans.isEmpty()) {Scope.subResCount--; return varTrans;}
 
 
     ArrayList<Scope> modTrans = new ArrayList<Scope>();
-    System.out.println("\t- I have " + Integer.toString(currentScope.modScopes().size()) + " mod scopes");
-    for (Scope s: currentScope.modScopes()) { modTrans.addAll(getModTrans().resolve(id, s)); }
-    if (!modTrans.isEmpty()) return modTrans;
+    System.out.println(Scope.indent() + "Time for mod");
+    for (Scope s: currentScope.modScopes()) {
+      if (getModTrans().getId() == -1) continue;
+      System.out.println(Scope.indent() + "Folliwng a mod edge to state " + Integer.toString(getModTrans().getId()));
+      Scope.subResCount++;
+      modTrans.addAll(getModTrans().resolve(id, s)); 
+      Scope.subResCount--;
+    }
+    if (!modTrans.isEmpty()) {Scope.subResCount--; return modTrans;}
 
 
     ArrayList<Scope> impTrans = new ArrayList<Scope>();
-    System.out.println("\t- I have " + Integer.toString(currentScope.impScopes().size()) + " imp scopes");
-    for (Scope s: currentScope.impScopes()) { impTrans.addAll(getImpTrans().resolve(id, s)); }
-    if (!impTrans.isEmpty()) return impTrans;
+    System.out.println(Scope.indent() + "Time for imp");
+    for (Scope s: currentScope.impScopes()) { 
+      if (getImpTrans().getId() == -1) continue;
+      System.out.println(Scope.indent() + "Folliwng an imp edge to state " + Integer.toString(getImpTrans().getId()));
+      Scope.subResCount++;
+      impTrans.addAll(getImpTrans().resolve(id, s)); 
+      Scope.subResCount--;
+    }
+    if (!impTrans.isEmpty()) {Scope.subResCount--; return impTrans;}
 
 
     ArrayList<Scope> lexTrans = new ArrayList<Scope>();
-    System.out.println("\t- I have " + Integer.toString(currentScope.lexScopes().size()) + " lex scopes");
-    for (Scope s: currentScope.lexScopes()) { lexTrans.addAll(getLexTrans().resolve(id, s)); }
-    if (!lexTrans.isEmpty()) return lexTrans;
+    System.out.println(Scope.indent() + "Time for lex");
+    for (Scope s: currentScope.lexScopes()) {
+      if (getLexTrans().getId() == -1) continue;
+      System.out.println(Scope.indent() + "Folliwng a lex edge to state " + Integer.toString(getLexTrans().getId()));
+      Scope.subResCount++;
+      lexTrans.addAll(getLexTrans().resolve(id, s)); 
+      Scope.subResCount--;
+    }
+    if (!lexTrans.isEmpty()) {Scope.subResCount--; return lexTrans;}
+    Scope.subResCount--;
 
 
     return new ArrayList<Scope>();
@@ -141,20 +165,19 @@ aspect Resolution {
   }
 
   eq FinalState.resolve(String id, Scope currentScope) {
-    
-    ArrayList<Scope> result = new ArrayList<Scope>();//super.resolve(id, currentScope);
 
-    System.out.println("[!!] At " + currentScope.getName() + " and looking for " + id);
+    System.out.print(Scope.indent() + "At FINAL state " + Integer.toString(getId()) + " looking for \"" + id + "\" in scope " + currentScope.getName());
+    
+    ArrayList<Scope> result = new ArrayList<Scope>();
 
     ScopeDatum thisScope = (ScopeDatum) currentScope;
-    System.out.println("\t The datum here has id " + thisScope.getDatum().getId());
 
     if (currentScope instanceof ScopeDatum &&
         ((ScopeDatum) currentScope).getDatum().getId().equals(id)) {
-      System.out.println("\t Found a match! Adding to result...");
-      result.add(currentScope); 
+      result.add(currentScope);
+      System.out.println(". Datum is \"" + ((ScopeDatum) currentScope).getDatum().getId() +  "\". This res is good. Adding it to the list.");
     } else {
-      System.out.println("\t No match!");
+      System.out.println(". Datum is \"" + ((ScopeDatum) currentScope).getDatum().getId() +  "\". This res is not good.");
     }
 
     return result;
@@ -162,6 +185,7 @@ aspect Resolution {
   }
 
   eq SinkState.resolve(String id, Scope currentScope) {
+    System.out.println(Scope.indent() + "At the sink state. Nothing to do or return.");
     return new ArrayList<Scope>();
   }
 
@@ -170,13 +194,57 @@ aspect Resolution {
   syn lazy ArrayList<Scope> Ref.res();// circular [new ArrayList<Scope>()];
 
   eq RefSimple.res() {
-    System.out.println("[+=+=] Wanting to resolve " + getId() + " now.");
-    return dfa().resolve(getId(), getScope());
+
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+
+    System.out.println(Scope.indent() + "Beginning resolution of " + getId() + "\"");
+
+    Scope.subResCount++;
+
+    ArrayList<Scope> res = dfa().resolve(getId(), getScope());
+
+    Scope.subResCount--;
+
+    System.out.print(Scope.indent() + "Ending resolution of \"" + getId() + "\". Found : [");
+    for (Scope s: res) {
+      System.out.print("\"" + s.getName() + "\", ");
+    }
+    System.out.println("].");
+
+    return res;
   }
 
   eq RefImport.res() {
-    System.out.println("[-=-=] Wanting to resolve " + getId() + " now.");
-    return dfa().resolve(getId(), getScope());
+
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+
+    System.out.print(Scope.indent() + "Beginning resolution of \"" + getId() + "\". Current res value is : [");
+    for (Scope s: getScope().getCurrentImpScopesValue()) {
+      System.out.print("\"" + s.getName() + "\", ");
+    }
+    System.out.println("].");
+
+    Scope.subResCount++;
+
+    ArrayList<Scope> res = dfa().resolve(getId(), getScope());
+
+    Scope.subResCount--;
+
+    System.out.print(Scope.indent() + "Ending resolution of \"" + getId() + "\". Found : [");
+    for (Scope s: res) {
+      System.out.print("\"" + s.getName() + "\", ");
+    }
+    System.out.println("].");
+
+    return res;
   }
 
 }

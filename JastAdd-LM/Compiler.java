@@ -31,7 +31,6 @@ public class Compiler {
 	    	System.err.println("error (PrettyPrint) : file does not exist");
 	    	System.exit(2);
 	    }
-	    //System.out.println("file : " + args[0]);
 	    		
 		try {
 			
@@ -43,23 +42,14 @@ public class Compiler {
 			reader.close();
 			
 			runPreErrorCheck(p);
-	
-			/*Collection c = p.errors();
-			if (c.size() > 0) {
-				System.out.println("Errors: ");
-				for (Object o : c) {
-					System.out.println("- " + o.toString());
-				}
-			} else {*/
-				//System.out.println("No errors.");
-				if (p.ok()) {
-					System.out.println("[✔] Well-typed :)");
-				} else {
-					System.out.println("[✗] Not well-typed :(");
-				}
 
-				System.out.println(p.prettyPrint());
-			//}
+			if (p.ok()) {
+			  System.out.println("[✔] Well-typed :)");
+			} else {
+			  System.out.println("[✗] Not well-typed :(");
+			}
+
+			//System.out.println(p.prettyPrint());
 		} catch (IOException e) {
 			System.err.println("error (PrettyPrint) : " + e.getMessage());
 			e.printStackTrace();

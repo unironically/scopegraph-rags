@@ -4,27 +4,27 @@ aspect Typing {
 
   /*---------- Program ----------*/
 
-  syn Boolean Program.ok() = getDs().ok();
+  syn lazy Boolean Program.ok() = getDs().ok();
 
 
   /*---------- Decls ----------*/
 
-  syn Boolean Decls.ok() = false;
-  syn Boolean DeclsCons.ok() = getD().ok() && getDs().ok();
-  syn Boolean DeclsNil.ok() = true;
+  syn lazy Boolean Decls.ok() = false;
+  syn lazy Boolean DeclsCons.ok() = getD().ok() && getDs().ok();
+  syn lazy Boolean DeclsNil.ok() = true;
 
 
   /*---------- Decl ----------*/
 
-  syn Boolean Decl.ok() = false;
-  syn Boolean ModuleDecl.ok() = getDs().ok();
-  syn Boolean ImportDecl.ok() = !getRef().impScopes().isEmpty();
-  syn Boolean DefDecl.ok() = getBind().ok();
+  syn lazy Boolean Decl.ok() = false;
+  syn lazy Boolean ModuleDecl.ok() = getDs().ok();
+  syn lazy Boolean ImportDecl.ok() = !getRef().impScopes().isEmpty();
+  syn lazy Boolean DefDecl.ok() = getBind().ok();
 
 
   /*---------- Expr ----------*/
 
-  syn Type Expr.type();
+  syn lazy Type Expr.type();
 
   eq Expr.type() { return new ErrType(); }
 
@@ -42,7 +42,7 @@ aspect Typing {
 
   /*---------- ParBind ----------*/
 
-  syn Boolean ParBind.ok() = getExpr().type().getClass().equals(getType().getClass());//!(getExpr().type() instanceof ErrType);
+  syn lazy Boolean ParBind.ok() = getExpr().type().getClass().equals(getType().getClass());//!(getExpr().type() instanceof ErrType);
 
 
   /*---------- VarRef ----------*/
@@ -51,7 +51,6 @@ aspect Typing {
 
   eq VarRef.type() {
 
-    System.out.println("[!] Trying to resolve " + getId() + " from scope " + scope().getName());
     ArrayList<Scope> queryResult = ref().res();
 
     Scope head;
@@ -59,7 +58,6 @@ aspect Typing {
     try {
       head = queryResult.get(0);
     } catch (Exception e) { 
-      System.out.println("[✗] Couldn't find a resolution for " + getId());
       return new ErrType();
     }
 
