@@ -101,10 +101,10 @@ aspect Resolution {
 
   /*---------- DFA/State ----------*/
 
-  syn /*lazy*/ ArrayList<Scope> DFA.resolve(String id, Scope currentScope);
+  syn lazy ArrayList<Scope> DFA.resolve(String id, Scope currentScope);
   eq DFA.resolve(String id, Scope currentScope) = getStart().resolve(id, currentScope);
 
-  syn /*lazy*/ ArrayList<Scope> State.resolve(String id, Scope currentScope);
+  syn lazy ArrayList<Scope> State.resolve(String id, Scope currentScope);
 
   eq State.resolve(String id, Scope currentScope) {
 
@@ -173,11 +173,8 @@ aspect Resolution {
   }
 
   eq FinalState.resolve(String id, Scope currentScope) {
-    //System.out.println("Hm.");
 
     System.out.print(Scope.indent() + "At FINAL state " + Integer.toString(getId()) + " looking for \"" + id + "\" in scope " + currentScope.getName());
-
-    //System.out.println("Trve");
     
     ArrayList<Scope> result = new ArrayList<Scope>();
 
