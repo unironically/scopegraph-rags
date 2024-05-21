@@ -1,0 +1,8 @@
+module A {
+  def x:bool = true
+}
+
+module B {
+  import A
+  def y:int = x
+}

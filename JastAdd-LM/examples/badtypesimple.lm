@@ -1,0 +1,2 @@
+def x:bool = true
+def y:int = x + 1

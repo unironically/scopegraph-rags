@@ -1,0 +1,8 @@
+module C {
+  def x:int = 1
+}
+
+module A {
+  import B
+  def y:int = x
+}
