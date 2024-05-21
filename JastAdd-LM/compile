@@ -4,6 +4,6 @@ ant clean
 
 ant build
 
-cp temp/Scope.java.keep AST/Scope.java
+sed '$s/.$//' AST/Scope.java > temp.java; cat temp/Scope.java.suffix >> temp.java; mv temp.java AST/Scope.java
 
 ant jar
