@@ -1,4 +1,6 @@
-*.jar
+grammars/*/*.jar
+lm_language_*/*.jar
+
 equations.md
 ministatix.hs
 out
