@@ -1,0 +1,9 @@
+#!/bin/bash
+
+ant clean
+
+ant build
+
+cp temp/Scope.java.keep AST/Scope.java
+
+ant jar
