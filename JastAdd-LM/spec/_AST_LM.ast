@@ -18,9 +18,10 @@ AddExpr: Expr ::= Left:Expr Right:Expr;
 ParBind ::= <Id:String> Type:Type Expr:Expr;
 
 ModRef ::= <Id:String>;
+ModQRef: ModRef ::= ModRef:ModRef;
 
 VarRef ::= <Id:String>;
-
+VarQRef: VarRef ::= ModRef:ModRef;
 
 abstract Type;
 IntType: Type ::= ;

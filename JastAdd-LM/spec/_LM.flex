@@ -65,6 +65,7 @@ Integer = 0|[1-9][0-9]*
 "}"           { return sym(Terminals.RBRACE); }
 
 ":"           { return sym(Terminals.COLON); }
+"."           { return sym(Terminals.DOT); }
 
 "true"        { return sym(Terminals.TRUE); }
 "false"       { return sym(Terminals.FALSE); }

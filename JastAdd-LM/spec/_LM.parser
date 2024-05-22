@@ -37,9 +37,11 @@ ParBind par_bind =
 
 ModRef mod_ref = 
     IDENTIFIER                              {: return new ModRef(IDENTIFIER); :}
+  | mod_ref DOT IDENTIFIER                  {: return new ModQRef(IDENTIFIER, mod_ref); :}
   ;
 
 
 VarRef var_ref = 
     IDENTIFIER                              {: return new VarRef(IDENTIFIER); :}
+  | mod_ref DOT IDENTIFIER                  {: return new VarQRef(IDENTIFIER, mod_ref); :}
   ;

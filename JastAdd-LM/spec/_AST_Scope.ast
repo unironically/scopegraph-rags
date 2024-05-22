@@ -6,6 +6,4 @@ abstract Datum ::= <Id:String>;
 DatumVar: Datum ::= Type:Type;
 DatumMod: Datum ::= ;
 
-abstract Ref ::= <Id:String> Scope:Scope;
-RefSimple: Ref ::=;
-RefImport: Ref ::=;
+Ref ::= <Id:String> Scope:Scope DFA:DFA;

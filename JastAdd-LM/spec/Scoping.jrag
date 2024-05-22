@@ -117,22 +117,31 @@ aspect Scoping {
   syn lazy ArrayList<Scope> ModRef.impScopes() circular [new ArrayList<Scope>()];
 
   eq ModRef.impScopes() {
-
-    ArrayList<Scope> queryResult = ref().res();
-
-    return queryResult;
-
+    return ref().res();
   }
 
   syn lazy Ref ModRef.ref();
 
   eq ModRef.ref() {
-    RefImport r = new RefImport(getId(), scope());
+    Ref r = new Ref(getId(), scope(), DFA.modRefDFA());
     r.setParent(this);
     return r;
   }
 
 
+  /*---------- ModQRef ----------*/
+
+  eq ModQRef.ref() {
+    Ref r = new Ref(getId(), getModRef().impScopes().get(0), DFA.modQRefDFA());
+    r.setParent(this);
+    return r;
+  }
+
+  eq ModQRef.getModRef().scope() {
+    return scope();
+  }
+
+  
   /*---------- VarRef ----------*/
 
   inh lazy Scope VarRef.scope();
@@ -140,9 +149,26 @@ aspect Scoping {
   syn lazy Ref VarRef.ref();
 
   eq VarRef.ref() {
-    RefSimple r = new RefSimple(getId(), scope());
+    Ref r = new Ref(getId(), scope(), DFA.varRefDFA());
     r.setParent(this);
     return r;
+  }
+
+
+  /*---------- VarQRef ----------*/
+
+  inh lazy Scope VarQRef.scope();
+
+  syn lazy Ref VarQRef.ref();
+
+  eq VarQRef.ref() {
+    Ref r = new Ref(getId(), getModRef().impScopes().get(0), DFA.varQRefDFA());
+    r.setParent(this);
+    return r;
+  }
+
+  eq VarQRef.getModRef().scope() {
+    return scope();
   }
 
 }
