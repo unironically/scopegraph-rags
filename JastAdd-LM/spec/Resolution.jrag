@@ -94,6 +94,8 @@ aspect Resolution {
 
   eq Ref.res() {
 
+    Scope.refResolvingOrDone = true;
+
     try {
       Thread.sleep(1000);
     } catch (InterruptedException e) {
@@ -113,6 +115,8 @@ aspect Resolution {
       System.out.print("\"" + s.getName() + "\", ");
     }
     System.out.println("].");
+
+    Scope.refResolvingOrDone = false;
 
     return res;
 

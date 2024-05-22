@@ -14,5 +14,7 @@ aspect Scope {
   public static String Scope.indent() {
     return Scope.indentBy(Scope.subResCount);
   }
+
+  public static Boolean Scope.refResolvingOrDone = false;
   
 }

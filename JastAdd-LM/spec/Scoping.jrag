@@ -64,6 +64,7 @@ aspect Scoping {
   }
 
   ImportDecl contributes getRef().impScopes()
+    when Scope.refResolvingOrDone
     to Scope.impScopes()
     for scope();
 
