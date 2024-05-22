@@ -1,0 +1,7 @@
+aspect Type {
+
+  public static Type Type.intType = new IntType();
+  public static Type Type.boolType = new BoolType();
+  public static Type Type.errType = new ErrType();
+
+}

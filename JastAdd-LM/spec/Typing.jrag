@@ -24,26 +24,31 @@ aspect Typing {
 
   /*---------- Expr ----------*/
 
-  syn lazy Type Expr.type();
+  syn lazy Type Expr.type() circular [new ErrType()];
 
-  eq Expr.type() { return new ErrType(); }
+  eq Expr.type() { return Type.errType; }
 
   eq VarExpr.type() { return getRef().type(); }
 
-  eq IntExpr.type() { return new IntType(); }
-
-  eq BoolExpr.type() { return new BoolType(); }
+  eq IntExpr.type() { return Type.intType; }
+  eq BoolExpr.type() { return Type.boolType; }
 
   eq AddExpr.type() {
-    if (getLeft().type().getClass().equals(getRight().type().getClass())) return new IntType();
-    else return new ErrType();
+    if (getLeft().type() instanceof IntType && getRight().type() instanceof IntType) 
+      return Type.intType;
+    return Type.errType;
   }
 
 
   /*---------- ParBind ----------*/
 
-  syn lazy Boolean ParBind.ok() = getExpr().type().getClass().equals(getType().getClass());//!(getExpr().type() instanceof ErrType);
+  syn lazy Boolean ParBind.ok();
 
+  eq ParBind.ok() {
+    if (getType() instanceof ErrType)
+      return !(getExpr().type() instanceof ErrType);
+    return getExpr().type().getClass().equals(getType().getClass());
+  }
 
   /*---------- VarRef ----------*/
 

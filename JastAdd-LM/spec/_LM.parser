@@ -30,7 +30,8 @@ Type type =
   ;
 
 ParBind par_bind =
-    IDENTIFIER COLON type ASSIGN expr                  {: return new ParBind(IDENTIFIER, type, expr); :}
+    IDENTIFIER COLON type ASSIGN expr       {: return new ParBind(IDENTIFIER, type, expr); :}
+  | IDENTIFIER ASSIGN expr                  {: return new ParBind(IDENTIFIER, new ErrType(), expr); :}
   ;
 
 

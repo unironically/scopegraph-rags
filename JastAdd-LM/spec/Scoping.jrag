@@ -95,9 +95,14 @@ aspect Scoping {
     ScopeDatum s = new ScopeDatum();
     s.setName("VarScope_" + Integer.toString(Scope.scopeCount++));
     s.setParent(this);
-    s.setDatum(new DatumVar(getId(), getType()));
-    
+    s.setDatum(new DatumVar(getId(), pbindType()));
     return s;
+  }
+
+  syn lazy Type ParBind.pbindType();
+  eq ParBind.pbindType() {
+    if (getType() instanceof ErrType) return getExpr().type();
+    return getType();
   }
 
   ParBind contributes varScope()
