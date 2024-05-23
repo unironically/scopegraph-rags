@@ -3,7 +3,7 @@ aspect Bindings {
   /* Passing root down the LM AST */
 
   // Program
-  coll HashSet<Binding> Program.bindings() [new HashSet<Binding>()] with add root Program;
+  coll HashSet<Binding> Program.bindings() [new HashSet<Binding>()] with addAll root Program;
   eq Program.getDs().root() { return this; }
 
   // Decls
@@ -38,9 +38,22 @@ aspect Bindings {
 
   /* Contributions */
 
-  VarRef contributes new Binding(label(), ((ScopeDatum) ref().decl().getChild(0)).getDatum().getLabel())
-  when ref().decl().getNumChild() > 0
+  VarRef contributes bindings() //new Binding(label(), ((ScopeDatum) ref().decl().getChild(0)).getDatum().getLabel())
   to Program.bindings()
   for root();
+
+  syn ArrayList<Binding> VarRef.bindings();
+  eq VarRef.bindings() {
+
+    ArrayList<Scope> decls = ref().decls();
+
+    ArrayList<Binding> binds = new ArrayList<Binding>();
+    
+    for (Scope s: decls)
+      if (s instanceof ScopeDatum)
+        binds.add(new Binding(label(), ((ScopeDatum) s).getDatum().getLabel()));
+    
+    return binds;
+  }
 
 }

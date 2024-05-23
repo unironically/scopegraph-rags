@@ -5,7 +5,7 @@ aspect Scoping {
   coll HashSet<Scope> Scope.lexScopes() [new HashSet<Scope>()] with add root Program;
   coll HashSet<Scope> Scope.modScopes() [new HashSet<Scope>()] with add root Program;
   coll HashSet<Scope> Scope.varScopes() [new HashSet<Scope>()] with add root Program;
-  coll HashSet<Scope> Scope.impScopes() circular [new HashSet<Scope>()] with add root Program;
+  coll HashSet<Scope> Scope.impScopes() circular [new HashSet<Scope>()] with addAll root Program;
 
 
   /*---------- Program ---------*/
@@ -141,9 +141,19 @@ aspect Scoping {
     getId() + "_" + getStartLine() + ":" + getStartColumn();
 
 
-  ModRef contributes (ScopeDatum) (ref().decl().getChild(0))
-    //when ref().decl().getNumChild() > 0
+  ModRef contributes imps()
     to Scope.impScopes()
     for scope();
+
+  syn ArrayList<Scope> ModRef.imps();
+  eq ModRef.imps() {
+    ArrayList<Scope> res = ref().decls();
+    ArrayList<Scope> ret = new ArrayList<Scope>();
+
+    if (!res.isEmpty())
+      ret.add(res.get(0));
+
+    return ret;
+  }
 
 }

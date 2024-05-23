@@ -49,7 +49,6 @@ aspect Resolution {
     }
     if (!lexRes.isEmpty()) allRes.add(lexRes);
 
-
     return allRes;
 
   }
@@ -78,30 +77,36 @@ aspect Resolution {
 
   /*---------- Ref ----------*/
 
-  syn lazy Opt<Scope> Ref.decl();// circular [new ArrayList<Scope>()];
+  syn lazy ArrayList<Scope> Ref.decls();// circular [new ArrayList<Scope>()];
 
-  eq Ref.decl() {
+  eq Ref.decls() {
 
-    Opt resOpt = new Opt();
-    resOpt.setParent(this);
+    //Opt resOpt = new Opt();
+    //resOpt.setParent(this);
+
+    ArrayList<Scope> myDecls = new ArrayList<Scope>();
 
     ArrayList<ArrayList<Scope>> res = getDFA().resolve(getId(), getScope());
 
         // No res         No res                  Ambiguous
     if (res.isEmpty() || res.get(0).isEmpty() || res.get(0).size() > 1) {
-      System.out.println("- No resolutions (1) found for reference " + getLabel());
-      return resOpt;
+      //System.out.println("- No resolutions (1) found for reference " + getLabel());
+      return myDecls;
     } else if (res.get(0).isEmpty()) {
-      System.out.println("- No resolutions (2) found for reference " + getLabel());
-      return resOpt;
+      //System.out.println("- No resolutions (2) found for reference " + getLabel());
+      return myDecls;
     } else if (res.get(0).size() > 1) {
-      System.out.println("- Ambiguous reference " + getLabel());
-      return resOpt;
+      //System.out.println("- Ambiguous reference " + getLabel());
+      return myDecls;
     }
 
-    resOpt.setChild(res.get(0).get(0), 0);
+    //System.out.println("fleeeeeeeeeeeeeehhhhhh " + getId());
 
-    return resOpt;
+    //resOpt.setChild(res.get(0).get(0), 0);
+
+    myDecls.addAll(res.get(0));
+
+    return myDecls;
 
   }
 
