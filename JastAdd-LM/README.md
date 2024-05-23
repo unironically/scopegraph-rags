@@ -17,7 +17,7 @@ TODO
 - This is because the result of one iteration replaces the current result. Then the next iteration acts similarly, replacing the previous value with a new one.
 - I.e.
   - Iteration 1 of `impScopes()` results in the `A` on line 1
-  - Iteration 2 of `impScopes()` results in the `A` on line 2
+  - Iteration 2 of `impScopes()` results in the `A` on line 5
   - Iteration 3 of `impScopes()` results in the `A` on line 1
   - ...
 
