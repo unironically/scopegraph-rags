@@ -1,0 +1,46 @@
+aspect Bindings {
+
+  /* Passing root down the LM AST */
+
+  // Program
+  coll HashSet<Binding> Program.bindings() [new HashSet<Binding>()] with add root Program;
+  eq Program.getDs().root() { return this; }
+
+  // Decls
+  inh Program Decls.root();
+  eq Decls.getChild(int i).root() { return root(); }
+
+
+  // Decl
+  inh Program Decl.root();
+  eq Decl.getChild(int i).root() { return root(); }
+
+
+  // Expr
+  inh Program Expr.root();
+  eq Expr.getChild(int i).root() { return root(); }
+
+
+  // ParBind
+  inh Program ParBind.root();
+  eq ParBind.getChild(int i).root() { return root(); }
+
+
+  // ModRef
+  inh Program ModRef.root();
+  eq ModRef.getChild(int i).root() { return root(); }
+
+
+  // VarRef
+  inh Program VarRef.root();
+  eq VarRef.getChild(int i).root() { return root(); }
+
+
+  /* Contributions */
+
+  VarRef contributes new Binding(label(), ((ScopeDatum) ref().decl().getChild(0)).getDatum().getLabel())
+  when ref().decl().getNumChild() > 0
+  to Program.bindings()
+  for root();
+
+}

@@ -2,124 +2,114 @@ import java.util.*;
 
 aspect Resolution {
 
+
   /*---------- DFA/State ----------*/
 
-  syn lazy ArrayList<Scope> DFA.resolve(String id, Scope currentScope);
+  syn lazy ArrayList<ArrayList<Scope>> DFA.resolve(String id, Scope currentScope);
+  syn lazy ArrayList<ArrayList<Scope>> State.resolve(String id, Scope currentScope);
   eq DFA.resolve(String id, Scope currentScope) = getStart().resolve(id, currentScope);
 
-  syn lazy ArrayList<Scope> State.resolve(String id, Scope currentScope);
-
   eq State.resolve(String id, Scope currentScope) {
-
-    System.out.println(Scope.indent() + "At state " + Integer.toString(getId()) + " looking for \"" + id + "\" in scope " + currentScope.getName());
     
-    ArrayList<Scope> res = new ArrayList<Scope>();
+    ArrayList<ArrayList<Scope>> allRes = new ArrayList<ArrayList<Scope>>();
 
-    Scope.subResCount++;
-    System.out.println(Scope.indent() + "Checking for VAR edges from " + currentScope.getName());
+
+    ArrayList<Scope> varRes = new ArrayList<Scope>();
     for (Scope s: currentScope.varScopes()) {
       if (getVarTrans().getId() == -1) continue;
-      Scope.subResCount++;
-      System.out.println(Scope.indent() + "Following a VAR edge to state " + Integer.toString(getVarTrans().getId()));
-      Scope.subResCount++;
-      res.addAll(getVarTrans().resolve(id, s));
-      Scope.subResCount -= 2;
+      ArrayList<ArrayList<Scope>> varResInter = getVarTrans().resolve(id, s);
+      if (!varResInter.isEmpty()) varRes.addAll(varResInter.get(0));
     }
+    if (!varRes.isEmpty()) allRes.add(varRes);
 
-    System.out.println(Scope.indent() + "Checking for MOD edges from " + currentScope.getName());
+
+    ArrayList<Scope> modRes = new ArrayList<Scope>();
     for (Scope s: currentScope.modScopes()) {
       if (getModTrans().getId() == -1) continue;
-      Scope.subResCount++;
-      System.out.println(Scope.indent() + "Following a MOD edge to state " + Integer.toString(getModTrans().getId()));
-      Scope.subResCount++;
-      res.addAll(getModTrans().resolve(id, s));
-      Scope.subResCount -= 2;
+      ArrayList<ArrayList<Scope>> modResInter = getModTrans().resolve(id, s);
+      if (!modResInter.isEmpty()) modRes.addAll(modResInter.get(0));
     }
+    if (!modRes.isEmpty()) allRes.add(modRes);
 
-    System.out.println(Scope.indent() + "Checking for IMP edges from " + currentScope.getName());
+
+    ArrayList<Scope> impRes = new ArrayList<Scope>();
     for (Scope s: currentScope.impScopes()) {
       if (getImpTrans().getId() == -1) continue;
-      Scope.subResCount++;
-      System.out.println(Scope.indent() + "Following an IMP edge to state " + Integer.toString(getImpTrans().getId()));
-      Scope.subResCount++;
-      res.addAll(getImpTrans().resolve(id, s));
-      Scope.subResCount -= 2;
+      ArrayList<ArrayList<Scope>> impResInter = getImpTrans().resolve(id, s);
+      if (!impResInter.isEmpty()) impRes.addAll(impResInter.get(0));
     }
+    if (!impRes.isEmpty()) allRes.add(impRes);
 
-    System.out.println(Scope.indent() + "Checking for LEX edges from " + currentScope.getName());
+
+    ArrayList<Scope> lexRes = new ArrayList<Scope>();
     for (Scope s: currentScope.lexScopes()) {
       if (getLexTrans().getId() == -1) continue;
-      Scope.subResCount++;
-      System.out.println(Scope.indent() + "Following a LEX edge to state " + Integer.toString(getLexTrans().getId()));
-      Scope.subResCount++;
-      res.addAll(getLexTrans().resolve(id, s));
-      Scope.subResCount -= 2;
+      ArrayList<ArrayList<Scope>> lexResInter = getLexTrans().resolve(id, s);
+      if (!lexResInter.isEmpty()) lexRes.addAll(lexResInter.get(0));
     }
+    if (!lexRes.isEmpty()) allRes.add(lexRes);
 
-    Scope.subResCount--;
 
-    return res;
+    return allRes;
 
   }
 
   eq FinalState.resolve(String id, Scope currentScope) {
 
-    System.out.print(Scope.indent() + "At FINAL state " + Integer.toString(getId()) + " looking for \"" + id + "\" in scope " + currentScope.getName());
-    
-    ArrayList<Scope> result = new ArrayList<Scope>();
+    ArrayList<ArrayList<Scope>> result = new ArrayList<ArrayList<Scope>>();
+    ArrayList<Scope> resultOne = new ArrayList<Scope>();
 
     ScopeDatum thisScope = (ScopeDatum) currentScope;
-
-    if (currentScope instanceof ScopeDatum &&
-        ((ScopeDatum) currentScope).getDatum().getId().equals(id)) {
-      result.add(currentScope);
-      System.out.println(". Datum is \"" + ((ScopeDatum) currentScope).getDatum().getId() +  "\". This res is good. Adding it to the list.");
-    } else {
-      System.out.println(". Datum is \"" + ((ScopeDatum) currentScope).getDatum().getId() +  "\". This res is not good.");
+    
+    if (thisScope.getDatum().getId().equals(id)) {
+      resultOne.add(currentScope);
+      result.add(resultOne);
     }
 
     return result;
 
   }
 
+
   eq SinkState.resolve(String id, Scope currentScope) {
-    System.out.println(Scope.indent() + "At the sink state. Nothing to do or return.");
-    return new ArrayList<Scope>();
+    return new ArrayList<ArrayList<Scope>>();
   }
 
 
   /*---------- Ref ----------*/
 
-  syn lazy ArrayList<Scope> Ref.res();// circular [new ArrayList<Scope>()];
+  syn lazy Opt<Scope> Ref.decl();// circular [new ArrayList<Scope>()];
 
-  eq Ref.res() {
+  eq Ref.decl() {
 
-    Scope.refResolvingOrDone = true;
+    Opt resOpt = new Opt();
+    resOpt.setParent(this);
 
-    try {
-      Thread.sleep(1000);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
+    ArrayList<ArrayList<Scope>> res = getDFA().resolve(getId(), getScope());
+
+        // No res         No res                  Ambiguous
+    if (res.isEmpty() || res.get(0).isEmpty() || res.get(0).size() > 1) {
+      System.out.println("- No resolutions (1) found for reference " + getLabel());
+      return resOpt;
+    } else if (res.get(0).isEmpty()) {
+      System.out.println("- No resolutions (2) found for reference " + getLabel());
+      return resOpt;
+    } else if (res.get(0).size() > 1) {
+      System.out.println("- Ambiguous reference " + getLabel());
+      return resOpt;
     }
 
-    System.out.println(Scope.indent() + "Beginning resolution of \"" + getId() + "\"");
+    resOpt.setChild(res.get(0).get(0), 0);
 
-    Scope.subResCount++;
-
-    ArrayList<Scope> res = getDFA().resolve(getId(), getScope());
-
-    Scope.subResCount--;
-
-    System.out.print(Scope.indent() + "Ending resolution of \"" + getId() + "\". Found : [");
-    for (Scope s: res) {
-      System.out.print("\"" + s.getName() + "\", ");
-    }
-    System.out.println("].");
-
-    Scope.refResolvingOrDone = false;
-
-    return res;
+    return resOpt;
 
   }
 
 }
+
+
+/*try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }*/

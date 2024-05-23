@@ -1,2 +1,0 @@
-def b:int = a
-def a:int = 1

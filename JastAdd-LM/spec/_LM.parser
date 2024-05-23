@@ -22,6 +22,7 @@ Expr expr =
   | TRUE                                    {: return new BoolExpr(true); :}
   | FALSE                                   {: return new BoolExpr(false); :}
   | expr.a PLUS expr.b                      {: return new AddExpr(a, b); :}
+  | expr.a AND expr.b                       {: return new AndExpr(a, b); :}
   ;
 
 Type type =

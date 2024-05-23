@@ -2,8 +2,10 @@ abstract Scope ::= <Name:String>;
 ScopeNoDatum: Scope ::= ;
 ScopeDatum: Scope ::= Datum:Datum;
 
-abstract Datum ::= <Id:String>;
+abstract Datum ::= <Id:String> <Label:String>;
 DatumVar: Datum ::= Type:Type;
 DatumMod: Datum ::= ;
 
-Ref ::= <Id:String> Scope:Scope DFA:DFA;
+Ref ::= <Id:String> <Label:String> Scope:Scope DFA:DFA;
+
+Binding ::= <RefLabel:String> <DeclLabel:String>;

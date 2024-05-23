@@ -1,5 +1,0 @@
-module A {
-  def a:int = b
-}
-
-def b:int = 1

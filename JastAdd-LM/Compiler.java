@@ -8,6 +8,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Collection;
 
+import java.util.*;
+
 import beaver.Scanner.Exception;
 
 import AST.*;
@@ -43,10 +45,13 @@ public class Compiler {
 			
 			runPreErrorCheck(p);
 
-			if (p.ok()) {
-			  System.out.println("[✔] Well-typed :)");
-			} else {
-			  System.out.println("[✗] Not well-typed :(");
+			HashSet<Binding> binds = p.bindings();
+
+			if (binds.isEmpty()) 
+				System.out.println("No bindings found.");
+
+			for (Binding b: p.bindings()) {
+				System.out.println("- Reference `" + b.getRefLabel() + "` resolves to declaration `" + b.getDeclLabel() + "`");
 			}
 
 			//System.out.println(p.prettyPrint());

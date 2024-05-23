@@ -5,7 +5,7 @@ aspect Scoping {
   coll HashSet<Scope> Scope.lexScopes() [new HashSet<Scope>()] with add root Program;
   coll HashSet<Scope> Scope.modScopes() [new HashSet<Scope>()] with add root Program;
   coll HashSet<Scope> Scope.varScopes() [new HashSet<Scope>()] with add root Program;
-  coll HashSet<Scope> Scope.impScopes() circular [new HashSet<Scope>()] with addAll root Program;
+  coll HashSet<Scope> Scope.impScopes() circular [new HashSet<Scope>()] with add root Program;
 
 
   /*---------- Program ---------*/
@@ -40,7 +40,7 @@ aspect Scoping {
     ScopeDatum s = new ScopeDatum();
     s.setName("ModScope_" + Integer.toString(Scope.scopeCount++));
     s.setParent(this);
-    s.setDatum(new DatumMod(getId()));
+    s.setDatum(new DatumMod(getId(), label()));
     return s;
   }
 
@@ -56,17 +56,15 @@ aspect Scoping {
     to Scope.lexScopes()
     for modScope();
 
+  syn String ModuleDecl.label() =
+    getId() + "_" + getStartLine() + ":" + getStartColumn();
+
 
   /*---------- Import Decl ----------*/
 
   eq ImportDecl.getRef().scope() {
     return scope();
   }
-
-  ImportDecl contributes getRef().impScopes()
-    when Scope.refResolvingOrDone
-    to Scope.impScopes()
-    for scope();
 
 
   /*---------- Def Decl ----------*/
@@ -85,6 +83,9 @@ aspect Scoping {
   eq AddExpr.getLeft().scope() { return scope(); }
   eq AddExpr.getRight().scope() { return scope(); }
 
+  eq AndExpr.getLeft().scope() { return scope(); }
+  eq AndExpr.getRight().scope() { return scope(); }
+
 
   /*---------- ParBind ----------*/
 
@@ -96,53 +97,18 @@ aspect Scoping {
     ScopeDatum s = new ScopeDatum();
     s.setName("VarScope_" + Integer.toString(Scope.scopeCount++));
     s.setParent(this);
-    s.setDatum(new DatumVar(getId(), pbindType()));
+    s.setDatum(new DatumVar(getId(), label(), getType()));
     return s;
-  }
-
-  syn lazy Type ParBind.pbindType();
-  eq ParBind.pbindType() {
-    if (getType() instanceof ErrType) return getExpr().type();
-    return getType();
   }
 
   ParBind contributes varScope()
     to Scope.varScopes()
     for scope();
 
+  syn String ParBind.label() =
+    getId() + "_" + getStartLine() + ":" + getStartColumn();
   
-  /*---------- ModRef ----------*/
 
-  inh lazy Scope ModRef.scope();
-
-  syn lazy ArrayList<Scope> ModRef.impScopes() circular [new ArrayList<Scope>()];
-
-  eq ModRef.impScopes() {
-    return ref().res();
-  }
-
-  syn lazy Ref ModRef.ref();
-
-  eq ModRef.ref() {
-    Ref r = new Ref(getId(), scope(), DFA.modRefDFA());
-    r.setParent(this);
-    return r;
-  }
-
-
-  /*---------- ModQRef ----------*/
-
-  eq ModQRef.ref() {
-    Ref r = new Ref(getId(), getModRef().impScopes().get(0), DFA.modQRefDFA());
-    r.setParent(this);
-    return r;
-  }
-
-  eq ModQRef.getModRef().scope() {
-    return scope();
-  }
-
-  
   /*---------- VarRef ----------*/
 
   inh lazy Scope VarRef.scope();
@@ -150,26 +116,34 @@ aspect Scoping {
   syn lazy Ref VarRef.ref();
 
   eq VarRef.ref() {
-    Ref r = new Ref(getId(), scope(), DFA.varRefDFA());
+    Ref r = new Ref(getId(), label(), scope(), DFA.varRefDFA());
     r.setParent(this);
     return r;
   }
 
+  syn String VarRef.label() =
+    getId() + "_" + getStartLine() + ":" + getStartColumn();
 
-  /*---------- VarQRef ----------*/
 
-  inh lazy Scope VarQRef.scope();
+  /*---------- ModRef ----------*/
 
-  syn lazy Ref VarQRef.ref();
+  inh lazy Scope ModRef.scope();
 
-  eq VarQRef.ref() {
-    Ref r = new Ref(getId(), getModRef().impScopes().get(0), DFA.varQRefDFA());
+  syn lazy Ref ModRef.ref();
+
+  eq ModRef.ref() {
+    Ref r = new Ref(getId(), label(), scope(), DFA.modRefDFA());
     r.setParent(this);
     return r;
   }
 
-  eq VarQRef.getModRef().scope() {
-    return scope();
-  }
+  syn String ModRef.label() =
+    getId() + "_" + getStartLine() + ":" + getStartColumn();
+
+
+  ModRef contributes (ScopeDatum) (ref().decl().getChild(0))
+    //when ref().decl().getNumChild() > 0
+    to Scope.impScopes()
+    for scope();
 
 }

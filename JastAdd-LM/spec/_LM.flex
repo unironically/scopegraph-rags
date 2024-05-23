@@ -60,6 +60,7 @@ Integer = 0|[1-9][0-9]*
 
 "="           { return sym(Terminals.ASSIGN); }
 "+"           { return sym(Terminals.PLUS); }
+"&&"          { return sym(Terminals.AND); }
 
 "{"           { return sym(Terminals.LBRACE); }
 "}"           { return sym(Terminals.RBRACE); }

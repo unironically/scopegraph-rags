@@ -1,0 +1,17 @@
+module A {
+
+  def c:int = a + 2
+  def d:bool = b && true
+  
+  def e:int = a + c
+  def f:bool = b && d
+
+  module B {
+    def g:int = a + e
+    def h:bool = b && f
+  }
+  
+}
+
+def a:int = 1
+def b:bool = true
