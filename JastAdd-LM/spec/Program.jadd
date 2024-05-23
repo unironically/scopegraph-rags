@@ -1,5 +1,5 @@
 aspect Program {
   
-  public static Boolean Program.resDebug = false;
+  public static Boolean Program.debug = false;
 
 }

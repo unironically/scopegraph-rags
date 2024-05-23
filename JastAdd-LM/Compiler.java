@@ -33,6 +33,11 @@ public class Compiler {
 	    	System.err.println("error (PrettyPrint) : file does not exist");
 	    	System.exit(2);
 	    }
+		
+		for (String s: args) {
+			if (s.equals("-d") || s.equals("--debug"))
+				Program.debug = true;
+		}
 	    		
 		try {
 			

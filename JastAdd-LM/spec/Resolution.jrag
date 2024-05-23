@@ -13,41 +13,109 @@ aspect Resolution {
     
     ArrayList<ArrayList<Scope>> allRes = new ArrayList<ArrayList<Scope>>();
 
+    if (Program.debug) System.out.println(Scope.indent() + "Resolving in state " + Integer.toString(getId()) + " for ref " + id + " in scope " + currentScope.getName());
 
+    Scope.addIndent();
+
+    if (Program.debug) System.out.println(Scope.indent() + "Demanding " + currentScope.getName() + ".varScopes");
+    Scope.addIndent();
     ArrayList<Scope> varRes = new ArrayList<Scope>();
     for (Scope s: currentScope.varScopes()) {
       if (getVarTrans().getId() == -1) continue;
+
+      if (Program.debug) System.out.println(Scope.indent() + "Following a VAR edge to scope " + s.getName());
+
+      Scope.addIndent();
+      
       ArrayList<ArrayList<Scope>> varResInter = getVarTrans().resolve(id, s);
       if (!varResInter.isEmpty()) varRes.addAll(varResInter.get(0));
+
+      Scope.removeIndent();
+
     }
     if (!varRes.isEmpty()) allRes.add(varRes);
+    Scope.removeIndent();
 
 
+    if (Program.debug) System.out.println(Scope.indent() + "Demanding " + currentScope.getName() + ".modScopes");
+    Scope.addIndent();
     ArrayList<Scope> modRes = new ArrayList<Scope>();
     for (Scope s: currentScope.modScopes()) {
+
+      if (Program.debug) System.out.println(Scope.indent() + "Following a MOD edge to scope " + s.getName());
+
+      Scope.addIndent();
+
       if (getModTrans().getId() == -1) continue;
       ArrayList<ArrayList<Scope>> modResInter = getModTrans().resolve(id, s);
       if (!modResInter.isEmpty()) modRes.addAll(modResInter.get(0));
+
+      Scope.removeIndent();
+
     }
     if (!modRes.isEmpty()) allRes.add(modRes);
+    Scope.removeIndent();
 
 
+    if (Program.debug) System.out.println(Scope.indent() + "Demanding " + currentScope.getName() + ".impScopes");
+    Scope.addIndent();
     ArrayList<Scope> impRes = new ArrayList<Scope>();
     for (Scope s: currentScope.impScopes()) {
       if (getImpTrans().getId() == -1) continue;
+
+      if (Program.debug) System.out.println(Scope.indent() + "Following an IMP edge to scope " + s.getName());
+
+      Scope.addIndent();
+
       ArrayList<ArrayList<Scope>> impResInter = getImpTrans().resolve(id, s);
       if (!impResInter.isEmpty()) impRes.addAll(impResInter.get(0));
+
+      Scope.removeIndent();
+
     }
     if (!impRes.isEmpty()) allRes.add(impRes);
+    Scope.removeIndent();
 
 
+    if (Program.debug) System.out.println(Scope.indent() + "Demanding " + currentScope.getName() + ".lexScopes");
+    Scope.addIndent();
     ArrayList<Scope> lexRes = new ArrayList<Scope>();
     for (Scope s: currentScope.lexScopes()) {
       if (getLexTrans().getId() == -1) continue;
+
+      if (Program.debug) System.out.println(Scope.indent() + "Following a LEX edge to scope " + s.getName());
+
+      Scope.addIndent();
+
       ArrayList<ArrayList<Scope>> lexResInter = getLexTrans().resolve(id, s);
       if (!lexResInter.isEmpty()) lexRes.addAll(lexResInter.get(0));
+
+      Scope.removeIndent();
+
     }
     if (!lexRes.isEmpty()) allRes.add(lexRes);
+    Scope.removeIndent();
+
+    Scope.removeIndent();
+
+    if (Program.debug) {
+      System.out.print(Scope.indent() + "Done resolving " + id + " got : [");
+      for (int i = 0; i < allRes.size(); i++) {
+        System.out.print("[");
+        for (int j = 0; j < allRes.get(i).size(); j++) {
+          System.out.print(allRes.get(i).get(j).getName());
+          if (j + 1 < allRes.get(i).size()) System.out.print(", ");
+        }
+        System.out.print("]");
+        if (i + 1 < allRes.size()) System.out.print(", ");
+      }
+      System.out.println("]");
+      try {
+        if (Program.debug) Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+    }
 
     return allRes;
 
@@ -59,11 +127,18 @@ aspect Resolution {
     ArrayList<Scope> resultOne = new ArrayList<Scope>();
 
     ScopeDatum thisScope = (ScopeDatum) currentScope;
+
+    Scope.addIndent();
     
     if (thisScope.getDatum().getId().equals(id)) {
+      if (Program.debug) System.out.println(Scope.indent() + "Found a good resolution for " + id + " as scope " + currentScope.getName());
       resultOne.add(currentScope);
       result.add(resultOne);
+    } else {
+      if (Program.debug) System.out.println(Scope.indent() + "Declaration of " + thisScope.getDatum().getId() + " in " + currentScope.getName() + " does not match " + id);
     }
+
+    Scope.removeIndent();
 
     return result;
 
