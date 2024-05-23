@@ -18,7 +18,7 @@ TODO
 - I.e.
   - Iteration 1 of `impScopes()` results in the `A` on line 1
   - Iteration 2 of `impScopes()` results in the `A` on line 2
-  - Iteration 1 of `impScopes()` results in the `A` on line 1
+  - Iteration 3 of `impScopes()` results in the `A` on line 1
   - ...
 
 ##### ![ModulesReachableVsVisible](examples/ModulesReachableVsVisible.lm)
