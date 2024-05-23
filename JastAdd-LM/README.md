@@ -12,10 +12,10 @@ TODO
 
 ### Issues
 
-##### ModulesNestedSame
+##### ![ModulesNestedSame](examples/ModulesNestedSame.lm)
 - Name resolution hangs here, because the result of the circular attribute resolutions switch between the two `A` modules.
 - This is because the result of one iteration replaces the current result. Then the next iteration acts similarly, replacing the previous value with a new one.
 
-##### ModulesReachableVsVisible
+##### ![ModulesReachableVsVisible](examples/ModulesReachableVsVisible.lm)
 - Resolution of the reference `x` will be either to the declaration on line 2, or that on line 7, depending on which way around the imports are.
 - When `import A` is before `import B`, `x` resolves to the declaration on line 7. Otherwise it resolves to the `x` on line 2.
