@@ -43,11 +43,6 @@ aspect DFA {
     sink.setModTrans(sink);
     sink.setVarTrans(sink);
 
-    state0.setFinal(false);
-    state1.setFinal(false);
-    state2.setFinal(true);
-    sink.setFinal(false);
-
     DFA.modRefDFA = new DFA(state0);
 
     return DFA.modRefDFA;
@@ -81,10 +76,6 @@ aspect DFA {
     sink.setImpTrans(sink);
     sink.setModTrans(sink);
     sink.setVarTrans(sink);
-
-    state0.setFinal(false);
-    state1.setFinal(true);
-    sink.setFinal(false);
 
     DFA.modQRefDFA = new DFA(state0);
 
@@ -127,11 +118,6 @@ aspect DFA {
     sink.setModTrans(sink);
     sink.setVarTrans(sink);
 
-    state0.setFinal(false);
-    state1.setFinal(false);
-    state2.setFinal(true);
-    sink.setFinal(false);
-
     DFA.varRefDFA = new DFA(state0);
 
     return DFA.varRefDFA;
@@ -165,10 +151,6 @@ aspect DFA {
     sink.setImpTrans(sink);
     sink.setModTrans(sink);
     sink.setVarTrans(sink);
-
-    state0.setFinal(false);
-    state1.setFinal(true);
-    sink.setFinal(false);
 
     DFA.varQRefDFA = new DFA(state0);
 

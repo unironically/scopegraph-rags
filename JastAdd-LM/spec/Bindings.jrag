@@ -42,7 +42,7 @@ aspect Bindings {
   to Program.bindings()
   for root();
 
-  syn ArrayList<Binding> VarRef.bindings();
+  syn lazy ArrayList<Binding> VarRef.bindings();
   eq VarRef.bindings() {
 
     ArrayList<Scope> decls = ref().decls();

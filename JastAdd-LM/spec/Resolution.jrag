@@ -5,8 +5,8 @@ aspect Resolution {
 
   /*---------- DFA/State ----------*/
 
-  syn lazy ArrayList<ArrayList<Scope>> DFA.resolve(String id, Scope currentScope);
-  syn lazy ArrayList<ArrayList<Scope>> State.resolve(String id, Scope currentScope);
+  syn ArrayList<ArrayList<Scope>> DFA.resolve(String id, Scope currentScope);
+  syn ArrayList<ArrayList<Scope>> State.resolve(String id, Scope currentScope);
   eq DFA.resolve(String id, Scope currentScope) = getStart().resolve(id, currentScope);
 
   eq State.resolve(String id, Scope currentScope) {
@@ -21,7 +21,7 @@ aspect Resolution {
     Scope.addIndent();
     ArrayList<Scope> varRes = new ArrayList<Scope>();
     for (Scope s: currentScope.varScopes()) {
-      if (getVarTrans().getId() == -1) continue;
+      if (getVarTrans() instanceof SinkState) continue;
 
       if (Program.debug) System.out.println(Scope.indent() + "Following a VAR edge to scope " + s.getName());
 
@@ -41,12 +41,12 @@ aspect Resolution {
     Scope.addIndent();
     ArrayList<Scope> modRes = new ArrayList<Scope>();
     for (Scope s: currentScope.modScopes()) {
+      if (getModTrans() instanceof SinkState) continue;
 
       if (Program.debug) System.out.println(Scope.indent() + "Following a MOD edge to scope " + s.getName());
 
       Scope.addIndent();
 
-      if (getModTrans().getId() == -1) continue;
       ArrayList<ArrayList<Scope>> modResInter = getModTrans().resolve(id, s);
       if (!modResInter.isEmpty()) modRes.addAll(modResInter.get(0));
 
@@ -61,7 +61,7 @@ aspect Resolution {
     Scope.addIndent();
     ArrayList<Scope> impRes = new ArrayList<Scope>();
     for (Scope s: currentScope.impScopes()) {
-      if (getImpTrans().getId() == -1) continue;
+      if (getImpTrans() instanceof SinkState) continue;
 
       if (Program.debug) System.out.println(Scope.indent() + "Following an IMP edge to scope " + s.getName());
 
@@ -81,7 +81,7 @@ aspect Resolution {
     Scope.addIndent();
     ArrayList<Scope> lexRes = new ArrayList<Scope>();
     for (Scope s: currentScope.lexScopes()) {
-      if (getLexTrans().getId() == -1) continue;
+      if (getLexTrans() instanceof SinkState) continue;
 
       if (Program.debug) System.out.println(Scope.indent() + "Following a LEX edge to scope " + s.getName());
 
@@ -131,7 +131,7 @@ aspect Resolution {
     Scope.addIndent();
     
     if (thisScope.getDatum().getId().equals(id)) {
-      if (Program.debug) System.out.println(Scope.indent() + "Found a good resolution for " + id + " as scope " + currentScope.getName());
+      if (Program.debug) System.out.println(Scope.indent() + "Found a good resolution for " + id + " as scope " + currentScope.getName() + " whose label is " + thisScope.getDatum().getLabel());
       resultOne.add(currentScope);
       result.add(resultOne);
     } else {
@@ -156,15 +156,11 @@ aspect Resolution {
 
   eq Ref.decls() {
 
-    //Opt resOpt = new Opt();
-    //resOpt.setParent(this);
-
     ArrayList<Scope> myDecls = new ArrayList<Scope>();
 
     ArrayList<ArrayList<Scope>> res = getDFA().resolve(getId(), getScope());
 
-        // No res         No res                  Ambiguous
-    if (res.isEmpty() || res.get(0).isEmpty() || res.get(0).size() > 1) {
+    if (res.isEmpty()) {
       //System.out.println("- No resolutions (1) found for reference " + getLabel());
       return myDecls;
     } else if (res.get(0).isEmpty()) {
@@ -175,11 +171,14 @@ aspect Resolution {
       return myDecls;
     }
 
-    //System.out.println("fleeeeeeeeeeeeeehhhhhh " + getId());
-
-    //resOpt.setChild(res.get(0).get(0), 0);
-
     myDecls.addAll(res.get(0));
+
+    if (Program.debug) System.out.print(Scope.indent() + "Returning ");
+    for (int j = 0; j < myDecls.size() && Program.debug; j++) {
+      System.out.print(myDecls.get(j).getName());
+      if (j + 1 < myDecls.size()) System.out.print(", ");
+    }
+    if (Program.debug) System.out.println(" as result of query on " + getId());
 
     return myDecls;
 

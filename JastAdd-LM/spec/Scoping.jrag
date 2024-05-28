@@ -44,15 +44,16 @@ aspect Scoping {
     return s;
   }
 
+  // Ds.scope = top.modScope
   eq ModuleDecl.getDs().scope() {
     return modScope();
   }
 
-  ModuleDecl contributes modScope()
+  ModuleDecl contributes modScope() /* scope -[ `MOD ]-> modScope */
     to Scope.modScopes()
     for scope();
 
-  ModuleDecl contributes scope()
+  ModuleDecl contributes scope()  /* modScope -[ `LEX ]-> scope */
     to Scope.lexScopes()
     for modScope();
 
@@ -62,6 +63,7 @@ aspect Scoping {
 
   /*---------- Import Decl ----------*/
 
+  // Ds.scope = top.scope
   eq ImportDecl.getRef().scope() {
     return scope();
   }
@@ -69,6 +71,7 @@ aspect Scoping {
 
   /*---------- Def Decl ----------*/
 
+  // Bind.scope = top.scope
   eq DefDecl.getBind().scope() {
     return scope();
   }
@@ -78,6 +81,7 @@ aspect Scoping {
 
   inh lazy Scope Expr.scope();
 
+  // Ref.scope = top.scope
   eq VarExpr.getRef().scope() { return scope(); }
 
   eq AddExpr.getLeft().scope() { return scope(); }
@@ -101,6 +105,7 @@ aspect Scoping {
     return s;
   }
 
+  // scope -[ `VAR ]-> varScope
   ParBind contributes varScope()
     to Scope.varScopes()
     for scope();
@@ -141,12 +146,16 @@ aspect Scoping {
     getId() + "_" + getStartLine() + ":" + getStartColumn();
 
 
-  ModRef contributes imps()
+
+  /* scope -[ `IMP ]-> res()*/
+  ModRef contributes res()
     to Scope.impScopes()
     for scope();
 
-  syn ArrayList<Scope> ModRef.imps();
-  eq ModRef.imps() {
+
+
+  syn ArrayList<Scope> ModRef.res();
+  eq ModRef.res() {
     ArrayList<Scope> res = ref().decls();
     ArrayList<Scope> ret = new ArrayList<Scope>();
 
