@@ -42,7 +42,7 @@ global dfaMod::DFA =
   end end;
 
 
-synthesized attribute findReachable::([Res] ::= String Scope Ref [Label] Boolean);
+synthesized attribute findReachable::([Res] ::= String Either<ModRef, VarRef> [Label] Boolean Scope);
 
 
 nonterminal DFA with findReachable;
@@ -60,7 +60,7 @@ top::DFA ::=
 }
 
 
-nonterminal State with findReachable;;
+nonterminal State with findReachable;
 
 {-
  - Regular (non-sink) state in a DFA.
@@ -76,24 +76,31 @@ top::State ::=
   isFinal::Boolean
 {
   top.findReachable = 
-    \lookup::String currentScope::Scope fromRef::Ref currentPath::[Label] resolvingImp::Boolean ->
+    \lookup::String
+     fromRef::Either<ModRef, VarRef>
+     currentPath::[Label]
+     resolvingImp::Boolean 
+     currentScope::Scope ->
     
-      let varRes::[Res] = if resolvingImp then [] else concat(map((var.findReachable(lookup, _)), currentScope.vars)) in
+      let varRes::[Res] = if resolvingImp then [] 
+                          else concat(map((var.findReachable(lookup, fromRef, labelVar()::currentPath, resolvingImp, _)), currentScope.vars)) in
       
-      let modRes::[Res] = if !resolvingImp then [] else concat(map((mods.findReachable(lookup, _)), currentScope.mods)) in
+      let modRes::[Res] = if !resolvingImp then [] 
+                          else concat(map((mods.findReachable(lookup, fromRef, labelMod()::currentPath, resolvingImp, _)), currentScope.mods)) in
 
-      let imps::[Scope] = if resolvingImp then map((.resolvedScope), currentScope.impsReachable) else scope.imps in
-      let impRes::[Res] = concat(map((imps.findReachable(lookup, _)), imps)) in
+      let imps::[Scope] = if resolvingImp then map((.resolvedScope), currentScope.impsReachable) 
+                          else scope.imps in
+      let impRes::[Res] = concat(map((imps.findReachable(lookup, fromRef, labelImp()::currentPath, resolvingImp, _)), imps)) in
 
-      let lexRes::[Res] = concat(map((lexs.findReachable(lookup, _)), currentScope.lexs)) in
+      let lexRes::[Res] = concat(map((lexs.findReachable(lookup, fromRef, labelLex()::currentPath, resolvingImp, _)), currentScope.lexs)) in
 
       let contRes::[Res] = varRef ++ modRes ++ impRes ++ lexRes in
 
         case currentScope of
         | scopeDatum(d) -> if d.id != lookup then contRes 
-                           else if resolvingImp then impRes(fromRef, currentScope, currentPath) :: contRes
-                           else    varRes(fromRef, currentScope, currentPath) :: contRes 
-        | _ -> contRes
+                           else if resolvingImp then impRes(left(fromRef), currentScope, currentPath) :: contRes
+                           else varRes(right(fromRef), currentScope, currentPath) :: contRes 
+        | _ -> contRes -- ignore scopes that do not have data
         end
 
       end end end end end end;
@@ -106,5 +113,11 @@ top::State ::=
 abstract production sinkState
 top::State ::=
 {
-  top.findReachable = \lookup::String currentScope::Scope fromRef::Ref currentPath::[Label] resolvingImp::Boolean -> [];
+  top.findReachable = 
+    \lookup::String 
+     fromRef::Either<ModRef, VarRef> 
+     currentPath::[Label] 
+     resolvingImp::Boolean
+     currentScope::Scope -> 
+      [];
 }
