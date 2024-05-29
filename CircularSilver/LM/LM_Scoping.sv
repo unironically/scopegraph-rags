@@ -411,7 +411,7 @@ nonterminal ModRef with scope, resMod;
 abstract production modRef
 top::ModRef ::= x::String
 {
-  top.scope.impsReachable <- dfaMod.findVisible(x, top.scope);
+  top.scope.impsReachable <- dfaMod.findReachable(x, top.scope);
 
   top.imps <- minRef(scope.impsReachable, top);
 }
@@ -429,7 +429,7 @@ nonterminal VarRef with scope;
 abstract production varRef
 top::VarRef ::= x::String
 {
-  local res::[Res] = minRef(dfaVarRef.findVisible(x, top.scope), top);
+  local res::[Res] = minRef(dfaVarRef.findReachable(x, top.scope), top);
 
   top.root.binds <- map ((\r::Res -> (x, res.resolvedScope.datum.fromJust.id)), res);
 }

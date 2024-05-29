@@ -175,39 +175,47 @@ dfaModRef.findReachable("A", S_C)                -- iteration 1
   state0.findReachable("A", S_C)
     S_C.mods
       No contributions. Return []
+    ++
     S_C.impsReachable
       Circular use. Return []                    -- using current value of S_C.impsReachable
+    ++
     S_C.lexs
       Contains [S_G]
       state0.findReachable("A", S_G)
         S_G.vars
           No contributions. Return []
+        ++
         S_G.mods
           Contains [S_C, S_A1]
           state2.findReachable("A", S_C)
-            S_C.vars
-              Transitions to sink state. Return []
             S_C.mods
               Transitions to sink state. Return []
-            S_G.impsReachable
+            ++
+            S_C.impsReachable
               Transitions to sink state. Return []
+            ++
             S_C.lexs
               Transitions to sink state. Return []
+            ++
             S_C datum does not match.
               Return []
+          ++
           state2.findReachable("A", S_A1)
-            S_A1.vars
-              Transitions to sink state. Return []
             S_A1.mods
               Transitions to sink state. Return []
+            ++
             S_A1.imps
               Transitions to sink state. Return []
+            ++
             S_A1.lexs
               Transitions to sink state. Return []
+            ++
             S_A1 datum matches. 
               Return [S_A1]
+        ++
         S_G.imps
           No contributions. Return []
+        ++
         S_G.lexs
           No contributions. Return []
 Return [S_A1]
@@ -218,43 +226,68 @@ dfaModRef.findReachable("A", S_C)                -- iteration 2
 state0.findReachable("A", S_C)
     S_C.mods
       No contributions. Return []
+    ++
     S_C.impsReachable
       Contains [S_A1]
       state1.findReachable("A", S_A1)
         S_A1.vars
           Transitions to sink state. Return []
+        ++
         S_A1.mods
           Contains [S_A2]
           state2.findReachable("A", S_A2)
-            S_A2.vars
-              Transitions to sink state. Return []
             S_A2.mods
               No contributions. Return []
+            ++
             S_A2.impsReachable
               Transitions to sink state. Return []
+            ++
             S_A2.lexs
               Transitions to sink state. Return []
+            ++
             S_A2 datum matches
               Return [S_A2]
+        ++
         S_A1.impsReachable
           Transitions to sink state. Return []
+        ++
         S_A1.lexs
           Transitions to sink state. Return []
+    ++
     S_C.lexs
       Contains [S_G]
       state0.findReachable("A", S_C)
-        S_G.vars
-          No contributions. Return []
         S_G.mods
           Contains [S_C, S_A1]
           state2.findReachable("A", S_C)
+            S_C.mods
+              Transitions to sink state. Return []
+            ++
+            S_C.impsReachable
+              Transitions to sink state. Return []
+            ++
+            S_C.lexs
+              Transitions to sink state. Return []
+            ++
             S_C datum does not match. 
               Return []
+          ++
           state2.findReachable("A", S_A1)
+            S_A1.mods
+              Transitions to sink state. Return []
+            ++
+            S_A1.impsReachable
+              Transitions to sink state. Return []
+            ++
+            S_A1.lexs
+              Transitions to sink state. Return []
+            ++
             S_A1 datum matches.
               Return [S_A1]
+        ++
         S_G.imps
           No contributions. Return []
+        ++
         S_G.lexs
           No contributions. Return []
 Return [S_A1, S_A2]
@@ -265,56 +298,78 @@ dfaModRef.findReachable("A", S_C)                -- iteration 3
 state0.findReachable("A", S_C)
     S_C.mods
       No contributions. Return []
+    ++
     S_C.impsReachable
       Contains [S_A1, S_A2]
       state1.findReachable("A", S_A1)
-        S_A2.mods
+        S_A1.mods
           Contains [S_A2]
             state2.findReachable("A", S_A2)
+              S_A2.mods
+                No contributions. Return []
+              ++
+              S_A2.imps
+                Transitions to sink state. Return []
+              ++
+              S_A2.lexs
+                Transitions to sink state. Return []
+              ++
               S_A2 datum matches.
                 Return [S_A2]
-        S_A2.impsReachable
+        ++
+        S_A1.impsReachable
           Transitions to sink state. Return []
-        S_A2.lexs
+        ++
+        S_A1.lexs
           Transitions to sink state. Return []
+      ++
       state1.findReachable("A", S_A2)
         S_A2.mods
           No contributions. Return []
+        ++
         S_A2.impsReachable
           Transitions to sink state. Return []
+        ++
         S_A2.lexs
           Transitions to sink state. Return []
+    ++
     S_C.lexs
       Contains [S_G]
       state0.findReachable("A", S_G)
         S_G.vars
           No contributions. Return []
+        ++
         S_G.mods
           Contains [S_C, S_A1]
           state2.findReachable("A", S_C)
-            S_C.vars
-              Transitions to sink state. Return []
             S_C.mods
               Transitions to sink state. Return []
+            ++
             S_C.impsReachable
               Transitions to sink state. Return []
+            ++
             S_C.lexs
               Transitions to sink state. Return []
+            ++
             S_C datum does not match.
               Return []
+          ++
           state2.findReachable("A", S_A1)
-            S_A1.vars
-              Transitions to sink state. Return []
             S_A1.mods
               Transitions to sink state. Return []
+            ++
             S_A1.impsReachable
               Transitions to sink state. Return []
+            ++
             S_A1.lexs
               Transitions to sink state. Return []
+            ++
             S_A1 datum matches.
               Return [S_A1]
+        ++
         S_G.impsReachable
           No contributions. Return []
+        ++
         S_G.lexs
           No contributions. Return []
 Return [S_A1, S_A2]

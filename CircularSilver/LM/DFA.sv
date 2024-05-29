@@ -42,10 +42,10 @@ global dfaMod::DFA =
   end end;
 
 
-synthesized attribute findVisible::([Res] ::= String Scope Ref [Label] Boolean);
+synthesized attribute findReachable::([Res] ::= String Scope Ref [Label] Boolean);
 
 
-nonterminal DFA with findVisible;
+nonterminal DFA with findReachable;
 
 {-
  - DFA.
@@ -56,11 +56,11 @@ abstract production dfa
 top::DFA ::=
   start::State
 {
-  top.findVisible = start.findVisible;
+  top.findReachable = start.findReachable;
 }
 
 
-nonterminal State with findVisible;;
+nonterminal State with findReachable;;
 
 {-
  - Regular (non-sink) state in a DFA.
@@ -75,22 +75,20 @@ top::State ::=
   lex::State
   isFinal::Boolean
 {
-  top.findVisible = 
+  top.findReachable = 
     \lookup::String currentScope::Scope fromRef::Ref currentPath::[Label] resolvingImp::Boolean ->
     
-      let varRes::[Res] = if resolvingImp then [] else concat(map((var.findVisible(lookup, _)), currentScope.vars)) in
-      let modRes::[Res] = if !resolvingImp then [] else concat(map((mods.findVisible(lookup, _)), currentScope.mods)) in
+      let varRes::[Res] = if resolvingImp then [] else concat(map((var.findReachable(lookup, _)), currentScope.vars)) in
+      
+      let modRes::[Res] = if !resolvingImp then [] else concat(map((mods.findReachable(lookup, _)), currentScope.mods)) in
 
       let imps::[Scope] = if resolvingImp then map((.resolvedScope), currentScope.impsReachable) else scope.imps in
-      let impRes::[Res] = concat(map((imps.findVisible(lookup, _)), imps)) in
+      let impRes::[Res] = concat(map((imps.findReachable(lookup, _)), imps)) in
 
-      let lexRes::[Res] = concat(map((lexs.findVisible(lookup, _)), currentScope.lexs)) in
-      let contRes::[Res] = 
-        if !null(varRes) then varRes
-        else if !null(modRes) then modRes
-        else if !null(impRes) then impRes
-        else lexRes 
-      in
+      let lexRes::[Res] = concat(map((lexs.findReachable(lookup, _)), currentScope.lexs)) in
+
+      let contRes::[Res] = varRef ++ modRes ++ impRes ++ lexRes in
+
         case currentScope of
         | scopeDatum(d) -> if d.id != lookup then contRes 
                            else if resolvingImp then impRes(fromRef, currentScope, currentPath) :: contRes
@@ -108,5 +106,5 @@ top::State ::=
 abstract production sinkState
 top::State ::=
 {
-  top.findVisible = \lookup::String currentScope::Scope fromRef::Ref currentPath::[Label] resolvingImp::Boolean -> [];
+  top.findReachable = \lookup::String currentScope::Scope fromRef::Ref currentPath::[Label] resolvingImp::Boolean -> [];
 }
