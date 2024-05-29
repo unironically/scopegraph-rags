@@ -105,6 +105,8 @@ S_x = scopeDatum(datumVar("x", INT))
 
 ### Resolution of `x`
 
+**NOTE:** The resolution below and in the spec makes use of a function `minRef` that I have not defined yet. The purpose of this function is to take a list of `Res` nodes and filter out those that are not in the minimal path set, with respect to the LM label ordering. This is the same as the `minref` used in the Statix specs.
+
 #### DFA
 ```
 state0 {
