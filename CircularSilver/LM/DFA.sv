@@ -1,7 +1,48 @@
 grammar LM;
 
-synthesized attribute findVisible::([Scope] ::= String Scope);
 
+{-
+ - DFA for VarRefs.
+ -}
+global dfaVarRef::DFA = 
+  let sink::State = sinkState() in
+  let final::State = state(sink, sink, sink, sink, true) in
+  let impState::State = state(final, sink, sink, sink, false) in
+  let start::State = state(final, sink, impState, start) in
+    dfa (start)
+  end end end end;
+
+{-
+ - DFA for qualified VarRefs.
+ -}
+global dfaVar::DFA = 
+  let final::State = state(sink, sink, sink, sink, true) in
+  let start::State = state(final, sink, sink, sink) in
+    dfa (start)
+  end end;
+
+{-
+ - DFA for ModRefs.
+ -}
+global dfaModRef::DFA = 
+  let sink::State = sinkState() in
+  let final::State = state(sink, sink, sink, sink, true) in
+  let impState::State = state(sink, final, sink, sink, false) in
+  let start::State = state(sink, final, impState, start) in
+    dfa (start)
+  end end end end;
+
+{-
+ - DFA for qualified ModRefs.
+ -}
+global dfaMod::DFA = 
+  let final::State = state(sink, sink, sink, sink, true) in
+  let start::State = state(sink, final, sink, sink) in
+    dfa (start)
+  end end;
+
+
+synthesized attribute findVisible::([Scope] ::= String Scope);
 
 
 nonterminal DFA with findVisible;
@@ -17,7 +58,6 @@ top::DFA ::=
 {
   top.findVisible = start.findVisible;
 }
-
 
 
 nonterminal State with findVisible;;
