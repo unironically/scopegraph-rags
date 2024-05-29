@@ -11,12 +11,16 @@ collection attribute mods::[Scope] with ++, [] root Program occurs on Scope;
 collection attribute lexs::[Scope] with ++, [] root Program occurs on Scope;
 
 {-
- - The type of imps is [[Scope]], which structurally maintains the precedence of certain reachable
- - import resolutions over others. The leftmost sub-list in which a resolution exists for a given
- - reference contains the 'visible' resolutions (may be ambiguous) of that reference.
- - Declared as circular, as the resolution of an import may depend on the resolutions of others.
+ - Circular attribute to find all of the reachable imports during a resolution.
+ - This list grows during the cyclic evaluation.
  -}
-collection attribute circular imps::[Res] with impsUpdate, [] root Program occurs on Scope;
+collection attribute circular impsReachable::[Res] with ++, [] root Program occurs on Scope;
+
+{-
+ - One impsReachable is done computing, we can contribute a subset of the reachable scopes to the 
+ - imps collection attribute without circularity issues.
+ -}
+collection attribute imps::[Scope] with ++, [] root Program occurs on Scope;
 
 {-
  - The datum associated with a declaration node, or nothing if the node is only a scope.
@@ -75,42 +79,6 @@ top::Scope ::=
   smod::Scope
 {
   top.id = id;
-}
-
-
-
-{-
- - Function for updating the imps collection attribute on a scope.
- -}
-function impsUpdate
-[Res] ::=
-  currRes::[Res]
-  addRes::[Res]
-{
-  local impsNotFromSameRef::[Res] = filter((\i::Res -> i.fromRef != currRes.fromRef), currRes);
-
-  local impsFromSameRef::[[Res]] = 
-    foldr (
-      (
-        \i::Res acc::[[Res]] ->
-          case acc of
-          | better::same::[] ->
-              if pathBetter(i, currRes) 
-                then [i::better, same]             -- this res in the list is better
-                else acc                           -- this res in the list is worse or is equal
-          | _ -> []
-          end;
-      ),
-      [[], []],
-      currRes
-    );
-
-  return
-    let better::[Res] = head(impsFromSameRef) in
-    let same::[Res] = head(tail(impsFromSameRef)) in
-      if !null(better) then better ++ impsNotFromSameRef      -- ignore the newly found res
-      else (currRes::same) ++ impsNotFromSameRef              -- keep the newly found res
-    end end;
 }
 
 

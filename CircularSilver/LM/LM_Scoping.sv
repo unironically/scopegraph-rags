@@ -411,32 +411,15 @@ nonterminal ModRef with scope, resMod;
 abstract production modRef
 top::ModRef ::= x::String
 {
-  local res::[Scope] = dfaModRef.findVisible(x, top.scope);
+  top.scope.impsReachable <- dfaMod.findVisible(x, top.scope);
 
-  top.resMod <- 
-    case res of 
-    | [] -> nothing()
-    | h::_ -> just(h)
-    end;
+  top.imps <- minRef(scope.impsReachable, top);
 }
 
 abstract production modQRef
 top::ModRef ::= r::ModRef x::String
 {
-  local res::[Res] = 
-    case r.resMod of 
-    | just(sMod) -> dfaMod.findVisible(x, sMod)
-    | nothing() -> []
-    end;
 
-  top.resMod <- 
-    case res of 
-    | [] -> nothing()
-    | h::_ -> just(h)
-    end;
-
-  r.scope = top.scope;
-  r.root = top.root;
 }
 
 
@@ -446,30 +429,13 @@ nonterminal VarRef with scope;
 abstract production varRef
 top::VarRef ::= x::String
 {
-  local res::[Scope] = dfaVarRef.findVisible(x, top.scope);
+  local res::[Res] = minRef(dfaVarRef.findVisible(x, top.scope), top);
 
-  top.root.binds <-
-    case res of
-    | [] -> []
-    | h::t -> [(x, h.datum.fromJust.id)]
-    end;
+  top.root.binds <- map ((\r::Res -> (x, res.resolvedScope.datum.fromJust.id)), res);
 }
 
 abstract production varQRef
 top::VarRef ::= r::ModRef x::String
 {
-  local res::[Res] = 
-    case r.resMod of 
-    | just(sMod) -> dfaVar.findVisible(x, sMod)
-    | nothing() -> []
-    end;
 
-  r.scope = top.scope;
-  r.root = top.root;
-
-  top.root.binds <-
-    case res of
-    | [] -> []
-    | h::t -> [(x, h.resolvedScope.datum.fromJust.id)]
-    end;
 }

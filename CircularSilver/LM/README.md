@@ -104,10 +104,8 @@ S_x = scopeDatum(datumVar("x", INT))
 ```
 
 ### Resolution of `x`
-```
-```
 
-### DFA
+#### DFA
 ```
 state0 {
   --LEX-> state0
@@ -122,221 +120,203 @@ state1 {
 state2 (final) {}
 
 sink {}
-
 ```
 
-#### Evaluation of `S_C.imps`
-
-##### Evaluation of `dfaModRef.findVisible("A", S_C)`
-
+#### Resolution trace for local attribute `res` for `VarRef("x")`
 ```
-
--- Before iteration 1, S_C.imps = []
-
-dfaModRef.findVisible("A", S_C)       -- iteration 1
-  state0.findVisible("A", S_C)
-    S_C.vars = [S_z]
-      sinkState.findVisible("A", S_z)
-        Sink state. Return []
-    S_C.mods
-      None. Return []
+minRef(dfaVarRef.findReachable(x, top.scope), top)
+  dfaVarRef.findReachable(x, top.scope)
+    S_C.vars
+      Contains [S_z]
+        state2.findReachable("x", S_z)
+          S_z datum does not match.
+            Return []
     S_C.imps
-      Circular use. Return []        -- using current value of S_C.imps
+      See "Evaluation of `S_C.imps`" below
+      Returns [S_A2]
+        state1.findReachable("x", S_A2)
+          S_A2.vars
+            Contains [S_x]
+              S_x datum matches.
+                Return [S_x]
+          S_A2.imps
+            Transitions to sink state. Return []
+          S_A2.lexs
+            Transitions to sink state. Return []
     S_C.lexs
       Contains [S_G]
-      state0.findVisible("A", S_G)
+        state0.findReachable("x", S_G)
+          S_G.vars
+            No contributions. Return []
+          S_G.imps
+            Transitions to sink state. Return []
+          S_G.lexs
+            No contributions. Return []
+  Return [S_z]
+Return [S_z]
+```
+
+
+##### Evaluation of `S_C.imps`
+```
+S_C.imps <- minRef(scope.impsReachable, "A")
+  See "Evaluation of `S_C.impsReachable`" below
+Return [S_A2]                                    -- minRef implementation TODO
+```
+
+###### Evaluation of `S_C.impsReachable`
+
+```
+-- Before iteration 1, S_C.impsReachable = []
+
+dfaModRef.findReachable("A", S_C)                -- iteration 1
+  state0.findReachable("A", S_C)
+    S_C.mods
+      No contributions. Return []
+    S_C.impsReachable
+      Circular use. Return []                    -- using current value of S_C.impsReachable
+    S_C.lexs
+      Contains [S_G]
+      state0.findReachable("A", S_G)
         S_G.vars
-          None. Return []
+          No contributions. Return []
         S_G.mods
           Contains [S_C, S_A1]
-          state2.findVisible("A", S_C)
+          state2.findReachable("A", S_C)
             S_C.vars
-              Sink state. Return []
+              Transitions to sink state. Return []
             S_C.mods
-              Sink state. Return []
-            S_C.imps
-              Sink state. Return []
+              Transitions to sink state. Return []
+            S_G.impsReachable
+              Transitions to sink state. Return []
             S_C.lexs
-              Sink state. Return []
+              Transitions to sink state. Return []
             S_C datum does not match.
               Return []
-          state2.findVisible("A", S_A1)
+          state2.findReachable("A", S_A1)
             S_A1.vars
-              Sink state. Return []
+              Transitions to sink state. Return []
             S_A1.mods
-              Sink state. Return []
+              Transitions to sink state. Return []
             S_A1.imps
-              Sink state. Return []
+              Transitions to sink state. Return []
             S_A1.lexs
-              Sink state. Return []
+              Transitions to sink state. Return []
             S_A1 datum matches. 
               Return [S_A1]
         S_G.imps
-          None. Return []
+          No contributions. Return []
         S_G.lexs
-          None. Return []
-  Return [S_A1]
+          No contributions. Return []
+Return [S_A1]
 
--- Before iteration 2, S_C.imps = [[S_A1]]
+-- Before iteration 2, S_C.impsReachable = [S_A1]
 
-dfaModRef.findVisible("A", S_C)       -- iteration 2
-state0.findVisible("A", S_C)
-    S_C.vars = [S_z]
-      sinkState.findVisible("A", S_z)
-        Sink state. Return []
+dfaModRef.findReachable("A", S_C)                -- iteration 2
+state0.findReachable("A", S_C)
     S_C.mods
-      None. Return []
-    S_C.imps
+      No contributions. Return []
+    S_C.impsReachable
       Contains [S_A1]
-      state1.findVisible("A", S_A1)
+      state1.findReachable("A", S_A1)
         S_A1.vars
-          Sink state. Return []
+          Transitions to sink state. Return []
         S_A1.mods
           Contains [S_A2]
-          state2.findVisible("A", S_A2)
+          state2.findReachable("A", S_A2)
             S_A2.vars
-              Sink state. Return []
+              Transitions to sink state. Return []
             S_A2.mods
-              None. Return []
-            S_A2.imps
-              Sink state. Return []
+              No contributions. Return []
+            S_A2.impsReachable
+              Transitions to sink state. Return []
             S_A2.lexs
-              Sink state. Return []
+              Transitions to sink state. Return []
             S_A2 datum matches
               Return [S_A2]
-        S_A1.imps
-          Sink State. Return []
+        S_A1.impsReachable
+          Transitions to sink state. Return []
         S_A1.lexs
-          Sink State. Return []
+          Transitions to sink state. Return []
     S_C.lexs
       Contains [S_G]
-      state0.findVisible("A", S_C)
+      state0.findReachable("A", S_C)
         S_G.vars
-          None. Return []
+          No contributions. Return []
         S_G.mods
           Contains [S_C, S_A1]
-          state2.findVisible("A", S_C)
+          state2.findReachable("A", S_C)
             S_C datum does not match. 
               Return []
-          state2.findVisible("A", S_A1)
+          state2.findReachable("A", S_A1)
             S_A1 datum matches.
               Return [S_A1]
         S_G.imps
-          None. Return []
+          No contributions. Return []
         S_G.lexs
-          None. Return []
+          No contributions. Return []
+Return [S_A1, S_A2]
 
--- Before iteration 3, S_C.imps = [[S_A2]]
+-- Before iteration 3, S_C.impsReachable = [S_A1, S_A2]
 
-dfaModRef.findVisible("A", S_C)       -- iteration 3
-state0.findVisible("A", S_C)
-    S_C.vars = [S_z]
-      sinkState.findVisible("A", S_z)
-        Sink state. Return []
+dfaModRef.findReachable("A", S_C)                -- iteration 3
+state0.findReachable("A", S_C)
     S_C.mods
-      None. Return []
-    S_C.imps
-      Contains [S_A2]
-      state1.findVisible("A", S_A2)
-        S_A2.vars
-          Sink State. Return []
+      No contributions. Return []
+    S_C.impsReachable
+      Contains [S_A1, S_A2]
+      state1.findReachable("A", S_A1)
         S_A2.mods
-          None. Return []
-        S_A2.imps
-          Sink State. Return []
+          Contains [S_A2]
+            state2.findReachable("A", S_A2)
+              S_A2 datum matches.
+                Return [S_A2]
+        S_A2.impsReachable
+          Transitions to sink state. Return []
         S_A2.lexs
-          Sink State. Return []
+          Transitions to sink state. Return []
+      state1.findReachable("A", S_A2)
+        S_A2.mods
+          No contributions. Return []
+        S_A2.impsReachable
+          Transitions to sink state. Return []
+        S_A2.lexs
+          Transitions to sink state. Return []
     S_C.lexs
       Contains [S_G]
-      state0.findVisible("A", S_G)
+      state0.findReachable("A", S_G)
         S_G.vars
-          None. Return []
+          No contributions. Return []
         S_G.mods
           Contains [S_C, S_A1]
-          state2.findVisible("A", S_C)
+          state2.findReachable("A", S_C)
             S_C.vars
-              Sink state. Return []
+              Transitions to sink state. Return []
             S_C.mods
-              Sink state. Return []
-            S_C.imps
-              Sink state. Return []
+              Transitions to sink state. Return []
+            S_C.impsReachable
+              Transitions to sink state. Return []
             S_C.lexs
-              Sink state. Return []
+              Transitions to sink state. Return []
             S_C datum does not match.
               Return []
-          state2.findVisible("A", S_A1)
+          state2.findReachable("A", S_A1)
             S_A1.vars
-              Sink state. Return []
+              Transitions to sink state. Return []
             S_A1.mods
-              Sink state. Return []
-            S_A1.imps
-              Sink state. Return []
+              Transitions to sink state. Return []
+            S_A1.impsReachable
+              Transitions to sink state. Return []
             S_A1.lexs
-              Sink state. Return []
+              Transitions to sink state. Return []
             S_A1 datum matches.
               Return [S_A1]
-        S_G.imps
-          None. Return []
+        S_G.impsReachable
+          No contributions. Return []
         S_G.lexs
-          None. Return []
-  Return [S_A1]
+          No contributions. Return []
+Return [S_A1, S_A2]
 
--- Before iteration 4, S_C.imps = [[S_A2], [S_A1]]
-
-dfaModRef.findVisible("A", S_C)       -- iteration 3
-state0.findVisible("A", S_C)
-    S_C.vars = [S_z]
-      sinkState.findVisible("A", S_z)
-        Sink state. Return []
-    S_C.mods
-      None. Return []
-    S_C.imps
-      Contains [S_A2]
-      state1.findVisible("A", S_A2)
-        S_A2.vars
-          Sink State. Return []
-        S_A2.mods
-          None. Return []
-        S_A2.imps
-          Sink State. Return []
-        S_A2.lexs
-          Sink State. Return []
-    S_C.lexs
-      Contains [S_G]
-      state0.findVisible("A", S_G)
-        S_G.vars
-          None. Return []
-        S_G.mods
-          Contains [S_C, S_A1]
-          state2.findVisible("A", S_C)
-            S_C.vars
-              Sink state. Return []
-            S_C.mods
-              Sink state. Return []
-            S_C.imps
-              Sink state. Return []
-            S_C.lexs
-              Sink state. Return []
-            S_C datum does not match.
-              Return []
-          state2.findVisible("A", S_A1)
-            S_A1.vars
-              Sink state. Return []
-            S_A1.mods
-              Sink state. Return []
-            S_A1.imps
-              Sink state. Return []
-            S_A1.lexs
-              Sink state. Return []
-            S_A1 datum matches.
-              Return [S_A1]
-        S_G.imps
-          None. Return []
-        S_G.lexs
-          None. Return []
-  Return [S_A1]
-
--- After iteration 4, S_C.imps = [[S_A2], [S_A1]]
-
+-- After iteration 3, S_C.impsReachable = [S_A1, S_A2]
 -- Same result as previous iteration, terminate.
 ```

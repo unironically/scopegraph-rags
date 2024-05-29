@@ -42,7 +42,7 @@ global dfaMod::DFA =
   end end;
 
 
-synthesized attribute findVisible::([Res] ::= String Scope);
+synthesized attribute findVisible::([Res] ::= String Scope Ref [Label] Boolean);
 
 
 nonterminal DFA with findVisible;
@@ -76,12 +76,13 @@ top::State ::=
   isFinal::Boolean
 {
   top.findVisible = 
-    \lookup::String currentScope::Scope fromRef::Ref currentPath::[Label] ->
-      let varRes::[Res] = concat(map((var.findVisible(lookup, _)), currentScope.vars)) in
-      let modRes::[Res] = concat(map((mods.findVisible(lookup, _)), currentScope.mods)) in
+    \lookup::String currentScope::Scope fromRef::Ref currentPath::[Label] resolvingImp::Boolean ->
+    
+      let varRes::[Res] = if resolvingImp then [] else concat(map((var.findVisible(lookup, _)), currentScope.vars)) in
+      let modRes::[Res] = if !resolvingImp then [] else concat(map((mods.findVisible(lookup, _)), currentScope.mods)) in
 
-      -- currentScope.imps has type [Res], so we need to first grab the resolved to scopes from each Res
-      let impRes::[Res] = concat(map((imps.findVisible(lookup, _)), map((.resolvedScope), currentScope.imps))) in
+      let imps::[Scope] = if resolvingImp then map((.resolvedScope), currentScope.impsReachable) else scope.imps in
+      let impRes::[Res] = concat(map((imps.findVisible(lookup, _)), imps)) in
 
       let lexRes::[Res] = concat(map((lexs.findVisible(lookup, _)), currentScope.lexs)) in
       let contRes::[Res] = 
@@ -92,11 +93,12 @@ top::State ::=
       in
         case currentScope of
         | scopeDatum(d) -> if d.id != lookup then contRes 
-                           else if impRes(fromRef, currentScope, currentPath) :: contRes
+                           else if resolvingImp then impRes(fromRef, currentScope, currentPath) :: contRes
                            else    varRes(fromRef, currentScope, currentPath) :: contRes 
         | _ -> contRes
         end
-      end end end end end;
+
+      end end end end end end;
 }
 
 {-
@@ -106,5 +108,5 @@ top::State ::=
 abstract production sinkState
 top::State ::=
 {
-  top.findVisible = \lookup::String currentScope::Scope -> [];
+  top.findVisible = \lookup::String currentScope::Scope fromRef::Ref currentPath::[Label] resolvingImp::Boolean -> [];
 }
