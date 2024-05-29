@@ -133,6 +133,7 @@ minRef(dfaVarRef.findReachable(x, VarRef("x"), [], false, S_C), top)
         state2.findReachable("x", VarRef("x"), [labelVar()], false, S_z)
           S_z datum does not match.
             Return []
+    ++
     S_C.imps
       See "Evaluation of `S_C.imps`" below
       Returns [S_A2]
@@ -141,10 +142,14 @@ minRef(dfaVarRef.findReachable(x, VarRef("x"), [], false, S_C), top)
             Contains [S_x]
               S_x datum matches.
                 Return [S_x]
+          ++
           S_A2.imps
             Transitions to sink state. Return []
+          ++
           S_A2.lexs
             Transitions to sink state. Return []
+          = [S_x]
+    ++
     S_C.lexs
       Contains [S_G]
         state0.findReachable("x", VarRef("x"), [labelLex()], false, S_G)
@@ -154,8 +159,9 @@ minRef(dfaVarRef.findReachable(x, VarRef("x"), [], false, S_C), top)
             Transitions to sink state. Return []
           S_G.lexs
             No contributions. Return []
-  Return [S_z]
-Return [S_z]
+    = [S_x]
+  Return [S_x]
+Return [S_x]
 ```
 
 
