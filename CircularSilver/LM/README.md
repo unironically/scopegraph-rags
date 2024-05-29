@@ -105,7 +105,7 @@ S_x = scopeDatum(datumVar("x", INT))
 
 ### Resolution of `x`
 
-**NOTE:** The resolution below and in the spec makes use of a function `minRef` that I have not defined yet. The purpose of this function is to take a list of `Res` nodes and filter out those that are not in the minimal path set, with respect to the LM label ordering. This is the same as the `minref` used in the Statix specs.
+**NOTE:** The resolution below and in the spec makes use of a function `minRef` that I have not defined yet. The purpose of this function is to take a list of `Res` nodes and filter out those that are not in the minimal path set, with respect to the LM label ordering. This is the same as the `minref` used in the Statix specs. It's type as I've been using is `[Scope] ::= [Res]`.
 
 #### DFA
 ```
@@ -199,6 +199,7 @@ dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                -- itera
             ++
             S_C datum does not match.
               Return []
+            = []
           ++
           state2.findReachable("A", ModRef("A"), [labelMod()], true, S_A1)
             S_A1.mods
@@ -212,12 +213,15 @@ dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                -- itera
             ++
             S_A1 datum matches. 
               Return [S_A1]
+            = [S_A1]
         ++
         S_G.imps
           No contributions. Return []
         ++
         S_G.lexs
           No contributions. Return []
+        = [S_A1]
+    = [S_A1]
 Return [S_A1]
 
 -- Before iteration 2, S_C.impsReachable = [S_A1]
@@ -247,12 +251,14 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
             ++
             S_A2 datum matches
               Return [S_A2]
+            = [S_A2]
         ++
         S_A1.impsReachable
           Transitions to sink state. Return []
         ++
         S_A1.lexs
           Transitions to sink state. Return []
+        = [S_A2]
     ++
     S_C.lexs
       Contains [S_G]
@@ -271,6 +277,7 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
             ++
             S_C datum does not match. 
               Return []
+            = []
           ++
           state2.findReachable("A", ModRef("A"), [labelLex(), labelMod()], true, S_A1)
             S_A1.mods
@@ -284,12 +291,15 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
             ++
             S_A1 datum matches.
               Return [S_A1]
+            = [S_A1]
         ++
         S_G.imps
           No contributions. Return []
         ++
         S_G.lexs
           No contributions. Return []
+        = [S_A1]
+    = [S_A1, S_A2]
 Return [S_A1, S_A2]
 
 -- Before iteration 3, S_C.impsReachable = [S_A1, S_A2]
@@ -316,12 +326,14 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
               ++
               S_A2 datum matches.
                 Return [S_A2]
+              = [S_A2]
         ++
         S_A1.impsReachable
           Transitions to sink state. Return []
         ++
         S_A1.lexs
           Transitions to sink state. Return []
+        = [S_A2]
       ++
       state1.findReachable("A", ModRef("A"), [labelImp(), labelMod()], true, S_A2)
         S_A2.mods
@@ -332,6 +344,8 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
         ++
         S_A2.lexs
           Transitions to sink state. Return []
+        = []
+      = [S_A2]
     ++
     S_C.lexs
       Contains [S_G]
@@ -353,6 +367,7 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
             ++
             S_C datum does not match.
               Return []
+            = []
           ++
           state2.findReachable("A", ModRef("A"), [labelLex(), labelMod()], true, S_A1)
             S_A1.mods
@@ -366,12 +381,15 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
             ++
             S_A1 datum matches.
               Return [S_A1]
+            = [S_A1]
         ++
         S_G.impsReachable
           No contributions. Return []
         ++
         S_G.lexs
           No contributions. Return []
+        = [S_A1]
+    = [S_A1, S_A2]
 Return [S_A1, S_A2]
 
 -- After iteration 3, S_C.impsReachable = [S_A1, S_A2]

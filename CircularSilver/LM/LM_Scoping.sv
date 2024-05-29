@@ -429,9 +429,9 @@ nonterminal VarRef with scope;
 abstract production varRef
 top::VarRef ::= x::String
 {
-  local res::[Res] = minRef(dfaVarRef.findReachable(x, right(top), [], false, top.scope), top);
+  local res::[Scope] = minRef(dfaVarRef.findReachable(x, right(top), [], false, top.scope), top);
 
-  top.root.binds <- map ((\r::Res -> (x, res.resolvedScope.datum.fromJust.id)), res);
+  top.root.binds <- map ((\r::Res -> (x, r.datum.fromJust.id)), res);
 }
 
 abstract production varQRef
