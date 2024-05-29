@@ -107,7 +107,236 @@ S_x = scopeDatum(datumVar("x", INT))
 ```
 ```
 
-#### Evaluation of `S_C.imps`
+### DFA
+```
+state0 {
+  --LEX-> state0
+  --IMP-> state1
+  --VAR/MOD-> state2
+}
+
+state1 {
+  -- VAR -> state2
+}
+
+state2 (final) {}
+
+sink {}
+
 ```
 
+#### Evaluation of `S_C.imps`
+
+##### Evaluation of `dfaModRef.findVisible("A", S_C)`
+
+```
+
+-- Before iteration 1, S_C.imps = []
+
+dfaModRef.findVisible("A", S_C)       -- iteration 1
+  state0.findVisible("A", S_C)
+    S_C.vars = [S_z]
+      sinkState.findVisible("A", S_z)
+        Sink state. Return []
+    S_C.mods
+      None. Return []
+    S_C.imps
+      Circular use. Return []        -- using current value of S_C.imps
+    S_C.lexs
+      Contains [S_G]
+      state0.findVisible("A", S_G)
+        S_G.vars
+          None. Return []
+        S_G.mods
+          Contains [S_C, S_A1]
+          state2.findVisible("A", S_C)
+            S_C.vars
+              Sink state. Return []
+            S_C.mods
+              Sink state. Return []
+            S_C.imps
+              Sink state. Return []
+            S_C.lexs
+              Sink state. Return []
+            S_C datum does not match.
+              Return []
+          state2.findVisible("A", S_A1)
+            S_A1.vars
+              Sink state. Return []
+            S_A1.mods
+              Sink state. Return []
+            S_A1.imps
+              Sink state. Return []
+            S_A1.lexs
+              Sink state. Return []
+            S_A1 datum matches. 
+              Return [S_A1]
+        S_G.imps
+          None. Return []
+        S_G.lexs
+          None. Return []
+  Return [S_A1]
+
+-- Before iteration 2, S_C.imps = [[S_A1]]
+
+dfaModRef.findVisible("A", S_C)       -- iteration 2
+state0.findVisible("A", S_C)
+    S_C.vars = [S_z]
+      sinkState.findVisible("A", S_z)
+        Sink state. Return []
+    S_C.mods
+      None. Return []
+    S_C.imps
+      Contains [S_A1]
+      state1.findVisible("A", S_A1)
+        S_A1.vars
+          Sink state. Return []
+        S_A1.mods
+          Contains [S_A2]
+          state2.findVisible("A", S_A2)
+            S_A2.vars
+              Sink state. Return []
+            S_A2.mods
+              None. Return []
+            S_A2.imps
+              Sink state. Return []
+            S_A2.lexs
+              Sink state. Return []
+            S_A2 datum matches
+              Return [S_A2]
+        S_A1.imps
+          Sink State. Return []
+        S_A1.lexs
+          Sink State. Return []
+    S_C.lexs
+      Contains [S_G]
+      state0.findVisible("A", S_C)
+        S_G.vars
+          None. Return []
+        S_G.mods
+          Contains [S_C, S_A1]
+          state2.findVisible("A", S_C)
+            S_C datum does not match. 
+              Return []
+          state2.findVisible("A", S_A1)
+            S_A1 datum matches.
+              Return [S_A1]
+        S_G.imps
+          None. Return []
+        S_G.lexs
+          None. Return []
+
+-- Before iteration 3, S_C.imps = [[S_A2]]
+
+dfaModRef.findVisible("A", S_C)       -- iteration 3
+state0.findVisible("A", S_C)
+    S_C.vars = [S_z]
+      sinkState.findVisible("A", S_z)
+        Sink state. Return []
+    S_C.mods
+      None. Return []
+    S_C.imps
+      Contains [S_A2]
+      state1.findVisible("A", S_A2)
+        S_A2.vars
+          Sink State. Return []
+        S_A2.mods
+          None. Return []
+        S_A2.imps
+          Sink State. Return []
+        S_A2.lexs
+          Sink State. Return []
+    S_C.lexs
+      Contains [S_G]
+      state0.findVisible("A", S_G)
+        S_G.vars
+          None. Return []
+        S_G.mods
+          Contains [S_C, S_A1]
+          state2.findVisible("A", S_C)
+            S_C.vars
+              Sink state. Return []
+            S_C.mods
+              Sink state. Return []
+            S_C.imps
+              Sink state. Return []
+            S_C.lexs
+              Sink state. Return []
+            S_C datum does not match.
+              Return []
+          state2.findVisible("A", S_A1)
+            S_A1.vars
+              Sink state. Return []
+            S_A1.mods
+              Sink state. Return []
+            S_A1.imps
+              Sink state. Return []
+            S_A1.lexs
+              Sink state. Return []
+            S_A1 datum matches.
+              Return [S_A1]
+        S_G.imps
+          None. Return []
+        S_G.lexs
+          None. Return []
+  Return [S_A1]
+
+-- Before iteration 4, S_C.imps = [[S_A2], [S_A1]]
+
+dfaModRef.findVisible("A", S_C)       -- iteration 3
+state0.findVisible("A", S_C)
+    S_C.vars = [S_z]
+      sinkState.findVisible("A", S_z)
+        Sink state. Return []
+    S_C.mods
+      None. Return []
+    S_C.imps
+      Contains [S_A2]
+      state1.findVisible("A", S_A2)
+        S_A2.vars
+          Sink State. Return []
+        S_A2.mods
+          None. Return []
+        S_A2.imps
+          Sink State. Return []
+        S_A2.lexs
+          Sink State. Return []
+    S_C.lexs
+      Contains [S_G]
+      state0.findVisible("A", S_G)
+        S_G.vars
+          None. Return []
+        S_G.mods
+          Contains [S_C, S_A1]
+          state2.findVisible("A", S_C)
+            S_C.vars
+              Sink state. Return []
+            S_C.mods
+              Sink state. Return []
+            S_C.imps
+              Sink state. Return []
+            S_C.lexs
+              Sink state. Return []
+            S_C datum does not match.
+              Return []
+          state2.findVisible("A", S_A1)
+            S_A1.vars
+              Sink state. Return []
+            S_A1.mods
+              Sink state. Return []
+            S_A1.imps
+              Sink state. Return []
+            S_A1.lexs
+              Sink state. Return []
+            S_A1 datum matches.
+              Return [S_A1]
+        S_G.imps
+          None. Return []
+        S_G.lexs
+          None. Return []
+  Return [S_A1]
+
+-- After iteration 4, S_C.imps = [[S_A2], [S_A1]]
+
+-- Same result as previous iteration, terminate.
 ```

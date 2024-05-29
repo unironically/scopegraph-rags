@@ -42,7 +42,7 @@ global dfaMod::DFA =
   end end;
 
 
-synthesized attribute findVisible::([Scope] ::= String Scope);
+synthesized attribute findVisible::([Res] ::= String Scope);
 
 
 nonterminal DFA with findVisible;
@@ -76,19 +76,24 @@ top::State ::=
   isFinal::Boolean
 {
   top.findVisible = 
-    \lookup::String currentScope::Scope ->
-      let varRes::[Scope] = concat(map((var.findVisible(lookup, _)), currentScope.vars)) in
-      let modRes::[Scope] = concat(map((mods.findVisible(lookup, _)), currentScope.mods)) in
-      let impRes::[Scope] = concat(map((imps.findVisible(lookup, _)), currentScope.imps)) in
-      let lexRes::[Scope] = concat(map((lexs.findVisible(lookup, _)), currentScope.lexs)) in
-      let contRes::[Scope] = 
+    \lookup::String currentScope::Scope fromRef::Ref currentPath::[Label] ->
+      let varRes::[Res] = concat(map((var.findVisible(lookup, _)), currentScope.vars)) in
+      let modRes::[Res] = concat(map((mods.findVisible(lookup, _)), currentScope.mods)) in
+
+      -- currentScope.imps has type [Res], so we need to first grab the resolved to scopes from each Res
+      let impRes::[Res] = concat(map((imps.findVisible(lookup, _)), map((.resolvedScope), currentScope.imps))) in
+
+      let lexRes::[Res] = concat(map((lexs.findVisible(lookup, _)), currentScope.lexs)) in
+      let contRes::[Res] = 
         if !null(varRes) then varRes
         else if !null(modRes) then modRes
         else if !null(impRes) then impRes
         else lexRes 
       in
         case currentScope of
-        | scopeDatum(d) -> if d.id == lookup then currentScope::contRes else contRes
+        | scopeDatum(d) -> if d.id != lookup then contRes 
+                           else if impRes(fromRef, currentScope, currentPath) :: contRes
+                           else    varRes(fromRef, currentScope, currentPath) :: contRes 
         | _ -> contRes
         end
       end end end end end;

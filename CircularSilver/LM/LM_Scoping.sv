@@ -423,7 +423,7 @@ top::ModRef ::= x::String
 abstract production modQRef
 top::ModRef ::= r::ModRef x::String
 {
-  local res::[Scope] = 
+  local res::[Res] = 
     case r.resMod of 
     | just(sMod) -> dfaMod.findVisible(x, sMod)
     | nothing() -> []
@@ -458,7 +458,7 @@ top::VarRef ::= x::String
 abstract production varQRef
 top::VarRef ::= r::ModRef x::String
 {
-  local res::[Scope] = 
+  local res::[Res] = 
     case r.resMod of 
     | just(sMod) -> dfaVar.findVisible(x, sMod)
     | nothing() -> []
@@ -470,6 +470,6 @@ top::VarRef ::= r::ModRef x::String
   top.root.binds <-
     case res of
     | [] -> []
-    | h::t -> [(x, h.datum.fromJust.id)]
+    | h::t -> [(x, h.resolvedScope.datum.fromJust.id)]
     end;
 }
