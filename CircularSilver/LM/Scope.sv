@@ -1,8 +1,6 @@
 grammar LM;
 
 
-nonterminal Scope;
-
 {-
  - Collection attributes for vars, mods, imps, lexs.
  - Each definition has a name, type, append op, initial value, and a declaration the type of the
@@ -16,11 +14,27 @@ collection attribute circular imps::[Scope] with ++, [] root Program occurs on S
 collection attribute lexs::[Scope] with ++, [] root Program occurs on Scope;
 
 {-
+ - The datum associated with a declaration node, or nothing if the node is only a scope.
+ -}
+synthesized attribute datum::Maybe<Datum> occurs on Scope;
+
+{-
+ - The ID of a datum, defined as the ID of the LM declaration which the datum represents.
+ -}
+synthesized attribute id::String occurs on Datum;
+
+
+
+nonterminal Scope with vars, mods, imps, lexs;
+
+{-
  - Scopes with no datum attached.
  -}
 abstract production scope
 top::Scope ::=
-{}
+{
+  top.datum = nothing();
+}
 
 {-
  - Scopes with a datum.
@@ -28,10 +42,13 @@ top::Scope ::=
 abstract production scopeDatum
 top::Scope ::=
   datum::Datum
-{}
+{
+  top.datum = just(datum);
+}
 
 
-nonterminal Datum;
+
+nonterminal Datum with id;
 
 {-
  - Datum of a def declaration.

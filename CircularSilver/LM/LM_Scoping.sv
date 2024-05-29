@@ -16,27 +16,43 @@ inherited attribute scopeDef::Scope;
  -}
 synthesized attribute resMod::Maybe<Scope>;
 
+{-
+ - Collection attribute which will synthesize all VarRef bindings found. Demanding this attribute
+ - is the trigger for name analysis on the program, as by following its dependencies we demand
+ - the resolution of references in the tree. 
+ -}
+collection attribute binds::[(String, String)] with ++, [] root Program;
+
+{-
+ - Program node to pass down the AST, so that contributions can be made to its `binds`.
+ -}
+inherited attribute root::Program;
 
 
-nonterminal Program;
+
+nonterminal Program with binds;
 
 abstract production program
-top::Main ::= ds::Decls
+top::Program ::= ds::Decls
 {
   local globScope::Scope = scope();
 
   ds.scope = globScope;
+  ds.root = top;
 }
 
 
 
-nonterminal Decls with scope;
+nonterminal Decls with scope, root;
 
 abstract production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
   d.scope = top.scope;
+  d.root = top.root;
+
   ds.scope = top.scope;
+  ds.root = top.root;
 }
 
 abstract production declsNil
@@ -46,7 +62,7 @@ top::Decls ::=
 
 
 
-nonterminal Decl with scope;
+nonterminal Decl with scope, root;
 
 abstract production declModule
 top::Decl ::= id::String ds::Decls
@@ -57,12 +73,14 @@ top::Decl ::= id::String ds::Decls
   modScope.lexs <- [top.scope];  -- modScope -[ `LEX ]-> scope
 
   ds.scope = modScope;
+  ds.root = top.root;
 }
 
 abstract production declImport
 top::Decl ::= r::ModRef
 {
   r.scope = top.scope;
+  r.root = top.root;
 }
 
 abstract production declDef
@@ -70,11 +88,12 @@ top::Decl ::= b::ParBind
 {
   b.scope = top.scope;
   b.scopeDef = top.scope;
+  b.root = top.root;
 }
 
 
 
-nonterminal Expr with scope;
+nonterminal Expr with scope, root;
 
 abstract production exprInt
 top::Expr ::= i::Integer
@@ -95,20 +114,27 @@ abstract production exprVar
 top::Expr ::= r::VarRef
 {
   r.scope = top.scope;
+  r.root = top.root;
 }
 
 abstract production exprAdd
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.scope = top.scope;
+  e1.root = top.root;
+
   e2.scope = top.scope;
+  e2.root = top.root;
 }
 
 abstract production exprSub
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.scope = top.scope;
+  e1.root = top.root;
+
   e2.scope = top.scope;
+  e2.root = top.root;
 }
 
 abstract production exprMul
@@ -122,7 +148,10 @@ abstract production exprDiv
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.scope = top.scope;
+  e1.root = top.root;
+
   e2.scope = top.scope;
+  e2.root = top.root;
 }
 
 abstract production exprAnd
@@ -136,29 +165,43 @@ abstract production exprOr
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.scope = top.scope;
+  e1.root = top.root;
+
   e2.scope = top.scope;
+  e2.root = top.root;
 }
 
 abstract production exprEq
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.scope = top.scope;
+  e1.root = top.root;
+
   e2.scope = top.scope;
+  e2.root = top.root;
 }
 
 abstract production exprApp
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.scope = top.scope;
+  e1.root = top.root;
+
   e2.scope = top.scope;
+  e2.root = top.root;
 }
 
 abstract production exprIf
 top::Expr ::= e1::Expr e2::Expr e3::Expr
 {
   e1.scope = top.scope;
+  e1.root = top.root;
+
   e2.scope = top.scope;
+  e2.root = top.root;
+
   e3.scope = top.scope;
+  e3.root = top.root;
 }
 
 abstract production exprFun
@@ -169,7 +212,10 @@ top::Expr ::= d::ArgDecl e::Expr
   sFun.lexs <- [top.scope]; -- sFun -[ `LEX ]-> scope
 
   d.scope = sFun;
+  d.root = top.root;
+
   e.scope = sFun;
+  e.root = top.root;
 }
 
 abstract production exprLet
@@ -181,8 +227,10 @@ top::Expr ::= bs::SeqBinds e::Expr
 
   bs.scope = top.scope;
   bs.sDef = sLet;
+  bf.root = top.root;
 
   e.scope = sLet;
+  e.root = top.root;
 }
 
 abstract production exprLetRec
@@ -213,7 +261,7 @@ top::Expr ::= bs::ParBinds e::Expr
 
 
 
-nonterminal SeqBinds with scope, scopeDef;
+nonterminal SeqBinds with scope, scopeDef, root;
 
 abstract production seqBindsNil
 top::SeqBinds ::=
@@ -228,6 +276,7 @@ top::SeqBinds ::= s::SeqBind
 
   s.scope = top.scope;
   s.scopeDef = top.scopeDef;
+  s.root = top.root;
 }
 
 abstract production seqBindsCons
@@ -239,14 +288,16 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
 
   s.scope = top.scope;
   s.scopeDef = sDef;
+  s.root = top.root;
 
   ss.scope = sDef;
   ss.scopeDef = top.scopeDef;
+  ss.root = top.root;
 }
 
 
 
-nonterminal SeqBind with scope, scopeDef;
+nonterminal SeqBind with scope, scopeDef, root;
 
 abstract production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
@@ -256,6 +307,7 @@ top::SeqBind ::= id::String e::Expr
   top.scopeDef.vars <- [scopeVar]; -- scopeDef -[ `VAR ]-> scopeVar
 
   e.scope = top.scope;
+  e.root = top.root;
 }
 
 abstract production seqBindTyped
@@ -266,20 +318,23 @@ top::SeqBind ::= ty::Type id::String e::Expr
   top.scopeDef.vars <- [scopeVar]; -- scopeDef -[ `VAR ]-> scopeVar
 
   e.scope = top.scope;
+  e.root = top.root;
 }
 
 
 
-nonterminal ParBinds with scope, scopeDef;
+nonterminal ParBinds with scope, scopeDef, root;
 
 abstract production parBindsCons
 top::ParBinds ::= s::ParBind ss::ParBinds
 {
   s.scope = top.scope;
   s.scopeDef = top.scopeDef;
+  s.root = top.root;
 
   ss.scope = top.scope;
   ss.scopeDef = top.scopeDef;
+  ss.root = top.root;
 }
 
 abstract production parBindsNil
@@ -289,7 +344,7 @@ top::ParBinds ::=
 
 
 
-nonterminal ParBind with scope, scopeDef;
+nonterminal ParBind with scope, scopeDef, root;
 
 abstract production parBindUntyped
 top::ParBind ::= id::String e::Expr
@@ -299,6 +354,7 @@ top::ParBind ::= id::String e::Expr
   top.scopeDef.vars <- [scopeVar]; -- scopeDef -[ `VAR ]-> scopeVar
 
   e.scope = top.scope;
+  e.root = top.root;
 }
 
 abstract production parBindTyped
@@ -309,6 +365,7 @@ top::ParBind ::= ty::Type id::String e::Expr
   top.scopeDef.vars <- [scopeVar]; -- scopeDef -[ `VAR ]-> scopeVar
 
   e.scope = top.scope;
+  e.root = top.root;
 }
 
 
@@ -377,6 +434,9 @@ top::ModRef ::= r::ModRef x::String
     | [] -> nothing()
     | h::_ -> just(h)
     end;
+
+  r.scope = top.scope;
+  r.root = top.root;
 }
 
 
@@ -388,10 +448,10 @@ top::VarRef ::= x::String
 {
   local res::[Scope] = dfaVarRef.findVisible(x, top.scope);
 
-  top.resMod <- 
-    case res of 
-    | [] -> nothing()
-    | h::_ -> just(h)
+  top.root.binds <-
+    case res of
+    | [] -> []
+    | h::t -> [(x, h.datum.fromJust.id)]
     end;
 }
 
@@ -404,9 +464,12 @@ top::VarRef ::= r::ModRef x::String
     | nothing() -> []
     end;
 
-  top.resMod <- 
-    case res of 
-    | [] -> nothing()
-    | h::_ -> just(h)
+  r.scope = top.scope;
+  r.root = top.root;
+
+  top.root.binds <-
+    case res of
+    | [] -> []
+    | h::t -> [(x, h.datum.fromJust.id)]
     end;
 }
