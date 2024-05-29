@@ -9,6 +9,7 @@ aspect Resolution {
   syn ArrayList<ArrayList<Scope>> State.resolve(String id, Scope currentScope);
   eq DFA.resolve(String id, Scope currentScope) = getStart().resolve(id, currentScope);
 
+  
   eq State.resolve(String id, Scope currentScope) {
     
     ArrayList<ArrayList<Scope>> allRes = new ArrayList<ArrayList<Scope>>();
