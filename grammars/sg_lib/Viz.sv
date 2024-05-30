@@ -21,7 +21,7 @@ top::Scope ::=
 
   local varEdgesString::String = concat(map(edgeStyle("VAR", top, _), top.varEdges));
   local modEdgesString::String = concat(map(edgeStyle("MOD", top, _), top.modEdges));
-  local impEdgesString::String = concat(map(edgeStyle("IMP", top, _), top.impEdges));
+  local impEdgesString::String = "";--concat(map(edgeStyle("IMP", top, _), top.impEdges));
 
   top.graphvizString = "{" ++ lexEdgeString ++ varEdgesString ++ modEdgesString ++ impEdgesString ++ "}\n";
 

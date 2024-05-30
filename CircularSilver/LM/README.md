@@ -74,6 +74,8 @@ Program(
 
 
 ### Scope graph
+
+###### Textual
 ```
 -- global scope
 S_G = scope()
@@ -102,6 +104,9 @@ S_A2 -[ `VAR ]-> S_x
 -- var x scope
 S_x = scopeDatum(datumVar("x", INT))
 ```
+
+###### Drawing
+![moo](modulesnestedsame.svg)
 
 ### Statix issues
 A Statix query cannot go ahead if there are any weakly critical edges for that query present in the scope graph. I.e., missing edges which [theoretically] can be filled in by other queries. The presence of `import A` in module `C` means that there is a weakly critical edge from `S_C` to another scope, either `S_A1` or `S_A2`. However, the only query which could ever extend the current scope graph with this edge is itself the `import A` query. Therefore we have a situation where the `import A` query can only go ahead when it has itself finished, meaning the query can never start. This issue is the same as that encountered in even more simple examples, where there is no question about ambiguity.
