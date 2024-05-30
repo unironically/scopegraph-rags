@@ -420,7 +420,7 @@ top::ModRef ::= x::String
 {
   top.scope.impsReachable <- dfaMod.findReachable(x, left(top), [], true, top.scope);
 
-  top.imps <- minRef(scope.impsReachable, top);
+  top.scope.imps <- minRef(scope.impsReachable, top);
   --EVW: does imps need to be a collection?  Can we not just assign the result of minRefs
   --to it?
 }
