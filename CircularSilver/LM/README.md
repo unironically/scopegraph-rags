@@ -103,6 +103,9 @@ S_A2 -[ `VAR ]-> S_x
 S_x = scopeDatum(datumVar("x", INT))
 ```
 
+### Statix issues
+A Statix query cannot go ahead if there are any weakly critical edges for that query present in the scope graph. I.e., missing edges which [theoretically] can be filled in by other queries. The presence of `import A` in module `C` means that there is a weakly critical edge from `S_C` to another scope, either `S_A1` or `S_A2`. However, the only query which could ever extend the current scope graph with this edge is itself the `import A` query. Therefore we have a situation where the `import A` query can only go ahead when it has itself finished, meaning the query can never start. This issue is the same as that encountered in even more simple examples, where there is no question about ambiguity.
+
 ### Resolution of `x`
 
 **NOTE:** The resolution below and in the spec makes use of a function `minRef` that I have not defined yet. The purpose of this function is to take a list of `Res` nodes and filter out those that are not in the minimal path set, with respect to the LM label ordering. This is the same as the `minref` used in the Statix specs. It's type as I've been using is `[Scope] ::= [Res]`.
