@@ -155,10 +155,13 @@ minRef(dfaVarRef.findReachable(x, VarRef("x"), [], false, S_C), top)
         state0.findReachable("x", VarRef("x"), [labelLex()], false, S_G)
           S_G.vars
             No contributions. Return []
+          ++
           S_G.imps
             Transitions to sink state. Return []
+          ++
           S_G.lexs
             No contributions. Return []
+          = []
     = [S_x]
   Return [S_x]
 Return [S_x]
@@ -188,9 +191,6 @@ dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                -- itera
     S_C.lexs
       Contains [S_G]
       state0.findReachable("A", ModRef("A"), [labelLex()], true, S_G)
-        S_G.vars
-          No contributions. Return []
-        ++
         S_G.mods
           Contains [S_C, S_A1]
           state2.findReachable("A", ModRef("A"), [labelMod()], true, S_C)
@@ -220,6 +220,7 @@ dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                -- itera
             S_A1 datum matches. 
               Return [S_A1]
             = [S_A1]
+          = [S_A1]
         ++
         S_G.imps
           No contributions. Return []
@@ -240,9 +241,6 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
     S_C.impsReachable
       Contains [S_A1]
       state1.findReachable("A", ModRef("A"), [labelImp()], true, S_A1)
-        S_A1.vars
-          Transitions to sink state. Return []
-        ++
         S_A1.mods
           Contains [S_A2]
           state2.findReachable("A", ModRef("A"), [labelImp(), labelMod()], true, S_A2)
@@ -356,9 +354,6 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
     S_C.lexs
       Contains [S_G]
       state0.findReachable("A", ModRef("A"), [labelLex()], true, S_G)
-        S_G.vars
-          No contributions. Return []
-        ++
         S_G.mods
           Contains [S_C, S_A1]
           state2.findReachable("A", ModRef("A"), [labelLex(), labelMod()], true, S_C)
