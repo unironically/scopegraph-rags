@@ -172,7 +172,7 @@ Return [S_x]
 ```
 S_C.imps <- minRef(scope.impsReachable, "A")
   See "Evaluation of `S_C.impsReachable`" below
-Return [S_A2]                                    -- minRef implementation TODO
+Return [S_A2]                                                             -- minRef implementation TODO
 ```
 
 ###### Evaluation of `S_C.impsReachable`
@@ -180,13 +180,13 @@ Return [S_A2]                                    -- minRef implementation TODO
 ```
 -- Before iteration 1, S_C.impsReachable = []
 
-dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                -- iteration 1
+dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                  -- iteration 1
   state0.findReachable("A", ModRef("A"), [], true, S_C)
     S_C.mods
       No contributions. Return []
     _union_
     S_C.impsReachable
-      Circular use. Return []                    -- using current value of S_C.impsReachable
+      Circular use. Return []                                             -- using current value of S_C.impsReachable
     _union_
     S_C.lexs
       Contains [S_G]
@@ -233,12 +233,12 @@ Return [S_A1]
 
 -- Before iteration 2, S_C.impsReachable = [S_A1]
 
-dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                -- iteration 2
+dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                  -- iteration 2
 state0.findReachable("A", ModRef("A"), [], true, S_C)
     S_C.mods
       No contributions. Return []
     _union_
-    S_C.impsReachable
+    S_C.impsReachable                                                     -- using current value of S_C.impsReachable
       Contains [S_A1]
       state1.findReachable("A", ModRef("A"), [labelImp()], true, S_A1)
         S_A1.mods
@@ -308,12 +308,12 @@ Return [S_A1, S_A2]
 
 -- Before iteration 3, S_C.impsReachable = [S_A1, S_A2]
 
-dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                -- iteration 3
+dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                  -- iteration 3
 state0.findReachable("A", ModRef("A"), [], true, S_C)
     S_C.mods
       No contributions. Return []
     _union_
-    S_C.impsReachable
+    S_C.impsReachable                                                     -- using current value of S_C.impsReachable
       Contains [S_A1, S_A2]
       state1.findReachable("A", ModRef("A"), [labelImp()], true, S_A1)
         S_A1.mods
