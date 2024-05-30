@@ -34,13 +34,13 @@ IO<Integer> ::= largs::[String]
                 print("[✔] Parse success\n");
                 mkdir("out");
                 system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
-                writeStatixConstraints(filePath, file, ast.statixConstraints);
-                writeSilverEquations(filePath, file, ast.silverEquations);
-                writeJastEquations(filePath, file, ast.jastEquations);
-                writeStatixAterm(fileName, ast.statix);
-                res::Integer <- printBinds(ast.binds);
-                programOk(ast.ok);
-                return res;
+                --writeStatixConstraints(filePath, file, ast.statixConstraints);
+                --writeSilverEquations(filePath, file, ast.silverEquations);
+                --writeJastEquations(filePath, file, ast.jastEquations);
+                --writeStatixAterm(fileName, ast.statix);
+                --res::Integer <- printBinds(ast.binds);
+                --programOk(ast.ok);
+                return 0;
               }
               else do {
                 print("[✗] Expected an input file of form [file name].lm\n");
