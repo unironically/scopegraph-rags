@@ -97,7 +97,7 @@ top::State ::=
       let contRes::[Res] = varRef ++ modRes ++ impRes ++ lexRes in
 
         case currentScope of
-        | scopeDatum(d) -> if d.id != lookup then contRes 
+        | scopeDatum(d) -> if !isFinal || d.id != lookup then contRes 
                            else if resolvingImp then impRes(left(fromRef), currentScope, currentPath) :: contRes
                            else varRes(right(fromRef), currentScope, currentPath) :: contRes 
         | _ -> contRes -- ignore scopes that do not have data
