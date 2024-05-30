@@ -133,7 +133,7 @@ minRef(dfaVarRef.findReachable(x, VarRef("x"), [], false, S_C), top)
         state2.findReachable("x", VarRef("x"), [labelVar()], false, S_z)
           S_z datum does not match.
             Return []
-    ++
+    _union_
     S_C.imps
       See "Evaluation of `S_C.imps`" below
       Returns [S_A2]
@@ -142,23 +142,23 @@ minRef(dfaVarRef.findReachable(x, VarRef("x"), [], false, S_C), top)
             Contains [S_x]
               S_x datum matches.
                 Return [S_x]
-          ++
+          _union_
           S_A2.imps
             Transitions to sink state. Return []
-          ++
+          _union_
           S_A2.lexs
             Transitions to sink state. Return []
           = [S_x]
-    ++
+    _union_
     S_C.lexs
       Contains [S_G]
         state0.findReachable("x", VarRef("x"), [labelLex()], false, S_G)
           S_G.vars
             No contributions. Return []
-          ++
+          _union_
           S_G.imps
             Transitions to sink state. Return []
-          ++
+          _union_
           S_G.lexs
             No contributions. Return []
           = []
@@ -184,10 +184,10 @@ dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                -- itera
   state0.findReachable("A", ModRef("A"), [], true, S_C)
     S_C.mods
       No contributions. Return []
-    ++
+    _union_
     S_C.impsReachable
       Circular use. Return []                    -- using current value of S_C.impsReachable
-    ++
+    _union_
     S_C.lexs
       Contains [S_G]
       state0.findReachable("A", ModRef("A"), [labelLex()], true, S_G)
@@ -196,35 +196,35 @@ dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                -- itera
           state2.findReachable("A", ModRef("A"), [labelMod()], true, S_C)
             S_C.mods
               Transitions to sink state. Return []
-            ++
+            _union_
             S_C.impsReachable
               Transitions to sink state. Return []
-            ++
+            _union_
             S_C.lexs
               Transitions to sink state. Return []
-            ++
+            _union_
             S_C datum does not match.
               Return []
             = []
-          ++
+          _union_
           state2.findReachable("A", ModRef("A"), [labelMod()], true, S_A1)
             S_A1.mods
               Transitions to sink state. Return []
-            ++
+            _union_
             S_A1.imps
               Transitions to sink state. Return []
-            ++
+            _union_
             S_A1.lexs
               Transitions to sink state. Return []
-            ++
+            _union_
             S_A1 datum matches. 
               Return [S_A1]
             = [S_A1]
           = [S_A1]
-        ++
+        _union_
         S_G.imps
           No contributions. Return []
-        ++
+        _union_
         S_G.lexs
           No contributions. Return []
         = [S_A1]
@@ -237,7 +237,7 @@ dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                -- itera
 state0.findReachable("A", ModRef("A"), [], true, S_C)
     S_C.mods
       No contributions. Return []
-    ++
+    _union_
     S_C.impsReachable
       Contains [S_A1]
       state1.findReachable("A", ModRef("A"), [labelImp()], true, S_A1)
@@ -246,24 +246,24 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
           state2.findReachable("A", ModRef("A"), [labelImp(), labelMod()], true, S_A2)
             S_A2.mods
               No contributions. Return []
-            ++
+            _union_
             S_A2.impsReachable
               Transitions to sink state. Return []
-            ++
+            _union_
             S_A2.lexs
               Transitions to sink state. Return []
-            ++
+            _union_
             S_A2 datum matches
               Return [S_A2]
             = [S_A2]
-        ++
+        _union_
         S_A1.impsReachable
           Transitions to sink state. Return []
-        ++
+        _union_
         S_A1.lexs
           Transitions to sink state. Return []
         = [S_A2]
-    ++
+    _union_
     S_C.lexs
       Contains [S_G]
       state0.findReachable("A", ModRef("A"), [labelLex()], true, S_G)
@@ -272,34 +272,34 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
           state2.findReachable("A", ModRef("A"), [labelLex(), labelMod()], true, S_C)
             S_C.mods
               Transitions to sink state. Return []
-            ++
+            _union_
             S_C.impsReachable
               Transitions to sink state. Return []
-            ++
+            _union_
             S_C.lexs
               Transitions to sink state. Return []
-            ++
+            _union_
             S_C datum does not match. 
               Return []
             = []
-          ++
+          _union_
           state2.findReachable("A", ModRef("A"), [labelLex(), labelMod()], true, S_A1)
             S_A1.mods
               Transitions to sink state. Return []
-            ++
+            _union_
             S_A1.impsReachable
               Transitions to sink state. Return []
-            ++
+            _union_
             S_A1.lexs
               Transitions to sink state. Return []
-            ++
+            _union_
             S_A1 datum matches.
               Return [S_A1]
             = [S_A1]
-        ++
+        _union_
         S_G.imps
           No contributions. Return []
-        ++
+        _union_
         S_G.lexs
           No contributions. Return []
         = [S_A1]
@@ -312,7 +312,7 @@ dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                -- itera
 state0.findReachable("A", ModRef("A"), [], true, S_C)
     S_C.mods
       No contributions. Return []
-    ++
+    _union_
     S_C.impsReachable
       Contains [S_A1, S_A2]
       state1.findReachable("A", ModRef("A"), [labelImp()], true, S_A1)
@@ -321,36 +321,36 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
             state2.findReachable("A", ModRef("A"), [labelImp(), labelMod()], true, S_A2)
               S_A2.mods
                 No contributions. Return []
-              ++
+              _union_
               S_A2.imps
                 Transitions to sink state. Return []
-              ++
+              _union_
               S_A2.lexs
                 Transitions to sink state. Return []
-              ++
+              _union_
               S_A2 datum matches.
                 Return [S_A2]
               = [S_A2]
-        ++
+        _union_
         S_A1.impsReachable
           Transitions to sink state. Return []
-        ++
+        _union_
         S_A1.lexs
           Transitions to sink state. Return []
         = [S_A2]
-      ++
+      _union_
       state1.findReachable("A", ModRef("A"), [labelImp(), labelMod()], true, S_A2)
         S_A2.mods
           No contributions. Return []
-        ++
+        _union_
         S_A2.impsReachable
           Transitions to sink state. Return []
-        ++
+        _union_
         S_A2.lexs
           Transitions to sink state. Return []
         = []
       = [S_A2]
-    ++
+    _union_
     S_C.lexs
       Contains [S_G]
       state0.findReachable("A", ModRef("A"), [labelLex()], true, S_G)
@@ -359,34 +359,34 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
           state2.findReachable("A", ModRef("A"), [labelLex(), labelMod()], true, S_C)
             S_C.mods
               Transitions to sink state. Return []
-            ++
+            _union_
             S_C.impsReachable
               Transitions to sink state. Return []
-            ++
+            _union_
             S_C.lexs
               Transitions to sink state. Return []
-            ++
+            _union_
             S_C datum does not match.
               Return []
             = []
-          ++
+          _union_
           state2.findReachable("A", ModRef("A"), [labelLex(), labelMod()], true, S_A1)
             S_A1.mods
               Transitions to sink state. Return []
-            ++
+            _union_
             S_A1.impsReachable
               Transitions to sink state. Return []
-            ++
+            _union_
             S_A1.lexs
               Transitions to sink state. Return []
-            ++
+            _union_
             S_A1 datum matches.
               Return [S_A1]
             = [S_A1]
-        ++
+        _union_
         S_G.impsReachable
           No contributions. Return []
-        ++
+        _union_
         S_G.lexs
           No contributions. Return []
         = [S_A1]

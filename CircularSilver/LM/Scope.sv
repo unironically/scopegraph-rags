@@ -167,3 +167,16 @@ Boolean ::=
     | [], [] -> false
     end;
 }
+
+
+function _union_
+[Res] ::=
+  current::[Res]
+  toAdd::[Res]
+{
+  return
+    case toAdd of
+    | h::t -> if contains(h, current) then _union_(current, t) else _union_(h::current, t)
+    | [] -> current
+    end;
+}
