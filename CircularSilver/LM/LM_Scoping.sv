@@ -1,6 +1,8 @@
 grammar LM;
 
+--EVW: scope, scopeDef, and program should be Decorated, right?
 
+--EVW: maybe rename scope to be lexscope? the name is very general otherwise.
 {-
  - The lexically enclosing scope of a program construct.
  -}
@@ -15,6 +17,7 @@ inherited attribute scopeDef::Scope;
  - The module which a ModRef resolves to, if such a resolution is found.
  -}
 synthesized attribute resMod::Maybe<Scope>;
+--EVW: there is no equation defining this on ModRef.
 
 {-
  - Collection attribute which will synthesize all VarRef bindings found. Demanding this attribute
@@ -22,6 +25,9 @@ synthesized attribute resMod::Maybe<Scope>;
  - the resolution of references in the tree. 
  -}
 collection attribute binds::[(String, String)] with ++, [] root Program;
+--EVW: binds can just be a synthesized attribute the pulles up all the binding
+--in the tree, right?
+--Thus, the inherited attribute root is not needed?
 
 {-
  - Program node to pass down the AST, so that contributions can be made to its `binds`.
@@ -68,6 +74,7 @@ abstract production declModule
 top::Decl ::= id::String ds::Decls
 {
   local modScope::Scope = scopeDatum(datumMod(id, modScope));
+                                                 --EVW: top? ds?
 
   top.scope.mods <- [modScope];  -- scope    -[ `MOD ]-> modScope
   modScope.lexs <- [top.scope];  -- modScope -[ `LEX ]-> scope
@@ -414,6 +421,8 @@ top::ModRef ::= x::String
   top.scope.impsReachable <- dfaMod.findReachable(x, left(top), [], true, top.scope);
 
   top.imps <- minRef(scope.impsReachable, top);
+  --EVW: does imps need to be a collection?  Can we not just assign the result of minRefs
+  --to it?
 }
 
 abstract production modQRef

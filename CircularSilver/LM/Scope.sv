@@ -6,6 +6,10 @@ grammar LM;
  - Each definition has a name, type, append op, initial value, and a declaration the type of the
  - LM AST node from which we will descend the tree to find contributions.
  -}
+--EVW: these are lists of Decorated Scopes, right?
+--EVW: are collection attributes needed here? are they used only to let us
+-- write specs that look more like statix?
+--EVW: why is lexs a list? could it be a maybe or just a Decorated Scope?
 collection attribute vars::[Scope] with ++, [] root Program occurs on Scope;
 collection attribute mods::[Scope] with ++, [] root Program occurs on Scope;
 collection attribute lexs::[Scope] with ++, [] root Program occurs on Scope;
@@ -17,9 +21,10 @@ collection attribute lexs::[Scope] with ++, [] root Program occurs on Scope;
 collection attribute circular impsReachable::[Res] with ++, [] root Program occurs on Scope;
 
 {-
- - One impsReachable is done computing, we can contribute a subset of the reachable scopes to the 
+ - Once impsReachable is done computing, we can contribute a subset of the reachable scopes to the 
  - imps collection attribute without circularity issues.
  -}
+--EVW: is this the visible ones then?
 collection attribute imps::[Scope] with ++, [] root Program occurs on Scope;
 
 {-
@@ -62,6 +67,7 @@ nonterminal Datum with id;
 {-
  - Datum of a def declaration.
  -}
+--EVW: the left hand side of these should be Datam, right?
 abstract production datumVar
 top::Scope ::=
   id::String
@@ -76,7 +82,7 @@ top::Scope ::=
 abstract production datumMod
 top::Scope ::=
   id::String
-  smod::Scope
+  smod::Scope  --EVW: should be Decorated Scope
 {
   top.id = id;
 }

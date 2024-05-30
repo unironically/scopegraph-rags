@@ -79,7 +79,7 @@ top::State ::=
     \lookup::String
      fromRef::Either<ModRef, VarRef>
      currentPath::[Label]
-     resolvingImp::Boolean 
+     resolvingImp::Boolean --EVW: can't this be determined by fromRef being either a left or a right thing?
      currentScope::Scope ->
     
       let varRes::[Res] = if resolvingImp then [] 
