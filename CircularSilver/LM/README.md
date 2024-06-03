@@ -3,7 +3,8 @@
 
 ### Program
 ```
-module A {  
+module A {
+  def x:int = 3
   module A {
     def x:int = 2
   }

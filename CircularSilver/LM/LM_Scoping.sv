@@ -385,8 +385,6 @@ top::ModRef ::= x::String
 {
   top.lexScope.impsReachable <- dfaMod.findReachable(x, left(top), [], top.lexScope);
 
-  top.lexScope.imps <- minRef(top.lexScope.impsReachable, top);
-
   top.imps = minRef(top.lexScope.impsReachable, top);
 }
 
