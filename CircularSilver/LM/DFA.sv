@@ -77,35 +77,40 @@ top::State ::=
 {
   top.findReachable = 
     \lookup::String
-     fromRef::Either<ModRef, VarRef>
+     ref::Either<ModRef, VarRef>
      currentPath::[Label]
      currentScope::Scope ->
     
-      let varRes::[Res] = if fromRef.isLeft then [] 
-                          else concat(map((var.findReachable(lookup, fromRef, labelVar()::currentPath, resolvingImp, _)), currentScope.vars)) in
+      let varRes::[Res] = if ref.isLeft then [] 
+                          else concat(map((var.findReachable(lookup, ref, labelVar()::currentPath, resolvingImp, _)), currentScope.vars)) in
       
-      let modRes::[Res] = if fromRef.isRight then [] 
-                          else concat(map((mods.findReachable(lookup, fromRef, labelMod()::currentPath, resolvingImp, _)), currentScope.mods)) in
+      let modRes::[Res] = if ref.isRight then [] 
+                          else concat(map((mods.findReachable(lookup, ref, labelMod()::currentPath, resolvingImp, _)), currentScope.mods)) in
 
 
-      -- Need to stop the 2nd iteration of resolving A from using the import edge it introduced in the 1st iteration
-      let imps::[Scope] = if fromRef.isRight then map((.resolvedScope), currentScope.impsReachable)
+      {- `valid` is all of the known reachable import resolutions whose origin is NOT
+         equal to the ModRef which we are currently looking up. Then using `valid` in
+         the assignment to `imps` below means that the resolution of an import can NOT
+         use the IMP edge introduced by itself on a previous iteration of the circ attr. -}
+      let valid::[Res] = filter ((\r::Res -> ref.isLeft && r != ref.fromLeft.fromRef),
+                                 currentScope.impsReachable) in
+      let imps::[Scope] = if ref.isRight then map((.resolvedScope), valid)
                           else scope.imps in
-      let impRes::[Res] = concat(map((imps.findReachable(lookup, fromRef, labelImp()::currentPath, resolvingImp, _)), imps)) in
+      let impRes::[Res] = concat(map((imps.findReachable(lookup, ref, labelImp()::currentPath, resolvingImp, _)), imps)) in
 
 
-      let lexRes::[Res] = concat(map((lexs.findReachable(lookup, fromRef, labelLex()::currentPath, resolvingImp, _)), currentScope.lexs)) in
+      let lexRes::[Res] = concat(map((lexs.findReachable(lookup, ref, labelLex()::currentPath, resolvingImp, _)), currentScope.lexs)) in
 
       let contRes::[Res] = varRef ++ modRes ++ impRes ++ lexRes in
 
         case currentScope of
         | scopeDatum(d) -> if !isFinal || d.id != lookup then contRes 
-                           else if fromRef.isLeft then impRes(left(fromRef), currentScope, currentPath) :: contRes
-                           else varRes(right(fromRef), currentScope, currentPath) :: contRes 
+                           else if ref.isLeft then impRes(left(ref), currentScope, currentPath) :: contRes
+                           else varRes(right(ref), currentScope, currentPath) :: contRes 
         | _ -> contRes -- ignore scopes that do not have data
         end
 
-      end end end end end end;
+      end end end end end end end;
 }
 
 {-
@@ -117,7 +122,7 @@ top::State ::=
 {
   top.findReachable = 
     \lookup::String 
-     fromRef::Either<ModRef, VarRef> 
+     ref::Either<ModRef, VarRef> 
      currentPath::[Label] 
      currentScope::Scope -> 
       [];

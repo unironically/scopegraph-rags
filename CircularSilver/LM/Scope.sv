@@ -201,7 +201,6 @@ function minRef
   visible::[Res]
   ref::ModRef
 {
-  
   return
     let match::Boolean = case ref of 
                          | left(r) -> r.fromRef == ref
