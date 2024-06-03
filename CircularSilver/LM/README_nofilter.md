@@ -248,8 +248,30 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
       No contributions. Return []
     _union_
     S_C.impsReachable                                                     -- using current value of S_C.impsReachable
-      Contains [S_A1], but local `valid` contains [] since S_A1 was introduced by resolving the same ModRef
-        Return []
+      Contains [S_A1]
+      state1.findReachable("A", ModRef("A"), [labelImp()], true, S_A1)
+        S_A1.mods
+          Contains [S_A2]
+          state2.findReachable("A", ModRef("A"), [labelImp(), labelMod()], true, S_A2)
+            S_A2.mods
+              No contributions. Return []
+            _union_
+            S_A2.impsReachable
+              Transitions to sink state. Return []
+            _union_
+            S_A2.lexs
+              Transitions to sink state. Return []
+            _union_
+            S_A2 datum matches
+              Return [S_A2]
+            = [S_A2]
+        _union_
+        S_A1.impsReachable
+          Transitions to sink state. Return []
+        _union_
+        S_A1.lexs
+          Transitions to sink state. Return []
+        = [S_A2]
     _union_
     S_C.lexs
       Contains [S_G]
@@ -290,9 +312,96 @@ state0.findReachable("A", ModRef("A"), [], true, S_C)
         S_G.lexs
           No contributions. Return []
         = [S_A1]
-    = [S_A1]
-Return [S_A1]
+    = [S_A1, S_A2]
+Return [S_A1, S_A2]
 
--- After iteration 2, S_C.impsReachable = [S_A1]
+-- Before iteration 3, S_C.impsReachable = [S_A1, S_A2]
+
+dfaModRef.findReachable("A", ModRef("A"), [], true, S_C)                  -- iteration 3
+state0.findReachable("A", ModRef("A"), [], true, S_C)
+    S_C.mods
+      No contributions. Return []
+    _union_
+    S_C.impsReachable                                                     -- using current value of S_C.impsReachable
+      Contains [S_A1, S_A2]
+      state1.findReachable("A", ModRef("A"), [labelImp()], true, S_A1)
+        S_A1.mods
+          Contains [S_A2]
+            state2.findReachable("A", ModRef("A"), [labelImp(), labelMod()], true, S_A2)
+              S_A2.mods
+                No contributions. Return []
+              _union_
+              S_A2.imps
+                Transitions to sink state. Return []
+              _union_
+              S_A2.lexs
+                Transitions to sink state. Return []
+              _union_
+              S_A2 datum matches.
+                Return [S_A2]
+              = [S_A2]
+        _union_
+        S_A1.impsReachable
+          Transitions to sink state. Return []
+        _union_
+        S_A1.lexs
+          Transitions to sink state. Return []
+        = [S_A2]
+      _union_
+      state1.findReachable("A", ModRef("A"), [labelImp(), labelMod()], true, S_A2)
+        S_A2.mods
+          No contributions. Return []
+        _union_
+        S_A2.impsReachable
+          Transitions to sink state. Return []
+        _union_
+        S_A2.lexs
+          Transitions to sink state. Return []
+        = []
+      = [S_A2]
+    _union_
+    S_C.lexs
+      Contains [S_G]
+      state0.findReachable("A", ModRef("A"), [labelLex()], true, S_G)
+        S_G.mods
+          Contains [S_C, S_A1]
+          state2.findReachable("A", ModRef("A"), [labelLex(), labelMod()], true, S_C)
+            S_C.mods
+              Transitions to sink state. Return []
+            _union_
+            S_C.impsReachable
+              Transitions to sink state. Return []
+            _union_
+            S_C.lexs
+              Transitions to sink state. Return []
+            _union_
+            S_C datum does not match.
+              Return []
+            = []
+          _union_
+          state2.findReachable("A", ModRef("A"), [labelLex(), labelMod()], true, S_A1)
+            S_A1.mods
+              Transitions to sink state. Return []
+            _union_
+            S_A1.impsReachable
+              Transitions to sink state. Return []
+            _union_
+            S_A1.lexs
+              Transitions to sink state. Return []
+            _union_
+            S_A1 datum matches.
+              Return [S_A1]
+            = [S_A1]
+        _union_
+        S_G.impsReachable
+          No contributions. Return []
+        _union_
+        S_G.lexs
+          No contributions. Return []
+        = [S_A1]
+    = [S_A1, S_A2]
+Return [S_A1, S_A2]
+
+-- After iteration 3, S_C.impsReachable = [S_A1, S_A2]
 -- Same result as previous iteration, terminate.
 ```
