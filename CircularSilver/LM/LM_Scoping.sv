@@ -1,39 +1,21 @@
 grammar LM;
 
---EVW: scope, scopeDef, and program should be Decorated, right?
-
---EVW: maybe rename scope to be lexscope? the name is very general otherwise.
 {-
  - The lexically enclosing scope of a program construct.
  -}
-inherited attribute scope::Scope;
+inherited attribute lexScope::Decorated Scope;
 
 {-
  - The source scope for edges to declarations that are created in SeqBinds, SeqBind, ParBind and ParBinds.
  -}
-inherited attribute scopeDef::Scope;
-
-{-
- - The module which a ModRef resolves to, if such a resolution is found.
- -}
-synthesized attribute resMod::Maybe<Scope>;
---EVW: there is no equation defining this on ModRef.
+inherited attribute scopeDef::Decorated Scope;
 
 {-
  - Collection attribute which will synthesize all VarRef bindings found. Demanding this attribute
  - is the trigger for name analysis on the program, as by following its dependencies we demand
  - the resolution of references in the tree. 
  -}
-collection attribute binds::[(String, String)] with ++, [] root Program;
---EVW: binds can just be a synthesized attribute the pulles up all the binding
---in the tree, right?
---Thus, the inherited attribute root is not needed?
-
-{-
- - Program node to pass down the AST, so that contributions can be made to its `binds`.
- -}
-inherited attribute root::Program;
-
+monoid attribute binds::[(String, String)] with ++, [];
 
 
 nonterminal Program with binds;
@@ -41,66 +23,80 @@ nonterminal Program with binds;
 abstract production program
 top::Program ::= ds::Decls
 {
-  local globScope::Scope = scope();
+  local globScope::Scope = scope(ds.vars, ds.mods, ds.imps, ds.lexs);
 
-  ds.scope = globScope;
-  ds.root = top;
+  ds.lexScope = globScope;
 }
 
 
 
-nonterminal Decls with scope, root;
+nonterminal Decls with lexScope, root, vars, mods, imps, binds;
+
+propagate binds on Decls;
 
 abstract production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  d.scope = top.scope;
-  d.root = top.root;
+  d.lexScope = top.lexScope;
+  ds.lexScope = top.lexScope;
 
-  ds.scope = top.scope;
-  ds.root = top.root;
+  top.vars = d.vars ++ ds.vars;
+  top.mods = d.mods ++ ds.mods;
+  top.imps = d.imps ++ ds.imps;
 }
 
 abstract production declsNil
 top::Decls ::=
 {
+  top.vars = [];
+  top.mods = [];
+  top.imps = [];
 }
 
 
 
-nonterminal Decl with scope, root;
+nonterminal Decl with lexScope, root, vars, mods, imps, binds;
+
+propagate binds on Decl;
 
 abstract production declModule
 top::Decl ::= id::String ds::Decls
 {
-  local modScope::Scope = scopeDatum(datumMod(id, modScope));
-                                                 --EVW: top? ds?
+  local modScope::Scope = scopeDatum(ds.vars, ds.mods, ds.imps, ds.lexs, datumMod(id, modScope));
 
-  top.scope.mods <- [modScope];  -- scope    -[ `MOD ]-> modScope
-  modScope.lexs <- [top.scope];  -- modScope -[ `LEX ]-> scope
+  ds.lexScope = modScope;
 
-  ds.scope = modScope;
-  ds.root = top.root;
+  top.vars = [];
+  top.mods = [modScope];
+  top.imps = [];
 }
 
 abstract production declImport
 top::Decl ::= r::ModRef
 {
-  r.scope = top.scope;
-  r.root = top.root;
+  r.lexScope = top.lexScope;
+
+  top.vars = [];
+  top.mods = [];
+  top.imps = r.imps;
 }
 
 abstract production declDef
 top::Decl ::= b::ParBind
 {
-  b.scope = top.scope;
-  b.scopeDef = top.scope;
-  b.root = top.root;
+  b.lexScope = top.lexScope;
+  b.scopeDef = top.lexScope;
+
+  top.vars = b.vars;
+  top.mods = [];
+  top.imps = [];
 }
 
 
 
-nonterminal Expr with scope, root;
+nonterminal Expr with lexScope, root, bnids;
+
+propagate binds on Expr;
 
 abstract production exprInt
 top::Expr ::= i::Integer
@@ -120,228 +116,197 @@ top::Expr ::=
 abstract production exprVar
 top::Expr ::= r::VarRef
 {
-  r.scope = top.scope;
-  r.root = top.root;
+  r.lexScope = top.lexScope;
 }
 
 abstract production exprAdd
 top::Expr ::= e1::Expr e2::Expr
 {
-  e1.scope = top.scope;
-  e1.root = top.root;
+  e1.lexScope = top.lexScope;
+  e2.lexScope = top.lexScope;
 
-  e2.scope = top.scope;
-  e2.root = top.root;
 }
 
 abstract production exprSub
 top::Expr ::= e1::Expr e2::Expr
 {
-  e1.scope = top.scope;
-  e1.root = top.root;
-
-  e2.scope = top.scope;
-  e2.root = top.root;
+  e1.lexScope = top.lexScope;
+  e2.lexScope = top.lexScope;
 }
 
 abstract production exprMul
 top::Expr ::= e1::Expr e2::Expr
 {
-  e1.scope = top.scope;
-  e2.scope = top.scope;
+  e1.lexScope = top.lexScope;
+  e2.lexScope = top.lexScope;
 }
 
 abstract production exprDiv
 top::Expr ::= e1::Expr e2::Expr
 {
-  e1.scope = top.scope;
-  e1.root = top.root;
-
-  e2.scope = top.scope;
-  e2.root = top.root;
+  e1.lexScope = top.lexScope;
+  e2.lexScope = top.lexScope;
 }
 
 abstract production exprAnd
 top::Expr ::= e1::Expr e2::Expr
 {
-  e1.scope = top.scope;
-  e2.scope = top.scope;
+  e1.lexScope = top.lexScope;
+  e2.lexScope = top.lexScope;
 }
 
 abstract production exprOr
 top::Expr ::= e1::Expr e2::Expr
 {
-  e1.scope = top.scope;
-  e1.root = top.root;
-
-  e2.scope = top.scope;
-  e2.root = top.root;
+  e1.lexScope = top.lexScope;
+  e2.lexScope = top.lexScope;
 }
 
 abstract production exprEq
 top::Expr ::= e1::Expr e2::Expr
 {
-  e1.scope = top.scope;
-  e1.root = top.root;
-
-  e2.scope = top.scope;
-  e2.root = top.root;
+  e1.lexScope = top.lexScope;
+  e2.lexScope = top.lexScope;
 }
 
 abstract production exprApp
 top::Expr ::= e1::Expr e2::Expr
 {
-  e1.scope = top.scope;
-  e1.root = top.root;
+  e1.lexScope = top.lexScope;
 
-  e2.scope = top.scope;
-  e2.root = top.root;
+  e2.lexScope = top.lexScope;
 }
 
 abstract production exprIf
 top::Expr ::= e1::Expr e2::Expr e3::Expr
 {
-  e1.scope = top.scope;
-  e1.root = top.root;
-
-  e2.scope = top.scope;
-  e2.root = top.root;
-
-  e3.scope = top.scope;
-  e3.root = top.root;
+  e1.lexScope = top.lexScope;
+  e2.lexScope = top.lexScope;
+  e3.lexScope = top.lexScope;
 }
 
 abstract production exprFun
 top::Expr ::= d::ArgDecl e::Expr
 {
-  local sFun::Scope = scope();
+  local sFun::Scope = scope(d.vars, [], [top.lexScope]);
 
-  sFun.lexs <- [top.scope]; -- sFun -[ `LEX ]-> scope
+  d.lexScope = sFun;
 
-  d.scope = sFun;
-  d.root = top.root;
-
-  e.scope = sFun;
-  e.root = top.root;
+  e.lexScope = sFun;
 }
 
 abstract production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
-  local sLet::Scope = scope();
+  local sLet::Scope = scope(bs.vars, [], [bs.lastScope]);
 
-  sLet.lexs <- [top.scope]; -- sLet -[ `LEX ]-> scope
-
-  bs.scope = top.scope;
+  bs.lexScope = top.lexScope;
   bs.sDef = sLet;
-  bf.root = top.root;
 
-  e.scope = sLet;
-  e.root = top.root;
+  e.lexScope = sLet;
 }
 
 abstract production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local sLet::Scope = scope();
+  local sLet::Scope = scope(bs.vars, [], [top.lexScope]);
 
-  sLet.lexs <- [top.scope]; -- sLet -[ `LEX ]-> scope
-
-  bs.scope = sLet;
+  bs.lexScope = sLet;
   bs.scopeDef = sLet;
   
-  e.scope = sLet;
+  e.lexScope = sLet;
 }
 
 abstract production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local sLet::Scope = scope();
+  local sLet::Scope = scope(bs.vars, [], [top.lexScope]);
 
-  sLet.lexs <- [top.scope]; -- sLet -[ `LEX ]-> scope
-
-  bs.scope = top.scope;
+  bs.lexScope = top.lexScope;
   bs.scopeDef = sLet;
   
-  e.scope = sLet;
+  e.lexScope = sLet;
 }
 
 
+inherited attribute lastScope::[Decorated Scope];
 
-nonterminal SeqBinds with scope, scopeDef, root;
+nonterminal SeqBinds with lexScope, scopeDef, lastScope, vars, binds;
+
+propagate binds on SeqBinds;
 
 abstract production seqBindsNil
 top::SeqBinds ::=
 {
-  top.scopeDef.lexs <- [top.scope]; -- scopeDef -[ `LEX ]-> scope
+  top.vars = [];
+  top.lastScope = top.lexScope;
 }
 
 abstract production seqBindsOne
 top::SeqBinds ::= s::SeqBind
 {
-  top.scopeDef.lexs <- [top.scope]; -- scopeDef -[ `LEX ]-> scope
-
-  s.scope = top.scope;
+  s.lexScope = top.lexScope;
   s.scopeDef = top.scopeDef;
-  s.root = top.root;
+
+  top.vars = s.vars;
+  top.lastScope = top.lexScope;
 }
 
 abstract production seqBindsCons
 top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
-  local sDef::Scope = scope();
+  local sDef::Scope = scope(s.vars, [], [top.lexScope]);
 
-  sDef.lexs <- [top.scope]; -- sDef -[ `LEX ]-> scope
-
-  s.scope = top.scope;
+  s.lexScope = top.lexScope;
   s.scopeDef = sDef;
-  s.root = top.root;
 
-  ss.scope = sDef;
+  ss.lexScope = sDef;
   ss.scopeDef = top.scopeDef;
-  ss.root = top.root;
+
+  top.vars = ss.vars;
+  top.lastScope = ss.lastScope;
 }
 
 
 
-nonterminal SeqBind with scope, scopeDef, root;
+nonterminal SeqBind with lexScope, scopeDef, root, binds;
+
+propagate binds on SeqBind;
 
 abstract production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
 {
-  local scopeVar::Scope = scopeDatum(datumVar(id, e.ty));
+  local scopeVar::Scope = scopeDatum([], [], [], datumVar(id, e.ty));
 
-  top.scopeDef.vars <- [scopeVar]; -- scopeDef -[ `VAR ]-> scopeVar
+  top.vars = [scopeVar];
 
-  e.scope = top.scope;
-  e.root = top.root;
+  e.lexScope = top.lexScope;
 }
 
 abstract production seqBindTyped
 top::SeqBind ::= ty::Type id::String e::Expr
 {
-  local scopeVar::Scope = scopeDatum(datumVar(id, ty));
+  local scopeVar::Scope = scopeDatum([], [], [], datumVar(id, ty));
 
-  top.scopeDef.vars <- [scopeVar]; -- scopeDef -[ `VAR ]-> scopeVar
+  top.vars = [scopeVar];
 
-  e.scope = top.scope;
-  e.root = top.root;
+  e.lexScope = top.lexScope;
 }
 
 
 
-nonterminal ParBinds with scope, scopeDef, root;
+nonterminal ParBinds with lexScope, scopeDef, root, binds;
+
+propagate binds on ParBinds;
 
 abstract production parBindsCons
 top::ParBinds ::= s::ParBind ss::ParBinds
 {
-  s.scope = top.scope;
+  s.lexScope = top.lexScope;
   s.scopeDef = top.scopeDef;
-  s.root = top.root;
 
-  ss.scope = top.scope;
+  ss.lexScope = top.lexScope;
   ss.scopeDef = top.scopeDef;
-  ss.root = top.root;
 }
 
 abstract production parBindsNil
@@ -351,40 +316,40 @@ top::ParBinds ::=
 
 
 
-nonterminal ParBind with scope, scopeDef, root;
+nonterminal ParBind with lexScope, scopeDef, root, binds;
+
+propagate binds on ParBind;
 
 abstract production parBindUntyped
 top::ParBind ::= id::String e::Expr
 {
-  local scopeVar::Scope = scopeDatum(datumVar(id, e.ty));
+  local scopeVar::Scope = scopeDatum([], [], [], datumVar(id, e.ty));
 
-  top.scopeDef.vars <- [scopeVar]; -- scopeDef -[ `VAR ]-> scopeVar
+  top.vars = [scopeVar];
 
-  e.scope = top.scope;
-  e.root = top.root;
+  e.lexScope = top.lexScope;
 }
 
 abstract production parBindTyped
 top::ParBind ::= ty::Type id::String e::Expr
 {
-  local scopeVar::Scope = scopeDatum(datumVar(id, ty));
+  local scopeVar::Scope = scopeDatum([], [], [], datumVar(id, ty));
 
-  top.scopeDef.vars <- [scopeVar]; -- scopeDef -[ `VAR ]-> scopeVar
+  top.vars = [scopeVar];
 
-  e.scope = top.scope;
-  e.root = top.root;
+  e.lexScope = top.lexScope;
 }
 
 
 
-nonterminal ArgDecl with scope;
+nonterminal ArgDecl with lexScope;
 
 abstract production argDecl
 top::ArgDecl ::= id::String ty::Type
 {
-  local scopeVar::Scope = scopeDatum(datumVar(id, ty));
+  local scopeVar::Scope = scopeDatum([], [], [], datumVar(id, ty));
 
-  top.scope.vars <- [scopeVar]; -- scope -[ `VAR ]-> scopeVar
+  top.vars = [scopeVar];
 }
 
 
@@ -413,16 +378,16 @@ top::Type ::=
 
 
 
-nonterminal ModRef with scope, resMod;
+nonterminal ModRef with lexScope, imps;
 
 abstract production modRef
 top::ModRef ::= x::String
 {
-  top.scope.impsReachable <- dfaMod.findReachable(x, left(top), [], true, top.scope);
+  top.lexScope.impsReachable <- dfaMod.findReachable(x, left(top), [], top.lexScope);
 
-  top.imps <- minRef(scope.impsReachable, top);
-  --EVW: does imps need to be a collection?  Can we not just assign the result of minRefs
-  --to it?
+  top.lexScope.imps <- minRef(top.lexScope.impsReachable, top);
+
+  top.imps = minRef(top.lexScope.impsReachable, top);
 }
 
 abstract production modQRef
@@ -433,14 +398,14 @@ top::ModRef ::= r::ModRef x::String
 
 
 
-nonterminal VarRef with scope;
+nonterminal VarRef with lexScope, binds;
 
 abstract production varRef
 top::VarRef ::= x::String
 {
-  local res::[Scope] = minRef(dfaVarRef.findReachable(x, right(top), [], false, top.scope), top);
+  local res::[Scope] = minRef(dfaVarRef.findReachable(x, right(top), [], top.lexScope), top);
 
-  top.root.binds <- map ((\r::Res -> (x, r.datum.fromJust.id)), res);
+  top.binds := map ((\r::Res -> (x, r.datum.fromJust.id)), res);
 }
 
 abstract production varQRef

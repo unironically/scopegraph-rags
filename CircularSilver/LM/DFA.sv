@@ -8,7 +8,7 @@ global dfaVarRef::DFA =
   let sink::State = sinkState() in
   let final::State = state(sink, sink, sink, sink, true) in
   let impState::State = state(final, sink, sink, sink, false) in
-  let start::State = state(final, sink, impState, start) in
+  let start::State = state(final, sink, impState, start, false) in
     dfa (start)
   end end end end;
 
@@ -17,7 +17,7 @@ global dfaVarRef::DFA =
  -}
 global dfaVar::DFA = 
   let final::State = state(sink, sink, sink, sink, true) in
-  let start::State = state(final, sink, sink, sink) in
+  let start::State = state(final, sink, sink, sink, false) in
     dfa (start)
   end end;
 
@@ -28,7 +28,7 @@ global dfaModRef::DFA =
   let sink::State = sinkState() in
   let final::State = state(sink, sink, sink, sink, true) in
   let impState::State = state(sink, final, sink, sink, false) in
-  let start::State = state(sink, final, impState, start) in
+  let start::State = state(sink, final, impState, start, false) in
     dfa (start)
   end end end end;
 
@@ -37,12 +37,12 @@ global dfaModRef::DFA =
  -}
 global dfaMod::DFA = 
   let final::State = state(sink, sink, sink, sink, true) in
-  let start::State = state(sink, final, sink, sink) in
+  let start::State = state(sink, final, sink, sink, false) in
     dfa (start)
   end end;
 
 
-synthesized attribute findReachable::([Res] ::= String Either<ModRef, VarRef> [Label] Boolean Scope);
+synthesized attribute findReachable::([Res] ::= String Either<ModRef, VarRef> [Label] Scope);
 
 
 nonterminal DFA with findReachable;
@@ -79,18 +79,20 @@ top::State ::=
     \lookup::String
      fromRef::Either<ModRef, VarRef>
      currentPath::[Label]
-     resolvingImp::Boolean --EVW: can't this be determined by fromRef being either a left or a right thing?
      currentScope::Scope ->
     
-      let varRes::[Res] = if resolvingImp then [] 
+      let varRes::[Res] = if fromRef.isLeft then [] 
                           else concat(map((var.findReachable(lookup, fromRef, labelVar()::currentPath, resolvingImp, _)), currentScope.vars)) in
       
-      let modRes::[Res] = if !resolvingImp then [] 
+      let modRes::[Res] = if fromRef.isRight then [] 
                           else concat(map((mods.findReachable(lookup, fromRef, labelMod()::currentPath, resolvingImp, _)), currentScope.mods)) in
 
-      let imps::[Scope] = if resolvingImp then map((.resolvedScope), currentScope.impsReachable) 
+
+      -- Need to stop the 2nd iteration of resolving A from using the import edge it introduced in the 1st iteration
+      let imps::[Scope] = if fromRef.isRight then map((.resolvedScope), currentScope.impsReachable)
                           else scope.imps in
       let impRes::[Res] = concat(map((imps.findReachable(lookup, fromRef, labelImp()::currentPath, resolvingImp, _)), imps)) in
+
 
       let lexRes::[Res] = concat(map((lexs.findReachable(lookup, fromRef, labelLex()::currentPath, resolvingImp, _)), currentScope.lexs)) in
 
@@ -98,7 +100,7 @@ top::State ::=
 
         case currentScope of
         | scopeDatum(d) -> if !isFinal || d.id != lookup then contRes 
-                           else if resolvingImp then impRes(left(fromRef), currentScope, currentPath) :: contRes
+                           else if fromRef.isLeft then impRes(left(fromRef), currentScope, currentPath) :: contRes
                            else varRes(right(fromRef), currentScope, currentPath) :: contRes 
         | _ -> contRes -- ignore scopes that do not have data
         end
@@ -117,7 +119,6 @@ top::State ::=
     \lookup::String 
      fromRef::Either<ModRef, VarRef> 
      currentPath::[Label] 
-     resolvingImp::Boolean
      currentScope::Scope -> 
       [];
 }
