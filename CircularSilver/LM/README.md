@@ -96,14 +96,16 @@ S_z = scopeDatum(datumVar("z", ???))
 S_A1 = scopeDatum(datumMod("A", S_A1))
 S_A1 -[ `LEX ]-> S_G
 S_A1 -[ `MOD ]-> S_A2
+S_A1 -[ `VAR ]-> S_x1
 
 -- inner module A scope
 S_A2 = scopeDatum(datumMod("A", S_A2))
 S_A2 -[ `LEX ]-> S_A1
-S_A2 -[ `VAR ]-> S_x
+S_A2 -[ `VAR ]-> S_x2
 
--- var x scope
-S_x = scopeDatum(datumVar("x", INT))
+-- var x scopes
+S_x2 = scopeDatum(datumVar("x", INT))
+S_x2 = scopeDatum(datumVar("x", INT))
 ```
 
 ###### Drawing
@@ -145,19 +147,19 @@ minRef(dfaVarRef.findReachable(x, VarRef("x"), [], false, S_C), top)
     _union_
     S_C.imps
       See "Evaluation of `S_C.imps`" below
-      Returns [S_A2]
-        state1.findReachable("x", VarRef("x"), [labelImp()], false, S_A2)
-          S_A2.vars
-            Contains [S_x]
-              S_x datum matches.
-                Return [S_x]
+      Returns [S_A1]
+        state1.findReachable("x", VarRef("x"), [labelImp()], false, S_A1)
+          S_A1.vars
+            Contains [S_x1]
+              S_x1 datum matches.
+                Return [S_x1]
           _union_
-          S_A2.imps
+          S_A1.imps
             Transitions to sink state. Return []
           _union_
-          S_A2.lexs
+          S_A1.lexs
             Transitions to sink state. Return []
-          = [S_x]
+          = [S_x1]
     _union_
     S_C.lexs
       Contains [S_G]
@@ -171,9 +173,9 @@ minRef(dfaVarRef.findReachable(x, VarRef("x"), [], false, S_C), top)
           S_G.lexs
             No contributions. Return []
           = []
-    = [S_x]
-  Return [S_x]
-Return [S_x]
+    = [S_x1]
+  Return [S_x1]
+Return [S_x1]
 ```
 
 
@@ -181,7 +183,7 @@ Return [S_x]
 ```
 S_C.imps <- minRef(scope.impsReachable, "A")
   See "Evaluation of `S_C.impsReachable`" below
-Return [S_A2]                                                             -- minRef implementation TODO
+Return [S_A1]
 ```
 
 ###### Evaluation of `S_C.impsReachable`
