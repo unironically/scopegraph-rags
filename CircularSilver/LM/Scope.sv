@@ -98,14 +98,14 @@ top::Datum ::=
 
 nonterminal Res;
 
-synthesized attribute resolvedScope::Scope occurs on Res;
+synthesized attribute resolvedScope::Decorated Scope occurs on Res;
 synthesized attribute path::[Label] occurs on Res;
 synthesized attribute fromRef::Ref occurs on Res;
 
 abstract production impRes
 top::Res ::=
   fromRef::Ref
-  resolvedScope::Scope
+  resolvedScope::Decorated Scope
   path::[Label]
 {
   top.resolvedScope = scope;
@@ -116,7 +116,7 @@ top::Res ::=
 abstract production varRes
 top::Res ::=
   fromRef::Ref
-  resolvedScope::Scope
+  resolvedScope::Decorated Scope
   path::[Label]
 {
   top.resolvedScope = scope;
@@ -191,5 +191,37 @@ function _union_
     case toAdd of
     | h::t -> if contains(h, current) then _union_(current, t) else _union_(h::current, t)
     | [] -> current
+    end;
+}
+
+
+function minRef
+[Scope] ::=
+  reachable::[Res]
+  visible::[Res]
+  ref::ModRef
+{
+  return
+    let match::Boolean = case ref of 
+                         | left(r) -> r.fromRef == ref
+                         | right(r) -> r.fromRef == ref
+                         end
+    in
+      case reachable, visible of
+      | rh::rt, [] -> -- visibility list is currently empty
+          if match then minRefMod(rt, [r], ref) else minRefMod(rt, [], ref)
+      | rh::rt, vh::vt ->
+          (case pathBetter(rh, vh), pathBetter(vh, rh) of
+          | true, false ->    -- resolution `rh` is better than all resolutions in `visible`
+              minRefMod(rt, [r], ref)
+          | false, true ->    -- resolution `rh` is worse than all resolutions in `visible`
+              minRefMod(rt, visible, ref)
+          | false, false ->  -- resolution `rh` is equally as good as all resolutions in `visible`
+              minRefMod(rt, r::visible, ref)
+          | true, true ->    -- impossible
+              []
+          end)
+      | _, _ -> visible
+      end
     end;
 }
