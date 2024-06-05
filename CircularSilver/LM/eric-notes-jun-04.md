@@ -218,3 +218,37 @@ Resolves to an ambiguity on imports:
     }
   ]
 ```
+
+## Program 7
+
+```
+module A_1 {
+  module B_1 {
+    def x_1 = 1
+  }
+}
+module A_2 {
+  module B_2 {
+    def x_2 = 2
+  }
+}
+module C_1 {
+  import A_3
+  import B_3
+  def y_1 = x_3
+  module D_1 {
+    import A_4
+    import B_4
+    def y_2 = x_4
+  }
+}
+```
+
+Resolves to:
+
+```
+  [ { [(A_3 -> [A_1]), (B_3 -> [B_1]), (x_3 -> [x_1]), (A_4 -> [A_1]), (B_4 -> [B_1]), (x_4 -> [x_1])],
+      [(A_3 -> [A_2]), (B_3 -> [B_2]), (x_3 -> [x_2]), (A_4 -> [A_2]), (B_4 -> [B_2]), (x_4 -> [x_2])],
+    }
+  ]
+```
