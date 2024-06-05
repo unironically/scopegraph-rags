@@ -181,6 +181,10 @@ module C_1 {
 
 No ambiguities on imports, but ambiguities on x_3, x_4:
 
+(EVW: I would not call these ambiguities. This is just a reference
+with multiple declarations. The term "ambiguity" (or something else)
+should be reserved for two resolutions that individually coherent.)
+
 ```
   [ A_2 -> [A_1], 
     B_2 -> [B_1], 
