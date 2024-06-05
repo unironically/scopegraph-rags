@@ -244,7 +244,10 @@ module C_1 {
 }
 ```
 
-Resolves to:
+Resolves to an import ambiguity, which only occurs due import A_3 and import B_3.
+There is no ambiguity involving A_4 and B_4, because the IMP edges we get by resolving
+A_3 and B_3 are used when resolving A_4 and B_4. Thus the edge introduced for these can only
+point to the same scopes as are pointed to by module C_1 after resolving A_3 and B_3:
 
 ```
   [ { [(A_3 -> [A_1]), (B_3 -> [B_1]), (x_3 -> [x_1]), (A_4 -> [A_1]), (B_4 -> [B_1]), (x_4 -> [x_1])],
