@@ -188,3 +188,33 @@ No ambiguities on imports, but ambiguities on x_3, x_4:
     {[(x_4 -> [x_1])], [(x_4 -> [x_2])]}
   ]
 ```
+
+## Program 6
+
+```
+module A_1 {
+  module A_2 {
+    def x_1 = 1
+  }
+}
+module B_1 {
+  module A_3 {
+    def x_2 = 1
+  }
+}
+
+module C_1 {
+  import A_4
+  import B_2
+  def y_1 = x_3
+}
+```
+
+Resolves to an ambiguity on imports:
+
+```
+  [ { [(A_4 -> [A_1]), (B_2 -> [B_1]), (x_3 -> [])],
+      [(A_4 -> [A_3]), (B_2 -> [B_1]), (x_3 -> [x_2])] 
+    }
+  ]
+```
