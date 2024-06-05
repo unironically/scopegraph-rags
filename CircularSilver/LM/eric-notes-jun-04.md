@@ -96,6 +96,8 @@ module G_1 {
         import D_3
         import D_4
         def z_1 = w_2
+      }
+    }
   }
 }
 ```
@@ -128,6 +130,35 @@ of C are independent of what happens in the ambiguity in B.
           [ D_3 -> [D_2], D_4 -> [D_1], w_2 -> [w_1] ] 
         }
       ] 
+    }
+  ]
+```
+
+## Program 4
+
+```
+module A_1 {
+  module B_1 {
+    def x_1 = 1
+  }
+}
+module B_2 {
+  module A_2 {
+    def x_2 = 1
+  }
+}
+module C_1 {
+  import A_3
+  import B_3
+  def y_1 = x_3
+}
+```
+
+Resolves to two ambiguities:
+
+```
+  [ { [ (A_3 -> [A_1], B_3 -> [B_1], x_3 -> [x_1]) ],
+      [ (A_3 -> [A_2], B_3 -> [B_2], x_3 -> [x_2]) ]
     }
   ]
 ```

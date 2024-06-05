@@ -104,7 +104,7 @@ S_A2 -[ `LEX ]-> S_A1
 S_A2 -[ `VAR ]-> S_x2
 
 -- var x scopes
-S_x2 = scopeDatum(datumVar("x", INT))
+S_x1 = scopeDatum(datumVar("x", INT))
 S_x2 = scopeDatum(datumVar("x", INT))
 ```
 
