@@ -157,8 +157,8 @@ module C_1 {
 Resolves to two ambiguities:
 
 ```
-  [ { [ (A_3 -> [A_1], B_3 -> [B_1], x_3 -> [x_1]) ],
-      [ (A_3 -> [A_2], B_3 -> [B_2], x_3 -> [x_2]) ]
+  [ { [ A_3 -> [A_1], B_3 -> [B_1], x_3 -> [x_1] ],
+      [ A_3 -> [A_2], B_3 -> [B_2], x_3 -> [x_2] ]
     }
   ]
 ```
@@ -182,10 +182,10 @@ module C_1 {
 No ambiguities on imports, but ambiguities on x_3, x_4:
 
 ```
-  [ (A_2 -> [A_1]), 
-    (B_2 -> [B_1]), 
-    {[(x_3 -> [x_1])], [(x_3 -> [x_2])]}, 
-    {[(x_4 -> [x_1])], [(x_4 -> [x_2])]}
+  [ A_2 -> [A_1], 
+    B_2 -> [B_1], 
+    { [ x_3 -> [x_1] ], [ x_3 -> [x_2] ] }, 
+    { [ x_4 -> [x_1] ], [ x_4 -> [x_2] ] }
   ]
 ```
 
@@ -213,8 +213,8 @@ module C_1 {
 Resolves to an ambiguity on imports:
 
 ```
-  [ { [(A_4 -> [A_1]), (B_2 -> [B_1]), (x_3 -> [])],
-      [(A_4 -> [A_3]), (B_2 -> [B_1]), (x_3 -> [x_2])] 
+  [ { [ A_4 -> [A_1], B_2 -> [B_1], x_3 -> [] ],
+      [ A_4 -> [A_3], B_2 -> [B_1], x_3 -> [x_2] ] 
     }
   ]
 ```
@@ -250,8 +250,27 @@ A_3 and B_3 are used when resolving A_4 and B_4. Thus the edge introduced for th
 point to the same scopes as are pointed to by module C_1 after resolving A_3 and B_3:
 
 ```
-  [ { [(A_3 -> [A_1]), (B_3 -> [B_1]), (x_3 -> [x_1]), (A_4 -> [A_1]), (B_4 -> [B_1]), (x_4 -> [x_1])],
-      [(A_3 -> [A_2]), (B_3 -> [B_2]), (x_3 -> [x_2]), (A_4 -> [A_2]), (B_4 -> [B_2]), (x_4 -> [x_2])],
+  [ { [ A_3 -> [A_1], B_3 -> [B_1], x_3 -> [x_1], A_4 -> [A_1], B_4 -> [B_1], x_4 -> [x_1] ],
+      [ A_3 -> [A_2], B_3 -> [B_2], x_3 -> [x_2], A_4 -> [A_2], B_4 -> [B_2], x_4 -> [x_2] ],
     }
   ]
+```
+
+## Program 8
+
+```
+module A_1 {
+  import B_1
+  def x_1 = y_1
+}
+module B_2 {
+  import A_2
+  def x_2 = y_2
+}
+```
+
+Resolves to:
+
+```
+  [ B_1 -> [B_2], x_1 -> [x_2], A_2 -> [A_1], y_2 -> [y_1] ]
 ```
