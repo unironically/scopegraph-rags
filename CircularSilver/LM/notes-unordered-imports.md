@@ -24,7 +24,7 @@ module G_1 {
 }
 ```
 
-program resolution: a single ambiguity
+Program resolution: a single ambiguity
 
 ```
   [ { [ A_3 -> [A_1], A_4 -> [A_2], x_2 -> [x_1] ],
@@ -42,6 +42,10 @@ It passes type checking
 expected: True
  but got: False
 ```
+
+Mophasco explanation:
+
+This program fails due to a stability issue with regards to both `import A_3` and `import A_4`. Mophasco creates two permutations of these unordered imports: `p1 = [import A_3, import A_4]` and `p2 = [import A_4, import A_3]`. In each case both import queries are unstable. Take `p1` - first we run the `import A_3` query, which resolves to `module A_1` via `B_1 --LEX-> G_1 --MOD-> A_1`, and results in an `IMP` edge being added from `B_1` to `A_1`. But then this result is necessarily unstable, because under the newly extended scope graph the same query would instead give scope `A_2` as the result. Using permutation `p2` leads to the same issue where `import A_4`'s initial result causes itself to become unstable by the addition of the same `IMP` edge.
 
 ## Program 2
 
@@ -89,6 +93,10 @@ It passes type checking
 expected: True
  but got: False
 ```
+
+Mophasco explanation:
+
+This program inherits the same issue as program 1, where the result of each import in the program (`A_3`, `A_4`, `A_5`, `A_6`) is unstable due to its result being an `IMP` edge which would be valid to follow to a better `A` declaration if the query were to be run after the addition of that edge.
 
 ## Program 3
 
@@ -164,6 +172,10 @@ expected: True
  but got: False
 ```
 
+Mophasco explanation:
+
+Again, this inherits the same issue as with program 1. The result of each import in the program renders itself unstable due to the addition of the `IMP` edge which we draw after the query. For each `import` query in this program, running the same query later under the newly extended graph would lead to different results.
+
 ## Program 4
 
 ```
@@ -198,6 +210,10 @@ Mophasco output (PASS):
 ```
 Test suite mophasco-test: PASS
 ```
+
+Mophasco explanation:
+
+Despite the ambiguity between the import orders, Mophasco determines that the program has a stable model. This is likely due to Mophasco picking one of the stable resolutions that we get from the two different import orderings. Each of these different resolutions by itself is stable. For instance, with `p1 = [import A_3, import B_3]`, the only reachable and visible resolution for `A_3` is `A_1`. Then the only visible resolution for `B_3` is `B_1`, since `IMP` shadows `LEX`. From here, `x_3` can only resolve to `x_1`. We get a similar result with the other permutation, `p2 = [import B_3, import A_3]` but we resolve to `B_2`, `A_2` and `x_2` instead. Mophasco does not recognize the ambiguity between these imports.
 
 ## Program 5
 
@@ -239,6 +255,10 @@ expected: True
  but got: False
 ```
 
+Mophasco explanation:
+
+The import resolutions are stable, however there is an ambiguity on `x_3` and `x_4` as both `A_1` and `B_1` define their own versions of `x`.
+
 ## Program 6
 
 ```
@@ -274,6 +294,10 @@ Mophasco output (PASS):
 ```
 Test suite mophasco-test: PASS
 ```
+
+Mophasco explanation:
+
+There is one stable resolution, which we get if we choose to query `B_2` first. This adds an `IMP` edge from `C_1` to `B_1`, which we follow to get the best resolution of `A_4`. Without this sub-module `A_3`, the results of `import A_4` would be unstable, for the same reason that program 1 is unstable. However we avoid this instability by taking the `IMP` edge we get after resolving `B_2`.
 
 ## Program 7
 
@@ -317,6 +341,10 @@ Mophasco output (PASS):
 Test suite mophasco-test: PASS
 ```
 
+Mophasco explanation:
+
+As with program 4, there are two stable resolutions for the program where we either `import A_3` first, or `import B_3` first. The imports `A_4` and `B_4` simply use the `IMP` edges introduced by importing `B_3` and `A_3` respectively to get to the most visible `A` and `B` modules, which depends on whether `A_3` or `B_3` were resolved first.
+
 ## Program 8
 
 ```
@@ -341,3 +369,7 @@ Mophasco output (PASS):
 ```
 Test suite mophasco-test: PASS
 ```
+
+Mophasco explanation:
+
+Both of the imports here are easy to resolve, as there is only one declaration for each. Then, we can follow the `IMP` edges introduced by these to find the correct (and only) declarations of `x` and `y`.
