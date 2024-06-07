@@ -33,6 +33,16 @@ program resolution: a single ambiguity
   ]
 ```
 
+Mophasco output (FAIL):
+
+```
+### Failure in: 0:0:eric-notes-1.aterm
+test/Main.hs:82
+It passes type checking
+expected: True
+ but got: False
+```
+
 ## Program 2
 
 ```
@@ -68,6 +78,16 @@ program resolution: two ambiguities
       [ A_5 -> [A_2], A_6 -> [A_1], x_3 -> [x_1] ] 
     }
   ]
+```
+
+Mophasco output (FAIL):
+
+```
+### Failure in: 0:0:eric-notes-2.aterm
+test/Main.hs:82
+It passes type checking
+expected: True
+ but got: False
 ```
 
 ## Program 3
@@ -134,6 +154,16 @@ of C are independent of what happens in the ambiguity in B.
   ]
 ```
 
+Mophasco output (FAIL):
+
+```
+### Failure in: 0:0:eric-notes-3.aterm
+test/Main.hs:82
+It passes type checking
+expected: True
+ but got: False
+```
+
 ## Program 4
 
 ```
@@ -163,6 +193,12 @@ Resolves to two ambiguities:
   ]
 ```
 
+Mophasco output (PASS):
+
+```
+Test suite mophasco-test: PASS
+```
+
 ## Program 5
 
 ```
@@ -187,6 +223,16 @@ No ambiguities on imports, but ambiguities on x_3, x_4:
     { [ x_3 -> [x_1] ], [ x_3 -> [x_2] ] }, 
     { [ x_4 -> [x_1] ], [ x_4 -> [x_2] ] }
   ]
+```
+
+Mophasco output (FAIL):
+
+```
+### Failure in: 0:0:eric-notes-5.aterm
+test/Main.hs:82
+It passes type checking
+expected: True
+ but got: False
 ```
 
 ## Program 6
@@ -217,6 +263,12 @@ Resolves to an ambiguity on imports:
       [ A_4 -> [A_3], B_2 -> [B_1], x_3 -> [x_2] ] 
     }
   ]
+```
+
+Mophasco output (PASS):
+
+```
+Test suite mophasco-test: PASS
 ```
 
 ## Program 7
@@ -255,6 +307,12 @@ Resolves to:
   ]
 ```
 
+Mophasco output (PASS):
+
+```
+Test suite mophasco-test: PASS
+```
+
 ## Program 8
 
 ```
@@ -272,4 +330,10 @@ Resolves to:
 
 ```
   [ B_1 -> [B_2], x_1 -> [x_2], A_2 -> [A_1], y_2 -> [y_1] ]
+```
+
+Mophasco output (PASS):
+
+```
+Test suite mophasco-test: PASS
 ```
