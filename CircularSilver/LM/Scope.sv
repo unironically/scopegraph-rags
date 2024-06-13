@@ -6,22 +6,16 @@ grammar LM;
  - Each definition has a name, type, append op, initial value, and a declaration the type of the
  - LM AST node from which we will descend the tree to find contributions.
  -}
-synthesized attribute vars::[Decorated Scope] with ++, [] occurs on Scope;
-synthesized attribute mods::[Decorated Scope] with ++, [] occurs on Scope;
-synthesized attribute lexs::[Decorated Scope] with ++, [] occurs on Scope;
-
+synthesized attribute vars::[Decorated Scope] occurs on Scope;
+synthesized attribute mods::[Decorated Scope] occurs on Scope;
+synthesized attribute lexs::[Decorated Scope] occurs on Scope;
+synthesized attribute imps::[Decorated Scope] occurs on Scope;
 
 {-
  - Circular attribute to find all of the reachable imports during a resolution.
  - This list grows during the cyclic evaluation.
  -}
 collection attribute circular impsReachable::[Res] with _union_, [] root Program occurs on Scope;
-
-{-
- - Once impsReachable is done computing, we can contribute a subset of the reachable scopes to the 
- - imps collection attribute without circularity issues.
- -}
-synthesized attribute imps::[Decorated Scope] with ++, [] occurs on Scope;
 
 {-
  - The datum associated with a declaration node, or nothing if the node is only a scope.
@@ -42,31 +36,55 @@ nonterminal Scope with vars, mods, imps, lexs;
  -}
 abstract production scope
 top::Scope ::=
-  vars::[Decorated Scope]
-  mods::[Decorated Scope]
-  imps::[Decorated Scope]
-  lexs::[Decorated Scope]
-
+  var::[Decorated Scope]
+  mod::[Decorated Scope]
+  imp::[Decorated Scope]
+  lex::Maybe<Decorated Scope>
+  datum::Maybe<Datum>
 {
-  top.datum = nothing();
+  top.id = "S_" ++ toString(genInt());
+  top.var = var; top.mod = mod;
+  top.imp = imp; top.lex = lex;
+  top.datum = datum;
 }
 
 {-
- - Scopes with a datum.
+ - Global scope
  -}
-abstract production scopeDatum
+abstract production scopeGlobal
 top::Scope ::=
-  vars::[Decorated Scope]
-  mods::[Decorated Scope]
-  imps::[Decorated Scope]
-  lexs::[Decorated Scope]
-  datum::Datum
-{
-  top.vars = vars;
-  top.mods = mods;
-  top.lexs = lexs;
-  top.datum = just(datum);
-}
+  var::[Decorated Scope]
+  mod::[Decorated Scope]
+  imp::[Decorated Scope]
+{ forwards to scope(var, mod, imp, nothing(), nothing()); }
+
+{-
+ - Def decl scope 
+-}
+abstract production scopeDcl
+top::Scope ::= datum::(String, Type)
+{ forwards to scope([], [], [], nothing(), datumVar(datum)); }
+
+{-
+ - Module dcl scope
+ -}
+abstract production scopeMod
+top::Scope ::=
+  var::[Decorated Scope]
+  mod::[Decorated Scope]
+  imp::[Decorated Scope]
+  lex::Decorated Scope
+  datum::(String, Decorated Scope)
+{ forwards to scope(var, mod, imp, just(lex), datumMod(datum)); }
+
+{-
+ - Let scope
+ -}
+abstract production scopeLet
+top::Scope ::=
+  var::[Decorated Scope]
+  lex::Decorated Scope
+{ forwards to scope(var, [], [], just(lex), nothing()); }
 
 
 
@@ -77,10 +95,9 @@ nonterminal Datum with id;
  -}
 abstract production datumVar
 top::Datum ::=
-  id::String
-  ty::Type
+  data::(String, Type)
 {
-  top.id = id;
+  top.id = fst(data);
 }
 
 {-
@@ -88,10 +105,9 @@ top::Datum ::=
  -}
 abstract production datumMod
 top::Datum ::=
-  id::String
-  smod::Decorated Scope
+  data::(String, Decorated Scope)
 {
-  top.id = id;
+  top.id = fst(data);
 }
 
 
@@ -127,10 +143,10 @@ top::Res ::=
 
 
 nonterminal Label;
-abstract production labelVar top::Label ::= {}
-abstract production labelMod top::Label ::= {}
-abstract production labelImp top::Label ::= {}
-abstract production labelLex top::Label ::= {}
+abstract production labVAR top::Label ::= {}
+abstract production labMOD top::Label ::= {}
+abstract production labIMP top::Label ::= {}
+abstract production labLEX top::Label ::= {}
 
 
 
@@ -155,24 +171,24 @@ Boolean ::=
     case i1, i2 of
 
       -- IMP > MOD
-    | labelMod()::_, labelImp()::_ -> true
-    | labelImp()::_, labelMod()::_ -> false
+    | labMOD()::_, labIMP()::_ -> true
+    | labIMP()::_, labMOD()::_ -> false
 
       -- LEX > MOD
-    | labelMod()::_, labelLex()::_ -> true
-    | labelLex()::_, labelMod()::_ -> false
+    | labMOD()::_, labLEX()::_ -> true
+    | labLEX()::_, labMOD()::_ -> false
 
       -- IMP > VAR
-    | labelVar()::_, labelImp()::_ -> true
-    | labelImp()::_, labelVar()::_ -> false
+    | labVAR()::_, labIMP()::_ -> true
+    | labIMP()::_, labVAR()::_ -> false
 
       -- LEX > VAR
-    | labelVar()::_, labelLex()::_ -> true
-    | labelLex()::_, labelVar()::_ -> false
+    | labVAR()::_, labLEX()::_ -> true
+    | labLEX()::_, labVAR()::_ -> false
 
       -- LEX > IMP
-    | labelImp()::_, labelLex()::_ -> true
-    | labelLex()::_, labelImp()::_ -> false
+    | labIMP()::_, labLEX()::_ -> true
+    | labLEX()::_, labIMP()::_ -> false
 
       -- Equal
     | _::t1, _::t2 -> leftPathBetter(t1, t2) 

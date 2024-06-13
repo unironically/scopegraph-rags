@@ -6,9 +6,9 @@ grammar LM;
  -}
 global dfaVarRef::DFA = 
   let sink::State = sinkState() in
-  let final::State = state(sink, sink, sink, sink, true) in
-  let impState::State = state(final, sink, sink, sink, false) in
-  let start::State = state(final, sink, impState, start, false) in
+  let final::State = varRefstate(sink, sink, sink, true) in
+  let impState::State = varRefstate(final, sink, sink, false) in
+  let start::State = varRefstate(final, impState, start, false) in
     dfa (start)
   end end end end;
 
@@ -16,8 +16,8 @@ global dfaVarRef::DFA =
  - DFA for qualified VarRefs.
  -}
 global dfaVar::DFA = 
-  let final::State = state(sink, sink, sink, sink, true) in
-  let start::State = state(final, sink, sink, sink, false) in
+  let final::State = varRefstate(sink, sink, sink, true) in
+  let start::State = varRefstate(final, sink, sink, false) in
     dfa (start)
   end end;
 
@@ -26,9 +26,9 @@ global dfaVar::DFA =
  -}
 global dfaModRef::DFA = 
   let sink::State = sinkState() in
-  let final::State = state(sink, sink, sink, sink, true) in
-  let impState::State = state(sink, final, sink, sink, false) in
-  let start::State = state(sink, final, impState, start, false) in
+  let final::State = modRefState(sink, sink, sink, true) in
+  let impState::State = modRefState(final, sink, sink, false) in
+  let start::State = modRefState(final, impState, start, false) in
     dfa (start)
   end end end end;
 
@@ -36,8 +36,8 @@ global dfaModRef::DFA =
  - DFA for qualified ModRefs.
  -}
 global dfaMod::DFA = 
-  let final::State = state(sink, sink, sink, sink, true) in
-  let start::State = state(sink, final, sink, sink, false) in
+  let final::State = modRefState(sink, sink, sink, true) in
+  let start::State = modRefState(final, sink, sink, false) in
     dfa (start)
   end end;
 
@@ -62,55 +62,81 @@ top::DFA ::=
 
 nonterminal State with findReachable;
 
-{-
- - Regular (non-sink) state in a DFA.
- - We continue traversal, and also take into account the current scope as a possible resolution
- - if the state is final.
- -}
-abstract production state
+abstract production varRefstate
 top::State ::=
-  var::State
-  mod::State
-  imp::State
-  lex::State
+  varT::State
+  impT::State
+  lexT::State
   isFinal::Boolean
 {
   top.findReachable = 
     \lookup::String
      ref::Either<ModRef, VarRef>
-     currentPath::[Label]
-     currentScope::Scope ->
+     path::[Label]
+     scope::Scope ->
+
+      let varRef::VarRef = ref.fromRight in
     
-      let varRes::[Res] = if ref.isLeft then [] 
-                          else concat(map((var.findReachable(lookup, ref, labelVar()::currentPath, resolvingImp, _)), currentScope.vars)) in
-      
-      let modRes::[Res] = if ref.isRight then [] 
-                          else concat(map((mods.findReachable(lookup, ref, labelMod()::currentPath, resolvingImp, _)), currentScope.mods)) in
+      let varRes::[Res] = 
+        concat(map((varT.findReachable(lookup, ref, labVAR()::path, _)), scope.vars)) in
 
+      let impRes::[Res] = 
+        concat(map((impT.findReachable(lookup, ref, labIMP()::path, _)), scope.imps)) in
 
-      {- `valid` is all of the known reachable import resolutions whose origin is NOT
-         equal to the ModRef which we are currently looking up. Then using `valid` in
-         the assignment to `imps` below means that the resolution of an import can NOT
-         use the IMP edge introduced by itself on a previous iteration of the circ attr. -}
-      let valid::[Res] = filter ((\r::Res -> ref.isLeft && r != ref.fromLeft.fromRef),
-                                 currentScope.impsReachable) in
-      let imps::[Scope] = if ref.isRight then map((.resolvedScope), valid)
-                          else scope.imps in
-      let impRes::[Res] = concat(map((imps.findReachable(lookup, ref, labelImp()::currentPath, resolvingImp, _)), imps)) in
+      let lexRes::[Res] = 
+        concat(map((lexT.findReachable(lookup, ref, labLEX()::path, _)), scope.lexs)) in
 
-
-      let lexRes::[Res] = concat(map((lexs.findReachable(lookup, ref, labelLex()::currentPath, resolvingImp, _)), currentScope.lexs)) in
-
-      let contRes::[Res] = varRef ++ modRes ++ impRes ++ lexRes in
-
-        case currentScope of
-        | scopeDatum(d) -> if !isFinal || d.id != lookup then contRes 
-                           else if ref.isLeft then impRes(left(ref), currentScope, currentPath) :: contRes
-                           else varRes(right(ref), currentScope, currentPath) :: contRes 
-        | _ -> contRes -- ignore scopes that do not have data
+      let contRes::[Res] = 
+        if !null(varRes) then varRes
+        else if !null(impRes) then impRes
+        else lexRes
+      in
+        case scope of
+        | scopeDatum(d) when isFinal && d.id == lookup ->
+            varRes(varRef, scope, path) :: contRes 
+        | _ -> contRes
         end
 
-      end end end end end end end;
+      end end end end end;
+}
+
+abstract production modRefState
+top::State ::=
+  modT::State
+  impT::State
+  lexT::State
+  isFinal::Boolean
+{
+  top.findReachable = 
+    \lookup::String
+     ref::Either<ModRef, VarRef>
+     path::[Label]
+     scope::Scope ->
+
+      let modRef::ModRef = ref.fromLeft in
+
+      let modRes::[Res] = 
+        concat(map((modT.findReachable(lookup, ref, labMOD()::path, _)), scope.mods)) in
+
+      let impsSoFar::[Scope] = map((.resolvedScope), scope.impsReachable) in
+      let impRes::[Res] = 
+        concat(map((impT.findReachable(lookup, ref, labIMP()::path, _)), impsSoFar)) in
+
+      let lexRes::[Res] = 
+        concat(map((lexT.findReachable(lookup, ref, labLEX()::path, _)), scope.lexs)) in
+
+      let contRes::[Res] = 
+        if !null(modRes) then modRes
+        else if !null(impRes) then impRes
+        else lexRes
+      in
+        case scope of
+        | scopeDatum(d) when isFinal && d.id == lookup -> 
+            impRes(modRef, scope, path) :: contRes
+        | _ -> contRes
+        end
+        
+      end end end end end end;
 }
 
 {-
@@ -123,7 +149,6 @@ top::State ::=
   top.findReachable = 
     \lookup::String 
      ref::Either<ModRef, VarRef> 
-     currentPath::[Label] 
-     currentScope::Scope -> 
-      [];
+     path::[Label] 
+     scope::Scope -> [];
 }

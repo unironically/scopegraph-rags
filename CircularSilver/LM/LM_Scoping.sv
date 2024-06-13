@@ -23,7 +23,7 @@ nonterminal Program with binds;
 abstract production program
 top::Program ::= ds::Decls
 {
-  local globScope::Scope = scope(ds.vars, ds.mods, ds.imps, ds.lexs);
+  local globScope::Scope = scopeGlobal(ds.vars, ds.mods, ds.imps);
 
   ds.lexScope = globScope;
 }
@@ -62,7 +62,7 @@ propagate binds on Decl;
 abstract production declModule
 top::Decl ::= id::String ds::Decls
 {
-  local modScope::Scope = scopeDatum(ds.vars, ds.mods, ds.imps, ds.lexs, datumMod(id, modScope));
+  local modScope::Scope = scopeMod(ds.vars, ds.mods, ds.imps, just(top.scope), (id, modScope));
 
   ds.lexScope = modScope;
 
@@ -94,24 +94,21 @@ top::Decl ::= b::ParBind
 
 
 
-nonterminal Expr with lexScope, root, bnids;
+nonterminal Expr with lexScope, root, binds;
 
 propagate binds on Expr;
 
 abstract production exprInt
 top::Expr ::= i::Integer
-{
-}
+{}
 
 abstract production exprTrue
 top::Expr ::=
-{
-}
+{}
 
 abstract production exprFalse
 top::Expr ::=
-{
-}
+{}
 
 abstract production exprVar
 top::Expr ::= r::VarRef
@@ -120,28 +117,6 @@ top::Expr ::= r::VarRef
 }
 
 abstract production exprAdd
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.lexScope = top.lexScope;
-  e2.lexScope = top.lexScope;
-
-}
-
-abstract production exprSub
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.lexScope = top.lexScope;
-  e2.lexScope = top.lexScope;
-}
-
-abstract production exprMul
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.lexScope = top.lexScope;
-  e2.lexScope = top.lexScope;
-}
-
-abstract production exprDiv
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.lexScope = top.lexScope;
@@ -155,13 +130,6 @@ top::Expr ::= e1::Expr e2::Expr
   e2.lexScope = top.lexScope;
 }
 
-abstract production exprOr
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.lexScope = top.lexScope;
-  e2.lexScope = top.lexScope;
-}
-
 abstract production exprEq
 top::Expr ::= e1::Expr e2::Expr
 {
@@ -169,36 +137,10 @@ top::Expr ::= e1::Expr e2::Expr
   e2.lexScope = top.lexScope;
 }
 
-abstract production exprApp
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.lexScope = top.lexScope;
-
-  e2.lexScope = top.lexScope;
-}
-
-abstract production exprIf
-top::Expr ::= e1::Expr e2::Expr e3::Expr
-{
-  e1.lexScope = top.lexScope;
-  e2.lexScope = top.lexScope;
-  e3.lexScope = top.lexScope;
-}
-
-abstract production exprFun
-top::Expr ::= d::ArgDecl e::Expr
-{
-  local sFun::Scope = scope(d.vars, [], [top.lexScope]);
-
-  d.lexScope = sFun;
-
-  e.lexScope = sFun;
-}
-
 abstract production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
-  local sLet::Scope = scope(bs.vars, [], [bs.lastScope]);
+  local sLet::Scope = scopeLet(bs.vars, bs.lastScope);
 
   bs.lexScope = top.lexScope;
   bs.sDef = sLet;
@@ -209,7 +151,7 @@ top::Expr ::= bs::SeqBinds e::Expr
 abstract production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local sLet::Scope = scope(bs.vars, [], [top.lexScope]);
+  local sLet::Scope = scopeLet(bs.vars, top.lexScope);
 
   bs.lexScope = sLet;
   bs.scopeDef = sLet;
@@ -220,7 +162,7 @@ top::Expr ::= bs::ParBinds e::Expr
 abstract production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local sLet::Scope = scope(bs.vars, [], [top.lexScope]);
+  local sLet::Scope = scopeLet(bs.vars, top.lexScope);
 
   bs.lexScope = top.lexScope;
   bs.scopeDef = sLet;
@@ -229,7 +171,8 @@ top::Expr ::= bs::ParBinds e::Expr
 }
 
 
-inherited attribute lastScope::[Decorated Scope];
+
+inherited attribute lastScope::Decorated Scope;
 
 nonterminal SeqBinds with lexScope, scopeDef, lastScope, vars, binds;
 
@@ -243,7 +186,7 @@ top::SeqBinds ::=
 }
 
 abstract production seqBindsOne
-top::SeqBinds ::= s::SeqBind
+top::SeqBinds ::= s::Bind
 {
   s.lexScope = top.lexScope;
   s.scopeDef = top.scopeDef;
@@ -253,7 +196,7 @@ top::SeqBinds ::= s::SeqBind
 }
 
 abstract production seqBindsCons
-top::SeqBinds ::= s::SeqBind ss::SeqBinds
+top::SeqBinds ::= s::Bind ss::SeqBinds
 {
   local sDef::Scope = scope(s.vars, [], [top.lexScope]);
 
@@ -269,38 +212,12 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
 
 
 
-nonterminal SeqBind with lexScope, scopeDef, root, binds;
-
-propagate binds on SeqBind;
-
-abstract production seqBindUntyped
-top::SeqBind ::= id::String e::Expr
-{
-  local scopeVar::Scope = scopeDatum([], [], [], datumVar(id, e.ty));
-
-  top.vars = [scopeVar];
-
-  e.lexScope = top.lexScope;
-}
-
-abstract production seqBindTyped
-top::SeqBind ::= ty::Type id::String e::Expr
-{
-  local scopeVar::Scope = scopeDatum([], [], [], datumVar(id, ty));
-
-  top.vars = [scopeVar];
-
-  e.lexScope = top.lexScope;
-}
-
-
-
 nonterminal ParBinds with lexScope, scopeDef, root, binds;
 
 propagate binds on ParBinds;
 
 abstract production parBindsCons
-top::ParBinds ::= s::ParBind ss::ParBinds
+top::ParBinds ::= s::Bind ss::ParBinds
 {
   s.lexScope = top.lexScope;
   s.scopeDef = top.scopeDef;
@@ -310,71 +227,41 @@ top::ParBinds ::= s::ParBind ss::ParBinds
 }
 
 abstract production parBindsNil
-top::ParBinds ::=
+top::ParBinds ::= {}
+
+
+
+nonterminal Bind with lexScope, scopeDef, root, binds;
+
+propagate binds on Bind;
+
+abstract production bindUntyped
+top::Bind ::= id::String e::Expr
 {
-}
-
-
-
-nonterminal ParBind with lexScope, scopeDef, root, binds;
-
-propagate binds on ParBind;
-
-abstract production parBindUntyped
-top::ParBind ::= id::String e::Expr
-{
-  local scopeVar::Scope = scopeDatum([], [], [], datumVar(id, e.ty));
+  local scopeVar::Scope = scopeDcl(datumVar(id, e.ty));
 
   top.vars = [scopeVar];
 
   e.lexScope = top.lexScope;
 }
 
-abstract production parBindTyped
-top::ParBind ::= ty::Type id::String e::Expr
+abstract production bindTyped
+top::Bind ::= ty::Type id::String e::Expr
 {
-  local scopeVar::Scope = scopeDatum([], [], [], datumVar(id, ty));
+  local scopeVar::Scope = scopeDcl(datumVar(id, ty));
 
   top.vars = [scopeVar];
 
   e.lexScope = top.lexScope;
-}
-
-
-
-nonterminal ArgDecl with lexScope;
-
-abstract production argDecl
-top::ArgDecl ::= id::String ty::Type
-{
-  local scopeVar::Scope = scopeDatum([], [], [], datumVar(id, ty));
-
-  top.vars = [scopeVar];
 }
 
 
 
 nonterminal Type;
-
-abstract production tInt
-top::Type ::=
-{
-}
-
-abstract production tBool
-top::Type ::=
-{
-}
-
-abstract production tFun
-top::Type ::= tyann1::Type tyann2::Type
-{
-}
-
-abstract production tErr
-top::Type ::=
-{
-}
+abstract production tInt  top::Type  ::= {}
+abstract production tBool top::Type  ::= {}
+abstract production tFun  top::Type  ::= tyann1::Type tyann2::Type {}
+abstract production tErr  top::Type  ::= {}
 
 
 
@@ -388,12 +275,6 @@ top::ModRef ::= x::String
   top.imps = minRef(top.lexScope.impsReachable, [], left(top));
 }
 
-abstract production modQRef
-top::ModRef ::= r::ModRef x::String
-{
-  -- TODO
-}
-
 
 
 nonterminal VarRef with lexScope, binds;
@@ -404,10 +285,4 @@ top::VarRef ::= x::String
   local res::[Scope] = minRef(dfaVarRef.findReachable(x, right(top), [], top.lexScope), [], top);
 
   top.binds := map ((\r::Res -> (x, r.datum.fromJust.id)), right(res));
-}
-
-abstract production varQRef
-top::VarRef ::= r::ModRef x::String
-{
-  -- TODO
 }
