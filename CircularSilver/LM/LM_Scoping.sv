@@ -69,6 +69,12 @@ top::Decl ::= id::String ds::Decls
   top.vars = [];
   top.mods = [modScope];
   top.imps = [];
+
+   -- below is building the single program resolution for recurisve imports
+
+
+   -- below is building the coherent program resolutions for unordered imports
+    
 }
 
 abstract production declImport
