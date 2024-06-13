@@ -215,25 +215,26 @@ function minRef
 [Scope] ::=
   reachable::[Res]
   visible::[Res]
-  ref::ModRef
+  ref::Either<ModRef VarRef>
 {
   return
-    let match::Boolean = case ref of 
-                         | left(r) -> r.fromRef == ref
-                         | right(r) -> r.fromRef == ref
-                         end
+    let match::(Boolean ::= Res) = 
+      \r::Res -> case ref of 
+                 | left(r) -> r.fromRef == ref
+                 | right(r) -> r.fromRef == ref
+                 end
     in
       case reachable, visible of
       | rh::rt, [] -> -- visibility list is currently empty
-          if match then minRefMod(rt, [r], ref) else minRefMod(rt, [], ref)
+          if match(rh) then minRef(rt, [rh], ref) else minRef(rt, [], ref)
       | rh::rt, vh::vt ->
           (case pathBetter(rh, vh), pathBetter(vh, rh) of
           | true, false ->    -- resolution `rh` is better than all resolutions in `visible`
-              minRefMod(rt, [r], ref)
+              minRef(rt, [rh], ref)
           | false, true ->    -- resolution `rh` is worse than all resolutions in `visible`
-              minRefMod(rt, visible, ref)
+              minRef(rt, visible, ref)
           | false, false ->  -- resolution `rh` is equally as good as all resolutions in `visible`
-              minRefMod(rt, r::visible, ref)
+              minRef(rt, rh::visible, ref)
           | true, true ->    -- impossible
               []
           end)
