@@ -282,7 +282,7 @@ nonterminal VarRef with lexScope, binds;
 abstract production varRef
 top::VarRef ::= x::String
 {
-  local res::[Scope] = minRef(dfaVarRef.findReachable(x, right(top), [], top.lexScope), [], top);
+  local res::[Scope] = dfaVarRef.findReachable(x, right(top), [], top.lexScope);
 
-  top.binds := map ((\r::Res -> (x, r.datum.fromJust.id)), right(res));
+  top.binds := map ((\r::Res -> (x, r.datum.fromJust.id)), res);
 }

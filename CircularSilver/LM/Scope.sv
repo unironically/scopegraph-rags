@@ -116,28 +116,28 @@ nonterminal Res;
 
 synthesized attribute resolvedScope::Decorated Scope occurs on Res;
 synthesized attribute path::[Label] occurs on Res;
-synthesized attribute fromRef::Ref occurs on Res;
+synthesized attribute fromRef::Either<ModRef VarRef> occurs on Res;
 
 abstract production impRes
 top::Res ::=
-  fromRef::Ref
+  modRef::ModRef
   resolvedScope::Decorated Scope
   path::[Label]
 {
   top.resolvedScope = scope;
   top.path = path;
-  top.fromRef = fromRef;
+  top.fromRef = left(modRef);
 }
 
 abstract production varRes
 top::Res ::=
-  fromRef::Ref
+  varRef::VarRef
   resolvedScope::Decorated Scope
   path::[Label]
 {
   top.resolvedScope = scope;
   top.path = path;
-  top.fromRef = fromRef;
+  top.fromRef = right(varRef);
 }
 
 
@@ -220,8 +220,8 @@ function minRef
   return
     let match::(Boolean ::= Res) = 
       \r::Res -> case ref of 
-                 | left(r) -> r.fromRef == ref
-                 | right(r) -> r.fromRef == ref
+                 | left(r) -> r.fromRef.fromLeft == ref
+                 | right(r) -> r.fromRef.fromRight == ref
                  end
     in
       case reachable, visible of
