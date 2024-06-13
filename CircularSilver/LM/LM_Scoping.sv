@@ -270,7 +270,7 @@ nonterminal ModRef with lexScope, imps;
 abstract production modRef
 top::ModRef ::= x::String
 {
-  top.lexScope.impsReachable <- dfaMod.findReachable(x, left(top), [], top.lexScope);
+  top.lexScope.impsReachable <- dfaMod.findReachable(x, left(top), [], [], top.lexScope);
 
   top.imps = minRef(top.lexScope.impsReachable, [], left(top));
 }
@@ -282,7 +282,7 @@ nonterminal VarRef with lexScope, binds;
 abstract production varRef
 top::VarRef ::= x::String
 {
-  local res::[Scope] = dfaVarRef.findReachable(x, right(top), [], top.lexScope);
+  local res::[Scope] = dfaVarRef.findReachable(x, right(top), [], [], top.lexScope);
 
   top.binds := map ((\r::Res -> (x, r.datum.fromJust.id)), res);
 }
