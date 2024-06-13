@@ -114,30 +114,35 @@ top::Datum ::=
 
 nonterminal Res;
 
-synthesized attribute resolvedScope::Decorated Scope occurs on Res;
+synthesized attribute resScope::Decorated Scope occurs on Res;
 synthesized attribute path::[Label] occurs on Res;
 synthesized attribute fromRef::Either<ModRef VarRef> occurs on Res;
+synthesized attribute impDeps::[Res] occurs on Res;
 
 abstract production impRes
 top::Res ::=
   modRef::ModRef
-  resolvedScope::Decorated Scope
+  resScope::Decorated Scope
   path::[Label]
+  deps::[Res]
 {
-  top.resolvedScope = scope;
+  top.resScope = scope;
   top.path = path;
   top.fromRef = left(modRef);
+  top.impDeps = deps;
 }
 
 abstract production varRes
 top::Res ::=
   varRef::VarRef
-  resolvedScope::Decorated Scope
+  resScope::Decorated Scope
   path::[Label]
+  deps::[Res]
 {
-  top.resolvedScope = scope;
+  top.resScope = scope;
   top.path = path;
   top.fromRef = right(varRef);
+  top.impDeps = deps;
 }
 
 
@@ -218,7 +223,7 @@ function minRef
   ref::Either<ModRef VarRef>
 {
   return
-    let match::(Boolean ::= Res) = 
+    let match::(Boolean ::= Res) = -- determining whether a res is from resolving the same ref
       \r::Res -> case ref of 
                  | left(r) -> r.fromRef.fromLeft == ref
                  | right(r) -> r.fromRef.fromRight == ref

@@ -42,7 +42,7 @@ global dfaMod::DFA =
   end end;
 
 
-synthesized attribute findReachable::([Res] ::= String Either<ModRef, VarRef> [Label] Scope);
+synthesized attribute findReachable::([Res] ::= String Either<ModRef, VarRef> [Label] [Res] Scope);
 
 
 nonterminal DFA with findReachable;
@@ -73,18 +73,19 @@ top::State ::=
     \lookup::String
      ref::Either<ModRef, VarRef>
      path::[Label]
+     deps::[Res]
      scope::Scope ->
 
       let varRef::VarRef = ref.fromRight in
     
       let varRes::[Res] = 
-        concat(map((varT.findReachable(lookup, ref, labVAR()::path, _)), scope.vars)) in
+        concat(map((varT.findReachable(lookup, ref, labVAR()::path, [], _)), scope.vars)) in
 
       let impRes::[Res] = 
-        concat(map((impT.findReachable(lookup, ref, labIMP()::path, _)), scope.imps)) in
+        concat(map((impT.findReachable(lookup, ref, labIMP()::path, [], _)), scope.imps)) in
 
       let lexRes::[Res] = 
-        concat(map((lexT.findReachable(lookup, ref, labLEX()::path, _)), scope.lexs)) in
+        concat(map((lexT.findReachable(lookup, ref, labLEX()::path, [], _)), scope.lexs)) in
 
       let contRes::[Res] = 
         if !null(varRes) then varRes
@@ -111,19 +112,22 @@ top::State ::=
     \lookup::String
      ref::Either<ModRef, VarRef>
      path::[Label]
+     deps::[Res]
      scope::Scope ->
 
       let modRef::ModRef = ref.fromLeft in
 
       let modRes::[Res] = 
-        concat(map((modT.findReachable(lookup, ref, labMOD()::path, _)), scope.mods)) in
+        concat(map((modT.findReachable(lookup, ref, labMOD()::path, deps, _)), scope.mods)) in
 
-      let impsSoFar::[Scope] = map((.resolvedScope), scope.impsReachable) in
       let impRes::[Res] = 
-        concat(map((impT.findReachable(lookup, ref, labIMP()::path, _)), impsSoFar)) in
+        concat(
+          map(
+            (\r::Res -> impT.findReachable(lookup, ref, labIMP()::path, r::deps, r.resScope)), 
+            scope.impsReachable)) in
 
       let lexRes::[Res] = 
-        concat(map((lexT.findReachable(lookup, ref, labLEX()::path, _)), scope.lexs)) in
+        concat(map((lexT.findReachable(lookup, ref, labLEX()::path, deps, _)), scope.lexs)) in
 
       let contRes::[Res] = 
         if !null(modRes) then modRes
@@ -149,6 +153,7 @@ top::State ::=
   top.findReachable = 
     \lookup::String 
      ref::Either<ModRef, VarRef> 
-     path::[Label] 
+     path::[Label]
+     deps::[Res]
      scope::Scope -> [];
 }
