@@ -270,9 +270,18 @@ nonterminal ModRef with lexScope, imps;
 abstract production modRef
 top::ModRef ::= x::String
 {
+ local n :: Scope = scope ( )
+ n.lex = just (top.lexscope);
+ n.mod = [];  n.imps = [];
+ n.res = get all resolutions for x in top.lexscope.impsReachable - and these have their resolution pasths on them.
+ 
   top.lexScope.impsReachable <- dfaMod.findReachable(x, left(top), [], [], top.lexScope);
 
-  top.imps = minRef(top.lexScope.impsReachable, [], left(top));
+ top.imps = minRef(n.res));   -- finds only minimal ones - not doing program resolutions here
+   - for program 4, this only get A2 or B1
+
+   ---- how to build program resolutions ...
+  
 }
 
 
