@@ -12,10 +12,11 @@ global dfaVarRef::DFA = dfaVarRef();
 global dfaModRef::DFA = dfaModRef();
 
 
-synthesized attribute findReachable::([Res] ::= String Either<ModRef, VarRef> [Label] [Res] Scope);
 
+synthesized attribute findReachableVar::([Res] ::= String VarRef);
+synthesized attribute findReachableMod::([Res] ::= String ModRef);
 
-nonterminal DFA with findReachable;
+nonterminal DFA with findReachableVar, findReachableMod;
 
 {-
  - DFA.
@@ -25,7 +26,12 @@ nonterminal DFA with findReachable;
 abstract production dfa
 top::DFA ::=
   start::State
-{ top.findReachable = start.findReachable; }
+{ 
+  top.findReachableVar = 
+    \id::String vr::VarRef -> start.findReachable(id, right(vr), [], [], vr.lexScope); 
+  top.findReachableMod = 
+    \id::String mr::ModRef -> start.findReachable(id, left(mr), [], [], mr.lexScope); 
+}
 
 
 
@@ -33,6 +39,8 @@ inherited attribute varT::State;
 inherited attribute modT::State;
 inherited attribute impT::State;
 inherited attribute lexT::State;
+
+synthesized attribute findReachable::([Res] ::= String Either<ModRef, VarRef> [Label] [Res] Scope);
 
 nonterminal State with findReachable, varT, modR, impT, lexT;
 
@@ -91,8 +99,12 @@ top::State ::=
       let impRes::[Res] = 
         concat(
           map(
-            (\r::Res -> top.impT.findReachable(lookup, ref, labIMP()::path, r::deps, r.resTgt)), 
-            scope.impsReachable)) in
+            (\r::Res -> 
+              top.impT.findReachable(lookup, ref, labIMP()::path, r::deps, r.resTgt)), 
+            scope.impsReachable
+          )
+        ) 
+      in
 
       let lexRes::[Res] = 
         concat(map((top.lexT.findReachable(lookup, ref, labLEX()::path, deps, _)), scope.lexs)) in
@@ -117,14 +129,7 @@ top::State ::=
  -}
 abstract production sinkState
 top::State ::=
-{
-  top.findReachable = 
-    \lookup::String 
-     ref::Either<ModRef, VarRef> 
-     path::[Label]
-     deps::[Res]
-     scope::Scope -> [];
-}
+{ top.findReachable = \_ _ _ _ _ -> []; }
 
 
 {- DFA creation functions -}

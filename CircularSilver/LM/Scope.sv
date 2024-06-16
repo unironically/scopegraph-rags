@@ -16,7 +16,11 @@ inherited attribute res::[Res] occurs on Scope;
  - Circular attribute to find all of the reachable imports during a resolution.
  - This list grows during the cyclic evaluation.
  -}
-collection attribute circular impsReachable::[Res] with _union_, [] root Program occurs on Scope;
+collection attribute impsReachable::[Res] 
+  with ++, []       -- combination operator for contributions to the collection
+  root Program      -- search tree root type
+  circular _union_  -- combination operator for circular attribute results. new results go to the left
+occurs on Scope;
 
 {-
  - The datum associated with a declaration node, or nothing if the node is only a scope.
@@ -182,7 +186,6 @@ Boolean ::=
     end;
 }
 
-
 function _union_
 [Res] ::=
   current::[Res]
@@ -194,6 +197,7 @@ function _union_
     | [] -> current
     end;
 }
+
 
 function minRefRes
 [Resolution] ::=
