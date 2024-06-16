@@ -10,6 +10,7 @@ synthesized attribute vars::[Decorated Scope] occurs on Scope;
 synthesized attribute mods::[Decorated Scope] occurs on Scope;
 synthesized attribute lexs::[Decorated Scope] occurs on Scope;
 synthesized attribute imps::[Decorated Scope] occurs on Scope;
+synthesized attribute res::[Res] occurs on Scope;
 
 {-
  - Circular attribute to find all of the reachable imports during a resolution.
@@ -38,6 +39,14 @@ abstract production scope
 top::Scope ::=
 { top.id = "S_" ++ toString(genInt()); }
 
+abstract production modRefScope
+top::Scope ::=
+{ forwards to scope(); }
+
+abstract production varRefScope
+top::Scope ::=
+{ forwards to scope(); }
+
 
 
 nonterminal Datum with id;
@@ -62,6 +71,25 @@ top::Datum ::=
   top.id = fst(data);
 }
 
+{-
+ - Datum of a module ref.
+ -}
+abstract production datumModRef
+top::Datum ::=
+  data::ModRef
+{
+  top.id = case data of modRef(id) -> id | _ -> "";
+}
+
+{-
+ - Datum of a var reference.
+ -}
+abstract production datumVarRef
+top::Datum ::=
+  data::VarRef
+{
+  top.id = case data of varRef(id) -> id | _ -> "";
+}
 
 
 nonterminal Res;
@@ -167,6 +195,16 @@ function _union_
     end;
 }
 
+function minRefRes
+[Resolution] ::=
+  ref::Decorated Scope
+{
+  return
+    case ref of
+    | modRefScope(mref) -> modRefRes(mref, minRef(ref.res, [], left(mref)))
+    | varRefScope(vref) -> varRefRes(vref, minRef(ref.res, [], right(vref)))
+    end;
+}
 
 function minRef
 [Scope] ::=

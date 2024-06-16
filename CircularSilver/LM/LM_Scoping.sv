@@ -16,9 +16,9 @@ synthesized attribute vars::[Decorated Scope];
 synthesized attribute mod::[Decorated Scope];
 
 {-
- - RES edge targets
+ - Refs
  -}
-synthesized attribute ress::[Res];
+synthesized attribute refs::[Decorated Scope];
 
 
 {-
@@ -38,7 +38,7 @@ top::Resolution ::= ress::[Resolution] {}
 {-
  - RES edge targets
  -}
-synthesized attribute programResolution::[Resolution];
+synthesized attribute progRes::[Resolution];
 
 
 
@@ -46,7 +46,7 @@ synthesized attribute programResolution::[Resolution];
 {---------- Interesting stuff ----------}
 
 
-nonterminal Program with programResolution;
+nonterminal Program with progRes;
 
 abstract production program
 top::Program ::= ds::Decls
@@ -54,7 +54,7 @@ top::Program ::= ds::Decls
   -- Creating the new global scope node
   local glob::Scope = scope();
   glob.lexScope = nothing();
-  glob.var = ds.var; glob.mod = ds.mod; glob.res = ds.ress;
+  glob.var = ds.var; glob.mod = ds.mod; glob.res = [];
   glob.datum = nothing();
 
   -- Drawing all the IMP edges
@@ -65,16 +65,19 @@ top::Program ::= ds::Decls
 
   -- [RECURSIVE] below is building the single program resolution for recursive imports
 
-
+  top.progRes = 
+    map (minRefRes, ds.refs) -- best of all resolutions for every ref in this scope
+    ++ ds.progRes            -- + all progRes done in other scopes further down the tree (e.g. let scopes)
+  ;
 
   -- [UNORDERED] below is building the coherent program resolutions for unordered imports
 
-
+  top.progRes = ...;
 
 }
 
 
-nonterminal Decls with lexScope, root, vars, mods, ress;
+nonterminal Decls with lexScope, root, vars, mods, refs, progRes;
 
 abstract production declsCons
 top::Decls ::= d::Decl ds::Decls
@@ -86,17 +89,18 @@ top::Decls ::= d::Decl ds::Decls
   -- Synthesizing edge targets
   top.vars = d.vars ++ ds.vars;
   top.mods = d.mods ++ ds.mods;
-  top.ress  = d.ress ++ ds.ress;
+  top.refs  = d.refs ++ ds.refs;
+  top.progRes = d.progRes ++ ds.progRes;
 }
 
 abstract production declsNil
 top::Decls ::=
   -- Synthesizing empty edge targets
-{ top.vars = []; top.mods = []; top.ress = []; }
+{ top.vars = []; top.mods = []; top.refs = []; top.progRes = []; }
 
 
 
-nonterminal Decl with lexScope, root, vars, mods, ress;
+nonterminal Decl with lexScope, root, vars, mods, refs, progRes;
 
 abstract production declModule
 top::Decl ::= id::String ds::Decls
@@ -116,15 +120,18 @@ top::Decl ::= id::String ds::Decls
   -- declModule only provides the target of MOD edges
   top.vars = [];
   top.mods = [modScope];
-  top.ress  = [];
+  top.refs = [];
 
   -- [RECURSIVE] below is building the single program resolution for recursive imports
 
-
+  top.progRes = 
+    map (minRefRes, ds.refs) -- best of all resolutions for every ref in this scope
+    ++ ds.progRes            -- + all progRes done in other scopes further down the tree (e.g. let scopes)
+  ;
 
   -- [UNORDERED] below is building the coherent program resolutions for unordered imports
   
-
+  top.progRes = ...;
 
 }
 
@@ -136,7 +143,8 @@ top::Decl ::= r::ModRef
   -- ModRef only provides the target of RES edges
   top.vars = [];
   top.mods = [];
-  top.ress  = r.ress;
+  top.refs = r.refs;
+  top.progRes = [];
 }
 
 abstract production declDef
@@ -147,7 +155,8 @@ top::Decl ::= b::ParBind
   -- ParBind only provides the target of VAR edges
   top.vars = b.vars;
   top.mods = [];
-  top.ress  = [];
+  top.refs = [];
+  top.progRes = b.progRes;
 }
 
 
@@ -162,11 +171,12 @@ top::Bind ::= id::String e::Expr
   r.var = []; r.mod = []; r.imps = []; r.res = [];
   scopeVar.datum = datumVar((id, e.ty));
 
-  -- Synthesizing the decl node as the target of a VAR edge from the lexically surrounding scope
-  top.vars = [scopeVar];
-
   -- The expression is scoped in the lexically surrounding scope
   e.lexScope = top.lexScope;
+
+  -- Synthesizing the decl node as the target of a VAR edge from the lexically surrounding scope
+  top.vars = [scopeVar];
+  top.progRes = e.progRes;
 }
 
 abstract production bindTyped
@@ -178,53 +188,54 @@ top::Bind ::= ty::Type id::String e::Expr
   r.var = []; r.mod = []; r.imps = []; r.res = [];
   scopeVar.datum = datumVar((id, ty));
 
-  -- Synthesizing the decl node as the target of a VAR edge from the lexically surrounding scope
-  top.vars = [scopeVar];
-
   -- The expression is scoped in the lexically surrounding scope
   e.lexScope = top.lexScope;
+
+  -- Synthesizing the decl node as the target of a VAR edge from the lexically surrounding scope
+  top.vars = [scopeVar];
+  top.progRes = e.progRes;
 }
 
 
-nonterminal ModRef with lexScope, imps;
+nonterminal ModRef with lexScope, imps, refs;
 
 abstract production modRef
 top::ModRef ::= x::String
 {
   -- Creating the new reference node
-  local r :: Scope = scope();
+  local r :: Scope = modRefScope();
   r.lex = just(top.lexscope);
-  r.var = []; r.mod = []; r.imps = []; r.res = [];
+  r.var = []; r.mod = []; r.imps = [];
   r.datum = nothing();
 
   -- Demanding impsReachable, getting all res found from this node
-  r.ress = filter ((\res::Res -> res.fromRef == top), top.lexScope.impsReachable);
+  r.res = filter ((\res::Res -> res.fromRef == top), top.lexScope.impsReachable);
  
   -- Contributing our resolution to impsReachable
   top.lexScope.impsReachable <- dfaMod.findReachableMod(x, top);
 
-  -- Synthesizing this ref for use in the surrounding scope's declaration. Not really necessary?
-  -- top.refs = [r];
+  -- Synthesizing this ref for use in the surrounding scope's declaration
+  top.refs = [r];
 }
 
 
-nonterminal VarRef with lexScope;
+nonterminal VarRef with lexScope, refs;
 
 abstract production varRef
 top::VarRef ::= x::String
 {
   -- Creating the new reference node
-  local r :: Scope = scope();
+  local r :: Scope = varRefScope();
   r.lex = just(top.lexscope);
   r.var = []; r.mod = []; r.imps = []; r.res = [];
   r.datum = nothing();
 
   -- Getting all visible declarations that match this VarRef
   -- impsReachable not used. dfaVarRef will demand impsReachable is fully computed first
-  r.ress = dfaVarRef.findReachableVar(x, top);
+  r.res = dfaVarRef.findReachableVar(x, top);
  
-  -- Synthesizing this ref for use in the surrounding scope's declaration. Not really necessary?
-  -- top.refs = [r];
+  -- Synthesizing this ref for use in the surrounding scope's declaration
+  top.refs = [r];
 }
 
 
@@ -248,6 +259,12 @@ top::Expr ::= bs::SeqBinds e::Expr
 
   -- The expression is scoped in the let scope
   e.lexScope = sLet;
+
+  top.refs = [];
+
+  top.progRes = map (minRefRes, bs.refs ++ e.refs)
+    ++ e.progRes ++ bs.progRes
+  ;
 }
 
 abstract production exprLetRec
@@ -264,6 +281,12 @@ top::Expr ::= bs::ParBinds e::Expr
   
   -- The expression is scoped in the let scope
   e.lexScope = sLet;
+
+  top.refs = [];
+
+  top.progRes = map (minRefRes, bs.refs ++ e.refs)
+    ++ e.progRes ++ bs.progRes
+  ;
 }
 
 abstract production exprLetPar
@@ -280,21 +303,28 @@ top::Expr ::= bs::ParBinds e::Expr
   
   -- The expression is scoped in the let scope
   e.lexScope = sLet;
+
+  top.refs = [];
+
+  top.progRes = map (minRefRes, e.refs)
+    ++ e.progRes ++ bs.progRes
+  ;
 }
 
 
 
 inherited attribute lastScope::Decorated Scope;
 
-nonterminal SeqBinds with lexScope, lastScope, vars, ress;
+nonterminal SeqBinds with lexScope, lastScope, vars, refs, progRes;
 
 abstract production seqBindsNil
 top::SeqBinds ::=
 {
   top.vars = [];
-  top.ress = [];
+  top.refs = [];
 
   top.lastScope = top.lexScope;
+  top.progRes = [];
 }
 
 abstract production seqBindsOne
@@ -303,31 +333,35 @@ top::SeqBinds ::= s::Bind
   s.lexScope = top.lexScope;
 
   top.vars = s.vars;
-  top.ress = s.ress;
+  top.refs = s.refs;
 
   top.lastScope = top.lexScope;
+  top.progRes = s.progRes;
 }
 
 abstract production seqBindsCons
 top::SeqBinds ::= s::Bind ss::SeqBinds
 {
   local sLet::Scope = scope();
-  sLet.var = s.vars; sLet.mod = []; sLet.res = s.ress; sLet.imp = [];
+  sLet.var = s.vars; sLet.mod = []; sLet.res = []; sLet.imp = [];
   sLet.datum = nothing();
 
   s.lexScope = top.lexScope;
 
   ss.lexScope = sLet;
 
-  top.vars = ss.vars;
-  top.ress = ss.ress;
-
   top.lastScope = ss.lastScope;
+
+  top.vars = ss.vars;
+  top.refs = s.refs;
+  top.progRes = map (minRefRes, ss.refs)
+    ++ s.progRes ++ ss.progRes
+  ;
 }
 
 
 
-nonterminal ParBinds with lexScope, root, ress;
+nonterminal ParBinds with lexScope, root, refs;
 
 abstract production parBindsCons
 top::ParBinds ::= s::Bind ss::ParBinds
@@ -337,12 +371,13 @@ top::ParBinds ::= s::Bind ss::ParBinds
   ss.lexScope = top.lexScope;
 
   top.vars = s.vars ++ ss.vars;
-  top.ress = s.ress ++ ss.ress;
+  top.refs = s.refs ++ ss.refs;
+  top.progRes = s.progRes ++ ss.progRes;
 }
 
 abstract production parBindsNil
 top::ParBinds ::= 
-{ top.ress = []; }
+{ top.refs = []; top.progRes = []; }
 
 
 
@@ -351,26 +386,27 @@ top::ParBinds ::=
 {---------- Boring Stuff ----------}
 
 
-nonterminal Expr with lexScope, ress;
+nonterminal Expr with lexScope, refs, progRes;
 
 abstract production exprInt
 top::Expr ::= i::Integer
-{ top.ress = []; }
+{ top.refs = []; top.progRes = []; }
 
 abstract production exprTrue
 top::Expr ::=
-{ top.ress = []; }
+{ top.refs = []; top.progRes = []; }
 
 abstract production exprFalse
 top::Expr ::=
-{ top.ress = []; }
+{ top.refs = []; top.progRes = []; }
 
 abstract production exprVar
 top::Expr ::= r::VarRef
 {
   r.lexScope = top.lexScope;
 
-  top.ress = r.ress;
+  top.refs = r.refs;
+  top.progRes = r.progRes;
 }
 
 abstract production exprAdd
@@ -379,7 +415,8 @@ top::Expr ::= e1::Expr e2::Expr
   e1.lexScope = top.lexScope;
   e2.lexScope = top.lexScope;
 
-  top.ress = e1.ress ++ e2.ress;
+  top.refs = e1.refs ++ e2.refs;
+  top.progRes = e1.progRes ++ e2.progRes;
 }
 
 abstract production exprAnd
@@ -388,7 +425,8 @@ top::Expr ::= e1::Expr e2::Expr
   e1.lexScope = top.lexScope;
   e2.lexScope = top.lexScope;
 
-  top.ress = e1.ress ++ e2.ress;
+  top.refs = e1.refs ++ e2.refs;
+  top.progRes = e1.progRes ++ e2.progRes;
 }
 
 abstract production exprEq
@@ -397,7 +435,8 @@ top::Expr ::= e1::Expr e2::Expr
   e1.lexScope = top.lexScope;
   e2.lexScope = top.lexScope;
 
-  top.ress = e1.ress ++ e2.ress;
+  top.refs = e1.refs ++ e2.refs;
+  top.progRes = e1.progRes ++ e2.progRes;
 }
 
 nonterminal Type;
