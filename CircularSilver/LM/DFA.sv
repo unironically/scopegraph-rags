@@ -4,42 +4,12 @@ grammar LM;
 {-
  - DFA for VarRefs.
  -}
-global dfaVarRef::DFA = 
-  let sink::State = sinkState() in
-  let final::State = varRefstate(sink, sink, sink, true) in
-  let impState::State = varRefstate(final, sink, sink, false) in
-  let start::State = varRefstate(final, impState, start, false) in
-    dfa (start)
-  end end end end;
-
-{-
- - DFA for qualified VarRefs.
- -}
-global dfaVar::DFA = 
-  let final::State = varRefstate(sink, sink, sink, true) in
-  let start::State = varRefstate(final, sink, sink, false) in
-    dfa (start)
-  end end;
+global dfaVarRef::DFA = dfaVarRef();
 
 {-
  - DFA for ModRefs.
  -}
-global dfaModRef::DFA = 
-  let sink::State = sinkState() in
-  let final::State = modRefState(sink, sink, sink, true) in
-  let impState::State = modRefState(final, sink, sink, false) in
-  let start::State = modRefState(final, impState, start, false) in
-    dfa (start)
-  end end end end;
-
-{-
- - DFA for qualified ModRefs.
- -}
-global dfaMod::DFA = 
-  let final::State = modRefState(sink, sink, sink, true) in
-  let start::State = modRefState(final, sink, sink, false) in
-    dfa (start)
-  end end;
+global dfaModRef::DFA = dfaModRef();
 
 
 synthesized attribute findReachable::([Res] ::= String Either<ModRef, VarRef> [Label] [Res] Scope);
@@ -55,19 +25,14 @@ nonterminal DFA with findReachable;
 abstract production dfa
 top::DFA ::=
   start::State
-{
-  top.findReachable = start.findReachable;
-}
+{ top.findReachable = start.findReachable; }
 
 
 nonterminal State with findReachable;
 
 abstract production varRefstate
-top::State ::=
-  varT::State
-  impT::State
-  lexT::State
   isFinal::Boolean
+top::State ::=
 {
   top.findReachable = 
     \lookup::String
@@ -103,9 +68,6 @@ top::State ::=
 
 abstract production modRefState
 top::State ::=
-  modT::State
-  impT::State
-  lexT::State
   isFinal::Boolean
 {
   top.findReachable = 
@@ -156,4 +118,67 @@ top::State ::=
      path::[Label]
      deps::[Res]
      scope::Scope -> [];
+}
+
+
+{- DFA creation functions -}
+
+function dfaVarRef
+DFA ::=
+{
+  local start::State = varRefstate(false);
+  start.varT = final;
+  start.modT = sink;
+  start.impT = afterImp;
+  start.lexT = start; 
+
+  local afterImp::State = varRefstate(false);
+  afterImp.varT = final;
+  afterImp.modT = sink;
+  afterImp.impT = sink;
+  afterImp.lexT = sink; 
+
+  local final::State = varRefstate(true);
+  final.varT = sink;
+  final.modT = sink;
+  final.impT = sink;
+  final.lexT = sink;
+
+  local sink::State = sinkState();
+  final.varT = sink;
+  final.modT = sink;
+  final.impT = sink;
+  final.lexT = sink;
+
+  return dfa(start);
+}
+
+function dfaModRef
+DFA ::=
+{
+  local start::State = modRefState(false);
+  start.varT = sink;
+  start.modT = final;
+  start.impT = afterImp;
+  start.lexT = start;
+
+  local afterImp::State = modRefState(false);
+  afterImp.varT = sink;
+  afterImp.modT = final;
+  afterImp.impT = sink;
+  afterImp.lexT = sink; 
+
+  local final::State = modRefState(true);
+  final.varT = sink;
+  final.modT = sink;
+  final.impT = sink;
+  final.lexT = sink;
+
+  local sink::State = sinkState();
+  final.varT = sink;
+  final.modT = sink;
+  final.impT = sink;
+  final.lexT = sink;
+
+  return dfa(start);
 }
