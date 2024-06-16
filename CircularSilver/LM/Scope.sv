@@ -237,3 +237,15 @@ function minRef
       end
     end;
 }
+
+function leftmostImps
+[Decorated Scope] ::=
+  refs::[Decorated Scope]
+{
+  return
+    case refs of
+    | h::t -> case h of modRefRes(_) -> minRefRes(h) | _ -> [] end 
+              ++ leftmostImps(t)
+    | [] -> []
+    end;
+}
