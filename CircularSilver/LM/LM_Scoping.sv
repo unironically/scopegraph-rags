@@ -20,11 +20,33 @@ synthesized attribute mod::[Decorated Scope];
  -}
 synthesized attribute ress::[Res];
 
+
+{-
+ - Program resolution stuff
+ -}
+nonterminal Resolution;
+
+abstract production varRefRes
+top::Resolution ::= r::VarRef dcls::[Decorated Scope] {}
+
+abstract production modRefRes
+top::Resolution ::= r::ModRef dcls::[Decorated Scope] {}
+
+abstract production ambigRes
+top::Resolution ::= ress::[Resolution] {}
+
+{-
+ - RES edge targets
+ -}
+synthesized attribute programResolution::[Resolution];
+
+
+
 -----------------------------------------
 {---------- Interesting stuff ----------}
 
 
-nonterminal Program;
+nonterminal Program with programResolution;
 
 abstract production program
 top::Program ::= ds::Decls
