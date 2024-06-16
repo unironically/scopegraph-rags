@@ -214,7 +214,7 @@ top::ModRef ::= x::String
   local r :: Scope = modRefScope();
   r.lex = just(top.lexscope);
   r.var = []; r.mod = []; r.imps = [];
-  r.datum = nothing();
+  r.datum = datumModRef(top);
 
   -- Demanding impsReachable, getting all res found from this node
   r.res = filter ((\res::Res -> res.fromRef == top), top.lexScope.impsReachable);
@@ -236,7 +236,7 @@ top::VarRef ::= x::String
   local r :: Scope = varRefScope();
   r.lex = just(top.lexscope);
   r.var = []; r.mod = []; r.imps = []; r.res = [];
-  r.datum = nothing();
+  r.datum = datumVarRef(top);
 
   -- Getting all visible declarations that match this VarRef
   -- impsReachable not used. dfaVarRef will demand impsReachable is fully computed first

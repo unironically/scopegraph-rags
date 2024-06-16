@@ -43,14 +43,6 @@ abstract production scope
 top::Scope ::=
 { top.id = "S_" ++ toString(genInt()); }
 
-abstract production modRefScope
-top::Scope ::=
-{ forwards to scope(); }
-
-abstract production varRefScope
-top::Scope ::=
-{ forwards to scope(); }
-
 
 
 nonterminal Datum with id;
@@ -81,9 +73,7 @@ top::Datum ::=
 abstract production datumModRef
 top::Datum ::=
   data::ModRef
-{
-  top.id = case data of modRef(id) -> id | _ -> "";
-}
+{ top.id = case data of modRef(id) -> id | _ -> ""; }
 
 {-
  - Datum of a var reference.
@@ -91,9 +81,7 @@ top::Datum ::=
 abstract production datumVarRef
 top::Datum ::=
   data::VarRef
-{
-  top.id = case data of varRef(id) -> id | _ -> "";
-}
+{ top.id = case data of varRef(id) -> id | _ -> ""; }
 
 
 nonterminal Res;
@@ -204,9 +192,9 @@ function minRefRes
   ref::Decorated Scope
 {
   return
-    case ref of
-    | modRefScope(mref) -> modRefRes(mref, minRef(ref.res, [], left(mref)))
-    | varRefScope(vref) -> varRefRes(vref, minRef(ref.res, [], right(vref)))
+    case ref.datum of
+    | datumModRef(mref) -> modRefRes(mref, minRef(ref.res, [], left(mref)))
+    | datumVarRef(vref) -> varRefRes(vref, minRef(ref.res, [], right(vref)))
     end;
 }
 
