@@ -112,11 +112,11 @@ top::Decl ::= id::String ds::Decls
   -- Creating the new module node
   local modScope::Scope = scope();
   r.lex = just(top.lexscope);
-  r.var = ds.var; r.mod = ds.mod; r.res = ds.ress;
+  r.var = ds.var; r.mod = ds.mod; r.res = [];
   r.datum = datumMod((id, modScope));
 
   -- Drawing all the IMP edges
-  --r.imp = map ((.resTgt), ds.ress);
+  r.imp = map ((.resTgt), ds.ress);
 
   -- Decls is scoped the module scope
   ds.lexScope = modScope;
@@ -128,16 +128,12 @@ top::Decl ::= id::String ds::Decls
 
   -- [RECURSIVE] below is building the single program resolution for recursive imports
 
-  r.imp = leftmostImps(ds.res);
-
   top.progRes = 
     map (minRefRes, ds.refs) -- best of all resolutions for every ref in this scope
     ++ ds.progRes            -- + all progRes done in other scopes further down the tree (e.g. let scopes)
   ;
 
   -- [UNORDERED] below is building the coherent program resolutions for unordered imports
-
-  r.imp = ...;
   
   top.progRes = ...;
 

@@ -100,7 +100,7 @@ top::State ::=
         concat(
           map(
             (\r::Res -> 
-              top.impT.findReachable(lookup, ref, labIMP()::path, r::deps, r.resTgt)), 
+              top.impT.findReachable(lookup, ref, labIMP()::path, r::(r.deps ++ deps), r.resTgt)), 
             scope.impsReachable
           )
         ) 

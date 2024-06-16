@@ -258,3 +258,30 @@ Resolves to:
 AGs explanation:
 
 There is only one declaration for both `A` and `B` in the program, so only one resolution for the respective imports. Then, only `x_1` and `y_2` are visible declarations for references `y_1` and `x_2`.
+
+
+## Possible approach
+
+Considering program 4 here.
+
+We know that
+- `C.refs = [A_3, B_3, x_3]`
+- `A_3.res = [A_2, A_1]` where `A_2` is better than `A_1`
+- `B_3.res = [B_1, B_2]` where `B_1` is better than `B_2`
+- `x_3.res = [x_1, x_2]` where `x_1` is equally good as `x_2`
+
+We separate the references types first, easily done by filtering on the ref node datum
+- `impRefs = [A_3, B_3]`
+- `varRefs = [x_3]`
+
+Initialize `picks` by finding the leftmost resolutions for each item in `impRefs`
+
+Start with accumulating `picks` list initially `[A_2, B_1]`
+1. Choose an unpicked ref r1 in `varRefs`
+2. Pick the best (leftmost) resolutions for r1 in its `res` list that depends on nothing, or something in the list so far. Add them to `picks`
+3. Repeat 4 and 5 until there are no unpicked refs in `impRefs`
+
+For program 4, `picks` is initially `[A_2, B_1]`.
+Then running the steps above results in `[A_2, B_1, x_1, x_2]`
+
+**Coherence preserved for only VarRefs.**

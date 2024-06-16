@@ -373,3 +373,32 @@ Test suite mophasco-test: PASS
 Mophasco explanation:
 
 Both of the imports here are easy to resolve, as there is only one declaration for each. Then, we can follow the `IMP` edges introduced by these to find the correct (and only) declarations of `x` and `y`.
+
+
+## Possible approach
+
+Considering program 4 here.
+
+We know that
+- `C.refs = [A_3, B_3, x_3]`
+- `A_3.res = [A_2, A_1]` where `A_2` is better than `A_1`
+- `B_3.res = [B_1, B_2]` where `B_1` is better than `B_2`
+- `x_3.res = [x_1, x_2]` where `x_1` is equally good as `x_2`
+
+We separate the references types first, easily done by filtering on the ref node datum
+- `impRefs = [A_3, B_3]`
+- `varRefs = [x_3]`
+
+Start with accumulating `picks` list initially `[]`
+1. Choose an unpicked ref r1 in `impRefs`
+2. Pick the best (leftmost) resolutions for r1 in its `res` list that depends on nothing, or something in the list so far. Add them to `picks`
+3. Repeat 1 and 2 until there are no unpicked refs in `impRefs`
+4. Choose an unpicked ref r1 in `varRefs`
+5. Pick the best (leftmost) resolutions for r1 in its `res` list that depends on nothing, or something in the list so far. Add them to `picks`
+6. Repeat 4 and 5 until there are no unpicked refs in `impRefs`
+
+For program 4, you then end up with 2 permutations which are coherent.
+- `[A_2, B_2, x_2]`
+- `[B_1, A_1, x_1]`
+
+**Coherence preserved for both types of refs.**
