@@ -6,75 +6,104 @@ grammar LM;
 inherited attribute lexScope::Decorated Scope;
 
 {-
- - The source scope for edges to declarations that are created in SeqBinds, SeqBind, ParBind and ParBinds.
+ - VAR edge targets
  -}
-inherited attribute scopeDef::Decorated Scope;
+synthesized attribute vars::[Decorated Scope];
 
 {-
- - Collection attribute which will synthesize all VarRef bindings found. Demanding this attribute
- - is the trigger for name analysis on the program, as by following its dependencies we demand
- - the resolution of references in the tree. 
+ - MOD edge targets
  -}
-monoid attribute binds::[(String, String)] with ++, [];
+synthesized attribute mod::[Decorated Scope];
+
+{-
+ - RES edge targets
+ -}
+synthesized attribute ress::[Res];
+
+-----------------------------------------
+{---------- Interesting stuff ----------}
 
 
-nonterminal Program with binds;
+nonterminal Program;
 
 abstract production program
 top::Program ::= ds::Decls
 {
-  local globScope::Scope = scopeGlobal(ds.vars, ds.mods, ds.imps);
+  -- Creating the new global scope node
+  local glob::Scope = scope();
+  glob.lexScope = nothing();
+  glob.var = ds.var; glob.mod = ds.mod; glob.res = ds.ress;
+  glob.datum = nothing();
 
+  -- Drawing all the IMP edges
+  r.imp = map ((.resTgt), ds.res);
+
+  -- Decls is scoped the global scope
   ds.lexScope = globScope;
+
+  -- [RECURSIVE] below is building the single program resolution for recursive imports
+
+
+
+  -- [UNORDERED] below is building the coherent program resolutions for unordered imports
+
+
+
 }
 
 
-
-nonterminal Decls with lexScope, root, vars, mods, imps, binds;
-
-propagate binds on Decls;
+nonterminal Decls with lexScope, root, vars, mods, ress;
 
 abstract production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
+  -- Passing down lexical scope
   d.lexScope = top.lexScope;
   ds.lexScope = top.lexScope;
 
+  -- Synthesizing edge targets
   top.vars = d.vars ++ ds.vars;
   top.mods = d.mods ++ ds.mods;
-  top.imps = d.imps ++ ds.imps;
+  top.ress  = d.ress ++ ds.ress;
 }
 
 abstract production declsNil
 top::Decls ::=
-{
-  top.vars = [];
-  top.mods = [];
-  top.imps = [];
-}
+  -- Synthesizing empty edge targets
+{ top.vars = []; top.mods = []; top.ress = []; }
 
 
 
-nonterminal Decl with lexScope, root, vars, mods, imps, binds;
-
-propagate binds on Decl;
+nonterminal Decl with lexScope, root, vars, mods, ress;
 
 abstract production declModule
 top::Decl ::= id::String ds::Decls
 {
-  local modScope::Scope = scopeMod(ds.vars, ds.mods, ds.imps, just(top.scope), (id, modScope));
+  -- Creating the new module node
+  local modScope::Scope = scope();
+  r.lex = just(top.lexscope);
+  r.var = ds.var; r.mod = ds.mod; r.res = ds.ress;
+  r.datum = datumMod((id, modScope));
 
+  -- Drawing all the IMP edges
+  r.imp = map ((.resTgt), ds.ress);
+
+  -- Decls is scoped the module scope
   ds.lexScope = modScope;
 
+  -- declModule only provides the target of MOD edges
   top.vars = [];
   top.mods = [modScope];
-  top.imps = [];
+  top.ress  = [];
 
-   -- below is building the single program resolution for recurisve imports
+  -- [RECURSIVE] below is building the single program resolution for recursive imports
 
 
-   -- below is building the coherent program resolutions for unordered imports
-    
+
+  -- [UNORDERED] below is building the coherent program resolutions for unordered imports
+  
+
+
 }
 
 abstract production declImport
@@ -82,193 +111,57 @@ top::Decl ::= r::ModRef
 {
   r.lexScope = top.lexScope;
 
+  -- ModRef only provides the target of RES edges
   top.vars = [];
   top.mods = [];
-  top.imps = r.imps;
+  top.ress  = r.ress;
 }
 
 abstract production declDef
 top::Decl ::= b::ParBind
 {
   b.lexScope = top.lexScope;
-  b.scopeDef = top.lexScope;
 
+  -- ParBind only provides the target of VAR edges
   top.vars = b.vars;
   top.mods = [];
-  top.imps = [];
+  top.ress  = [];
 }
 
 
-
-nonterminal Expr with lexScope, root, binds;
-
-propagate binds on Expr;
-
-abstract production exprInt
-top::Expr ::= i::Integer
-{}
-
-abstract production exprTrue
-top::Expr ::=
-{}
-
-abstract production exprFalse
-top::Expr ::=
-{}
-
-abstract production exprVar
-top::Expr ::= r::VarRef
-{
-  r.lexScope = top.lexScope;
-}
-
-abstract production exprAdd
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.lexScope = top.lexScope;
-  e2.lexScope = top.lexScope;
-}
-
-abstract production exprAnd
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.lexScope = top.lexScope;
-  e2.lexScope = top.lexScope;
-}
-
-abstract production exprEq
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.lexScope = top.lexScope;
-  e2.lexScope = top.lexScope;
-}
-
-abstract production exprLet
-top::Expr ::= bs::SeqBinds e::Expr
-{
-  local sLet::Scope = scopeLet(bs.vars, bs.lastScope);
-
-  bs.lexScope = top.lexScope;
-  bs.sDef = sLet;
-
-  e.lexScope = sLet;
-}
-
-abstract production exprLetRec
-top::Expr ::= bs::ParBinds e::Expr
-{
-  local sLet::Scope = scopeLet(bs.vars, top.lexScope);
-
-  bs.lexScope = sLet;
-  bs.scopeDef = sLet;
-  
-  e.lexScope = sLet;
-}
-
-abstract production exprLetPar
-top::Expr ::= bs::ParBinds e::Expr
-{
-  local sLet::Scope = scopeLet(bs.vars, top.lexScope);
-
-  bs.lexScope = top.lexScope;
-  bs.scopeDef = sLet;
-  
-  e.lexScope = sLet;
-}
-
-
-
-inherited attribute lastScope::Decorated Scope;
-
-nonterminal SeqBinds with lexScope, scopeDef, lastScope, vars, binds;
-
-propagate binds on SeqBinds;
-
-abstract production seqBindsNil
-top::SeqBinds ::=
-{
-  top.vars = [];
-  top.lastScope = top.lexScope;
-}
-
-abstract production seqBindsOne
-top::SeqBinds ::= s::Bind
-{
-  s.lexScope = top.lexScope;
-  s.scopeDef = top.scopeDef;
-
-  top.vars = s.vars;
-  top.lastScope = top.lexScope;
-}
-
-abstract production seqBindsCons
-top::SeqBinds ::= s::Bind ss::SeqBinds
-{
-  local sDef::Scope = scope(s.vars, [], [top.lexScope]);
-
-  s.lexScope = top.lexScope;
-  s.scopeDef = sDef;
-
-  ss.lexScope = sDef;
-  ss.scopeDef = top.scopeDef;
-
-  top.vars = ss.vars;
-  top.lastScope = ss.lastScope;
-}
-
-
-
-nonterminal ParBinds with lexScope, scopeDef, root, binds;
-
-propagate binds on ParBinds;
-
-abstract production parBindsCons
-top::ParBinds ::= s::Bind ss::ParBinds
-{
-  s.lexScope = top.lexScope;
-  s.scopeDef = top.scopeDef;
-
-  ss.lexScope = top.lexScope;
-  ss.scopeDef = top.scopeDef;
-}
-
-abstract production parBindsNil
-top::ParBinds ::= {}
-
-
-
-nonterminal Bind with lexScope, scopeDef, root, binds;
-
-propagate binds on Bind;
+nonterminal Bind with lexScope, root;
 
 abstract production bindUntyped
 top::Bind ::= id::String e::Expr
 {
-  local scopeVar::Scope = scopeDcl(datumVar(id, e.ty));
+  -- Creating the new decl node
+  local scopeVar::Scope = scope();
+  r.lex = just(top.lexscope);
+  r.var = []; r.mod = []; r.imps = []; r.res = [];
+  scopeVar.datum = datumVar((id, e.ty));
 
+  -- Synthesizing the decl node as the target of a VAR edge from the lexically surrounding scope
   top.vars = [scopeVar];
 
+  -- The expression is scoped in the lexically surrounding scope
   e.lexScope = top.lexScope;
 }
 
 abstract production bindTyped
 top::Bind ::= ty::Type id::String e::Expr
 {
-  local scopeVar::Scope = scopeDcl(datumVar(id, ty));
+  -- Creating the new decl node
+  local scopeVar::Scope = scope();
+  r.lex = just(top.lexscope);
+  r.var = []; r.mod = []; r.imps = []; r.res = [];
+  scopeVar.datum = datumVar((id, ty));
 
+  -- Synthesizing the decl node as the target of a VAR edge from the lexically surrounding scope
   top.vars = [scopeVar];
 
+  -- The expression is scoped in the lexically surrounding scope
   e.lexScope = top.lexScope;
 }
-
-
-
-nonterminal Type;
-abstract production tInt  top::Type  ::= {}
-abstract production tBool top::Type  ::= {}
-abstract production tFun  top::Type  ::= tyann1::Type tyann2::Type {}
-abstract production tErr  top::Type  ::= {}
-
 
 
 nonterminal ModRef with lexScope, imps;
@@ -276,28 +169,217 @@ nonterminal ModRef with lexScope, imps;
 abstract production modRef
 top::ModRef ::= x::String
 {
- local n :: Scope = scope ( )
- n.lex = just (top.lexscope);
- n.mod = [];  n.imps = [];
- n.res = get all resolutions for x in top.lexscope.impsReachable - and these have their resolution pasths on them.
+  -- Creating the new reference node
+  local r :: Scope = scope();
+  r.lex = just(top.lexscope);
+  r.var = []; r.mod = []; r.imps = []; r.res = [];
+  r.datum = nothing();
+
+  -- Demanding impsReachable, getting all res found from this node
+  r.ress = filter ((\res::Res -> res.fromRef == top), top.lexScope.impsReachable);
  
-  top.lexScope.impsReachable <- dfaMod.findReachable(x, left(top), [], [], top.lexScope);
+  -- Contributing our resolution to impsReachable
+  top.lexScope.impsReachable <- dfaMod.findReachableMod(x, top);
 
- top.imps = minRef(n.res));   -- finds only minimal ones - not doing program resolutions here
-   - for program 4, this only get A2 or B1
-
-   ---- how to build program resolutions ...
-  
+  -- Synthesizing this ref for use in the surrounding scope's declaration. Not really necessary?
+  -- top.refs = [r];
 }
 
 
-
-nonterminal VarRef with lexScope, binds;
+nonterminal VarRef with lexScope;
 
 abstract production varRef
 top::VarRef ::= x::String
 {
-  local res::[Scope] = dfaVarRef.findReachable(x, right(top), [], [], top.lexScope);
+  -- Creating the new reference node
+  local r :: Scope = scope();
+  r.lex = just(top.lexscope);
+  r.var = []; r.mod = []; r.imps = []; r.res = [];
+  r.datum = nothing();
 
-  top.binds := map ((\r::Res -> (x, r.datum.fromJust.id)), res);
+  -- Getting all visible declarations that match this VarRef
+  -- impsReachable not used. dfaVarRef will demand impsReachable is fully computed first
+  r.ress = dfaVarRef.findReachableVar(x, top);
+ 
+  -- Synthesizing this ref for use in the surrounding scope's declaration. Not really necessary?
+  -- top.refs = [r];
 }
+
+
+
+
+---------------------------------
+{---------- Let stuff ----------}
+
+
+abstract production exprLet
+top::Expr ::= bs::SeqBinds e::Expr
+{
+  -- Creating the new let scope node
+  local sLet::Scope = scope();
+  sLet.lex = just(bs.lastScope);
+  sLet.var = bs.var; sLet.mod = []; sLet.res = []; sLet.imp = [];
+  sLet.datum = nothing();
+
+  -- The bind list is scoped in the lexically surrounding scope
+  bs.lexScope = top.lexScope;
+
+  -- The expression is scoped in the let scope
+  e.lexScope = sLet;
+}
+
+abstract production exprLetRec
+top::Expr ::= bs::ParBinds e::Expr
+{
+  -- Creating the new let scope node
+  local sLet::Scope = scope();
+  sLet.lex = just(top.lexScope);
+  sLet.var = bs.var; sLet.mod = []; sLet.res = bs.ress ++ e.ress; sLet.imp = [];
+  sLet.datum = nothing();
+
+  -- The bind list is scoped in the let scope
+  bs.lexScope = sLet;
+  
+  -- The expression is scoped in the let scope
+  e.lexScope = sLet;
+}
+
+abstract production exprLetPar
+top::Expr ::= bs::ParBinds e::Expr
+{
+  -- Creating the new let scope node
+  local sLet::Scope = scope();
+  sLet.lex = just(top.lexScope);
+  sLet.var = bs.var; sLet.mod = []; sLet.res = bs.ress ++ e.ress; sLet.imp = [];
+  sLet.datum = nothing();
+
+  -- The bind list is scoped in the lexically surrounding scope
+  bs.lexScope = top.lexScope;
+  
+  -- The expression is scoped in the let scope
+  e.lexScope = sLet;
+}
+
+
+
+inherited attribute lastScope::Decorated Scope;
+
+nonterminal SeqBinds with lexScope, lastScope, vars, ress;
+
+abstract production seqBindsNil
+top::SeqBinds ::=
+{
+  top.vars = [];
+  top.ress = [];
+
+  top.lastScope = top.lexScope;
+}
+
+abstract production seqBindsOne
+top::SeqBinds ::= s::Bind
+{
+  s.lexScope = top.lexScope;
+
+  top.vars = s.vars;
+  top.ress = s.ress;
+
+  top.lastScope = top.lexScope;
+}
+
+abstract production seqBindsCons
+top::SeqBinds ::= s::Bind ss::SeqBinds
+{
+  local sLet::Scope = scope();
+  sLet.var = s.vars; sLet.mod = []; sLet.res = s.ress; sLet.imp = [];
+  sLet.datum = nothing();
+
+  s.lexScope = top.lexScope;
+
+  ss.lexScope = sLet;
+
+  top.vars = ss.vars;
+  top.ress = ss.ress;
+
+  top.lastScope = ss.lastScope;
+}
+
+
+
+nonterminal ParBinds with lexScope, root, ress;
+
+abstract production parBindsCons
+top::ParBinds ::= s::Bind ss::ParBinds
+{
+  s.lexScope = top.lexScope;
+
+  ss.lexScope = top.lexScope;
+
+  top.vars = s.vars ++ ss.vars;
+  top.ress = s.ress ++ ss.ress;
+}
+
+abstract production parBindsNil
+top::ParBinds ::= 
+{ top.ress = []; }
+
+
+
+
+------------------------------------
+{---------- Boring Stuff ----------}
+
+
+nonterminal Expr with lexScope, ress;
+
+abstract production exprInt
+top::Expr ::= i::Integer
+{ top.ress = []; }
+
+abstract production exprTrue
+top::Expr ::=
+{ top.ress = []; }
+
+abstract production exprFalse
+top::Expr ::=
+{ top.ress = []; }
+
+abstract production exprVar
+top::Expr ::= r::VarRef
+{
+  r.lexScope = top.lexScope;
+
+  top.ress = r.ress;
+}
+
+abstract production exprAdd
+top::Expr ::= e1::Expr e2::Expr
+{
+  e1.lexScope = top.lexScope;
+  e2.lexScope = top.lexScope;
+
+  top.ress = e1.ress ++ e2.ress;
+}
+
+abstract production exprAnd
+top::Expr ::= e1::Expr e2::Expr
+{
+  e1.lexScope = top.lexScope;
+  e2.lexScope = top.lexScope;
+
+  top.ress = e1.ress ++ e2.ress;
+}
+
+abstract production exprEq
+top::Expr ::= e1::Expr e2::Expr
+{
+  e1.lexScope = top.lexScope;
+  e2.lexScope = top.lexScope;
+
+  top.ress = e1.ress ++ e2.ress;
+}
+
+nonterminal Type;
+abstract production tInt  top::Type  ::= {}
+abstract production tBool top::Type  ::= {}
+abstract production tFun  top::Type  ::= tyann1::Type tyann2::Type {}
+abstract production tErr  top::Type  ::= {}

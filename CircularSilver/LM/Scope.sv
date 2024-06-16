@@ -36,55 +36,7 @@ nonterminal Scope with vars, mods, imps, lexs;
  -}
 abstract production scope
 top::Scope ::=
-  var::[Decorated Scope]
-  mod::[Decorated Scope]
-  imp::[Decorated Scope]
-  lex::Maybe<Decorated Scope>
-  datum::Maybe<Datum>
-{
-  top.id = "S_" ++ toString(genInt());
-  top.var = var; top.mod = mod;
-  top.imp = imp; top.lex = lex;
-  top.datum = datum;
-}
-
-{-
- - Global scope
- -}
-abstract production scopeGlobal
-top::Scope ::=
-  var::[Decorated Scope]
-  mod::[Decorated Scope]
-  imp::[Decorated Scope]
-{ forwards to scope(var, mod, imp, nothing(), nothing()); }
-
-{-
- - Def decl scope 
--}
-abstract production scopeDcl
-top::Scope ::= datum::(String, Type)
-{ forwards to scope([], [], [], nothing(), datumVar(datum)); }
-
-{-
- - Module dcl scope
- -}
-abstract production scopeMod
-top::Scope ::=
-  var::[Decorated Scope]
-  mod::[Decorated Scope]
-  imp::[Decorated Scope]
-  lex::Decorated Scope
-  datum::(String, Decorated Scope)
-{ forwards to scope(var, mod, imp, just(lex), datumMod(datum)); }
-
-{-
- - Let scope
- -}
-abstract production scopeLet
-top::Scope ::=
-  var::[Decorated Scope]
-  lex::Decorated Scope
-{ forwards to scope(var, [], [], just(lex), nothing()); }
+{ top.id = "S_" ++ toString(genInt()); }
 
 
 
@@ -114,7 +66,7 @@ top::Datum ::=
 
 nonterminal Res;
 
-synthesized attribute resScope::Decorated Scope occurs on Res;
+synthesized attribute resTgt::Decorated Scope occurs on Res;
 synthesized attribute path::[Label] occurs on Res;
 synthesized attribute fromRef::Either<ModRef VarRef> occurs on Res;
 synthesized attribute impDeps::[Res] occurs on Res;
@@ -122,11 +74,11 @@ synthesized attribute impDeps::[Res] occurs on Res;
 abstract production impRes
 top::Res ::=
   modRef::ModRef
-  resScope::Decorated Scope
+  resTgt::Decorated Scope
   path::[Label]
   deps::[Res]
 {
-  top.resScope = scope;
+  top.resTgt = scope;
   top.path = path;
   top.fromRef = left(modRef);
   top.impDeps = deps;
@@ -135,11 +87,11 @@ top::Res ::=
 abstract production varRes
 top::Res ::=
   varRef::VarRef
-  resScope::Decorated Scope
+  resTgt::Decorated Scope
   path::[Label]
   deps::[Res]
 {
-  top.resScope = scope;
+  top.resTgt = scope;
   top.path = path;
   top.fromRef = right(varRef);
   top.impDeps = deps;

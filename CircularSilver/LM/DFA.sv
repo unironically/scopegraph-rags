@@ -123,7 +123,7 @@ top::State ::=
       let impRes::[Res] = 
         concat(
           map(
-            (\r::Res -> impT.findReachable(lookup, ref, labIMP()::path, r::deps, r.resScope)), 
+            (\r::Res -> impT.findReachable(lookup, ref, labIMP()::path, r::deps, r.resTgt)), 
             scope.impsReachable)) in
 
       let lexRes::[Res] = 
