@@ -28,7 +28,13 @@ top::DFA ::=
 { top.findReachable = start.findReachable; }
 
 
-nonterminal State with findReachable;
+
+inherited attribute varT::State;
+inherited attribute modT::State;
+inherited attribute impT::State;
+inherited attribute lexT::State;
+
+nonterminal State with findReachable, varT, modR, impT, lexT;
 
 abstract production varRefstate
   isFinal::Boolean
@@ -44,13 +50,13 @@ top::State ::=
       let varRef::VarRef = ref.fromRight in
     
       let varRes::[Res] = 
-        concat(map((varT.findReachable(lookup, ref, labVAR()::path, [], _)), scope.vars)) in
+        concat(map((top.varT.findReachable(lookup, ref, labVAR()::path, [], _)), scope.vars)) in
 
       let impRes::[Res] = 
-        concat(map((impT.findReachable(lookup, ref, labIMP()::path, [], _)), scope.imps)) in
+        concat(map((top.impT.findReachable(lookup, ref, labIMP()::path, [], _)), scope.imps)) in
 
       let lexRes::[Res] = 
-        concat(map((lexT.findReachable(lookup, ref, labLEX()::path, [], _)), scope.lexs)) in
+        concat(map((top.lexT.findReachable(lookup, ref, labLEX()::path, [], _)), scope.lexs)) in
 
       let contRes::[Res] = 
         if !null(varRes) then varRes
@@ -80,16 +86,16 @@ top::State ::=
       let modRef::ModRef = ref.fromLeft in
 
       let modRes::[Res] = 
-        concat(map((modT.findReachable(lookup, ref, labMOD()::path, deps, _)), scope.mods)) in
+        concat(map((top.modT.findReachable(lookup, ref, labMOD()::path, deps, _)), scope.mods)) in
 
       let impRes::[Res] = 
         concat(
           map(
-            (\r::Res -> impT.findReachable(lookup, ref, labIMP()::path, r::deps, r.resTgt)), 
+            (\r::Res -> top.impT.findReachable(lookup, ref, labIMP()::path, r::deps, r.resTgt)), 
             scope.impsReachable)) in
 
       let lexRes::[Res] = 
-        concat(map((lexT.findReachable(lookup, ref, labLEX()::path, deps, _)), scope.lexs)) in
+        concat(map((top.lexT.findReachable(lookup, ref, labLEX()::path, deps, _)), scope.lexs)) in
 
       let contRes::[Res] = 
         if !null(modRes) then modRes

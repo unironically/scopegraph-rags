@@ -6,11 +6,11 @@ grammar LM;
  - Each definition has a name, type, append op, initial value, and a declaration the type of the
  - LM AST node from which we will descend the tree to find contributions.
  -}
-synthesized attribute vars::[Decorated Scope] occurs on Scope;
-synthesized attribute mods::[Decorated Scope] occurs on Scope;
-synthesized attribute lexs::[Decorated Scope] occurs on Scope;
-synthesized attribute imps::[Decorated Scope] occurs on Scope;
-synthesized attribute res::[Res] occurs on Scope;
+inherited attribute var::[Decorated Scope] occurs on Scope;
+inherited attribute mod::[Decorated Scope] occurs on Scope;
+inherited attribute imp::[Decorated Scope] occurs on Scope;
+inherited attribute lex::Maybe<Decorated Scope occurs on Scope;
+inherited attribute res::[Res] occurs on Scope;
 
 {-
  - Circular attribute to find all of the reachable imports during a resolution.
@@ -21,7 +21,7 @@ collection attribute circular impsReachable::[Res] with _union_, [] root Program
 {-
  - The datum associated with a declaration node, or nothing if the node is only a scope.
  -}
-synthesized attribute datum::Maybe<Datum> occurs on Scope;
+inherited attribute datum::Maybe<Datum> occurs on Scope;
 
 {-
  - The ID of a datum, defined as the ID of the LM declaration which the datum represents.
@@ -30,7 +30,7 @@ synthesized attribute id::String occurs on Datum;
 
 
 
-nonterminal Scope with vars, mods, imps, lexs;
+nonterminal Scope with id, var, mod, imp, lex, res, datum;
 
 {-
  - Scopes with no datum attached.

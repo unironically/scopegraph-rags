@@ -13,7 +13,7 @@ synthesized attribute vars::[Decorated Scope];
 {-
  - MOD edge targets
  -}
-synthesized attribute mod::[Decorated Scope];
+synthesized attribute mods::[Decorated Scope];
 
 {-
  - Refs
