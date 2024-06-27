@@ -115,8 +115,10 @@ top::Decl ::= id::String ds::Decls
   r.var = ds.var; r.mod = ds.mod; r.res = [];
   r.datum = datumMod((id, modScope));
 
+  local q = ...;
+
   -- Drawing all the IMP edges
-  r.imp = map ((.resTgt), ds.ress);
+  r.imp = map((.tgt), q.paths); --map ((.resTgt), ds.ress);
 
   -- Decls is scoped the module scope
   ds.lexScope = modScope;

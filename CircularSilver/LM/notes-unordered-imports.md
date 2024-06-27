@@ -492,3 +492,104 @@ Mophasco explanation:
 Multiple (4) good program resolutions - see the leaves of the program resolution
 tree structure above. All resolutions are stable. Mophasco only requires that
 there is not an unstable resolution.
+
+## Program 10
+
+```
+module A_1 {
+  module B_1 {
+    def x_1 = 1
+  }
+}
+
+module B_2 {
+  module A_2 {
+    def x_2 = 1
+  }
+}
+
+module C_1 {
+  import A_3
+  import B_3
+  def y_1 = x_3
+
+  module G_1 {
+    module A_5 {
+      module B_5 {
+        def x_5 = 1
+      }
+    }
+    module B_6 {
+      module A_6 {
+        def x_6 = 1
+      }
+    }
+    module C_2 {
+      import A_7
+      import B_7
+      def y_3 = x_7
+    }
+  }
+
+  module G_2 {
+    module A_8 {
+      module B_8 {
+        def x_8 = 1
+      }
+    }
+    module B_9 {
+      module A_9 {
+        def x_9 = 1
+      }
+    }
+    module C_3 {
+      import A_10
+      import B_10
+      def y_4 = x_10
+    }
+  }
+
+}
+```
+
+Resolves to:
+
+```
+[{
+
+  [ A_3 -> [A_1], B_3 -> [B_1], x_3 -> [x_1] ]
+
+    ++ [{
+         [ A_7 -> [A_5], B_7 -> [B_5], x_7 -> [x_5] ],
+         [ A_7 -> [A_6], B_7 -> [B_6], x_7 -> [x_6] ]
+       }]
+    ++ [{
+         [ A_10 -> [A_8], B_10 -> [B_8], x_10 -> [x_8] ],
+         [ A_10 -> [A_9], B_10 -> [B_9], x_10 -> [x_9] ]
+       }],
+
+  [ A_3 -> [A_2], B_3 -> [B_2], x_3 -> [x_2] ]
+
+    ++ [{
+         [ A_7 -> [A_5], B_7 -> [B_5], x_7 -> [x_5] ],
+         [ A_7 -> [A_6], B_7 -> [B_6], x_7 -> [x_6] ]
+       }]
+    ++ [{
+         [ A_10 -> [A_8], B_10 -> [B_8], x_10 -> [x_8] ],
+         [ A_10 -> [A_9], B_10 -> [B_9], x_10 -> [x_9] ]
+       }]
+
+}]
+```
+
+Mophasco output (PASS):
+
+```
+Test suite mophasco-test: PASS
+```
+
+Mophasco explanation:
+
+Multiple (8) good program resolutions - see the leaves of the program resolution
+tree structure above. All resolutions are stable. Mophasco only requires that
+there is not an unstable resolution.
