@@ -50,13 +50,20 @@ public class Compiler {
 			
 			runPreErrorCheck(p);
 
-			HashSet<Binding> binds = p.bindings();
+			for (Scope s: p.allScopes()) {
+				System.out.print(s.getName() + " --IMP-> ");
 
-			if (binds.isEmpty()) 
-				System.out.println("No bindings found.");
+				if (!s.imp().isEmpty()){
+					System.out.print("[");
+					for (Scope impS: s.imp()) {
+						System.out.print(impS.getName() + ", ");
+					}
+					System.out.println("]");
+				} else {
+					System.out.println();
+				}
 
-			for (Binding b: p.bindings()) {
-				System.out.println("- Reference `" + b.getRefLabel() + "` resolves to declaration `" + b.getDeclLabel() + "`");
+
 			}
 
 			//System.out.println(p.prettyPrint());

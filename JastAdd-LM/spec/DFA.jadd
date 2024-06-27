@@ -2,11 +2,7 @@
 aspect DFA {
   
   public static DFA DFA.modRefDFA = null;
-  public static DFA DFA.modQRefDFA = null;
-
   public static DFA DFA.varRefDFA = null;
-  public static DFA DFA.varQRefDFA = null;
-
 
   public static DFA DFA.modRefDFA() {
 
@@ -46,42 +42,8 @@ aspect DFA {
     DFA.modRefDFA = new DFA(state0);
 
     return DFA.modRefDFA;
-  }
-
-
-  public static DFA DFA.modQRefDFA() {
     
-    if (DFA.modQRefDFA != null) return DFA.modQRefDFA;
-
-    // MOD
-
-    State state0 = new State();
-    FinalState state1 = new FinalState();
-    SinkState sink = new SinkState();
-
-    state0.setId(0);
-    state0.setLexTrans(sink);
-    state0.setImpTrans(sink);
-    state0.setModTrans(state1);
-    state0.setVarTrans(sink);
-
-    state1.setId(1);
-    state1.setLexTrans(sink);
-    state1.setImpTrans(sink);
-    state1.setModTrans(sink);
-    state1.setVarTrans(sink);
-
-    sink.setId(-1);
-    sink.setLexTrans(sink);
-    sink.setImpTrans(sink);
-    sink.setModTrans(sink);
-    sink.setVarTrans(sink);
-
-    DFA.modQRefDFA = new DFA(state0);
-
-    return DFA.modQRefDFA;
   }
-
 
   public static DFA DFA.varRefDFA() {
 
@@ -121,41 +83,7 @@ aspect DFA {
     DFA.varRefDFA = new DFA(state0);
 
     return DFA.varRefDFA;
+
   }
-
-
-  public static DFA DFA.varQRefDFA() {
-    
-    if (DFA.varQRefDFA != null) return DFA.varQRefDFA;
-
-    // VAR
-
-    State state0 = new State();
-    FinalState state1 = new FinalState();
-    SinkState sink = new SinkState();
-
-    state0.setId(0);
-    state0.setLexTrans(sink);
-    state0.setImpTrans(sink);
-    state0.setModTrans(sink);
-    state0.setVarTrans(state1);
-
-    state1.setId(1);
-    state1.setLexTrans(sink);
-    state1.setImpTrans(sink);
-    state1.setModTrans(sink);
-    state1.setVarTrans(sink);
-
-    sink.setId(-1);
-    sink.setLexTrans(sink);
-    sink.setImpTrans(sink);
-    sink.setModTrans(sink);
-    sink.setVarTrans(sink);
-
-    DFA.varQRefDFA = new DFA(state0);
-
-    return DFA.varQRefDFA;
-  }
-
 
 }

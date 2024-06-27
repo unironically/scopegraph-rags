@@ -1,4 +1,7 @@
-abstract Scope ::= <Name:String>;
+abstract Scope ::= <Name:String> 
+                   <Lex:Opt<Scope>>
+                   <Mod:HashSet<Scope>>
+                   <Var:HashSet<Scope>>;
 ScopeNoDatum: Scope ::= ;
 ScopeDatum: Scope ::= Datum:Datum;
 
@@ -8,4 +11,6 @@ DatumMod: Datum ::= ;
 
 Ref ::= <Id:String> <Label:String> Scope:Scope DFA:DFA;
 
-Binding ::= <RefLabel:String> <DeclLabel:String>;
+Result ::= Ref:Ref <Path:ArrayList<Edge>> Edge:Edge;
+
+Edge ::= Src:Scope <Label:String> Tgt:Scope;

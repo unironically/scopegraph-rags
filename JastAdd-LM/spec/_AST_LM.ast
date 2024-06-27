@@ -1,11 +1,11 @@
-Program ::= Ds:Decls;
+Program ::= Ds:Decls /TopScope:Scope/;
 
 abstract Decls;
 DeclsNil: Decls ::= ;
 DeclsCons: Decls ::= D:Decl Ds:Decls;
 
 abstract Decl;
-ModuleDecl: Decl ::= <Id:String> Ds:Decls;
+ModuleDecl: Decl ::= <Id:String> Ds:Decls /ModScope:Scope/;
 ImportDecl: Decl ::= Ref:ModRef;
 DefDecl: Decl ::= Bind:ParBind;
 
@@ -16,13 +16,11 @@ BoolExpr: Expr ::= <Value:Boolean>;
 AddExpr: Expr ::= Left:Expr Right:Expr;
 AndExpr: Expr ::= Left:Expr Right:Expr;
 
-ParBind ::= <Id:String> Type:Type Expr:Expr;
+ParBind ::= <Id:String> Type:Type Expr:Expr /VarScope:Scope/;
 
 ModRef ::= <Id:String>;
-ModQRef: ModRef ::= ModRef:ModRef;
 
 VarRef ::= <Id:String>;
-VarQRef: VarRef ::= ModRef:ModRef;
 
 abstract Type;
 IntType: Type ::= ;

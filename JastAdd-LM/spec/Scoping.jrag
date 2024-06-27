@@ -2,27 +2,49 @@ import java.util.*;
 
 aspect Scoping {
 
-  coll HashSet<Scope> Scope.lexScopes() [new HashSet<Scope>()] with add root Program;
-  coll HashSet<Scope> Scope.modScopes() [new HashSet<Scope>()] with add root Program;
-  coll HashSet<Scope> Scope.varScopes() [new HashSet<Scope>()] with add root Program;
-  coll HashSet<Scope> Scope.impScopes() circular [new HashSet<Scope>()] with addAll root Program;
+  syn lazy HashSet<Scope> ASTNode.mods();
+    eq ASTNode.mods() { return new HashSet<Scope>(); }
+
+  syn lazy HashSet<Scope> ASTNode.vars();
+    eq ASTNode.vars() { return new HashSet<Scope>(); }
+
+  coll ArrayList<Scope> Scope.impTentative() 
+    circular [new ArrayList<Scope>()] with addAll root Program;
+  
+  syn lazy ArrayList<Scope> ASTNode.allScopes();
+    eq ASTNode.allScopes() { return new ArrayList<Scope>(); }
+
+  inh lazy HashSet<Scope> Scope.imp();
 
 
   /*---------- Program ---------*/
 
   /* Program */
 
-  syn lazy Scope Program.topScope();
-  eq Program.topScope() {
-    Scope topScope =  new ScopeNoDatum();
-    topScope.setName("GlobalScope_" + Integer.toString(Scope.scopeCount++));
+  syn nta Scope Program.TopScope() {
+    Opt<Scope> lexOpt = new Opt();
+    lexOpt.setParent(this);
+    ScopeNoDatum topScope = new ScopeNoDatum (
+      "GlobalScope_" + Integer.toString(Scope.scopeCount++),
+      lexOpt,
+      getDs().mods(),
+      getDs().vars()
+    );
     topScope.setParent(this);
-
     return topScope;
   }
   
-  eq Program.getDs().scope() { return topScope(); }
+  eq Program.getDs().scope() { return TopScope(); }
 
+  eq Program.allScopes() {
+    ArrayList<Scope> all = getDs().allScopes();
+    all.add(TopScope());
+    return all;
+  }
+
+  eq Program.TopScope().imp() {
+    return new HashSet<Scope>();
+  }
 
   /*---------- Decls ----------*/
 
@@ -30,35 +52,55 @@ aspect Scoping {
 
   eq Decls.getChild(int i).scope() { return scope(); }
 
+  eq DeclsCons.allScopes() {
+    ArrayList<Scope> all = getD().allScopes();
+    all.addAll(getDs().allScopes());
+    return all;
+  }
+
   /*---------- Module Decl ----------*/
 
   inh lazy Scope Decl.scope();
 
-  syn lazy Scope ModuleDecl.modScope();
+  syn nta lazy Scope ModuleDecl.ModScope();
 
-  eq ModuleDecl.modScope() {
-    ScopeDatum s = new ScopeDatum();
-    s.setName("ModScope_" + Integer.toString(Scope.scopeCount++));
-    s.setParent(this);
-    s.setDatum(new DatumMod(getId(), label()));
-    return s;
+  eq ModuleDecl.ModScope() {
+    Opt<Scope> lexOpt = new Opt(scope());
+    lexOpt.setParent(this);
+    ScopeDatum modScope = new ScopeDatum (
+      "ModScope_" + getId() + "_" + Integer.toString(Scope.scopeCount++),
+      lexOpt,
+      getDs().mods(),
+      getDs().vars(),
+      new DatumMod(getId(), getId() + "_" + getStartLine() + ":" +   
+                            getStartColumn())
+    );
+    modScope.setParent(this);
+    return modScope;
   }
 
   // Ds.scope = top.modScope
   eq ModuleDecl.getDs().scope() {
-    return modScope();
+    return ModScope();
   }
 
-  ModuleDecl contributes modScope() /* scope -[ `MOD ]-> modScope */
-    to Scope.modScopes()
-    for scope();
+  eq ModuleDecl.mods() { HashSet<Scope> mod = new HashSet<Scope>(); 
+                         mod.add(ModScope()); return mod; }
 
-  ModuleDecl contributes scope()  /* modScope -[ `LEX ]-> scope */
-    to Scope.lexScopes()
-    for modScope();
 
-  syn String ModuleDecl.label() =
-    getId() + "_" + getStartLine() + ":" + getStartColumn();
+  eq ModuleDecl.ModScope().imp() {
+    HashSet<Scope> toImp = new HashSet<Scope>();
+    System.out.println("impTentative empty for " + this.getId() + "? " + Boolean.toString(scope().impTentative().isEmpty()));
+    for (Scope s: scope().impTentative())
+      toImp.add(s);
+    return toImp;
+  }
+
+  eq ModuleDecl.allScopes() {
+    ArrayList<Scope> all = getDs().allScopes();
+    all.add(ModScope());
+    return all;
+  }
 
 
   /*---------- Import Decl ----------*/
@@ -76,6 +118,14 @@ aspect Scoping {
     return scope();
   }
 
+  eq DefDecl.vars() {
+    return getBind().vars();
+  }
+
+  eq DefDecl.allScopes() {
+    return getBind().allScopes();
+  }
+
 
   /*---------- Expr ----------*/
 
@@ -84,34 +134,46 @@ aspect Scoping {
   // Ref.scope = top.scope
   eq VarExpr.getRef().scope() { return scope(); }
 
-  eq AddExpr.getLeft().scope() { return scope(); }
-  eq AddExpr.getRight().scope() { return scope(); }
-
-  eq AndExpr.getLeft().scope() { return scope(); }
-  eq AndExpr.getRight().scope() { return scope(); }
-
 
   /*---------- ParBind ----------*/
 
   inh lazy Scope ParBind.scope();
 
-  syn lazy Scope ParBind.varScope();
+  syn nta lazy Scope ParBind.VarScope();
 
-  eq ParBind.varScope() {
-    ScopeDatum s = new ScopeDatum();
-    s.setName("VarScope_" + Integer.toString(Scope.scopeCount++));
-    s.setParent(this);
-    s.setDatum(new DatumVar(getId(), label(), getType()));
-    return s;
+  eq ParBind.VarScope() {
+    Opt<Scope> lexOpt = new Opt();
+    lexOpt.setParent(this);
+    ScopeDatum varScope = new ScopeDatum (
+      "VarScope_" + getId() + "_" + Integer.toString(Scope.scopeCount++),
+      lexOpt,
+      new HashSet<Scope>(),
+      new HashSet<Scope>(),
+      new DatumVar(getId(), label(), getType())
+    );
+    varScope.setParent(this);
+    return varScope;
   }
-
-  // scope -[ `VAR ]-> varScope
-  ParBind contributes varScope()
-    to Scope.varScopes()
-    for scope();
 
   syn String ParBind.label() =
     getId() + "_" + getStartLine() + ":" + getStartColumn();
+
+  
+  eq ParBind.vars() {
+    HashSet<Scope> varSet = new HashSet<Scope>();
+    varSet.add(VarScope());
+    return varSet;
+  }
+
+  eq ParBind.allScopes() {
+    ArrayList<Scope> all = new ArrayList<Scope>();
+    all.add(VarScope());
+    return all;
+  }
+
+  eq ParBind.VarScope().imp() {
+    return new HashSet<Scope>();
+  }
   
 
   /*---------- VarRef ----------*/
@@ -146,23 +208,16 @@ aspect Scoping {
     getId() + "_" + getStartLine() + ":" + getStartColumn();
 
 
-
-  /* scope -[ `IMP ]-> res()*/
   ModRef contributes res()
-    to Scope.impScopes()
-    for scope();
-
-
+                  to Scope.impTentative()
+                 for scope();
 
   syn ArrayList<Scope> ModRef.res();
+
   eq ModRef.res() {
-    ArrayList<Scope> res = ref().decls();
-    ArrayList<Scope> ret = new ArrayList<Scope>();
-
-    if (!res.isEmpty())
-      ret.add(res.get(0));
-
-    return ret;
+    ArrayList<Scope> toRes = new ArrayList<Scope>();
+    for (Result r: ref().result()) toRes.add(r.getEdge().getTgt());
+    return toRes;
   }
 
 }

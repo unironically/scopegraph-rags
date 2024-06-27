@@ -2,187 +2,87 @@ import java.util.*;
 
 aspect Resolution {
 
+  /*---------- DFA ----------*/
 
-  /*---------- DFA/State ----------*/
+  syn ArrayList<Result> DFA.findVisMod(Scope source, Scope current, 
+                                       ArrayList<Edge> path, Ref ref);
 
-  syn ArrayList<ArrayList<Scope>> DFA.resolve(String id, Scope currentScope);
-  syn ArrayList<ArrayList<Scope>> State.resolve(String id, Scope currentScope);
-  eq DFA.resolve(String id, Scope currentScope) = getStart().resolve(id, currentScope);
+  eq DFA.findVisMod(Scope source, Scope current, 
+                    ArrayList<Edge> path, Ref ref) = 
+    getStart().findVisMod(source, current, path, ref);
 
+
+  /*---------- State ----------*/
+
+  syn ArrayList<Result> State.findVisMod(Scope source, Scope current, 
+                                         ArrayList<Edge> path, Ref ref);
   
-  eq State.resolve(String id, Scope currentScope) {
+  eq State.findVisMod(Scope source, Scope current, 
+                      ArrayList<Edge> path, Ref ref) {
     
-    ArrayList<ArrayList<Scope>> allRes = new ArrayList<ArrayList<Scope>>();
+    ArrayList<Result> res = new ArrayList<Result>();
 
-    if (Program.debug) System.out.println(Scope.indent() + "Resolving in state " + Integer.toString(getId()) + " for ref " + id + " in scope " + currentScope.getName());
+    /* MOD */
 
-    Scope.addIndent();
-
-    if (Program.debug) System.out.println(Scope.indent() + "Demanding " + currentScope.getName() + ".varScopes");
-    Scope.addIndent();
-    ArrayList<Scope> varRes = new ArrayList<Scope>();
-    for (Scope s: currentScope.varScopes()) {
-      if (getVarTrans() instanceof SinkState) continue;
-
-      if (Program.debug) System.out.println(Scope.indent() + "Following a VAR edge to scope " + s.getName());
-
-      Scope.addIndent();
-      
-      ArrayList<ArrayList<Scope>> varResInter = getVarTrans().resolve(id, s);
-      if (!varResInter.isEmpty()) varRes.addAll(varResInter.get(0));
-
-      Scope.removeIndent();
-
+    for (Scope s: current.getMod()) {
+      ArrayList<Edge> newPath = new ArrayList<Edge>(path);
+      newPath.add(new Edge(current, "MOD", s));
+      res.addAll(getModTrans().findVisMod(source, s, newPath, ref));
     }
-    if (!varRes.isEmpty()) allRes.add(varRes);
-    Scope.removeIndent();
+    if (!res.isEmpty()) return res;
 
+    /* IMP */
 
-    if (Program.debug) System.out.println(Scope.indent() + "Demanding " + currentScope.getName() + ".modScopes");
-    Scope.addIndent();
-    ArrayList<Scope> modRes = new ArrayList<Scope>();
-    for (Scope s: currentScope.modScopes()) {
-      if (getModTrans() instanceof SinkState) continue;
-
-      if (Program.debug) System.out.println(Scope.indent() + "Following a MOD edge to scope " + s.getName());
-
-      Scope.addIndent();
-
-      ArrayList<ArrayList<Scope>> modResInter = getModTrans().resolve(id, s);
-      if (!modResInter.isEmpty()) modRes.addAll(modResInter.get(0));
-
-      Scope.removeIndent();
-
+    for (Scope s: current.equals(source) ? current.impTentative() :
+                                           current.imp()) {
+      ArrayList<Edge> newPath = new ArrayList<Edge>(path);
+      newPath.add(new Edge(current, "IMP", s));
+      res.addAll(getImpTrans().findVisMod(source, s, newPath, ref));
     }
-    if (!modRes.isEmpty()) allRes.add(modRes);
-    Scope.removeIndent();
+    if (!res.isEmpty()) return res;
 
+    /* LEX */
 
-    if (Program.debug) System.out.println(Scope.indent() + "Demanding " + currentScope.getName() + ".impScopes");
-    Scope.addIndent();
-    ArrayList<Scope> impRes = new ArrayList<Scope>();
-    for (Scope s: currentScope.impScopes()) {
-      if (getImpTrans() instanceof SinkState) continue;
-
-      if (Program.debug) System.out.println(Scope.indent() + "Following an IMP edge to scope " + s.getName());
-
-      Scope.addIndent();
-
-      ArrayList<ArrayList<Scope>> impResInter = getImpTrans().resolve(id, s);
-      if (!impResInter.isEmpty()) impRes.addAll(impResInter.get(0));
-
-      Scope.removeIndent();
-
+    if (current.getLex().numChildren() != 0) {
+      ArrayList<Edge> newPath = new ArrayList<Edge>(path);
+      newPath.add(new Edge(current, "LEX", 
+                           (Scope) current.getLex().getChild(0)));
+      res.addAll(getLexTrans().findVisMod(source, 
+                                          (Scope) current.getLex().getChild(0), 
+                                          newPath, ref));
     }
-    if (!impRes.isEmpty()) allRes.add(impRes);
-    Scope.removeIndent();
-
-
-    if (Program.debug) System.out.println(Scope.indent() + "Demanding " + currentScope.getName() + ".lexScopes");
-    Scope.addIndent();
-    ArrayList<Scope> lexRes = new ArrayList<Scope>();
-    for (Scope s: currentScope.lexScopes()) {
-      if (getLexTrans() instanceof SinkState) continue;
-
-      if (Program.debug) System.out.println(Scope.indent() + "Following a LEX edge to scope " + s.getName());
-
-      Scope.addIndent();
-
-      ArrayList<ArrayList<Scope>> lexResInter = getLexTrans().resolve(id, s);
-      if (!lexResInter.isEmpty()) lexRes.addAll(lexResInter.get(0));
-
-      Scope.removeIndent();
-
-    }
-    if (!lexRes.isEmpty()) allRes.add(lexRes);
-    Scope.removeIndent();
-
-    Scope.removeIndent();
-
-    if (Program.debug) {
-      System.out.print(Scope.indent() + "Done resolving " + id + " got : [");
-      for (int i = 0; i < allRes.size(); i++) {
-        System.out.print("[");
-        for (int j = 0; j < allRes.get(i).size(); j++) {
-          System.out.print(allRes.get(i).get(j).getName());
-          if (j + 1 < allRes.get(i).size()) System.out.print(", ");
-        }
-        System.out.print("]");
-        if (i + 1 < allRes.size()) System.out.print(", ");
-      }
-      System.out.println("]");
-      try {
-        if (Program.debug) Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-    }
-
-    return allRes;
+    return res;
 
   }
 
-  eq FinalState.resolve(String id, Scope currentScope) {
+  eq FinalState.findVisMod(Scope source, Scope current, 
+                        ArrayList<Edge> path, Ref ref) {
 
-    ArrayList<ArrayList<Scope>> result = new ArrayList<ArrayList<Scope>>();
-    ArrayList<Scope> resultOne = new ArrayList<Scope>();
+    ArrayList<Result> res = new ArrayList<Result>();
 
-    ScopeDatum thisScope = (ScopeDatum) currentScope;
-
-    Scope.addIndent();
-    
-    if (thisScope.getDatum().getId().equals(id)) {
-      if (Program.debug) System.out.println(Scope.indent() + "Found a good resolution for " + id + " as scope " + currentScope.getName() + " whose label is " + thisScope.getDatum().getLabel());
-      resultOne.add(currentScope);
-      result.add(resultOne);
-    } else {
-      if (Program.debug) System.out.println(Scope.indent() + "Declaration of " + thisScope.getDatum().getId() + " in " + currentScope.getName() + " does not match " + id);
+    if (current instanceof ScopeDatum && 
+        ((ScopeDatum)current).getDatum().getId().equals(ref.getId())) {
+      res.add(new Result(ref, path, new Edge(source, "RES", current)));
     }
 
-    Scope.removeIndent();
-
-    return result;
+    return res;
 
   }
 
 
-  eq SinkState.resolve(String id, Scope currentScope) {
-    return new ArrayList<ArrayList<Scope>>();
+  eq SinkState.findVisMod(Scope source, Scope current, 
+                          ArrayList<Edge> path, Ref ref) {
+    return new ArrayList<Result>();
   }
 
 
   /*---------- Ref ----------*/
 
-  syn lazy ArrayList<Scope> Ref.decls();// circular [new ArrayList<Scope>()];
+  syn lazy ArrayList<Result> Ref.result();
 
-  eq Ref.decls() {
-
-    ArrayList<Scope> myDecls = new ArrayList<Scope>();
-
-    ArrayList<ArrayList<Scope>> res = getDFA().resolve(getId(), getScope());
-
-    if (res.isEmpty()) {
-      //System.out.println("- No resolutions (1) found for reference " + getLabel());
-      return myDecls;
-    } else if (res.get(0).isEmpty()) {
-      //System.out.println("- No resolutions (2) found for reference " + getLabel());
-      return myDecls;
-    } else if (res.get(0).size() > 1) {
-      //System.out.println("- Ambiguous reference " + getLabel());
-      return myDecls;
-    }
-
-    myDecls.addAll(res.get(0));
-
-    if (Program.debug) System.out.print(Scope.indent() + "Returning ");
-    for (int j = 0; j < myDecls.size() && Program.debug; j++) {
-      System.out.print(myDecls.get(j).getName());
-      if (j + 1 < myDecls.size()) System.out.print(", ");
-    }
-    if (Program.debug) System.out.println(" as result of query on " + getId());
-
-    return myDecls;
-
+  eq Ref.result() {
+    return getDFA().findVisMod(getScope(), getScope(),
+                               new ArrayList<Edge>(), this);
   }
 
 }

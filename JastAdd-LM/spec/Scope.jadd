@@ -18,5 +18,11 @@ aspect Scope {
   public static void Scope.removeIndent() {
     Scope.subResCount--;
   }
+
+  public boolean Scope.equals(Object o) {
+    if (!(o instanceof Scope)) return false;
+    Scope other = (Scope) o;
+    return other.getName() == this.getName();
+  }
   
 }

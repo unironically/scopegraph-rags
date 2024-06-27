@@ -150,7 +150,7 @@
 	<target name="jar" depends="build">
 		<jar destfile="${jar.file}">
 			<manifest>
-				<attribute name="Main-Class" value="PrettyPrint" />
+				<attribute name="Main-Class" value="Compiler" />
 			</manifest>
 			<fileset dir=".">
 				<include name="**/*.class"/>
