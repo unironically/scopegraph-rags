@@ -1,5 +1,7 @@
 grammar sg_lib;
 
+{-
+
 --------------------------------------------------
 
 synthesized attribute graphvizString::String occurs on Scope;
@@ -53,3 +55,5 @@ String ::= lab::String src::Decorated Scope tgt::Decorated Scope
 {
   return "{edge [label=" ++ lab ++ "] " ++ toString(src.id) ++ "->" ++ toString(tgt.id) ++ "}";
 }
+
+-}

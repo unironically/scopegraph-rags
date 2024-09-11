@@ -7,4 +7,4 @@ else
   exit -1
 fi
 
-mv lm_semantics_4.driver.jar lm_language3.jar
+mv lm_semantics_4.driver.jar lm_language4.jar

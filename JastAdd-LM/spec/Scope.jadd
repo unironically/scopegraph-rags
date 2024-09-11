@@ -20,6 +20,7 @@ aspect Scope {
   }
 
   public boolean Scope.equals(Object o) {
+    System.out.println("OWOOOWWWWWOOWO");
     if (!(o instanceof Scope)) return false;
     Scope other = (Scope) o;
     return other.getName() == this.getName();

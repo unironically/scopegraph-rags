@@ -196,7 +196,7 @@ par-binds(s, bs, s_def) :- bs match {
 
 
 par-bind(s, b, s_def) :- b match {
-    
+
     DefBind(x, e) ->
         {s_var, ty}
         new s_var -> (x, ty),

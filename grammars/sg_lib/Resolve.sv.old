@@ -1,10 +1,11 @@
 grammar sg_lib;
 
+{-
 -- Resolution type:
 -- [Decorated Scope] ::= Decorated Scope Either<VarRef ModRef>
 
 
-{- Given a state, give me back the transitions for it in label order -}
+-- Given a state, give me back the transitions for it in label order 
 function getOrderedTransForState
 [DFATrans] ::= moves::[DFATrans] state::Integer
 {
@@ -42,7 +43,10 @@ function dfaStateToFun
                   (\new_s::Decorated Scope -> snd(f)(new_s, name)),
                   
                   case fst(f) of
-                  | labelLex() -> case s.lexEdge of | just(s) -> [s] | nothing() -> [] end
+                  | labelLex() -> case s.lexEdge of 
+                                  | just(s) -> [s] 
+                                  | nothing() -> [] 
+                                  end
                   | labelVar() -> s.varEdges
                   | labelMod() -> s.modEdges
                   | labelImp() -> s.impEdges
@@ -72,3 +76,4 @@ function findFun
     | [] -> (\s::Decorated Scope str::String -> [])
     end;
 }
+-}

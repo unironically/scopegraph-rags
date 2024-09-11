@@ -21,7 +21,7 @@ aspect Scoping {
 
   /* Program */
 
-  syn nta Scope Program.TopScope() {
+  syn lazy Scope Program.getTopScope() {
     Opt<Scope> lexOpt = new Opt();
     lexOpt.setParent(this);
     ScopeNoDatum topScope = new ScopeNoDatum (
@@ -34,15 +34,15 @@ aspect Scoping {
     return topScope;
   }
   
-  eq Program.getDs().scope() { return TopScope(); }
+  eq Program.getDs().scope() { return getTopScope(); }
 
   eq Program.allScopes() {
     ArrayList<Scope> all = getDs().allScopes();
-    all.add(TopScope());
+    all.add(getTopScope());
     return all;
   }
 
-  eq Program.TopScope().imp() {
+  eq Program.getTopScope().imp() {
     return new HashSet<Scope>();
   }
 
@@ -62,9 +62,7 @@ aspect Scoping {
 
   inh lazy Scope Decl.scope();
 
-  syn nta lazy Scope ModuleDecl.ModScope();
-
-  eq ModuleDecl.ModScope() {
+  syn lazy Scope ModuleDecl.getModScope() {
     Opt<Scope> lexOpt = new Opt(scope());
     lexOpt.setParent(this);
     ScopeDatum modScope = new ScopeDatum (
@@ -76,21 +74,21 @@ aspect Scoping {
                             getStartColumn())
     );
     modScope.setParent(this);
+    System.out.println(modScope.getName() + "'s parent is " + modScope.getParent().getClass().getSimpleName()); // removing this changes result....
     return modScope;
   }
 
   // Ds.scope = top.modScope
   eq ModuleDecl.getDs().scope() {
-    return ModScope();
+    return getModScope();
   }
 
   eq ModuleDecl.mods() { HashSet<Scope> mod = new HashSet<Scope>(); 
-                         mod.add(ModScope()); return mod; }
+                         mod.add(getModScope()); return mod; }
 
 
-  eq ModuleDecl.ModScope().imp() {
+  eq ModuleDecl.getModScope().imp() {
     HashSet<Scope> toImp = new HashSet<Scope>();
-    System.out.println("impTentative empty for " + this.getId() + "? " + Boolean.toString(scope().impTentative().isEmpty()));
     for (Scope s: scope().impTentative())
       toImp.add(s);
     return toImp;
@@ -98,7 +96,7 @@ aspect Scoping {
 
   eq ModuleDecl.allScopes() {
     ArrayList<Scope> all = getDs().allScopes();
-    all.add(ModScope());
+    all.add(getModScope());
     return all;
   }
 
@@ -139,9 +137,7 @@ aspect Scoping {
 
   inh lazy Scope ParBind.scope();
 
-  syn nta lazy Scope ParBind.VarScope();
-
-  eq ParBind.VarScope() {
+  syn lazy Scope ParBind.getVarScope() {
     Opt<Scope> lexOpt = new Opt();
     lexOpt.setParent(this);
     ScopeDatum varScope = new ScopeDatum (
@@ -161,17 +157,17 @@ aspect Scoping {
   
   eq ParBind.vars() {
     HashSet<Scope> varSet = new HashSet<Scope>();
-    varSet.add(VarScope());
+    varSet.add(getVarScope());
     return varSet;
   }
 
   eq ParBind.allScopes() {
     ArrayList<Scope> all = new ArrayList<Scope>();
-    all.add(VarScope());
+    all.add(getVarScope());
     return all;
   }
 
-  eq ParBind.VarScope().imp() {
+  eq ParBind.getVarScope().imp() {
     return new HashSet<Scope>();
   }
   

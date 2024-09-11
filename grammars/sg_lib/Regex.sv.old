@@ -1,6 +1,6 @@
 grammar sg_lib;
 
-nonterminal Regex;
+{-nonterminal Regex;
 
 synthesized attribute dfa::DFA occurs on Regex;
 synthesized attribute nfa::NFA occurs on Regex;
@@ -106,8 +106,8 @@ attribute pp occurs on Label;
 
 synthesized attribute priority::Integer occurs on Label;
 
-{-----------------------------}
-{----- LANGUAGE SPECIFIC -----}
+-----------------------------
+----- LANGUAGE SPECIFIC -----
 
 abstract production labelVar
 top::Label ::= {
@@ -144,8 +144,8 @@ instance Ord Label {
               else    0;
 }
 
-{-----------------------------}
-{-----------------------------}
+-----------------------------
+-----------------------------
 
 global globLabs::[Label] = [labelLex(), labelVar(), labelMod(), labelImp()];
 type NFA = ([Integer], [NFATrans], Integer, Integer);   -- states, transitions, initial state, accepting state
@@ -224,7 +224,7 @@ function dfaMoves
     end;
 }
 
-{- What states can I get to from any state in `from` on all labels in `labs`/ -}
+-- What states can I get to from any state in `from` on all labels in `labs`
 function transOnAll
 [([Integer], Label, [Integer])] ::= trans::[NFATrans] from::[Integer] labs::[Label]
 {
@@ -240,7 +240,7 @@ function transOnAll
     end;
 }
 
-{- What states can I get to from any state in `from` on label `lab`/ -}
+-- What states can I get to from any state in `from` on label `lab`
 function transOnLabel
 [Integer] ::= trans::[NFATrans] from::[Integer] lab::Label
 {
@@ -260,3 +260,4 @@ function eClosure
         else eClosure(trans, from ++ newStates)
     end end;
 }
+-}
