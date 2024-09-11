@@ -617,26 +617,6 @@ top::ModRef ::= x::String
   ];
 }
 
-aspect production modQRef
-top::ModRef ::= r::ModRef x::String
-{
-  local xName::String = "\"" ++ x ++ "\"";
-  local p_modName::String = "p_mod_" ++ toString(genInt());
-  local s_modName::String = "s_mod_" ++ toString(genInt());
-  local modsName::String = "mods_" ++ toString(genInt());
-  local xmodsName::String = "xmods_" ++ toString(genInt());
-  top.statixConstraints = [
-    "{" ++ p_modName ++ ", " ++ s_modName ++ ", " ++ modsName ++ ", " ++ xmodsName ++ "}"
-  ] ++ r.statixConstraints ++ [
-    "tgt(" ++ p_modName ++ ", " ++ s_modName ++ ")",
-    "query " ++ top.sName ++ " `MOD as " ++ modsName,
-    "filter " ++ modsName ++ " ((x, _) where x == " ++ xName ++ ") " ++ xmodsName,
-    "only(" ++ xmodsName ++ ", " ++ top.pName ++ ")"
-  ];
-  r.sName = top.sName;
-  r.pName = p_modName;
-}
-
 --------------------------------------------------
 
 attribute statixConstraints occurs on VarRef;
@@ -657,24 +637,4 @@ top::VarRef ::= x::String
     "min-refs(" ++ xvarsName ++ ", " ++ xvarsPrimeName ++ ")",
     "only(" ++ xvarsPrimeName ++ ", " ++ top.pName ++ ")"
   ];
-}
-
-aspect production varQRef
-top::VarRef ::= r::ModRef x::String
-{
-  local xName::String = "\"" ++ x ++ "\"";
-  local p_modName::String = "p_mod_" ++ toString(genInt());
-  local s_modName::String = "s_mod_" ++ toString(genInt());
-  local varsName::String = "vars_" ++ toString(genInt());
-  local xvarsName::String = "xvars_" ++ toString(genInt());
-  top.statixConstraints = [
-    "{" ++ p_modName ++ ", " ++ s_modName ++ ", " ++ varsName ++ ", " ++ xvarsName ++ "}"
-  ] ++ r.statixConstraints ++ [
-    "tgt(" ++ p_modName ++ ", " ++ s_modName ++ ")",
-    "query " ++ top.sName ++ " `VAR as " ++ varsName,
-    "filter " ++ varsName ++ " ((x, _) where x == " ++ xName ++ ") " ++ xvarsName,
-    "only(" ++ xvarsName ++ ", " ++ top.pName ++ ")"
-  ];
-  r.sName = top.sName;
-  r.pName = p_modName;
 }

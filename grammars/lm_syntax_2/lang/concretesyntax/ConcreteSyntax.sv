@@ -290,12 +290,6 @@ top::ModRef_c ::= x::ModId_t
   top.ast = modRef(x.lexeme, location=top.location);
 }
 
-concrete production modQRef_c
-top::ModRef_c ::= r::ModRef_c '.' x::ModId_t
-{
-  top.ast = modQRef(r.ast, x.lexeme, location=top.location);
-}
-
 --------------------------------------------------
 
 nonterminal VarRef_c with ast<VarRef>, location;
@@ -304,10 +298,4 @@ concrete production varRef_c
 top::VarRef_c ::= x::VarId_t
 {
   top.ast = varRef(x.lexeme, location=top.location);
-}
-
-concrete production varQRef_c
-top::VarRef_c ::= r::ModRef_c '.' x::VarId_t
-{
-  top.ast = varQRef(r.ast, x.lexeme, location=top.location);
 }

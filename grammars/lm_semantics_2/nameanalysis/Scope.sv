@@ -1,69 +1,43 @@
 grammar lm_semantics_2:nameanalysis;
 
+--------------------------------------------------
 
-abstract production mkScopeLet
-top::Scope ::=
-  lex::Decorated Scope
-  var::[Decorated Scope]
-{
-  forwards to mkScope(just(lex), var, [], [], nothing(), location=top.location);
-}
+abstract production mkDeclVar
+top::SGDecl ::=
+  name::String
+  ty::Type
+{ forwards to 
+  mkNode(just(datumVar(name, ty, location=top.location)), 
+         location=top.location); }
 
-abstract production mkScopeGlobal
-top::Scope ::=
-  var::[Decorated Scope]
-  mod::[Decorated Scope]
-{
-  forwards to mkScope(nothing(), var, [], [], nothing(), location=top.location);
-}
-
-abstract production mkScopeMod
-top::Scope ::=
-  lex::Decorated Scope
-  var::[Decorated Scope]
-  mod::[Decorated Scope]
-  id::String
-{
-  forwards to mkScope(just(lex), var, mod, [], just(datumMod(id, top, location=top.location)), location=top.location);
-}
-
-abstract production mkScopeImpLookup
-top::Scope ::=
-  lex::Decorated Scope
-  var::[Decorated Scope]
-  mod::[Decorated Scope]
-  imp::Maybe<Decorated Scope>
-{
-  forwards to mkScope(just(lex), var, mod, if imp.isJust then [imp.fromJust] else [], nothing(), location=top.location);
-}
-
-abstract production mkScopeVar
-top::Scope ::=
-  datum::(String, Type)
-{
-  forwards to mkScope(nothing(), [], [], [], just(datumVar(fst(datum), snd(datum), location=top.location)), location=top.location);
-}
-
-abstract production mkScopeSeqBind
-top::Scope ::=
-  lex::Decorated Scope
-  var::[Decorated Scope]
-{
-  forwards to mkScope(just(lex), var, [], [], nothing(), location=top.location);
-}
+abstract production mkDeclMod
+top::SGDecl ::=
+  name::String
+{ forwards to 
+  mkNode(just(datumMod(name, location=top.location)), 
+         location=top.location); }
 
 --------------------------------------------------
 
-abstract production datumMod
-top::Datum ::= id::String ty::Decorated Scope
-{
-  local datumPrint::String = id;
-  forwards to datumId(id, datumPrint, location=top.location);
-}
-
 abstract production datumVar
-top::Datum ::= id::String ty::Type
+top::SGDatum ::= name::String ty::Type
+{ forwards to datum(name, location=top.location); }
+
+abstract production datumMod
+top::SGDatum ::= name::String
+{ forwards to datum(name, location=top.location); }
+
+--------------------------------------------------
+
+function printDecl
+String ::= d::Decorated SGDecl
 {
-  local datumPrint::String = id ++ " : " ++ ty.statix;
-  forwards to datumId(id, datumPrint, location=top.location);
+  return 
+    case d of
+    | mkDeclVar(name, _) -> name ++ "_" ++ 
+        toString(d.location.line) ++ "_" ++ toString(d.location.column)
+    | mkDeclMod(name) -> name ++ "_" ++ 
+        toString(d.location.line) ++ "_" ++ toString(d.location.column)
+    | _ -> ""
+    end;
 }

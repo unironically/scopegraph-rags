@@ -232,10 +232,10 @@ type(s, tyann, ty) :- tyann match {
 
 var-ref(s, r, p) :- r match {
     
-    VarRef(x) ->
+    VarRef(name) ->
         {vars, xvars, xvars'}
         query s `LEX* `VAR as vars,
-        filter vars((x', _) where x' == x) xvars,
+        filter vars((x', _) where x' == name) xvars,
         min-refs(xvars, xvars'),
         only(xvars', p)
 

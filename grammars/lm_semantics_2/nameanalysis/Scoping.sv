@@ -2,64 +2,66 @@ grammar lm_semantics_2:nameanalysis;
 
 --------------------------------------------------
 
-inherited attribute s::Decorated Scope;
-inherited attribute sLookup::Decorated Scope;
+inherited attribute s::Decorated SGScope;
+inherited attribute sLookup::Decorated SGScope;
 
-synthesized attribute varScopes::[Decorated Scope];
-synthesized attribute modScopes::[Decorated Scope];
-synthesized attribute impScope::Maybe<Decorated Scope>;
+synthesized attribute vars::[Decorated SGScope];
+synthesized attribute mods::[Decorated SGScope];
+synthesized attribute imps::[Decorated SGScope];
 
-monoid attribute binds::[(String, String)] with [], ++;
-monoid attribute allScopes::[Decorated Scope] with [], ++;
+monoid attribute allScopes::[Decorated SGScope] with [], ++;
 
 --------------------------------------------------
-
-attribute binds occurs on Main;
-propagate binds on Main;
 
 attribute allScopes occurs on Main;
 
 aspect production program
 top::Main ::= ds::Decls
 {
-  local globalScope::Scope = mkScopeGlobal([], [], location=top.location);
-  ds.s = globalScope;
+  local glob::SGScope = mkScope(location=top.location);
+  glob.lex = [];
+  glob.imp = [];
+  glob.mod = ds.mods;
+  glob.var = ds.vars;
 
-  top.allScopes := globalScope :: ds.allScopes;
+  ds.s = glob;
+
+  top.allScopes := glob :: ds.allScopes;
 }
 
 --------------------------------------------------
 
 attribute s occurs on Decls;
-attribute varScopes occurs on Decls;
-attribute modScopes occurs on Decls;
-
-attribute binds occurs on Decls;
-propagate binds on Decls;
+attribute vars occurs on Decls;
+attribute mods occurs on Decls;
 
 attribute allScopes occurs on Decls;
 
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  local lookupScope::Scope = mkScopeImpLookup(top.s, d.varScopes, d.modScopes, d.impScope, location=top.location);
+  local lookup::SGScope = mkScope(location=top.location);
+  lookup.lex = [top.s];
+  lookup.imp = d.imps;
+  lookup.mod = d.mods;
+  lookup.var = d.vars;
 
   d.s = top.s;
-  d.sLookup = lookupScope;
+  d.sLookup = lookup;
 
-  ds.s = lookupScope;
+  ds.s = lookup;
 
-  top.varScopes = d.varScopes ++ ds.varScopes;
-  top.modScopes = d.modScopes ++ ds.modScopes;
+  top.vars = d.vars ++ ds.vars;
+  top.mods = d.mods ++ ds.mods;
 
-  top.allScopes := lookupScope::(d.allScopes ++ ds.allScopes);
+  top.allScopes := lookup::(d.allScopes ++ ds.allScopes);
 }
 
 aspect production declsNil
 top::Decls ::=
 {
-  top.varScopes = [];
-  top.modScopes = [];
+  top.vars = [];
+  top.mods = [];
 
   top.allScopes := [];
 }
@@ -68,23 +70,25 @@ top::Decls ::=
 
 attribute s occurs on Decl;
 attribute sLookup occurs on Decl;
-attribute varScopes occurs on Decl;
-attribute modScopes occurs on Decl;
-attribute impScope occurs on Decl;
 
-attribute binds occurs on Decl;
-propagate binds on Decl;
+attribute vars occurs on Decl;
+attribute mods occurs on Decl;
+attribute imps occurs on Decl;
 
 attribute allScopes occurs on Decl;
 
 aspect production declModule
 top::Decl ::= id::String ds::Decls
 {
-  local modScope::Scope = mkScopeMod(top.s, ds.varScopes, ds.modScopes, id, location=top.location);
+  local modScope::SGScope = mkDeclMod(id, location=top.location);
+  modScope.lex = [top.s];
+  modScope.imp = [];
+  modScope.mod = ds.mods;
+  modScope.var = ds.vars;
 
-  top.varScopes = [];
-  top.modScopes = [modScope];
-  top.impScope = nothing();
+  top.vars = [];
+  top.mods = [modScope];
+  top.imps = [];
 
   ds.s = top.s;
 
@@ -94,9 +98,9 @@ top::Decl ::= id::String ds::Decls
 aspect production declImport
 top::Decl ::= r::ModRef
 {
-  top.varScopes = [];
-  top.modScopes = [];
-  top.impScope = r.declScope;
+  top.vars = [];
+  top.mods = [];
+  top.imps = r.resolution;
 
   r.s = top.s;
 
@@ -106,9 +110,9 @@ top::Decl ::= r::ModRef
 aspect production declDef
 top::Decl ::= b::ParBind
 {
-  top.varScopes = b.varScopes;
-  top.modScopes = [];
-  top.impScope = nothing();
+  top.vars = b.vars;
+  top.mods = [];
+  top.imps = [];
 
   b.s = top.sLookup;
 
@@ -118,9 +122,6 @@ top::Decl ::= b::ParBind
 --------------------------------------------------
 
 attribute s occurs on Expr;
-
-attribute binds occurs on Expr;
-propagate binds on Expr;
 
 attribute allScopes occurs on Expr;
 
@@ -234,64 +235,77 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 aspect production exprFun
 top::Expr ::= d::ArgDecl e::Expr
 {
-  local funScope::Scope = mkScopeLet(top.s, d.varScopes, location=top.location);
+  local s_fun::SGScope = mkScope(location=top.location);
+  s_fun.lex = [top.s];
+  s_fun.imp = [];
+  s_fun.mod = [];
+  s_fun.var = d.vars;
 
-  d.s = funScope;
-  e.s = funScope;
+  d.s = s_fun;
+  e.s = s_fun;
 
-  top.allScopes := funScope :: (d.allScopes ++ e.allScopes);
+  top.allScopes := s_fun :: (d.allScopes ++ e.allScopes);
 }
 
 
 aspect production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
-  local letScope::Scope = mkScopeLet(bs.lastScope, bs.varScopes, location=top.location);
+  local s_let::SGScope = mkScope(location=top.location);
+  s_let.lex = [bs.lastScope];
+  s_let.imp = [];
+  s_let.mod = [];
+  s_let.var = bs.vars;
 
   bs.s = top.s;
-  e.s = letScope;
+  e.s = s_let;
 
-  top.allScopes := letScope :: (bs.allScopes ++ e.allScopes);
+  top.allScopes := s_let :: (bs.allScopes ++ e.allScopes);
 }
 
 aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local letScope::Scope = mkScopeLet(top.s, bs.varScopes, location=top.location);
+  local s_let::SGScope = mkScope(location=top.location);
+  s_let.lex = [top.s];
+  s_let.imp = [];
+  s_let.mod = [];
+  s_let.var = bs.vars;
 
-  bs.s = letScope;
-  e.s = letScope;
+  bs.s = s_let;
+  e.s = s_let;
 
-  top.allScopes := letScope :: e.allScopes;
+  top.allScopes := s_let :: (bs.allScopes ++ e.allScopes);
 }
 
 aspect production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local letScope::Scope = mkScopeLet(top.s, bs.varScopes, location=top.location);
+  local s_let::SGScope = mkScope(location=top.location);
+  s_let.lex = [top.s];
+  s_let.imp = [];
+  s_let.mod = [];
+  s_let.var = bs.vars;
 
   bs.s = top.s;
-  e.s = letScope;
+  e.s = s_let;
 
-  top.allScopes := letScope :: e.allScopes;
+  top.allScopes := s_let :: (bs.allScopes ++ e.allScopes);
 }
 
 --------------------------------------------------
 
 attribute s occurs on SeqBinds;
 
-synthesized attribute lastScope::Decorated Scope occurs on SeqBinds;
+synthesized attribute lastScope::Decorated SGScope occurs on SeqBinds;
 
-attribute varScopes occurs on SeqBinds;
+attribute vars occurs on SeqBinds;
 attribute allScopes occurs on SeqBinds;
-
-attribute binds occurs on SeqBinds;
-propagate binds on SeqBinds;
 
 aspect production seqBindsNil
 top::SeqBinds ::=
 {
-  top.varScopes = [];
+  top.vars = [];
   top.lastScope = top.s;
 
   top.allScopes := [];
@@ -302,7 +316,7 @@ top::SeqBinds ::= s::SeqBind
 {
   s.s = top.s;
 
-  top.varScopes = s.varScopes;
+  top.vars = s.vars;
   top.lastScope = top.s;
 
   top.allScopes := s.allScopes;
@@ -311,63 +325,72 @@ top::SeqBinds ::= s::SeqBind
 aspect production seqBindsCons
 top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
-  local letBindScope::Scope = mkScopeSeqBind(top.s, s.varScopes, location=top.location);
+  local s_def_prime::SGScope = mkScope(location=top.location);
+  s_def_prime.lex = [top.s];
+  s_def_prime.imp = [];
+  s_def_prime.mod = [];
+  s_def_prime.var = s.vars;
 
   s.s = top.s;
-  ss.s = letBindScope;
+  ss.s = s_def_prime;
 
-  top.varScopes = ss.varScopes;
+  top.vars = ss.vars;
   top.lastScope = ss.lastScope;
 
-  top.allScopes := letBindScope :: (s.allScopes ++ ss.allScopes);
+  top.allScopes := s_def_prime :: (s.allScopes ++ ss.allScopes);
 }
 
 --------------------------------------------------
 
 attribute s occurs on SeqBind;
 
-attribute varScopes occurs on SeqBind;
+attribute vars occurs on SeqBind;
 attribute allScopes occurs on SeqBind;
-
-attribute binds occurs on SeqBind;
-propagate binds on SeqBind;
 
 aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
 {
-  local varScope::Scope = mkScopeVar((id, e.ty), location=top.location);
+  local s_var::SGDecl = mkDeclVar(id, e.ty, location=top.location);
+  s_var.lex = [];
+  s_var.imp = [];
+  s_var.mod = [];
+  s_var.var = [];
 
   e.s = top.s;
 
-  top.varScopes = [varScope];
-  top.allScopes := [varScope];
+  top.vars = [s_var];
+  top.allScopes := [s_var];
 }
 
 aspect production seqBindTyped
 top::SeqBind ::= ty::Type id::String e::Expr
 {
-  local varScope::Scope = mkScopeVar((id, ty), location=top.location);
+  local s_var::SGDecl = mkDeclVar(id, ty, location=top.location);
+  s_var.lex = [];
+  s_var.imp = [];
+  s_var.mod = [];
+  s_var.var = [];
 
   e.s = top.s;
   ty.s = top.s;
 
-  top.varScopes = [varScope];
-  top.allScopes := [varScope];
+  top.vars = [s_var];
+  top.allScopes := [s_var];
 }
 
 --------------------------------------------------
 
 attribute s occurs on ParBinds;
 
-attribute varScopes occurs on ParBinds;
+attribute vars occurs on ParBinds;
 
-attribute binds occurs on ParBinds;
-propagate binds on ParBinds;
+attribute allScopes occurs on ParBinds;
+propagate allScopes on ParBinds;
 
 aspect production parBindsNil
 top::ParBinds ::=
 {
-  top.varScopes = [];
+  top.vars = [];
 }
 
 aspect production parBindsCons
@@ -376,79 +399,73 @@ top::ParBinds ::= s::ParBind ss::ParBinds
   s.s = top.s;
   ss.s = top.s;
 
-  top.varScopes = s.varScopes ++ ss.varScopes;
+  top.vars = s.vars ++ ss.vars;
 }
 
 --------------------------------------------------
 
 attribute s occurs on ParBind;
 
-attribute varScopes occurs on ParBind;
-attribute allScopes occurs on ParBind;
+attribute vars occurs on ParBind;
 
-attribute binds occurs on ParBind;
-propagate binds on ParBind;
+attribute allScopes occurs on ParBind;
 
 aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
 {
-  local s_var::Scope = mkScopeVar((id, e.ty), location=top.location);
-
-  top.varScopes = [s_var];
+  local s_var::SGDecl = mkDeclVar(id, e.ty, location=top.location);
+  s_var.lex = [];
+  s_var.imp = [];
+  s_var.mod = [];
+  s_var.var = [];
 
   e.s = top.s;
 
-  top.allScopes := s_var :: e.allScopes;
+  top.vars = [s_var];
+  top.allScopes := [s_var];
 }
 
 aspect production parBindTyped
 top::ParBind ::= ty::Type id::String e::Expr
 {
-  local s_var::Scope = mkScopeVar((id, ty), location=top.location);
-
-  top.varScopes = [s_var];
+  local s_var::SGDecl = mkDeclVar(id, ty, location=top.location);
+  s_var.lex = [];
+  s_var.imp = [];
+  s_var.mod = [];
+  s_var.var = [];
 
   e.s = top.s;
+  ty.s = top.s;
 
-  top.allScopes := s_var :: e.allScopes;
+  top.vars = [s_var];
+  top.allScopes := [s_var];
 }
 
 --------------------------------------------------
 
 attribute s occurs on ArgDecl;
 
-attribute varScopes occurs on ArgDecl;
+attribute vars occurs on ArgDecl;
 attribute allScopes occurs on ArgDecl;
-
-attribute binds occurs on ArgDecl;
-propagate binds on ArgDecl;
 
 aspect production argDecl
 top::ArgDecl ::= id::String ty::Type
 {
-  local varScope::Scope = mkScopeVar((id, ty), location=top.location);
+  local s_var::SGScope = mkDeclVar(id, ty, location=top.location);
+  s_var.lex = [];
+  s_var.imp = [];
+  s_var.mod = [];
+  s_var.var = [];
 
   ty.s = top.s;
 
-  top.varScopes = [varScope];
-  top.allScopes := [varScope];
+  top.vars = [s_var];
+  top.allScopes := [s_var];
 }
 
 --------------------------------------------------
 
 attribute s occurs on Type;
-
-aspect production tInt
-top::Type ::=
-{
-
-}
-
-aspect production tBool
-top::Type ::=
-{
-
-}
 
 aspect production tFun
 top::Type ::= tyann1::Type tyann2::Type
@@ -457,134 +474,44 @@ top::Type ::= tyann1::Type tyann2::Type
   tyann2.s = top.s;
 }
 
+aspect production tInt
+top::Type ::=
+{}
+
+aspect production tBool
+top::Type ::=
+{}
+
 aspect production tErr
 top::Type ::=
-{
-
-}
+{}
 
 --------------------------------------------------
 
 attribute s occurs on ModRef;
 
-synthesized attribute declScope::Maybe<Decorated Scope> occurs on ModRef;
-synthesized attribute varRefDatum::Maybe<Datum> occurs on ModRef;
-attribute binds occurs on ModRef;
+synthesized attribute resolution::[Decorated SGDecl] occurs on ModRef;
 
 aspect production modRef
-top::ModRef ::= x::String
+top::ModRef ::= name::String
 {
-  local regex::Regex = regexCat(regexStar(regexSingle(labelLex())), regexCat(regexOption(regexSingle(labelImp())), regexSingle(labelMod())));
-  
-  local dfa::DFA = regex.dfa;
-  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun(dfa);
-  local result::[Decorated Scope] = resFun(top.s, x);
+  local r::SGRef = mkRefMod(name, location=top.location);
+  r.lex = [top.s];
 
-  local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
-
-  top.declScope = fst(queryResult);
-  top.varRefDatum = fst(snd(queryResult));
-  top.binds := snd(snd(queryResult));
-
-  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) =
-    case result of
-      s::_ -> (case s.datum of
-            | just(d) -> (just(s), just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
-            | nothing() -> unsafeTrace((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
-            end)
-    | [] ->  unsafeTrace((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
-    end;
-  
-}
-
-aspect production modQRef
-top::ModRef ::= r::ModRef x::String
-{
-
-  local regex::Regex = regexSingle(labelMod());
-  
-  local dfa::DFA = regex.dfa;
-  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun(dfa);
-  local result::[Decorated Scope] = case r.declScope of | just(sMod) -> resFun(sMod, x) | _ -> [] end;
-
-  local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
-
-  top.declScope = fst(queryResult);
-  top.varRefDatum = fst(snd(queryResult));
-  top.binds := snd(snd(queryResult));
-
-  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) =
-    case result of
-      s::_ -> (case s.datum of
-            | just(d) -> (just(s), just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
-            | nothing() -> unsafeTrace((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
-            end)
-    | [] ->  unsafeTrace((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
-    end;
-
-  r.s = top.s;
-
+  top.resolution = r.res;
 }
 
 --------------------------------------------------
 
 attribute s occurs on VarRef;
 
-attribute declScope occurs on VarRef;
-attribute varRefDatum occurs on VarRef;
-attribute binds occurs on VarRef;
+attribute resolution occurs on VarRef;
 
 aspect production varRef
-top::VarRef ::= x::String
+top::VarRef ::= name::String
 {
-  local regex::Regex = regexCat(regexStar(regexSingle(labelLex())), regexCat(regexOption(regexSingle(labelImp())), regexSingle(labelVar())));
-  
-  local dfa::DFA = regex.dfa;
-  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun(dfa);
-  local result::[Decorated Scope] = resFun(top.s, x);
+  local r::SGRef = mkRefVar(name, location=top.location);
+  r.lex = [top.s];
 
-  local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
-
-  top.declScope = fst(queryResult);
-  top.varRefDatum = fst(snd(queryResult));
-  top.binds := snd(snd(queryResult));
-
-  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) =
-    case result of
-      s::_ -> (case s.datum of
-            | just(d) -> (just(s), just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
-            | nothing() -> unsafeTrace((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
-            end)
-    | [] ->  unsafeTrace((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
-    end;
-  
-}
-
-aspect production varQRef
-top::VarRef ::= r::ModRef x::String
-{
-
-  local regex::Regex = regexSingle(labelVar());
-  
-  local dfa::DFA = regex.dfa;
-  local resFun::([Decorated Scope] ::= Decorated Scope String) = resolutionFun(dfa);
-  local result::[Decorated Scope] = case r.declScope of | just(sMod) -> resFun(sMod, x) | _ -> [] end;
-
-  local bindStr::String = x ++ "_" ++ toString(top.location.line) ++ ":" ++ toString(top.location.column);
-
-  top.declScope = fst(queryResult);
-  top.varRefDatum = fst(snd(queryResult));
-  top.binds := snd(snd(queryResult));
-
-  local queryResult::(Maybe<Decorated Scope>, Maybe<Datum>, [(String, String)]) =
-    case result of
-      s::_ -> (case s.datum of
-            | just(d) -> (just(s), just(d), [(bindStr, d.datumId ++ "_" ++ toString(d.location.line) ++ ":" ++ toString(d.location.column))])
-            | nothing() -> unsafeTrace((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
-            end)
-    | [] ->  unsafeTrace((nothing(), nothing(), [(bindStr, "?")]), printT("[✗] Unable to find a binding for " ++ bindStr ++ "\n", unsafeIO()))
-    end;
-
-  r.s = top.s;
-
+  top.resolution = r.res;
 }

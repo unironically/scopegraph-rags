@@ -287,12 +287,6 @@ top::ModRef ::= x::String
   top.statix = "ModRef(\"" ++ x ++ "\")";
 }
 
-abstract production modQRef
-top::ModRef ::= r::ModRef x::String
-{
-  top.statix = "ModQRef(" ++ r.statix ++ ", \"" ++ x ++ "\")";
-}
-
 --------------------------------------------------
 
 nonterminal VarRef with statix, location;
@@ -301,10 +295,4 @@ abstract production varRef
 top::VarRef ::= x::String
 {
   top.statix = "VarRef(\"" ++ x ++ "\")";
-}
-
-abstract production varQRef
-top::VarRef ::= r::ModRef x::String
-{
-  top.statix = "VarQRef(" ++ r.statix ++ ", \"" ++ x ++ "\")";
 }
