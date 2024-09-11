@@ -9,11 +9,7 @@ synthesized attribute vars::[Decorated SGScope];
 synthesized attribute mods::[Decorated SGScope];
 synthesized attribute imps::[Decorated SGScope];
 
-monoid attribute allScopes::[Decorated SGScope] with [], ++;
-
 --------------------------------------------------
-
-attribute allScopes occurs on Main;
 
 aspect production program
 top::Main ::= ds::Decls
@@ -25,8 +21,6 @@ top::Main ::= ds::Decls
   glob.var = ds.vars;
 
   ds.s = glob;
-
-  top.allScopes := glob :: ds.allScopes;
 }
 
 --------------------------------------------------
@@ -34,8 +28,6 @@ top::Main ::= ds::Decls
 attribute s occurs on Decls;
 attribute vars occurs on Decls;
 attribute mods occurs on Decls;
-
-attribute allScopes occurs on Decls;
 
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
@@ -53,8 +45,6 @@ top::Decls ::= d::Decl ds::Decls
 
   top.vars = d.vars ++ ds.vars;
   top.mods = d.mods ++ ds.mods;
-
-  top.allScopes := lookup::(d.allScopes ++ ds.allScopes);
 }
 
 aspect production declsNil
@@ -62,8 +52,6 @@ top::Decls ::=
 {
   top.vars = [];
   top.mods = [];
-
-  top.allScopes := [];
 }
 
 --------------------------------------------------
@@ -74,8 +62,6 @@ attribute sLookup occurs on Decl;
 attribute vars occurs on Decl;
 attribute mods occurs on Decl;
 attribute imps occurs on Decl;
-
-attribute allScopes occurs on Decl;
 
 aspect production declModule
 top::Decl ::= id::String ds::Decls
@@ -91,8 +77,6 @@ top::Decl ::= id::String ds::Decls
   top.imps = [];
 
   ds.s = top.s;
-
-  top.allScopes := modScope::ds.allScopes;
 }
 
 aspect production declImport
@@ -103,8 +87,6 @@ top::Decl ::= r::ModRef
   top.imps = r.resolution;
 
   r.s = top.s;
-
-  top.allScopes := [];
 }
 
 aspect production declDef
@@ -115,39 +97,28 @@ top::Decl ::= b::ParBind
   top.imps = [];
 
   b.s = top.sLookup;
-
-  top.allScopes := b.allScopes;
 }
 
 --------------------------------------------------
 
 attribute s occurs on Expr;
 
-attribute allScopes occurs on Expr;
-
 aspect production exprInt
 top::Expr ::= i::Integer
-{
-  top.allScopes := [];
-}
+{}
 
 aspect production exprTrue
 top::Expr ::=
-{
-  top.allScopes := [];
-}
+{}
 
 aspect production exprFalse
 top::Expr ::=
-{
-  top.allScopes := [];
-}
+{}
 
 aspect production exprVar
 top::Expr ::= r::VarRef
 {
   r.s = top.s;
-  top.allScopes := [];
 }
 
 aspect production exprAdd
@@ -155,8 +126,6 @@ top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
   e2.s = top.s;
-
-  top.allScopes := e1.allScopes ++ e2.allScopes;
 }
 
 aspect production exprSub
@@ -164,17 +133,13 @@ top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
   e2.s = top.s;
-  
-  top.allScopes := e1.allScopes ++ e2.allScopes;
-}
+  }
 
 aspect production exprMul
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
   e2.s = top.s;
-  
-  top.allScopes := e1.allScopes ++ e2.allScopes;
 }
 
 aspect production exprDiv
@@ -182,8 +147,6 @@ top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
   e2.s = top.s;
-  
-  top.allScopes := e1.allScopes ++ e2.allScopes;
 }
 
 aspect production exprAnd
@@ -191,8 +154,6 @@ top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
   e2.s = top.s;
-  
-  top.allScopes := e1.allScopes ++ e2.allScopes;
 }
 
 aspect production exprOr
@@ -200,8 +161,6 @@ top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
   e2.s = top.s;
-  
-  top.allScopes := e1.allScopes ++ e2.allScopes;
 }
 
 aspect production exprEq
@@ -209,8 +168,6 @@ top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
   e2.s = top.s;
-  
-  top.allScopes := e1.allScopes ++ e2.allScopes;
 }
 
 aspect production exprApp
@@ -218,8 +175,6 @@ top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
   e2.s = top.s;
-  
-  top.allScopes := e1.allScopes ++ e2.allScopes;
 }
 
 aspect production exprIf
@@ -228,8 +183,6 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
   e1.s = top.s;
   e2.s = top.s;
   e3.s = top.s;
-  
-  top.allScopes := e1.allScopes ++ e2.allScopes ++ e3.allScopes;
 }
 
 aspect production exprFun
@@ -243,8 +196,6 @@ top::Expr ::= d::ArgDecl e::Expr
 
   d.s = s_fun;
   e.s = s_fun;
-
-  top.allScopes := s_fun :: (d.allScopes ++ e.allScopes);
 }
 
 
@@ -259,8 +210,6 @@ top::Expr ::= bs::SeqBinds e::Expr
 
   bs.s = top.s;
   e.s = s_let;
-
-  top.allScopes := s_let :: (bs.allScopes ++ e.allScopes);
 }
 
 aspect production exprLetRec
@@ -274,8 +223,6 @@ top::Expr ::= bs::ParBinds e::Expr
 
   bs.s = s_let;
   e.s = s_let;
-
-  top.allScopes := s_let :: (bs.allScopes ++ e.allScopes);
 }
 
 aspect production exprLetPar
@@ -289,8 +236,6 @@ top::Expr ::= bs::ParBinds e::Expr
 
   bs.s = top.s;
   e.s = s_let;
-
-  top.allScopes := s_let :: (bs.allScopes ++ e.allScopes);
 }
 
 --------------------------------------------------
@@ -300,15 +245,12 @@ attribute s occurs on SeqBinds;
 synthesized attribute lastScope::Decorated SGScope occurs on SeqBinds;
 
 attribute vars occurs on SeqBinds;
-attribute allScopes occurs on SeqBinds;
 
 aspect production seqBindsNil
 top::SeqBinds ::=
 {
   top.vars = [];
   top.lastScope = top.s;
-
-  top.allScopes := [];
 }
 
 aspect production seqBindsOne
@@ -318,8 +260,6 @@ top::SeqBinds ::= s::SeqBind
 
   top.vars = s.vars;
   top.lastScope = top.s;
-
-  top.allScopes := s.allScopes;
 }
 
 aspect production seqBindsCons
@@ -336,8 +276,6 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
 
   top.vars = ss.vars;
   top.lastScope = ss.lastScope;
-
-  top.allScopes := s_def_prime :: (s.allScopes ++ ss.allScopes);
 }
 
 --------------------------------------------------
@@ -345,7 +283,6 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
 attribute s occurs on SeqBind;
 
 attribute vars occurs on SeqBind;
-attribute allScopes occurs on SeqBind;
 
 aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
@@ -359,7 +296,6 @@ top::SeqBind ::= id::String e::Expr
   e.s = top.s;
 
   top.vars = [s_var];
-  top.allScopes := [s_var];
 }
 
 aspect production seqBindTyped
@@ -375,7 +311,6 @@ top::SeqBind ::= ty::Type id::String e::Expr
   ty.s = top.s;
 
   top.vars = [s_var];
-  top.allScopes := [s_var];
 }
 
 --------------------------------------------------
@@ -383,9 +318,6 @@ top::SeqBind ::= ty::Type id::String e::Expr
 attribute s occurs on ParBinds;
 
 attribute vars occurs on ParBinds;
-
-attribute allScopes occurs on ParBinds;
-propagate allScopes on ParBinds;
 
 aspect production parBindsNil
 top::ParBinds ::=
@@ -408,8 +340,6 @@ attribute s occurs on ParBind;
 
 attribute vars occurs on ParBind;
 
-attribute allScopes occurs on ParBind;
-
 aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
 {
@@ -422,7 +352,6 @@ top::ParBind ::= id::String e::Expr
   e.s = top.s;
 
   top.vars = [s_var];
-  top.allScopes := [s_var];
 }
 
 aspect production parBindTyped
@@ -438,7 +367,6 @@ top::ParBind ::= ty::Type id::String e::Expr
   ty.s = top.s;
 
   top.vars = [s_var];
-  top.allScopes := [s_var];
 }
 
 --------------------------------------------------
@@ -446,7 +374,6 @@ top::ParBind ::= ty::Type id::String e::Expr
 attribute s occurs on ArgDecl;
 
 attribute vars occurs on ArgDecl;
-attribute allScopes occurs on ArgDecl;
 
 aspect production argDecl
 top::ArgDecl ::= id::String ty::Type
@@ -460,7 +387,6 @@ top::ArgDecl ::= id::String ty::Type
   ty.s = top.s;
 
   top.vars = [s_var];
-  top.allScopes := [s_var];
 }
 
 --------------------------------------------------
