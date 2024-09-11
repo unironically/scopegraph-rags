@@ -28,4 +28,25 @@ Note that the syntax for languages 2, 3 and 4 are identical, whereas the syntax 
   - See [lm_language_4/](lm_language_4/)
 
 #### Scope Graph Examples
-Coming soon...
+
+##### `modulessimple.lm`
+
+```
+module A {
+  def a:int = 1
+}
+
+module B {
+  import A
+  def b:int = a
+}
+```
+
+- Language 2
+
+
+
+- Language 3
+
+
+- Language 4
