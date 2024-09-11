@@ -66,11 +66,10 @@ top::Expr ::=
 aspect production exprVar
 top::Expr ::= r::VarRef
 {
-  top.ty =
-    case r.varRefDatum of
-    | just(datumVar(id, ty)) -> ty
-    | _ -> tErr()
-    end;
+  top.ty = case head(r.resolution).datum of
+           | just(datumVar(_, t)) -> t
+           | _ -> tErr()
+           end;
 }
 
 aspect production exprAdd
@@ -240,7 +239,7 @@ top::ArgDecl ::= id::String tyann::Type
 
 attribute ty occurs on Type;
 
--- A little absurd, but doing this to make equations look closer to the statix constraints
+-- Make equations look closer to the statix constraints
 
 aspect production tInt
 top::Type ::=
@@ -271,4 +270,5 @@ top::Type ::=
 aspect production varRef
 top::VarRef ::= x::String
 {
+
 }

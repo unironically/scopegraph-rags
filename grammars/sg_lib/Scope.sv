@@ -2,19 +2,19 @@ grammar sg_lib;
 
 --------------------------------------------------
 
-nonterminal Node with location;
+nonterminal SGNode with location;
 
-synthesized attribute id::Integer occurs on Node;
-synthesized attribute datum::Maybe<Datum> occurs on Node;
+synthesized attribute id::Integer occurs on SGNode;
+synthesized attribute datum::Maybe<SGDatum> occurs on SGNode;
 
-inherited attribute lex::[Decorated Node] occurs on Node;
-inherited attribute var::[Decorated Node] occurs on Node;
-inherited attribute mod::[Decorated Node] occurs on Node;
-inherited attribute imp::[Decorated Node] occurs on Node;
+inherited attribute lex::[Decorated SGNode] occurs on SGNode;
+inherited attribute var::[Decorated SGNode] occurs on SGNode;
+inherited attribute mod::[Decorated SGNode] occurs on SGNode;
+inherited attribute imp::[Decorated SGNode] occurs on SGNode;
 
 abstract production mkNode
-top::Node ::=
-  datum::Maybe<Datum>
+top::SGNode ::=
+  datum::Maybe<SGDatum>
 {
   top.id = genInt();
   top.datum = datum;
@@ -22,53 +22,53 @@ top::Node ::=
 
 --------------------------------------------------
 
-type Scope = Node;
+type SGScope = SGNode;
 
 abstract production mkScope
-top::Scope ::=
-{ forwards to mkNode(nothing()); }
+top::SGScope ::=
+{ forwards to mkNode(nothing(), location=top.location); }
 
 --------------------------------------------------
 
-type Decl = Scope;
-
-abstract production mkDeclMod
-top::Decl ::=
-  name::String
-{ forwards to mkNode(datumMod(name)); }
-
-abstract production mkDeclVar
-top::Decl ::=
-  name::String
-{ forwards to mkNode(datumVar(name)); }
+type SGDecl = SGNode;
 
 --------------------------------------------------
 
 synthesized attribute name::String;
+synthesized attribute res::[Decorated SGDecl];
 
-nonterminal Ref with name, lex, location;
+nonterminal SGRef with name, lex, res, location;
 
 abstract production mkRefVar
-top::Ref ::= name::String
+top::SGRef ::= name::String
 {
   local dfa::DFA = varRefDFA();
-  top.decls = dfa.decls(top, head(top.lex));
+  top.name = name;
+  top.res = dfa.decls(top, head(top.lex));
 }
 
 abstract production mkRefMod
-top::Ref ::= name::String
+top::SGRef ::= name::String
 {
   local dfa::DFA = modRefDFA();
-  top.decls = dfa.decls(top, head(top.lex));
+  top.name = name;
+  top.res = dfa.decls(top, head(top.lex));
 }
 
 --------------------------------------------------
 
-synthesized attribute match::(Boolean ::= Ref);
+synthesized attribute test::(Boolean ::= SGRef);
 
-nonterminal Datum with name, nameEq, location;
+nonterminal SGDatum with name, test, location;
 
 --synthesized attribute str::String occurs on Datum;
+
+abstract production datum
+top::SGDatum ::= name::String
+{
+  top.name = name;
+  top.test = \r::SGRef -> r.name == top.name;
+}
 
 {-abstract production datumId
 top::Datum ::= id::String str::String
@@ -78,18 +78,25 @@ top::Datum ::= id::String str::String
   top.str = str;
 }-}
 
-abstract production datumMod
-top::Datum ::= name::String
+{-abstract production datumMod
+top::SGDatum ::= name::String
 {
   top.name = name;
-  top.match = \r::Ref -> r.name == top.name;
+  top.test = \r::Ref -> r.name == top.name;
 }
 
 abstract production datumVar
-top::Datum ::= name::String ty::Type
+top::SGDatum ::= name::String
 {
   top.name = name;
-  top.match = \r::Ref -> r.name == top.name;
-}
+  top.test = \r::Ref -> r.name == top.name;
+}-}
 
 --------------------------------------------------
+
+function printRef
+String ::= r::Decorated SGRef
+{
+  return r.name ++ "_" ++ 
+         toString(r.location.line) ++ "_" ++ toString(r.location.column);
+}

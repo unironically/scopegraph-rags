@@ -25,7 +25,7 @@ IO<Integer> ::= largs::[String]
         let fileNameExplode::[String] = explode(".", fileNameExt);
         let fileName::String = head(fileNameExplode);
 
-        let viz::String = graphvizScopes(ast.allScopes);
+        --let viz::String = graphvizScopes(ast.allScopes);
 
         if result.parseSuccess
           then do {
@@ -33,11 +33,11 @@ IO<Integer> ::= largs::[String]
               then do {
                 print("[✔] Parse success\n");
                 mkdir("out");
-                system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
-                writeStatixConstraints(filePath, file, ast.statixConstraints);
-                writeSilverEquations(filePath, file, ast.silverEquations);
-                writeJastEquations(filePath, file, ast.jastEquations);
-                writeStatixAterm(fileName, ast.statix);
+                --system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
+                --writeStatixConstraints(filePath, file, ast.statixConstraints);
+                --writeSilverEquations(filePath, file, ast.silverEquations);
+                --writeJastEquations(filePath, file, ast.jastEquations);
+                --writeStatixAterm(fileName, ast.statix);
                 res::Integer <- printBinds(ast.binds);
                 programOk(ast.ok);
                 return res;
@@ -63,7 +63,7 @@ fun writeStatixAterm IO<Integer> ::= fileN::String aterm::String = do {
   print("[✔] See out/" ++ fileN ++ ".aterm for the resulting Ministatix term\n");
 };
 
-fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[String] = do {
+{-fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[String] = do {
   let numberedLines::[String] = snd(foldr(eqsNumbered, (length(cs), []), cs));
   let toWrite::[String] =
     ("## Statix core constraints for " ++ fname ++ "\n") ::
@@ -94,7 +94,7 @@ fun writeJastEquations IO<Integer> ::= fname::String code::String es::[String] =
     (numberedLines ++ ["\n```\n"]);
   writeFile("out/JastEquations.md", implode("\n", toWrite));
   print("[✔] See out/JastEquations.md for the resulting flattened Silver equations\n");
-};
+};-}
 
 fun printBinds IO<Integer> ::= binds::[(String, String)] = do {
   let bindEachStr::[String] = map((\p::(String, String) -> "\t" ++ fst(p) ++ "\t-[binds to]->\t" ++ snd(p)), binds);

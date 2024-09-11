@@ -3,9 +3,9 @@ grammar sg_lib;
 
 --------------------------------------------------
 
-nonterminal DFA;
+synthesized attribute decls::([Decorated SGDecl] ::= SGRef Decorated SGScope);
 
-synthesized attribute decls::([Decorated Scope] ::= Ref Decorated Scope);
+nonterminal DFA with decls;
 
 abstract production varRefDFA
 top::DFA ::= 
@@ -81,12 +81,12 @@ nonterminal DFAState with varT, modT, impT, lexT, decls;
 abstract production stateVar
 top::DFAState ::=
 {
-  top.decls = \r::Ref cur::Scope ->
-    let varRes::[Decorated Scope] = 
+  top.decls = \r::SGRef cur::Decorated SGScope ->
+    let varRes::[Decorated SGDecl] = 
       concat(map(top.varT.decls(r, _), cur.var)) in
-    let impRes::[Decorated Scope] = 
+    let impRes::[Decorated SGDecl] = 
       concat(map(top.impT.decls(r, _), cur.imp)) in
-    let lexRes::[Decorated Scope] = 
+    let lexRes::[Decorated SGDecl] = 
       concat(map(top.lexT.decls(r, _), cur.lex)) in
     
     if !null(varRes) then varRes
@@ -99,12 +99,12 @@ top::DFAState ::=
 abstract production stateMod
 top::DFAState ::=
 {
-  top.decls = \r::Ref cur::Scope ->
-    let modRes::[Decorated Scope] = 
+  top.decls = \r::SGRef cur::Decorated SGScope ->
+    let modRes::[Decorated SGDecl] = 
       concat(map(top.modT.decls(r, _), cur.mod)) in
-    let impRes::[Decorated Scope] = 
+    let impRes::[Decorated SGDecl] = 
       concat(map(top.impT.decls(r, _), cur.imp)) in
-    let lexRes::[Decorated Scope] = 
+    let lexRes::[Decorated SGDecl] = 
       concat(map(top.lexT.decls(r, _), cur.lex)) in
     
     if !null(modRes) then modRes
@@ -117,10 +117,10 @@ top::DFAState ::=
 abstract production stateFinal
 top::DFAState ::=
 {
-  top.decls = \r::Ref cur::Scope
+  top.decls = \r::SGRef cur::Decorated SGScope ->
     case cur.datum of
-    | just(d) when d.match(r) -> [cur]
-    | nothing() ->
+    | just(d) when d.test(r) -> [cur]
+    | _ -> []
     end;
 }
 
