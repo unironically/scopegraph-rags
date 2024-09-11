@@ -23,9 +23,9 @@
 <!-- 0&#45;&gt;1 -->
 <g id="edge1" class="edge">
 <title>0&#45;&gt;1</title>
-<path fill="none" stroke="black" d="M60.71,-192.2C41.08,-188.25 15.86,-179.55 3.12,-160.5 -2.8,-151.65 0.88,-142.09 7.81,-133.6"/>
-<polygon fill="black" stroke="black" points="10.11,-136.25 14.52,-126.62 5.07,-131.4 10.11,-136.25"/>
-<text text-anchor="middle" x="21.49" y="-147.2" font-family="Times,serif" font-size="14.00">MOD</text>
+<path fill="none" stroke="blue" d="M60.71,-192.2C41.08,-188.25 15.86,-179.55 3.12,-160.5 -2.8,-151.65 0.88,-142.09 7.81,-133.6"/>
+<polygon fill="blue" stroke="blue" points="10.11,-136.25 14.52,-126.62 5.07,-131.4 10.11,-136.25"/>
+<text text-anchor="middle" x="21.49" y="-147.2" font-family="Times,serif" font-size="14.00" fill="blue">MOD</text>
 </g>
 <!-- 3 -->
 <g id="node4" class="node">
@@ -36,9 +36,9 @@
 <!-- 0&#45;&gt;3 -->
 <g id="edge2" class="edge">
 <title>0&#45;&gt;3</title>
-<path fill="none" stroke="black" d="M96.81,-178.01C102.06,-167.82 108.87,-154.76 115.12,-143.25 116.49,-140.73 117.92,-138.11 119.37,-135.5"/>
-<polygon fill="black" stroke="black" points="122.33,-137.39 124.17,-126.95 116.22,-133.96 122.33,-137.39"/>
-<text text-anchor="middle" x="133.49" y="-147.2" font-family="Times,serif" font-size="14.00">MOD</text>
+<path fill="none" stroke="blue" d="M96.81,-178.01C102.06,-167.82 108.87,-154.76 115.12,-143.25 116.49,-140.73 117.92,-138.11 119.37,-135.5"/>
+<polygon fill="blue" stroke="blue" points="122.33,-137.39 124.17,-126.95 116.22,-133.96 122.33,-137.39"/>
+<text text-anchor="middle" x="133.49" y="-147.2" font-family="Times,serif" font-size="14.00" fill="blue">MOD</text>
 </g>
 <!-- 1&#45;&gt;0 -->
 <g id="edge3" class="edge">
@@ -56,9 +56,9 @@
 <!-- 1&#45;&gt;2 -->
 <g id="edge4" class="edge">
 <title>1&#45;&gt;2</title>
-<path fill="none" stroke="black" d="M39.87,-89.01C39.87,-77.18 39.87,-61.2 39.87,-47.5"/>
-<polygon fill="black" stroke="black" points="43.37,-47.72 39.87,-37.72 36.37,-47.72 43.37,-47.72"/>
-<text text-anchor="middle" x="54.87" y="-57.95" font-family="Times,serif" font-size="14.00">VAR</text>
+<path fill="none" stroke="red" d="M39.87,-89.01C39.87,-77.18 39.87,-61.2 39.87,-47.5"/>
+<polygon fill="red" stroke="red" points="43.37,-47.72 39.87,-37.72 36.37,-47.72 43.37,-47.72"/>
+<text text-anchor="middle" x="54.87" y="-57.95" font-family="Times,serif" font-size="14.00" fill="red">VAR</text>
 </g>
 <!-- 3&#45;&gt;0 -->
 <g id="edge5" class="edge">
@@ -76,9 +76,9 @@
 <!-- 3&#45;&gt;4 -->
 <g id="edge6" class="edge">
 <title>3&#45;&gt;4</title>
-<path fill="none" stroke="black" d="M134.87,-89.01C134.87,-77.18 134.87,-61.2 134.87,-47.5"/>
-<polygon fill="black" stroke="black" points="138.37,-47.72 134.87,-37.72 131.37,-47.72 138.37,-47.72"/>
-<text text-anchor="middle" x="149.87" y="-57.95" font-family="Times,serif" font-size="14.00">VAR</text>
+<path fill="none" stroke="red" d="M134.87,-89.01C134.87,-77.18 134.87,-61.2 134.87,-47.5"/>
+<polygon fill="red" stroke="red" points="138.37,-47.72 134.87,-37.72 131.37,-47.72 138.37,-47.72"/>
+<text text-anchor="middle" x="149.87" y="-57.95" font-family="Times,serif" font-size="14.00" fill="red">VAR</text>
 </g>
 </g>
 </svg>

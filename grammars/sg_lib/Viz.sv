@@ -9,13 +9,13 @@ top::SGNode ::=
   datum::Maybe<SGDatum>
 {
   local lexEdgesString::String = 
-    concat(map(edgeStyle("LEX", top, _), top.lex));
+    concat(map(edgeStyle("LEX", "black", top, _), top.lex));
   local impEdgesString::String = "";
-  --  concat(map(edgeStyle("IMP", top, _), top.imp));
+    --concat(map(edgeStyle("IMP", "green", top, _), top.imp));
   local modEdgesString::String = 
-    concat(map(edgeStyle("MOD", top, _), top.mod));
+    concat(map(edgeStyle("MOD", "blue", top, _), top.mod));
   local varEdgesString::String = 
-    concat(map(edgeStyle("VAR", top, _), top.var));
+    concat(map(edgeStyle("VAR", "red", top, _), top.var));
   
   top.graphvizString = "{" ++ lexEdgesString ++ varEdgesString ++ modEdgesString ++ impEdgesString ++ "}\n";
 
@@ -44,7 +44,9 @@ String ::= s::Decorated SGNode
 }
 
 function edgeStyle
-String ::= lab::String src::Decorated SGNode tgt::Decorated SGNode
+String ::= lab::String col::String src::Decorated SGNode tgt::Decorated SGNode
 {
-  return "{edge [label=" ++ lab ++ "] " ++ toString(src.id) ++ "->" ++ toString(tgt.id) ++ "}";
+  return "{edge [label=" ++ lab ++ " color=\"" ++ col ++ "\" " ++ 
+    "fontcolor=\"" ++ col ++ "\"] " ++ 
+    toString(src.id) ++ "->" ++ toString(tgt.id) ++ "}";
 }
