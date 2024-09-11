@@ -78,11 +78,10 @@ top::Expr ::=
 aspect production exprVar
 top::Expr ::= r::VarRef
 {
-  top.ty =
-    case r.varRefDatum of
-    | just(datumVar(id, ty)) -> ty
-    | _ -> tErr()
-    end;
+  top.ty = case head(r.resolution).datum of
+           | just(datumVar(_, t)) -> t
+           | _ -> tErr()
+           end;
 }
 
 aspect production exprAdd
@@ -285,23 +284,11 @@ attribute ok occurs on ModRef;
 aspect production modRef
 top::ModRef ::= x::String
 {
-  top.ok = top.declScope.isJust;
-}
-
-aspect production modQRef
-top::ModRef ::= r::ModRef x::String
-{
-  top.ok = top.declScope.isJust;
+  top.ok = length(top.resolution) == 1;
 }
 
 --------------------------------------------------
 
 aspect production varRef
 top::VarRef ::= x::String
-{
-}
-
-aspect production varQRef
-top::VarRef ::= r::ModRef x::String
-{
-}
+{}

@@ -1,4 +1,4 @@
-grammar lm_semantics_3:nameanalysis;
+grammar lm_semantics_4:nameanalysis;
 
 monoid attribute allScopes::[Decorated SGScope] with [], ++;
 
@@ -10,15 +10,7 @@ top::Main ::= ds::Decls
 
 
 attribute allScopes occurs on Decls;
-
-aspect production declsCons
-top::Decls ::= d::Decl ds::Decls
-{ top.allScopes := d.allScopes ++ ds.allScopes; }
-
-aspect production declsNil
-top::Decls ::=
-{ top.allScopes := []; }
-
+propagate allScopes on Decls;
 
 attribute allScopes occurs on Decl;
 
@@ -28,7 +20,7 @@ top::Decl ::= id::String ds::Decls
 
 aspect production declImport
 top::Decl ::= r::ModRef
-{ top.allScopes := top.imps; }
+{ top.allScopes := []; }
 
 aspect production declDef
 top::Decl ::= b::ParBind

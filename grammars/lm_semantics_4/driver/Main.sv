@@ -35,7 +35,7 @@ IO<Integer> ::= largs::[String]
                 mkdir("out");
                 system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
                 writeStatixConstraints(filePath, file, ast.statixConstraints);
-                writeSilverEquations(filePath, file, ast.silverEquations);
+                --writeSilverEquations(filePath, file, ast.silverEquations);
                 --writeJastEquations(filePath, file, ast.jastEquations);
                 writeStatixAterm(fileName, ast.statix);
                 --res::Integer <- printBinds(ast.binds);
@@ -74,7 +74,7 @@ fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[Strin
   print("[✔] See out/SilverEquations.md for the resulting flattened Statix constraints\n");
 };
 
-fun writeSilverEquations IO<Integer> ::= fname::String code::String es::[String] = do {
+{-fun writeSilverEquations IO<Integer> ::= fname::String code::String es::[String] = do {
   let numberedLines::[String] = snd(foldr(eqsNumbered, (length(es), []), es));
   let toWrite::[String] =
     ("## Silver equations for " ++ fname ++ "\n") ::
@@ -94,7 +94,7 @@ fun writeJastEquations IO<Integer> ::= fname::String code::String es::[String] =
     (numberedLines ++ ["\n```\n"]);
   writeFile("out/JastEquations.md", implode("\n", toWrite));
   print("[✔] See out/JastEquations.md for the resulting flattened Silver equations\n");
-};
+};-}
 
 fun printBinds IO<Integer> ::= binds::[(String, String)] = do {
   let bindEachStr::[String] = map((\p::(String, String) -> "\t" ++ fst(p) ++ "\t-[binds to]->\t" ++ snd(p)), binds);
