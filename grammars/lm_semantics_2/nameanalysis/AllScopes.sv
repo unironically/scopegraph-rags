@@ -15,7 +15,7 @@ attribute allScopes occurs on Decls;
 
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
-{ top.allScopes := d.s::(d.allScopes ++ ds.allScopes); }
+{ top.allScopes := d.sLookup::(d.allScopes ++ ds.allScopes); }
 
 aspect production declsNil
 top::Decls ::=

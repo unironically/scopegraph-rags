@@ -10,8 +10,8 @@ top::SGNode ::=
 {
   local lexEdgesString::String = 
     concat(map(edgeStyle("LEX", top, _), top.lex));
-  local impEdgesString::String = 
-    concat(map(edgeStyle("IMP", top, _), top.imp));
+  local impEdgesString::String = "";
+  --  concat(map(edgeStyle("IMP", top, _), top.imp));
   local modEdgesString::String = 
     concat(map(edgeStyle("MOD", top, _), top.mod));
   local varEdgesString::String = 

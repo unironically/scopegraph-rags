@@ -44,9 +44,12 @@ module B {
 
 - Language 2
 
-
+![modulessimple.lm for language 2](img/modulessimple_2.svg)
 
 - Language 3
 
+![modulessimple.lm for language 3](img/modulessimple_3.svg)
 
 - Language 4
+
+![modulessimple.lm for language 4](img/modulessimple_4.svg)
