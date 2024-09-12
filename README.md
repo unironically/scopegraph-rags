@@ -29,6 +29,28 @@ Note that the syntax for languages 2, 3 and 4 are identical, whereas the syntax 
 
 #### Scope Graph Examples
 
+##### Let expressions
+
+```
+def a:int = let x:int = 1
+                y:int = 2
+                z:int = 3
+            in x + y + z
+```
+
+- Sequential
+
+![leqseq.lm for language 1](img/letseq_1.svg)
+
+- Recursive
+
+![leqrec.lm for language 1](img/letrec_1.svg)
+
+- Parallel
+
+![leqpar.lm for language 1](img/letpar_1.svg)
+
+
 ##### `modulessimple.lm`
 
 ```
@@ -50,6 +72,6 @@ module B {
 
 ![modulessimple.lm for language 3](img/modulessimple_3.svg)
 
-- Language 4
+- Language 4 (no `IMP` edges - dependency cycle during import queries)
 
 ![modulessimple.lm for language 4](img/modulessimple_4.svg)

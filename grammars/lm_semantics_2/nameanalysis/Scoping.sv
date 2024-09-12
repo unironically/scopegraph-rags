@@ -417,6 +417,7 @@ top::Type ::=
 attribute s occurs on ModRef;
 
 synthesized attribute resolution::[Decorated SGDecl] occurs on ModRef;
+synthesized attribute ref::Decorated SGRef occurs on ModRef;
 
 aspect production modRef
 top::ModRef ::= name::String
@@ -424,6 +425,7 @@ top::ModRef ::= name::String
   local r::SGRef = mkRefMod(name, location=top.location);
   r.lex = [top.s];
 
+  top.ref = r;
   top.resolution = r.res;
 }
 
@@ -432,6 +434,7 @@ top::ModRef ::= name::String
 attribute s occurs on VarRef;
 
 attribute resolution occurs on VarRef;
+attribute ref occurs on VarRef;
 
 aspect production varRef
 top::VarRef ::= name::String
@@ -439,5 +442,6 @@ top::VarRef ::= name::String
   local r::SGRef = mkRefVar(name, location=top.location);
   r.lex = [top.s];
 
+  top.ref = r;
   top.resolution = r.res;
 }

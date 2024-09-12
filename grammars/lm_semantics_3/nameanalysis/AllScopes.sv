@@ -92,3 +92,25 @@ attribute allScopes occurs on ArgDecl;
 aspect production argDecl
 top::ArgDecl ::= id::String ty::Type
 { top.allScopes := top.vars; }
+
+--------------------------------------------------
+
+monoid attribute allRefs::[Decorated SGRef] with [], ++;
+
+attribute allRefs occurs on Main, Decls, Decl, SeqBinds, SeqBind, ParBinds,
+                         ParBind, Expr, ArgDecl, VarRef, ModRef;
+
+propagate allRefs on Main, Decls, Decl, SeqBinds, SeqBind, ParBinds, ParBind,
+                  Expr, ArgDecl;
+
+aspect production modRef
+top::ModRef ::= name::String
+{
+  top.allRefs := [top.ref];
+}
+
+aspect production varRef
+top::VarRef ::= name::String
+{
+  top.allRefs := [top.ref];
+}

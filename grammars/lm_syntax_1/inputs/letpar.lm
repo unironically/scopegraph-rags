@@ -1,6 +1,6 @@
 def a =
   letpar
-    x = let a = 1, b = 2 in a + b,
+    x = 1,
     y = 2,
     z = 3
   in

@@ -25,7 +25,8 @@ IO<Integer> ::= largs::[String]
         let fileNameExplode::[String] = explode(".", fileNameExt);
         let fileName::String = head(fileNameExplode);
 
-        let viz::String = graphvizScopes(ast.allScopes);
+        let viz::String = graphvizScopes(ast.allScopes, ast.allRefs);
+        print(viz);
 
         if result.parseSuccess
           then do {

@@ -3,7 +3,8 @@ grammar sg_lib;
 
 --------------------------------------------------
 
-synthesized attribute decls::([Decorated SGDecl] ::= SGRef Decorated SGScope);
+synthesized attribute decls::
+  ([Decorated SGDecl] ::= Decorated SGRef Decorated SGScope);
 
 nonterminal DFA with decls;
 
@@ -81,7 +82,7 @@ nonterminal DFAState with varT, modT, impT, lexT, decls;
 abstract production stateVar
 top::DFAState ::=
 {
-  top.decls = \r::SGRef cur::Decorated SGScope ->
+  top.decls = \r::Decorated SGRef cur::Decorated SGScope ->
     let varRes::[Decorated SGDecl] = 
       concat(map(top.varT.decls(r, _), cur.var)) in
     let impRes::[Decorated SGDecl] = 
@@ -99,7 +100,7 @@ top::DFAState ::=
 abstract production stateMod
 top::DFAState ::=
 {
-  top.decls = \r::SGRef cur::Decorated SGScope ->
+  top.decls = \r::Decorated SGRef cur::Decorated SGScope ->
     let modRes::[Decorated SGDecl] = 
       concat(map(top.modT.decls(r, _), cur.mod)) in
     let impRes::[Decorated SGDecl] = 
@@ -117,7 +118,7 @@ top::DFAState ::=
 abstract production stateFinal
 top::DFAState ::=
 {
-  top.decls = \r::SGRef cur::Decorated SGScope ->
+  top.decls = \r::Decorated SGRef cur::Decorated SGScope ->
     case cur.datum of
     | just(d) when d.test(r) -> [cur]
     | _ -> []
