@@ -5,8 +5,15 @@ module A {
   }
 }
 
+module B {
+  def x:int = 3
+  module A {
+    def x:int = 4
+  }
+}
+
 module C {
-  import A
   import B
+  import A
   def y:int = x
 }

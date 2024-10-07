@@ -33,13 +33,14 @@ IO<Integer> ::= largs::[String]
               then do {
                 print("[✔] Parse success\n");
                 mkdir("out");
-                system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
+                --system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
                 writeStatixConstraints(filePath, file, ast.statixConstraints);
                 --writeSilverEquations(filePath, file, ast.silverEquations);
                 --writeJastEquations(filePath, file, ast.jastEquations);
                 writeStatixAterm(fileName, ast.statix);
                 --res::Integer <- printBinds(ast.binds);
                 --programOk(ast.ok);
+                writeJava(fileName, ast.java);
                 return 0;
               }
               else do {
@@ -62,6 +63,13 @@ fun writeStatixAterm IO<Integer> ::= fileN::String aterm::String = do {
   writeFile("out/" ++ fileN ++ ".aterm", aterm ++ "\n");
   print("[✔] See out/" ++ fileN ++ ".aterm for the resulting Ministatix term\n");
 };
+
+fun writeJava IO<Integer> ::= fileN::String java::[String] = do {
+  let imploded::String = implode("\n", java);
+  writeFile("out/java_" ++ fileN ++ ".txt", imploded ++ "\n");
+  print("[✔] See out/java_" ++ fileN ++ ".txt for the resulting Java ast\n");
+};
+
 
 fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[String] = do {
   let numberedLines::[String] = snd(foldr(eqsNumbered, (length(cs), []), cs));
