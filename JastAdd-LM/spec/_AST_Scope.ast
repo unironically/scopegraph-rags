@@ -1,6 +1,7 @@
-MkScope ::= ;
-MkScopeVar: MkScope ::= <s:String> t:Type;
-MkScopeMod: MkScope ::= <s:String>;
+abstract Scope ::= ;
+MkScope: Scope ::= ;
+MkScopeVar: Scope ::= <id:String> t:Type;
+MkScopeMod: Scope ::= <id:String>;
 
 abstract Datum ::= ;
 DatumVar: Datum ::= <id:String> t:Type;
@@ -8,5 +9,5 @@ DatumMod: Datum ::= <id:String>;
 DatumNone: Datum ::= ;
 
 abstract Ref ::= <id:String>;
-MkVarRef: Ref ::= ;
-MkModRef: Ref ::= ;
+MkVarRef: Ref ::= /dfa:VarDFA/;
+MkModRef: Ref ::= /dfa:ModDFA/;

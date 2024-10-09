@@ -6,15 +6,17 @@ aspect Resolution {
 
   syn ArrayList<Scope> DFA.decls(Ref ref, Scope current);
 
-  eq DFA.decls(Ref ref, Scope current) = stateLex().decls(ref, current);
+  eq DFA.decls(Ref ref, Scope current) = lexState().decls(ref, current);
 
+  syn State DFA.lexState();
+  syn State DFA.impState();
   syn FinalState DFA.finalState();
-  syn StinkState DFA.sinkState();
+  syn SinkState DFA.sinkState();
 
-  eq DFA.finalState() { State fin = new FinalState();
+  eq DFA.finalState() { FinalState fin = new FinalState();
                         fin.setParent(this); return fin; }
 
-    eq DFA.sinkState()  { State snk = new FinalState();
+    eq DFA.sinkState()  { SinkState snk = new SinkState();
                         snk.setParent(this); return snk; }
 
   eq DFA.finalState().lexT() { return this.sinkState(); }
@@ -49,23 +51,23 @@ aspect Resolution {
 
   /*---------- ModDFA ----------*/
 
-  syn State VarDFA.lexState();
-  syn State VarDFA.impState();
+  syn State ModDFA.lexState();
+  syn State ModDFA.impState();
 
-  eq VarDFA.lexState() { State lex = new ModState();
+  eq ModDFA.lexState() { State lex = new ModState();
                          lex.setParent(this); return lex; }
-  eq VarDFA.impState() { State imp = new ModState();
+  eq ModDFA.impState() { State imp = new ModState();
                          imp.setParent(this); return imp; }
 
-  eq VarDFA.lexState().lexT() { return this.lexState(); }
-  eq VarDFA.lexState().impT() { return this.impState(); }
-  eq VarDFA.lexState().varT() { return this.sinkState(); }
-  eq VarDFA.lexState().modT() { return this.finalState(); }
+  eq ModDFA.lexState().lexT() { return this.lexState(); }
+  eq ModDFA.lexState().impT() { return this.impState(); }
+  eq ModDFA.lexState().varT() { return this.sinkState(); }
+  eq ModDFA.lexState().modT() { return this.finalState(); }
 
-  eq VarDFA.impState().lexT() { return this.sinkState(); }
-  eq VarDFA.impState().impT() { return this.sinkState(); }
-  eq VarDFA.impState().varT() { return this.sinkState(); }
-  eq VarDFA.impState().modT() { return this.finalState(); }
+  eq ModDFA.impState().lexT() { return this.sinkState(); }
+  eq ModDFA.impState().impT() { return this.sinkState(); }
+  eq ModDFA.impState().varT() { return this.sinkState(); }
+  eq ModDFA.impState().modT() { return this.finalState(); }
   
   /*---------- State ----------*/
 
@@ -76,30 +78,30 @@ aspect Resolution {
 
   syn ArrayList<Scope> State.decls(Ref ref, Scope s);
 
-  eq VarState.decls(Ref ref, Scope s) {
+  eq State.decls(Ref ref, Scope s) {
     
     ArrayList<Scope> varRes = new ArrayList<Scope>();
 
-    for (Scope s: s.getVar()) {
-      varRes.addAll(this.varT().decls(ref, s));
+    for (Scope sVar: s.var()) {
+      varRes.addAll(this.varT().decls(ref, sVar));
     }
 
     ArrayList<Scope> modRes = new ArrayList<Scope>();
 
-    for (Scope s: s.getMod()) {
-      modRes.addAll(this.modT().decls(ref, s));
+    for (Scope sMod: s.mod()) {
+      modRes.addAll(this.modT().decls(ref, sMod));
     }
 
     ArrayList<Scope> impRes = new ArrayList<Scope>();
 
-    for (Scope s: s.getImp()) {
-      impRes.addAll(this.impT().decls(ref, s));
+    for (Scope sImp: s.imp()) {
+      impRes.addAll(this.impT().decls(ref, sImp));
     }
 
     ArrayList<Scope> lexRes = new ArrayList<Scope>();
 
-    for (Scope s: s.getLex()) {
-      lexRes.addAll(this.lexT().decls(ref, s));
+    for (Scope sLex: s.lex()) {
+      lexRes.addAll(this.lexT().decls(ref, sLex));
     }
 
     ArrayList<Scope> allRes = new ArrayList<Scope>();
@@ -117,26 +119,26 @@ aspect Resolution {
     
     ArrayList<Scope> varRes = new ArrayList<Scope>();
 
-    for (Scope s: s.getVar()) {
-      varRes.addAll(this.varT().decls(ref, s));
+    for (Scope sVar: s.var()) {
+      varRes.addAll(this.varT().decls(ref, sVar));
     }
 
     ArrayList<Scope> modRes = new ArrayList<Scope>();
 
-    for (Scope s: s.getMod()) {
-      modRes.addAll(this.modT().decls(ref, s));
+    for (Scope sMod: s.mod()) {
+      modRes.addAll(this.modT().decls(ref, sMod));
     }
 
     ArrayList<Scope> impTentativeRes = new ArrayList<Scope>();
 
-    for (Scope s: s.getImpTentative()) {
-      impTentativeRes.addAll(this.impT().decls(ref, s));
+    for (Scope sImpTentative: s.impTentative()) {
+      impTentativeRes.addAll(this.impT().decls(ref, sImpTentative));
     }
 
     ArrayList<Scope> lexRes = new ArrayList<Scope>();
 
-    for (Scope s: s.getLex()) {
-      lexRes.addAll(this.lexT().decls(ref, s));
+    for (Scope sLex: s.lex()) {
+      lexRes.addAll(this.lexT().decls(ref, sLex));
     }
 
     ArrayList<Scope> allRes = new ArrayList<Scope>();
@@ -150,7 +152,7 @@ aspect Resolution {
 
   }
   
-  eq FinalState.findVisMod(Ref ref, Scope s) {
+  eq FinalState.decls(Ref ref, Scope s) {
 
     ArrayList<Scope> res = new ArrayList<Scope>();
 
@@ -163,27 +165,35 @@ aspect Resolution {
   }
 
 
-  eq SinkState.findVisMod(Ref ref, Scope s) {
+  eq SinkState.decls(Ref ref, Scope s) {
 
     return new ArrayList<Scope>();
 
   }
 
 
-  /*---------- VarRef ----------*/
+  /*---------- MkVarRef ----------*/
 
-  syn lazy ArrayList<Scope> VarRef.varRes();
+  syn lazy ArrayList<Scope> MkVarRef.varRes();
 
   // top.varRes = top.dfa.decls(top, head(top.lex))
-  eq VarRef.varRes() { return getDFA().decls(this, this.lex().get(0)); }
+  eq MkVarRef.varRes() { return dfa().decls(this, this.lex().get(0)); }
 
+  syn lazy DFA MkVarRef.dfa() {
+    VarDFA dfa = new VarDFA();
+    return dfa;
+  }
 
-  /*---------- ModRef ----------*/
+  /*---------- MkModRef ----------*/
 
-  syn ArrayList<Scope> ModRef.modRes()
-    circular [new ArrayList<Scope>()];
+  syn ArrayList<Scope> MkModRef.modRes() circular [new ArrayList<Scope>()];
+
+  syn lazy DFA MkModRef.dfa() {
+    ModDFA dfa = new ModDFA();
+    return dfa;
+  }
 
   // top.modRes = top.dfa.decls(top, head(top.lex))
-  eq ModRef.modRes() { return getDFA().decls(this, this.lex().get(0)); }
+  eq MkModRef.modRes() { return dfa().decls(this, this.lex().get(0)); }
 
 }
