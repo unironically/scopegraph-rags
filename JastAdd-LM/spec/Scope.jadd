@@ -1,4 +1,3 @@
-
 aspect Scope {
   
   public static int Scope.scopeCount = 0;

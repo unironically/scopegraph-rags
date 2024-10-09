@@ -20,16 +20,20 @@ aspect Scoping {
   inh lazy ArrayList<Scope> Scope.var();
   inh lazy ArrayList<Scope> Scope.mod();
 
+  syn lazy ArrayList<ResPair> ASTNode.binds();
+  eq ASTNode.binds() { return new ArrayList<ResPair>(); }
 
   /*---------- Program ---------*/
 
   /* Program */
 
-  syn lazy Scope Program.globalScope() {
+  // global scope
+  /*syn lazy Scope Program.globalScope() {
     MkScope topScope = new MkScope ();
     topScope.setParent(this);
     return topScope;
-  }
+  }*/
+  syn nta MkScope Program.globalScope() = new MkScope();
   
   // passing global scope down to dcls
   eq Program.getDs().scope() { return globalScope(); }
@@ -41,6 +45,8 @@ aspect Scoping {
   eq Program.globalScope().mod() { return getDs().mods(); }
   eq Program.globalScope().impTentative() { return getDs().impTentatives(); }
 
+  eq Program.binds() = getDs().binds();
+
 
   /*---------- Decls ----------*/
 
@@ -48,17 +54,25 @@ aspect Scoping {
 
   eq Decls.getChild(int i).scope() { return scope(); }
 
+  eq DeclsCons.binds() {
+    ArrayList<ResPair> bnds = new ArrayList<ResPair>();
+    bnds.addAll(getD().binds());
+    bnds.addAll(getDs().binds());
+    return bnds;
+  }
+
 
   /*---------- Module Decl ----------*/
 
   inh lazy Scope Decl.scope();
   
   // module scope
-  syn lazy Scope ModuleDecl.modScope() {
+  /*syn lazy Scope ModuleDecl.modScope() {
     MkScopeMod modScope = new MkScopeMod (getId());
     modScope.setParent(this);
     return modScope;
-  }
+  }*/
+  syn nta MkScopeMod ModuleDecl.modScope() = new MkScopeMod(getId());
 
   // module scope edges
   eq ModuleDecl.modScope().lex() {
@@ -81,6 +95,8 @@ aspect Scoping {
   eq ModuleDecl.mods() { ArrayList<Scope> modLst = new ArrayList<Scope>(); 
                          modLst.add(modScope()); return modLst; }
 
+  eq ModuleDecl.binds() { return getDs().binds(); }
+
 
   /*---------- Import Decl ----------*/
 
@@ -89,6 +105,8 @@ aspect Scoping {
 
   // top.impTentatives = Ref.impTentatives
   eq ImportDecl.impTentatives() { return getRef().impTentatives(); }
+
+  eq ImportDecl.binds() { return getRef().binds(); }
 
 
   /*---------- Def Decl ----------*/
@@ -99,6 +117,8 @@ aspect Scoping {
   // top.vars = Bind.vars
   eq DefDecl.vars() { return getBind().vars(); }
 
+  eq DefDecl.binds() { return getBind().binds(); }
+
 
   /*---------- Expr ----------*/
 
@@ -107,17 +127,24 @@ aspect Scoping {
   // Ref.scope = top.scope
   eq VarExpr.getRef().scope() { return scope(); }
 
+  eq Expr.binds() {
+    ArrayList<ResPair> bnds = new ArrayList<ResPair>();
+    for (int i = 0; i < numChildren(); i++) bnds.addAll(getChild(i).binds());
+    return bnds;
+  }
+
 
   /*---------- ParBind ----------*/
 
   inh lazy Scope ParBind.scope();
 
   // var scope
-  syn lazy Scope ParBind.varScope() {
+  /*syn lazy Scope ParBind.varScope() {
     MkScopeVar varScope = new MkScopeVar (getId(), getType());
     varScope.setParent(this);
     return varScope;
-  }
+  }*/
+  syn nta MkScopeVar ParBind.varScope() = new MkScopeVar(getId(), getType());
 
   // var scope edges
   eq ParBind.varScope().lex() { return new ArrayList<Scope>(); }
@@ -130,17 +157,19 @@ aspect Scoping {
   eq ParBind.vars() { ArrayList<Scope> varLst = new ArrayList<Scope>();
                       varLst.add(varScope()); return varLst; }
   
+  eq ParBind.binds() { return getExpr().binds(); }
 
   /*---------- VarRef ----------*/
 
   inh lazy Scope VarRef.scope();
 
-  syn lazy MkVarRef VarRef.r();
+  //syn lazy MkVarRef VarRef.r();
   syn lazy ArrayList<Scope> VarRef.varRes();
 
   // top.r = mkVarRef(id)
-  eq VarRef.r() { MkVarRef r = new MkVarRef(getId());
-                  r.setParent(this); return r; }
+  /*eq VarRef.r() { MkVarRef r = new MkVarRef(getId());
+                  r.setParent(this); return r; }*/
+  syn nta MkVarRef VarRef.r() = new MkVarRef();
 
   // r.lex = [top.scope]
   eq VarRef.r().lex() { ArrayList<Scope> lexLst = new ArrayList<Scope>(); 
@@ -152,15 +181,18 @@ aspect Scoping {
                        resLst.addAll(this.r().varRes());
                        return resLst; }
 
+  eq VarRef.binds() { return r().binds(); }
+
   /*---------- ModRef ----------*/
 
   inh lazy Scope ModRef.scope();
 
-  syn lazy MkModRef ModRef.r();
+  //syn lazy MkModRef ModRef.r();
 
   // top.r = mkModRef(id)
-  eq ModRef.r() { MkModRef r = new MkModRef(getId());
-                  r.setParent(this); return r; }
+  /*eq ModRef.r() { MkModRef r = new MkModRef(getId());
+                  r.setParent(this); return r; }*/
+  syn nta MkModRef ModRef.r() = new MkModRef();
 
   // r.lex = [top.scope]
   eq ModRef.r().lex() { ArrayList<Scope> lexLst = new ArrayList<Scope>(); 
@@ -171,6 +203,7 @@ aspect Scoping {
                               impTentLst.addAll(this.r().modRes());
                               return impTentLst; }
 
+  eq ModRef.binds() { return r().binds(); }
 
   /*---------- Scope ----------*/
 
@@ -226,8 +259,20 @@ aspect Scoping {
     return getid();
   }
 
+  eq MkVarRef.binds() {  
+    ArrayList<ResPair> bnds = new ArrayList<ResPair>();
+    bnds.add(new ResPair(this, this.varRes()));
+    return bnds;
+  }
+
   eq MkModRef.str() {
     return getid();
+  }
+
+  eq MkModRef.binds() {  
+    ArrayList<ResPair> bnds = new ArrayList<ResPair>();
+    bnds.add(new ResPair(this, this.modRes()));
+    return bnds;
   }
 
 }

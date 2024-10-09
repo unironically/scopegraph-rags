@@ -90,5 +90,41 @@ aspect PrettyPrint {
 		}
 		return s;
 	}
+
+	/* Scope */
+
+	syn lazy String Scope.pp();
+
+	eq Scope.pp() {
+		return "Scope_" + Integer.toString(this.hashCode());
+	}
+
+	eq MkScope.pp() {
+		return "MkScope" + Integer.toString(this.hashCode());
+	}
+
+	eq MkScopeVar.pp() {
+		return "MkScopeVar(" + getid() + ")_" + Integer.toString(this.hashCode());
+	}
+
+	eq MkScopeMod.pp() {
+		return "MkScopeMod(" + getid() + ")_" + Integer.toString(this.hashCode());
+	}
+
+	/* Ref */
+
+	syn lazy String Ref.pp();
+
+	eq Ref.pp() {
+		return "Ref(" + getid() + ")_" + Integer.toString(this.hashCode());
+	}
+
+	eq MkVarRef.pp() {
+		return "MkVarRef(" + getid() + ")_" + Integer.toString(this.hashCode());
+	}
+
+	eq MkModRef.pp() {
+		return "MkModRef(" + getid() + ")_" + Integer.toString(this.hashCode());
+	}
 	
 }

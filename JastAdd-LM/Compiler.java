@@ -50,20 +50,22 @@ public class Compiler {
 			
 			runPreErrorCheck(p);
 
-			/*for (Scope s: p.allScopes()) {
-				System.out.print(s.getName() + " --IMP-> ");
+			for (ResPair pair: p.binds()) {
 
-				if (!s.imp().isEmpty()){
-					System.out.print("[");
-					for (Scope impS: s.imp()) {
-						System.out.print(impS.getName() + ", ");
+				Ref r = pair.getFst();
+				ArrayList<Scope> scopes = pair.getSnd();
+
+				System.out.print(r.pp() + " |-> ");
+
+				if (scopes.isEmpty()){
+					for (Scope res: scopes) {
+						System.out.print(res.pp() + ", ");
 					}
-					System.out.println("]");
 				} else {
 					System.out.println();
 				}
 
-			}*/
+			}
 
 			System.out.println(p.prettyPrint());
 		} catch (IOException e) {
