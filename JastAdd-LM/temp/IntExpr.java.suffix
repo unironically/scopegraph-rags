@@ -1,6 +1,0 @@
-  
-  public Type getCurrentTypeValue() {
-    return type_value;
-  }
-
-}

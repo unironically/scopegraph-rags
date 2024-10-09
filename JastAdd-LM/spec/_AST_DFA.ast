@@ -1,14 +1,8 @@
-DFA ::=
-  Start:State
-  ;
+abstract DFA ::= ;
+ModDFA: DFA ::= ;
+VarDFA: DFA ::= ;
 
-State ::=
-  <Id:Integer>
-  LexTrans:State
-  ImpTrans:State
-  ModTrans:State
-  VarTrans:State
-  ;
-
+State ::= ;
+ModState: State ::= ;
 SinkState: State ::= ;
 FinalState: State ::= ;

@@ -3,27 +3,4 @@ aspect Scope {
   
   public static int Scope.scopeCount = 0;
 
-  public static int Scope.subResCount = 0;
-
-  public static String Scope.indent() {
-    String s = "";
-    for (int i = 0; i < Scope.subResCount; i++) s += "    ";
-    return s;
-  }
-  
-  public static void Scope.addIndent() {
-    Scope.subResCount++;
-  }
-
-  public static void Scope.removeIndent() {
-    Scope.subResCount--;
-  }
-
-  public boolean Scope.equals(Object o) {
-    System.out.println("OWOOOWWWWWOOWO");
-    if (!(o instanceof Scope)) return false;
-    Scope other = (Scope) o;
-    return other.getName() == this.getName();
-  }
-  
 }

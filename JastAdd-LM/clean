@@ -1,0 +1,4 @@
+#!/bin/bash
+
+rm -r AST > /dev/null 2>&1
+rm *.class > /dev/null 2>&1

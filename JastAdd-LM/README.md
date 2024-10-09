@@ -1,3 +1,5 @@
+# OUTDATED README
+
 # [TENTATIVELY DEPRECATED - TODO] LM Language 4 Implementation with JastAdd
 - An implementation of language 4 with JastAdd
 

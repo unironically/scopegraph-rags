@@ -1,16 +1,12 @@
-abstract Scope ::= <Name:String> 
-                   <Lex:Opt<Scope>>
-                   <Mod:HashSet<Scope>>
-                   <Var:HashSet<Scope>>;
-ScopeNoDatum: Scope ::= ;
-ScopeDatum: Scope ::= Datum:Datum;
+MkScope ::= ;
+MkScopeVar: MkScope ::= <s:String> t:Type;
+MkScopeMod: MkScope ::= <s:String>;
 
-abstract Datum ::= <Id:String> <Label:String>;
-DatumVar: Datum ::= Type:Type;
-DatumMod: Datum ::= ;
+abstract Datum ::= ;
+DatumVar: Datum ::= <id:String> t:Type;
+DatumMod: Datum ::= <id:String>;
+DatumNone: Datum ::= ;
 
-Ref ::= <Id:String> <Label:String> Scope:Scope DFA:DFA;
-
-Result ::= Ref:Ref <Path:ArrayList<Edge>> Edge:Edge;
-
-Edge ::= Src:Scope <Label:String> Tgt:Scope;
+abstract Ref ::= <id:String>;
+MkVarRef: Ref ::= ;
+MkModRef: Ref ::= ;

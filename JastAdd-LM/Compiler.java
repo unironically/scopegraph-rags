@@ -50,7 +50,7 @@ public class Compiler {
 			
 			runPreErrorCheck(p);
 
-			for (Scope s: p.allScopes()) {
+			/*for (Scope s: p.allScopes()) {
 				System.out.print(s.getName() + " --IMP-> ");
 
 				if (!s.imp().isEmpty()){
@@ -63,10 +63,9 @@ public class Compiler {
 					System.out.println();
 				}
 
+			}*/
 
-			}
-
-			//System.out.println(p.prettyPrint());
+			System.out.println(p.prettyPrint());
 		} catch (IOException e) {
 			System.err.println("error (PrettyPrint) : " + e.getMessage());
 			e.printStackTrace();

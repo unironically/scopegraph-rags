@@ -4,92 +4,186 @@ aspect Resolution {
 
   /*---------- DFA ----------*/
 
-  syn ArrayList<Result> DFA.findVisMod(Scope source, Scope current, 
-                                       ArrayList<Edge> path, Ref ref);
+  syn ArrayList<Scope> DFA.decls(Ref ref, Scope current);
 
-  eq DFA.findVisMod(Scope source, Scope current, 
-                    ArrayList<Edge> path, Ref ref) = 
-    getStart().findVisMod(source, current, path, ref);
+  eq DFA.decls(Ref ref, Scope current) = stateLex().decls(ref, current);
 
+  syn FinalState DFA.finalState();
+  syn StinkState DFA.sinkState();
 
+  eq DFA.finalState() { State fin = new FinalState();
+                        fin.setParent(this); return fin; }
+
+    eq DFA.sinkState()  { State snk = new FinalState();
+                        snk.setParent(this); return snk; }
+
+  eq DFA.finalState().lexT() { return this.sinkState(); }
+  eq DFA.finalState().impT() { return this.sinkState(); }
+  eq DFA.finalState().varT() { return this.sinkState(); }
+  eq DFA.finalState().modT() { return this.sinkState(); }
+
+  eq DFA.sinkState().lexT() { return this.sinkState(); }
+  eq DFA.sinkState().impT() { return this.sinkState(); }
+  eq DFA.sinkState().varT() { return this.sinkState(); }
+  eq DFA.sinkState().modT() { return this.sinkState(); }
+
+  /*---------- VarDFA ----------*/
+
+  syn State VarDFA.lexState();
+  syn State VarDFA.impState();
+
+  eq VarDFA.lexState() { State lex = new State();
+                         lex.setParent(this); return lex; }
+  eq VarDFA.impState() { State imp = new State();
+                         imp.setParent(this); return imp; }
+  
+  eq VarDFA.lexState().lexT() { return this.lexState(); }
+  eq VarDFA.lexState().impT() { return this.impState(); }
+  eq VarDFA.lexState().varT() { return this.finalState(); }
+  eq VarDFA.lexState().modT() { return this.sinkState(); }
+
+  eq VarDFA.impState().lexT() { return this.sinkState(); }
+  eq VarDFA.impState().impT() { return this.sinkState(); }
+  eq VarDFA.impState().varT() { return this.finalState(); }
+  eq VarDFA.impState().modT() { return this.sinkState(); }
+
+  /*---------- ModDFA ----------*/
+
+  syn State VarDFA.lexState();
+  syn State VarDFA.impState();
+
+  eq VarDFA.lexState() { State lex = new ModState();
+                         lex.setParent(this); return lex; }
+  eq VarDFA.impState() { State imp = new ModState();
+                         imp.setParent(this); return imp; }
+
+  eq VarDFA.lexState().lexT() { return this.lexState(); }
+  eq VarDFA.lexState().impT() { return this.impState(); }
+  eq VarDFA.lexState().varT() { return this.sinkState(); }
+  eq VarDFA.lexState().modT() { return this.finalState(); }
+
+  eq VarDFA.impState().lexT() { return this.sinkState(); }
+  eq VarDFA.impState().impT() { return this.sinkState(); }
+  eq VarDFA.impState().varT() { return this.sinkState(); }
+  eq VarDFA.impState().modT() { return this.finalState(); }
+  
   /*---------- State ----------*/
 
-  syn ArrayList<Result> State.findVisMod(Scope source, Scope current, 
-                                         ArrayList<Edge> path, Ref ref);
-  
-  eq State.findVisMod(Scope source, Scope current, 
-                      ArrayList<Edge> path, Ref ref) {
+  inh State State.lexT();
+  inh State State.impT();
+  inh State State.varT();
+  inh State State.modT();
+
+  syn ArrayList<Scope> State.decls(Ref ref, Scope s);
+
+  eq VarState.decls(Ref ref, Scope s) {
     
-    ArrayList<Result> res = new ArrayList<Result>();
+    ArrayList<Scope> varRes = new ArrayList<Scope>();
 
-    /* MOD */
-
-    for (Scope s: current.getMod()) {
-      ArrayList<Edge> newPath = new ArrayList<Edge>(path);
-      newPath.add(new Edge(current, "MOD", s));
-      res.addAll(getModTrans().findVisMod(source, s, newPath, ref));
+    for (Scope s: s.getVar()) {
+      varRes.addAll(this.varT().decls(ref, s));
     }
-    if (!res.isEmpty()) return res;
 
-    /* IMP */
+    ArrayList<Scope> modRes = new ArrayList<Scope>();
 
-    for (Scope s: current.equals(source) ? current.impTentative() :
-                                           current.imp()) {
-      ArrayList<Edge> newPath = new ArrayList<Edge>(path);
-      newPath.add(new Edge(current, "IMP", s));
-      res.addAll(getImpTrans().findVisMod(source, s, newPath, ref));
+    for (Scope s: s.getMod()) {
+      modRes.addAll(this.modT().decls(ref, s));
     }
-    if (!res.isEmpty()) return res;
 
-    /* LEX */
+    ArrayList<Scope> impRes = new ArrayList<Scope>();
 
-    if (current.getLex().numChildren() != 0) {
-      ArrayList<Edge> newPath = new ArrayList<Edge>(path);
-      newPath.add(new Edge(current, "LEX", 
-                           (Scope) current.getLex().getChild(0)));
-      res.addAll(getLexTrans().findVisMod(source, 
-                                          (Scope) current.getLex().getChild(0), 
-                                          newPath, ref));
+    for (Scope s: s.getImp()) {
+      impRes.addAll(this.impT().decls(ref, s));
     }
+
+    ArrayList<Scope> lexRes = new ArrayList<Scope>();
+
+    for (Scope s: s.getLex()) {
+      lexRes.addAll(this.lexT().decls(ref, s));
+    }
+
+    ArrayList<Scope> allRes = new ArrayList<Scope>();
+
+    allRes.addAll(varRes);
+    allRes.addAll(modRes);
+    allRes.addAll(impRes);
+    allRes.addAll(lexRes);
+
+    return allRes;
+
+  }
+
+  eq ModState.decls(Ref ref, Scope s) {
+    
+    ArrayList<Scope> varRes = new ArrayList<Scope>();
+
+    for (Scope s: s.getVar()) {
+      varRes.addAll(this.varT().decls(ref, s));
+    }
+
+    ArrayList<Scope> modRes = new ArrayList<Scope>();
+
+    for (Scope s: s.getMod()) {
+      modRes.addAll(this.modT().decls(ref, s));
+    }
+
+    ArrayList<Scope> impTentativeRes = new ArrayList<Scope>();
+
+    for (Scope s: s.getImpTentative()) {
+      impTentativeRes.addAll(this.impT().decls(ref, s));
+    }
+
+    ArrayList<Scope> lexRes = new ArrayList<Scope>();
+
+    for (Scope s: s.getLex()) {
+      lexRes.addAll(this.lexT().decls(ref, s));
+    }
+
+    ArrayList<Scope> allRes = new ArrayList<Scope>();
+
+    allRes.addAll(varRes);
+    allRes.addAll(modRes);
+    allRes.addAll(impTentativeRes);
+    allRes.addAll(lexRes);
+
+    return allRes;
+
+  }
+  
+  eq FinalState.findVisMod(Ref ref, Scope s) {
+
+    ArrayList<Scope> res = new ArrayList<Scope>();
+
+    if (s.datum().str().equals(ref.str())) {
+      res.add(s);
+    }
+
     return res;
 
   }
 
-  eq FinalState.findVisMod(Scope source, Scope current, 
-                        ArrayList<Edge> path, Ref ref) {
 
-    ArrayList<Result> res = new ArrayList<Result>();
+  eq SinkState.findVisMod(Ref ref, Scope s) {
 
-    if (current instanceof ScopeDatum && 
-        ((ScopeDatum)current).getDatum().getId().equals(ref.getId())) {
-      res.add(new Result(ref, path, new Edge(source, "RES", current)));
-    }
-
-    return res;
+    return new ArrayList<Scope>();
 
   }
 
 
-  eq SinkState.findVisMod(Scope source, Scope current, 
-                          ArrayList<Edge> path, Ref ref) {
-    return new ArrayList<Result>();
-  }
+  /*---------- VarRef ----------*/
+
+  syn lazy ArrayList<Scope> VarRef.varRes();
+
+  // top.varRes = top.dfa.decls(top, head(top.lex))
+  eq VarRef.varRes() { return getDFA().decls(this, this.lex().get(0)); }
 
 
-  /*---------- Ref ----------*/
+  /*---------- ModRef ----------*/
 
-  syn lazy ArrayList<Result> Ref.result();
+  syn ArrayList<Scope> ModRef.modRes()
+    circular [new ArrayList<Scope>()];
 
-  eq Ref.result() {
-    return getDFA().findVisMod(getScope(), getScope(),
-                               new ArrayList<Edge>(), this);
-  }
+  // top.modRes = top.dfa.decls(top, head(top.lex))
+  eq ModRef.modRes() { return getDFA().decls(this, this.lex().get(0)); }
 
 }
-
-
-/*try {
-      Thread.sleep(1000);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }*/
