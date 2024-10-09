@@ -2,3 +2,4 @@
 
 rm -r AST > /dev/null 2>&1
 rm *.class > /dev/null 2>&1
+rm LM.jar > /dev/null 2>&1
