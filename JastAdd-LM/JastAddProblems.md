@@ -1,40 +1,6 @@
 # Issues with JastAdd
+ 
 
-#### NTAs not being assigned as children to the production they belong to
-
-Needed to go into the generated JastAdd code to add the `setChild(r_value, 0)` 
-statement in the code below, so that the result of `getrNoTransform()` is not 
-null, but the `MkVarRef r()` which is initialized as an NTA in `Scoping.jrag`. 
-Example below is in `AST/VarRef.java`.
-
-```Java
-public MkVarRef r() {
-    if(r_computed) {
-      return r_value;
-    }
-    ASTNode$State state = state();
-    if (r_visited == state().boundariesCrossed) {
-      throw new RuntimeException
-      ("Circular definition of attr: r in class: org.jastadd.ast.AST.SynDecl");
-    }
-    r_visited = state().boundariesCrossed;
-    int num = state.boundariesCrossed;
-    boolean isFinal = this.is$Final();
-    r_value = r_compute();
-    
-    r_value.setParent(this);
-    setChild(r_value, 0); // luke addition
-
-    r_value.is$Final = true;
-    if(true) {
-      r_computed = true;
-    } else {
-    }
-
-    r_visited = -1;
-    return r_value;
-  }
-```
 
 #### Use of `==` instead of `.equals(..)` for inherited attribute collection
 
@@ -177,3 +143,75 @@ Exception in thread "main" java.lang.NullPointerException: Cannot invoke "AST.AS
 	at Compiler.run(Compiler.java:53)
 	at Compiler.main(Compiler.java:20)
 ```
+
+
+
+#### NTAs not being assigned as children to the production they belong to
+
+After the problem in the previous section was solved, needed to go into the 
+generated JastAdd code to add the `setChild(r_value, 0)` statement in the code 
+below, so that the result of `VarRef.getrNoTransform()` is not null, but correctly the `MkVarRef r()` which is initialized as an NTA in `Scoping.jrag` (seen in prev. subsection). Example below shows relevant parts of `AST/VarRef.java` and `AST/ASTNode.java`. Without the addition of `setChild(r_value, 0)`, no [nonterminal-typed] child exists from the perspective of `VarRef`.
+
+```Java
+// AST/VarRef.java
+public class VarRef extends ASTNode<ASTNode> implements Cloneable {
+
+  ...
+
+  public MkVarRef getrNoTransform() {
+    return (MkVarRef) getChildNoTransform(0); // essentially getChild(0)
+  }
+
+  ...
+
+  public MkVarRef r() {
+    if(r_computed) {
+      return r_value;
+    }
+    ASTNode$State state = state();
+    if (r_visited == state().boundariesCrossed) {
+      throw new RuntimeException
+      ("Circular definition of attr: r in class: org.jastadd.ast.AST.SynDecl");
+    }
+    r_visited = state().boundariesCrossed;
+    int num = state.boundariesCrossed;
+    boolean isFinal = this.is$Final();
+    r_value = r_compute();
+    
+    r_value.setParent(this);
+    setChild(r_value, 0); // luke addition
+
+    r_value.is$Final = true;
+    if(true) {
+      r_computed = true;
+    } else {
+    }
+
+    r_visited = -1;
+    return r_value;
+  }
+  
+  ...
+
+}
+
+// AST/ASTNode.java
+public class ASTNode<T extends ASTNode> implements Cloneable, Iterable<T> {
+
+  ...
+
+  public final T getChildNoTransform(int i) {
+    if (children == null) {
+      return null;
+    }
+    T child = (T)children[i];
+    return child;
+  }
+
+  ...
+
+}
+```
+
+Following this fix (and that in the last subsection) for this particular 
+inherited attribute, the `MkVarRef` node from the previous subsection is able to find its proper value. However, the same problem exists for other instances of inherited attributes.
