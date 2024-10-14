@@ -10,8 +10,18 @@ aspect Resolution {
 
   syn State DFA.lexState();
   syn State DFA.impState();
-  syn nta lazy FinalState DFA.finalState() = new FinalState();
-  syn nta lazy SinkState DFA.sinkState() = new SinkState();
+
+  syn nta lazy FinalState DFA.finalState() {
+    FinalState fs = new FinalState();
+    this.setChild(fs, 1);
+    return fs;
+  }
+
+  syn nta lazy SinkState DFA.sinkState() {
+    SinkState ss = new SinkState();
+    this.setChild(ss, 0);
+    return ss;
+  }
 
   /*eq DFA.finalState() { FinalState fin = new FinalState();
                         fin.setParent(this); return fin; }*/
@@ -31,8 +41,17 @@ aspect Resolution {
 
   /*---------- VarDFA ----------*/
 
-  syn nta lazy State VarDFA.lexState() = new State();
-  syn nta lazy State VarDFA.impState() = new State();
+  syn nta lazy State VarDFA.lexState() {
+    State s = new State();
+    this.setChild(s, 2);
+    return s;
+  }
+
+  syn nta lazy State VarDFA.impState() {
+    State s = new State();
+    this.setChild(s, 3);
+    return s;
+  }
 
   /*eq VarDFA.lexState() { State lex = new State();
                          lex.setParent(this); return lex; }*/
@@ -51,8 +70,16 @@ aspect Resolution {
 
   /*---------- ModDFA ----------*/
 
-  syn nta lazy State ModDFA.lexState() = new ModState();
-  syn nta lazy State ModDFA.impState() = new ModState();
+  syn nta lazy State ModDFA.lexState() {
+    State s = new ModState();
+    this.setChild(s, 2);
+    return s;
+  }
+  syn nta lazy State ModDFA.impState() {
+    State s = new ModState();
+    this.setChild(s, 3);
+    return s;
+  }
 
   /*eq ModDFA.lexState() { State lex = new ModState();
                          lex.setParent(this); return lex; }*/

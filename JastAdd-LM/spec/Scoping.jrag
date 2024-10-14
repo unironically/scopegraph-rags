@@ -36,7 +36,11 @@ aspect Scoping {
     topScope.setParent(this);
     return topScope;
   }*/
-  syn nta lazy MkScope Program.globalScope() = new MkScope();
+  syn nta lazy MkScope Program.globalScope() {
+    MkScope s = new MkScope();
+    this.setChild(s, 1);
+    return s;
+  }
   
   // passing global scope down to dcls
   eq Program.getDs().scope() { return globalScope(); }
@@ -129,7 +133,11 @@ aspect Scoping {
     modScope.setParent(this);
     return modScope;
   }*/
-  syn nta lazy MkScopeMod ModuleDecl.modScope() = new MkScopeMod(getId());
+  syn nta lazy MkScopeMod ModuleDecl.modScope() {
+    MkScopeMod s = new MkScopeMod(getId());
+    this.setChild(s, 1);
+    return s;
+  }
 
   // module scope edges
   eq ModuleDecl.modScope().lex() {
@@ -298,7 +306,11 @@ aspect Scoping {
     varScope.setParent(this);
     return varScope;
   }*/
-  syn nta lazy MkScopeVar ParBind.varScope() = new MkScopeVar(getId(), getType());
+  syn nta lazy MkScopeVar ParBind.varScope() {
+    MkScopeVar s = new MkScopeVar(getId(), getType());
+    this.setChild(s, 2);
+    return s;
+  } 
 
   // var scope edges
   eq ParBind.varScope().lex() { return new ArrayList<Edge>(); }
@@ -337,7 +349,11 @@ aspect Scoping {
 
   inh lazy Scope VarRef.scope();
 
-  syn nta lazy MkVarRef VarRef.r() = new MkVarRef(getId());
+  syn nta lazy MkVarRef VarRef.r() {
+    MkVarRef r = new MkVarRef(getId());
+    this.setChild(r, 0);
+    return r;
+  }
 
   // r.lex = [top.scope]
   eq VarRef.r().lex() { ArrayList<Edge> lexEdges = new ArrayList<Edge>();
@@ -365,7 +381,11 @@ aspect Scoping {
   inh lazy Scope ModRef.scope();
 
   // top.r = mkModRef(id)
-  syn nta lazy MkModRef ModRef.r() = new MkModRef(getId());
+  syn nta lazy MkModRef ModRef.r() {
+    MkModRef r = new MkModRef(getId());
+    this.setChild(r, 0);
+    return r;
+  }
 
   // r.lex = [top.scope]
   eq ModRef.r().lex() { ArrayList<Edge> lexEdges = new ArrayList<Edge>(); 
