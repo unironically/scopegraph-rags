@@ -50,24 +50,38 @@ public class Compiler {
 			
 			runPreErrorCheck(p);
 
-			for (ResPair pair: p.binds()) {
+			System.out.println("IMP edges in graph:");
 
-				Ref r = pair.getFst();
-				ArrayList<Scope> scopes = pair.getSnd();
-
-				System.out.print(r.pp() + " |-> ");
-
-				if (scopes.isEmpty()){
-					for (Scope res: scopes) {
-						System.out.print(res.pp() + ", ");
-					}
-				} else {
-					System.out.println();
+			for (Scope s: p.scopes()) {
+				ArrayList<Edge> impEdges = s.imp();
+				if (impEdges.size() <= 0) continue;
+				System.out.print("\t- " + s.pp() + " --IMP-> ");
+				for (Edge e: s.imp()) {
+					System.out.print(e.gettgtNoTransform().pp() + ", ");
 				}
+				System.out.println();
+			}
+
+			System.out.println("VarRef resolutions in graph:");
+
+			for (MkVarRef ref: p.refs()) {
+				ArrayList<Resolution> refRes = ref.resolution();
+				//if (refRes.size() <= 0) continue;
+
+				//Ref r = res.getrefNoTransform();
+				//Scope s = res.getpathNoTransform().tgt();
+
+				System.out.print("\t- " + ref.pp() + " |-> ");
+
+				for (Resolution res: refRes) {
+					System.out.print(res.getpathNoTransform().tgt().pp() + ", ");
+				}
+
+				System.out.println();
 
 			}
 
-			System.out.println(p.prettyPrint());
+			//System.out.println(p.prettyPrint());
 		} catch (IOException e) {
 			System.err.println("error (PrettyPrint) : " + e.getMessage());
 			e.printStackTrace();

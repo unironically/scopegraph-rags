@@ -1,9 +1,11 @@
 #!/bin/bash
 
-ant clean
+#ant clean
+#ant build
+#ant jar
 
-ant build
+ant jar
 
-#sed '$s/.$//' AST/Scope.java > temp.java; cat temp/Scope.java.suffix >> temp.java; mv temp.java AST/Scope.java
+./fix_ntas
 
 ant jar

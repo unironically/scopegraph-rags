@@ -1,3 +1,6 @@
+def a:int = 1
+def b:bool = true
+
 module A {
 
   def c:int = a + 2
@@ -12,6 +15,3 @@ module A {
   }
   
 }
-
-def a:int = 1
-def b:bool = true

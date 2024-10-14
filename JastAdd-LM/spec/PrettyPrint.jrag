@@ -96,19 +96,19 @@ aspect PrettyPrint {
 	syn lazy String Scope.pp();
 
 	eq Scope.pp() {
-		return "Scope_" + Integer.toString(this.hashCode());
+		return "Scope_" + Integer.toString(this.getParent().getStartLine()) + "_" + Short.toString(this.getParent().getStartColumn());
 	}
 
 	eq MkScope.pp() {
-		return "MkScope" + Integer.toString(this.hashCode());
+		return "MkScope" + Integer.toString(this.getParent().getStartLine()) + "_" + Short.toString(this.getParent().getStartColumn());
 	}
 
 	eq MkScopeVar.pp() {
-		return "MkScopeVar(" + getid() + ")_" + Integer.toString(this.hashCode());
+		return "MkScopeVar(" + getid() + ")_" + Integer.toString(this.getParent().getStartLine()) + "_" + Short.toString(this.getParent().getStartColumn());
 	}
 
 	eq MkScopeMod.pp() {
-		return "MkScopeMod(" + getid() + ")_" + Integer.toString(this.hashCode());
+		return "MkScopeMod(" + getid() + ")_" + Integer.toString(this.getParent().getStartLine()) + "_" + Short.toString(this.getParent().getStartColumn());
 	}
 
 	/* Ref */
@@ -116,15 +116,15 @@ aspect PrettyPrint {
 	syn lazy String Ref.pp();
 
 	eq Ref.pp() {
-		return "Ref(" + getid() + ")_" + Integer.toString(this.hashCode());
+		return "Ref(" + getid() + ")_" + Integer.toString(this.getParent().getStartLine()) + "_" + Short.toString(this.getParent().getStartColumn());
 	}
 
 	eq MkVarRef.pp() {
-		return "MkVarRef(" + getid() + ")_" + Integer.toString(this.hashCode());
+		return "MkVarRef(" + getid() + ")_" + Integer.toString(this.getParent().getStartLine()) + "_" + Short.toString(this.getParent().getStartColumn());
 	}
 
 	eq MkModRef.pp() {
-		return "MkModRef(" + getid() + ")_" + Integer.toString(this.hashCode());
+		return "MkModRef(" + getid() + ")_" + Integer.toString(this.getParent().getStartLine()) + "_" + Short.toString(this.getParent().getStartColumn());
 	}
 	
 }
