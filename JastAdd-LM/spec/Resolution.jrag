@@ -247,8 +247,12 @@ aspect Resolution {
 
   syn lazy ArrayList<Resolution> MkModRef.resolution() circular [new ArrayList<Resolution>()];
   eq MkModRef.resolution() { 
-    //System.out.println("Please resolve import" + this.getid()); 
-    return dfa().decls(this, this.lex().get(0).gettgtNoTransform(), new PathCons(this.lex().get(0), new PathNil())); }
+    //System.out.println("Please resolve import " + this.getid()); 
+    ArrayList<Resolution> dcls = dfa().decls(this, this.lex().get(0).gettgtNoTransform(), new PathCons(this.lex().get(0), new PathNil()));
+    //System.out.print("Resolution of import " + this.getid() + " in scope " + this.lex().get(0).gettgtNoTransform().pp() + " has size " + Integer.toString(dcls.size()));
+    //if (dcls.size() > 0) System.out.println(" to dcl " + dcls.get(0).getpathNoTransform().tgt().pp());
+    return dcls;
+  }
 
   /*---------- Path ----------*/
 

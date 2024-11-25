@@ -6,75 +6,46 @@ import statixlib.sets
 main(p) :- p match {
 
     Program(ds):[] ->
-        {s}
+      {s}
         new s,
-        decls(s, s, ds)
-    
+        decls(s, ds)
+
 }.
 
 
-// s:        lexical scope
-// s_mod:    outer scope of module
 
-decls(s, s_mod, ds) :- ds match {
+decls(s, ds) :- ds match {
   
     DeclsNil() ->
         true
-  
+
   | DeclsCons(d, ds) ->
-        {s_next}
-        new s_next,
-        s_next -[ `LEX ]-> s,
-        decl(s_next, s, s_mod, d),
-        decls(s_next, s_mod, ds)
+        decl(s, d),
+        decls(s, ds)
 
 }.
 
 
-// s:        lexical scope
-// s_lookup: lookup scope (prev. lexical)
-// s_mod:    outer scope of module
 
-decl(s, s_lookup, s_mod, d) :- d match {
+decl(s, d) :- d match {
     
     DeclModule(x, ds) ->
-        {s_mod}                   // shadows arg s_mod
+      {s_mod}
         new s_mod -> (x, s_mod),
         s -[ `MOD ]-> s_mod,
         s_mod -[ `LEX ]-> s,
-        decls(s_mod, s_mod, ds)
+        decls(s_mod, ds)
 
   | DeclImport(r) ->
-        {p, x, s_mod'}
-        mod-ref(s_lookup, r, p),
-        datum(p, (x, s_mod')),
-        s -[ `IMP ]-> s_mod'
+      {p, x, s_mod}
+        mod-ref(s, r, p),
+        datum(p, (x, s_mod)),
+        s -[ `IMP ]-> s_mod
 
   | DeclDef(b) ->
-        def-bind(s_lookup, s, s_mod, b)
+      par-bind(s, b, s)
 
-}.
-
-
-
-def-bind(s_lookup, s, s_mod, b) :- b match {
-    
-  | DefBind(x, e) ->
-        {s_var, ty}
-        new s_var -> (x, ty),
-        s -[ `VAR ]-> s_var,
-        s_mod -[ `VAR ]-> s_var, // add var edge to module scope
-        expr(s_lookup, e, ty)
-  
-  | DefBindTyped(x, tyann, e) ->
-        {s_var, ty}
-        new s_var -> (x, ty),
-        s -[ `VAR ]-> s_var,
-        s_mod -[ `VAR ]-> s_var,  // add var edge to module scope
-        type(s_lookup, tyann, ty),
-        expr(s_lookup, e, ty)
-        
-}.
+  }.
 
 
 

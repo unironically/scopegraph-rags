@@ -3,8 +3,8 @@ module A {
 }
 
 module B {
-  module A {         // once B is resolved, this becomes the visible A, because we follow IMP,MOD, 
-    def x:int = 1    // which shadows the LEX,MOD we use to get the outer A
+  module A {
+    def x:int = 1
   }
 }
 
@@ -13,6 +13,3 @@ module C {
   import B
   import A
 }
-
-// interesting result here. importing B before A means the x reference resolves to x on line 2
-// but importing A before B means the x reference resolves to x on line 7

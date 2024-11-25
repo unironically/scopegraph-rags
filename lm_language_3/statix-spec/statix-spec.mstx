@@ -8,7 +8,9 @@ main(p) :- p match {
     Program(ds):[] ->
         {s}
         new s,
-        decls(s, ds, s)
+        new s',
+        s' -[ `LEX ]-> s,
+        decls(s, s', ds)
     
 }.
 

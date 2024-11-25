@@ -25,7 +25,7 @@ IO<Integer> ::= largs::[String]
         let fileNameExplode::[String] = explode(".", fileNameExt);
         let fileName::String = head(fileNameExplode);
 
-        let viz::String = graphvizScopes(ast.allScopes, ast.allRefs);
+        let viz::String = graphvizScopes(ast.allScopes);--, ast.allRefs);
 
         if result.parseSuccess
           then do {
@@ -33,8 +33,9 @@ IO<Integer> ::= largs::[String]
               then do {
                 print("[✔] Parse success\n");
                 mkdir("out");
-                --system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
+                system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
                 writeStatixConstraints(filePath, file, ast.statixConstraints);
+                writeStatixConstraints2(filePath, file, ast.statixConstraintsTwo);
                 --writeSilverEquations(filePath, file, ast.silverEquations);
                 --writeJastEquations(filePath, file, ast.jastEquations);
                 writeStatixAterm(fileName, ast.statix);
@@ -80,6 +81,17 @@ fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[Strin
     (numberedLines ++ ["```\n"]);
   writeFile("out/StatixConstraints.md", implode("\n", toWrite));
   print("[✔] See out/SilverEquations.md for the resulting flattened Statix constraints\n");
+};
+
+fun writeStatixConstraints2 IO<Integer> ::= fname::String code::String cs::[String] = do {
+  let numberedLines::[String] = snd(foldr(eqsNumbered, (length(cs), []), cs));
+  let toWrite::[String] =
+    ("## Statix core constraints 2 for " ++ fname ++ "\n") ::
+    ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
+    ("### Constraints 2:\n```") ::
+    (numberedLines ++ ["```\n"]);
+  writeFile("out/StatixConstraints2.md", implode("\n", toWrite));
+  print("[✔] See out/SilverEquations2.md for the resulting flattened Statix constraints 2\n");
 };
 
 {-fun writeSilverEquations IO<Integer> ::= fname::String code::String es::[String] = do {

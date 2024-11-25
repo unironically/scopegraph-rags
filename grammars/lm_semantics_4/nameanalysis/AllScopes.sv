@@ -58,11 +58,11 @@ attribute allScopes occurs on SeqBind;
 
 aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
-{ top.allScopes := top.vars ++ e.allScopes; }
+{ top.allScopes := top.var_s_def ++ e.allScopes; }
 
 aspect production seqBindTyped
 top::SeqBind ::= ty::Type id::String e::Expr
-{ top.allScopes := top.vars ++ e.allScopes; }
+{ top.allScopes := top.var_s_def ++ e.allScopes; }
 
 
 attribute allScopes occurs on ParBinds;
@@ -72,22 +72,22 @@ attribute allScopes occurs on ParBind;
 
 aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
-{ top.allScopes := top.vars ++ e.allScopes; }
+{ top.allScopes := top.var_s_def ++ e.allScopes; }
 
 aspect production parBindTyped
 top::ParBind ::= ty::Type id::String e::Expr
-{ top.allScopes := top.vars ++ e.allScopes; }
+{ top.allScopes := top.var_s_def ++ e.allScopes; }
 
 
 attribute allScopes occurs on ArgDecl;
 
 aspect production argDecl
 top::ArgDecl ::= id::String ty::Type
-{ top.allScopes := top.vars; }
+{ top.allScopes := top.var_s; }
 
 --------------------------------------------------
 
-monoid attribute allRefs::[Decorated SGRef] with [], ++;
+{-monoid attribute allRefs::[Decorated SGRef] with [], ++;
 
 attribute allRefs occurs on Main, Decls, Decl, SeqBinds, SeqBind, ParBinds,
                          ParBind, Expr, ArgDecl, VarRef, ModRef;
@@ -105,4 +105,4 @@ aspect production varRef
 top::VarRef ::= name::String
 {
   top.allRefs := [top.ref];
-}
+}-}

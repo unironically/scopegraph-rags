@@ -1,12 +1,28 @@
 grammar sg_lib;
 
+--------------------------------------------------
+
+-- Path
+
+nonterminal Path;
+
+abstract production pEnd
+top::Path ::= s::Decorated SGScope
+{}
+
+abstract production pEdge
+top::Path ::= s::Decorated SGScope lab::String rest::Path
+{}
+
+abstract production pBad
+top::Path ::= 
+{}
 
 --------------------------------------------------
 
-synthesized attribute decls::
-  ([Decorated SGDecl] ::= Decorated SGRef Decorated SGScope);
+synthesized attribute paths::([Path] ::= Decorated SGScope);
 
-nonterminal DFA with decls;
+nonterminal DFA with paths;
 
 abstract production varRefDFA
 top::DFA ::= 
@@ -36,7 +52,7 @@ top::DFA ::=
   sink.impT = sink;
   sink.lexT = sink;
 
-  top.decls = state0.decls;
+  top.paths = state0.paths;
 }
 
 abstract production modRefDFA
@@ -67,7 +83,7 @@ top::DFA ::=
   sink.impT = sink;
   sink.lexT = sink;
 
-  top.decls = state0.decls;
+  top.paths = state0.paths;
 }
 
 --------------------------------------------------
@@ -77,18 +93,30 @@ inherited attribute modT::Decorated DFAState;
 inherited attribute impT::Decorated DFAState;
 inherited attribute lexT::Decorated DFAState;
 
-nonterminal DFAState with varT, modT, impT, lexT, decls;
+nonterminal DFAState with varT, modT, impT, lexT, paths;
 
 abstract production stateVar
 top::DFAState ::=
 {
-  top.decls = \r::Decorated SGRef cur::Decorated SGScope ->
-    let varRes::[Decorated SGDecl] = 
-      concat(map(top.varT.decls(r, _), cur.var)) in
-    let impRes::[Decorated SGDecl] = 
-      concat(map(top.impT.decls(r, _), cur.imp)) in
-    let lexRes::[Decorated SGDecl] = 
-      concat(map(top.lexT.decls(r, _), cur.lex)) in
+  top.paths = \cur::Decorated SGScope ->
+
+    let varRes::[Path] = 
+      let varPaths::[Path] = concat(map(top.varT.paths(_), cur.var)) in
+        map ((\p::Path -> pEdge(cur, "VAR", p)), varPaths)
+      end
+    in
+
+    let impRes::[Path] = 
+      let impPaths::[Path] = concat(map(top.impT.paths(_), cur.imp)) in
+        map ((\p::Path -> pEdge(cur, "IMP", p)), impPaths)
+      end 
+    in
+
+    let lexRes::[Path] = 
+      let lexPaths::[Path] = concat(map(top.lexT.paths(_), cur.lex)) in
+        map ((\p::Path -> pEdge(cur, "LEX", p)), lexPaths)
+      end
+    in
     
     if !null(varRes) then varRes
     else if !null(impRes) then impRes
@@ -100,13 +128,25 @@ top::DFAState ::=
 abstract production stateMod
 top::DFAState ::=
 {
-  top.decls = \r::Decorated SGRef cur::Decorated SGScope ->
-    let modRes::[Decorated SGDecl] = 
-      concat(map(top.modT.decls(r, _), cur.mod)) in
-    let impRes::[Decorated SGDecl] = 
-      concat(map(top.impT.decls(r, _), cur.imp)) in
-    let lexRes::[Decorated SGDecl] = 
-      concat(map(top.lexT.decls(r, _), cur.lex)) in
+  top.paths = \cur::Decorated SGScope ->
+
+    let modRes::[Path] = 
+      let modPaths::[Path] = concat(map(top.modT.paths(_), cur.mod)) in
+        map ((\p::Path -> pEdge(cur, "MOD", p)), modPaths)
+      end
+    in
+
+    let impRes::[Path] = 
+      let impPaths::[Path] = concat(map(top.impT.paths(_), cur.imp)) in
+        map ((\p::Path -> pEdge(cur, "IMP", p)), impPaths)
+      end 
+    in
+
+    let lexRes::[Path] = 
+      let lexPaths::[Path] = concat(map(top.lexT.paths(_), cur.lex)) in
+        map ((\p::Path -> pEdge(cur, "LEX", p)), lexPaths)
+      end
+    in
     
     if !null(modRes) then modRes
     else if !null(impRes) then impRes
@@ -118,13 +158,36 @@ top::DFAState ::=
 abstract production stateFinal
 top::DFAState ::=
 {
-  top.decls = \r::Decorated SGRef cur::Decorated SGScope ->
-    case cur.datum of
-    | just(d) when d.test(r) -> [cur]
-    | _ -> []
-    end;
+  top.paths = \cur::Decorated SGScope -> 
+    [pEnd(cur)];
 }
 
 abstract production stateSink
 top::DFAState ::=
-{ top.decls = \_ _ -> []; }
+{ top.paths = \_ -> [pBad()]; }
+
+
+-----------------------------------------------------
+
+-- Ministatix builtin functions
+
+function query
+[Path] ::= start::Decorated SGScope dfa::DFA
+{ return dfa.paths(start); }
+
+function pathFilter
+[Path] ::= f::(Boolean ::= SGDatum) ps::[Path]
+{
+  return filter (pathFilterOne(f, _), ps);
+}
+
+function pathFilterOne
+Boolean ::= f::(Boolean ::= SGDatum) p::Path
+{
+  return
+    case p of
+      pEnd(s)         -> f(s.datum)
+    | pEdge(s, l, ps) -> pathFilterOne(f, ps)
+    | pBad()          -> false
+    end;
+}

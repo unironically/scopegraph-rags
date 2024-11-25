@@ -157,38 +157,33 @@ aspect Scoping {
 
   eq ModuleDecl.modScope().imp() {
 
+    //System.out.println("imp for " + modScope().pp());
+
     ArrayList<Edge> impEdges = new ArrayList<Edge>();
     ArrayList<Resolution> ress = getDs().impTentatives();
 
-    ArrayList<String> modRefs = new ArrayList<String>();
-    modRefs.add("A");
-    modRefs.add("B");
+    { ArrayList<String> modRefs = new ArrayList<String>();
+      modRefs.add("A");  todo
+      modRefs.add("B"); 
+      modRefs.add("C"); }
+    //
+    // loop over modrefs
 
     for (String modRef: modRefs) {
 
       Path min = null;
 
       for (Resolution res: ress) {
+        if (res.getrefNoTransform().str().equals(modRef)) {
+          Path resPath = res.getpathNoTransform();
 
-        if (!res.getrefNoTransform().str().equals(modRef)) continue;
-
-        Path resPath = res.getpathNoTransform();
-        //ImpTentEdge impTentativeEdge = new ImpTentEdge();
-        //ASTNode tmpPar = resPath.tgt().getParent();
-
-        //impTentativeEdge.setsrc(this.modScope());
-        //impTentativeEdge.settgt(resPath.tgt());
-
-        //resPath.tgt().setParent(tmpPar);
-        //this.modScope().setParent(this);
-
-        //impTentativeEdges.add(impTentativeEdge);
-
-        if (min != null) min = Path.min(min, resPath);
-        else min = resPath;
+          if (min != null) min = Path.min(min, resPath);
+          else min = resPath;
+          
+        }
       }
 
-      if (min == null) return impEdges;
+      if (min == null)  continue;
 
       ImpTentEdge impTentativeEdge = new ImpTentEdge();
       ASTNode tmpPar = min.tgt().getParent();

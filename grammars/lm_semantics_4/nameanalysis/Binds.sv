@@ -1,5 +1,6 @@
 grammar lm_semantics_4:nameanalysis;
 
+{-
 monoid attribute binds::[(String, String)] with [], ++;
 
 attribute binds occurs on Main, Decls, Decl, SeqBinds, SeqBind, ParBinds,
@@ -21,3 +22,4 @@ top::VarRef ::= name::String
   top.binds := 
     map ((\d::Decorated SGDecl -> (name, printDecl(d))), top.resolution);
 }
+-}
