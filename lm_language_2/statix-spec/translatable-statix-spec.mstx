@@ -8,44 +8,54 @@ main(p) :- p match {
     Program(ds):[] ->
       {s}
       new s,
-      decls(s, ds)
+      decls(s, s, ds)
 
 }.
 
 
 
+// s:        lexical scope
+// s_modparent:    outer scope of module
+
 syntax:
-decls(inh: s, ds) :- ds match {
+decls(inh: s, inh: s_modparent, ds) :- ds match {
   
     DeclsNil() ->
         true
 
   | DeclsCons(d, ds) ->
-        decl(s, d),
-        decls(s, ds)
+        {s_next}
+        new s_next,
+        s_next -[ `LEX ]-> s,
+        decl(s_next, s, s_modparent d),
+        decls(s_next, s_modparent, ds)
 
 }.
 
 
 
+// s:        lexical scope
+// s_lookup: lookup scope (prev. lexical)
+// s_modparent:    outer scope of module
+
 syntax:
-decl(inh: s, d) :- d match {
+decl(inh: s, inh: s_lookup, inh: s_modparent d) :- d match {
     
     DeclModule(x, ds) ->
       {s_mod}
       new s_mod -> (x, s_mod),
-      s -[ `MOD ]-> s_mod,
+      s_modparent -[ `MOD ]-> s_mod, // add mod edge to module scope
       s_mod -[ `LEX ]-> s,
-      decls(s_mod, ds)
+      decls(s_mod, s_mod, ds)
 
   | DeclImport(r) ->
       {p, x, s_mod}
-      mod-ref(s, r, p),
+      mod-ref(s_lookup, r, p),
       datumOf(p, (x, s_mod)), // what does the expected form for the datum translate to? `datumMod(x, s_mod)`?
       s -[ `IMP ]-> s_mod     // ^ and how do we know which AG production to match on?
 
   | DeclDef(b) ->
-      par-bind(s, b, s)
+      par-bind(s, b, s_modparent)
 
   }.
 

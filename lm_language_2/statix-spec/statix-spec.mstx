@@ -13,6 +13,7 @@ main(p) :- p match {
 }.
 
 
+
 // s:        lexical scope
 // s_mod:    outer scope of module
 
@@ -29,6 +30,7 @@ decls(s, s_mod, ds) :- ds match {
         decls(s_next, s_mod, ds)
 
 }.
+
 
 
 // s:        lexical scope
@@ -51,29 +53,8 @@ decl(s, s_lookup, s_mod, d) :- d match {
         s -[ `IMP ]-> s_mod'
 
   | DeclDef(b) ->
-        def-bind(s_lookup, s, s_mod, b)
+        par-bind(s, b, s_modparent)
 
-}.
-
-
-
-def-bind(s_lookup, s, s_mod, b) :- b match {
-    
-  | DefBind(x, e) ->
-        {s_var, ty}
-        new s_var -> (x, ty),
-        s -[ `VAR ]-> s_var,
-        s_mod -[ `VAR ]-> s_var, // add var edge to module scope
-        expr(s_lookup, e, ty)
-  
-  | DefBindTyped(x, tyann, e) ->
-        {s_var, ty}
-        new s_var -> (x, ty),
-        s -[ `VAR ]-> s_var,
-        s_mod -[ `VAR ]-> s_var,  // add var edge to module scope
-        type(s_lookup, tyann, ty),
-        expr(s_lookup, e, ty)
-        
 }.
 
 

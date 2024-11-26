@@ -2,7 +2,6 @@ import statixlib.paths
 import statixlib.sets
 
 
-
 main(p) :- p match {
 
     Program(ds):[] ->
@@ -16,58 +15,35 @@ main(p) :- p match {
 
 
 
-decls(s, ds, s_lookup) :- ds match {
+decls(s, s_implookup, ds) :- ds match {
   
     DeclsNil() ->
         true
   
   | DeclsCons(d, ds) ->
-      //  d match {
-      //    DeclImport(_) ->
-      //      {s_imp}
-      //      new s_imp,
-      //      s_imp -[ `LEX ]-> s_lookup,
-      //      decl(s_lookup, d, s_imp),
-      //      decls(s, ds, s_imp)
-      //  | _ ->
-      //      decl(s, d, s_lookup),
-      //      decls(s, ds, s_lookup)
-      //  }
-      
-      {s_imp, test}
-      new test,
-      // s_imp -[ `LEX ]-> test,   // permission error [1]
-      decl(s, s_imp, d, s_lookup),
-      // s_imp -[ `LEX ]-> test,   // permission error [2]
-      decls(s, ds, s_imp)
+        decl(s_decl, s_implookup, d),
+        decls(s_decl, s_implookup, ds)
 
 }.
 
-fip(s, s_par) :- s -[ `LEX ]-> s_par.
 
-decl(s, s_imp, d, s_lookup) :- d match {
+decl(s, s_implookup, d) :- d match {
     
     DeclModule(x, ds) ->
         {s_mod}
         new s_mod -> (x, s_mod),
-        s -[ `MOD ]-> s_mod,
+        s_implookup -[ `MOD ]-> s_mod,
         s_mod -[ `LEX ]-> s,
-        decls(s_mod, ds, s_mod),
-        s_imp == s_lookup
+        decls(s_mod, s, ds)
 
   | DeclImport(r) ->
         {p, x, s_mod}
-
-        new s_imp,
-        s_imp -[ `LEX ]-> s_lookup,
-
-        mod-ref(s, r, p),
+        mod-ref(s_implookup, r, p),
         datum(p, (x, s_mod)),
-        s_imp -[ `IMP ]-> s_mod
+        s -[ `IMP ]-> s_mod
 
   | DeclDef(b) ->
-        s_imp == s_lookup,
-        par-bind(s_lookup, b, s)
+        par-bind(s, b, s)
 
 }.
 

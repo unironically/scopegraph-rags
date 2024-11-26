@@ -8,39 +8,41 @@ main(p) :- p match {
     Program(ds):[] ->
       {s}
       new s,
-      decls(s, ds)
+      new s',
+      s' -[ `LEX ]-> s,
+      decls(s, s' ds)
 
 }.
 
 
 
 syntax:
-decls(inh: s, ds) :- ds match {
+decls(inh: s, inh: s_implookup ds) :- ds match {
   
     DeclsNil() ->
         true
 
   | DeclsCons(d, ds) ->
-        decl(s, d),
-        decls(s, ds)
+        decl(s, s_implookup, d),
+        decls(s, s_implookup, ds)
 
 }.
 
 
 
 syntax:
-decl(inh: s, d) :- d match {
+decl(inh: s, inh: s_implookup, d) :- d match {
     
     DeclModule(x, ds) ->
       {s_mod}
       new s_mod -> (x, s_mod),
-      s -[ `MOD ]-> s_mod,
+      s_implookup -[ `MOD ]-> s_mod,
       s_mod -[ `LEX ]-> s,
-      decls(s_mod, ds)
+      decls(s_mod, s, ds)
 
   | DeclImport(r) ->
       {p, x, s_mod}
-      mod-ref(s, r, p),
+      mod-ref(s_implookup, r, p),
       datumOf(p, (x, s_mod)), // what does the expected form for the datum translate to? `datumMod(x, s_mod)`?
       s -[ `IMP ]-> s_mod     // ^ and how do we know which AG production to match on?
 
