@@ -31,7 +31,7 @@ decl(s, d) :- d match {
     
     DeclModule(x, ds) ->
       {s_mod}
-      new s_mod -> (x, s_mod),
+      new s_mod -> DatumMod(x, s_mod),
       s -[ `MOD ]-> s_mod,
       s_mod -[ `LEX ]-> s,
       decls(s_mod, ds)
@@ -39,7 +39,7 @@ decl(s, d) :- d match {
   | DeclImport(r) ->
       {p, x, s_mod}
       mod-ref(s, r, p),
-      datum(p, (x, s_mod)),
+      datum(p, DatumMod(x, s_mod)),
       s -[ `IMP ]-> s_mod
 
   | DeclDef(b) ->
@@ -63,7 +63,7 @@ expr(s, e, ty) :- e match {
   | ExprVar(r) ->
       {p, x}
       var-ref(s, r, p),
-      datum(p, (x, ty))
+      datum(p, DatumVar(x, ty))
 
   | ExprAdd(e1, e2) ->
       expr(s, e1, INT()),
@@ -167,13 +167,13 @@ seq-bind(s, b, s_def) :- b match {
     
     DefBind(x, e) ->
         {s_var, ty}
-        new s_var -> (x, ty),
+        new s_var -> DatumVar(x, ty),
         s_def -[ `VAR ]-> s_var,
         expr(s, e, ty)
   
   | DefBindTyped(x, tyann, e) ->
         {s_var, ty}
-        new s_var -> (x, ty),
+        new s_var -> DatumVar(x, ty),
         s_def -[ `VAR ]-> s_var,
         type(s, tyann, ty),
         expr(s, e, ty)
@@ -199,13 +199,13 @@ par-bind(s, b, s_def) :- b match {
 
     DefBind(x, e) ->
         {s_var, ty}
-        new s_var -> (x, ty),
+        new s_var -> DatumVar(x, ty),
         s_def -[ `VAR ]-> s_var,
         expr(s, e, ty)
   
   | DefBindTyped(x, tyann, e) ->
         {s_var, ty}
-        new s_var -> (x, ty),
+        new s_var -> DatumVar(x, ty),
         s_def -[ `VAR ]-> s_var,
         type(s, tyann, ty),
         expr(s, e, ty)
@@ -219,7 +219,7 @@ arg-decl(s, d, ty) :- d match {
     ArgDecl(x, tyann) ->
         {s_var}
         type(s, tyann, ty),
-        new s_var -> (x, ty),
+        new s_var -> DatumVar(x, ty),
         s -[ `VAR ]-> s_var
 
 }.
@@ -249,7 +249,7 @@ mod-ref(s, r, p) :- r match {
     ModRef(x) ->
         {mods, xmods, xmods'}
         query s `LEX*`IMP? `MOD as mods,
-        filter mods((x', _) where x' == x) xmods,
+        filter mods(DatumMod(x', _) where x' == x) xmods,
         min-refs(xmods, xmods'),
         only(xmods', p)
 
@@ -258,7 +258,7 @@ mod-ref(s, r, p) :- r match {
         mod-ref(s, r, p_mod),
         tgt(p_mod, s_mod),
         query s_mod `MOD as mods,
-        filter mods((x', _) where x' == x) xmods,
+        filter mods(DatumMod(x', _) where x' == x) xmods,
         only(xmods, p)
 }.
 
@@ -269,7 +269,7 @@ var-ref(s, r, p) :- r match {
     VarRef(x) ->
         {vars, xvars, xvars'}
         query s `LEX*(`EXT*|`IMP?) `VAR as vars,
-        filter vars ((x', _) where x' == x) xvars,
+        filter vars (DatumVar(x', _) where x' == x) xvars,
         min-refs(xvars, xvars'),
         only(xvars', p)
 
@@ -278,7 +278,7 @@ var-ref(s, r, p) :- r match {
         mod-ref(s, r, p_mod),
         tgt(p_mod, s_mod),
         query s_mod `VAR as vars,
-        filter vars((x', _) where x' == x) xvars,
+        filter vars(DatumVar(x', _) where x' == x) xvars,
         only(xvars, p)
 
 }.

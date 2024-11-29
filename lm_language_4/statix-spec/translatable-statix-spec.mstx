@@ -33,7 +33,7 @@ decl(inh: s, d) :- d match {
     
     DeclModule(x, ds) ->
       {s_mod}
-      new s_mod -> (x, s_mod),
+      new s_mod -> DatumMod(x, s_mod),
       s -[ `MOD ]-> s_mod,
       s_mod -[ `LEX ]-> s,
       decls(s_mod, ds)
@@ -41,8 +41,8 @@ decl(inh: s, d) :- d match {
   | DeclImport(r) ->
       {p, x, s_mod}
       mod-ref(s, r, p),
-      datumOf(p, (x, s_mod)), // what does the expected form for the datum translate to? `datumMod(x, s_mod)`?
-      s -[ `IMP ]-> s_mod     // ^ and how do we know which AG production to match on?
+      datumOf(p, DatumMod(x, s_mod)),
+      s -[ `IMP ]-> s_mod
 
   | DeclDef(b) ->
       par-bind(s, b, s)
@@ -66,8 +66,7 @@ expr(inh: s, e, syn: ty) :- e match {
   | ExprVar(r) ->
       {p, x}
       var-ref(s, r, p),
-      datumOf(p, (x, ty))  // what does the expected form for the datum translate to? `datumVar(x, ty)`?
-                           // ^ and how do we know which AG production to match on?
+      datumOf(p, DatumVar(x, ty))
 
   | ExprAdd(e1, e2) ->
       {ty1 ty2}
@@ -200,13 +199,13 @@ seq-bind(inh: s, b, inh: s_def) :- b match {
     
     DefBind(x, e) ->
         {s_var, ty}
-        new s_var -> (x, ty),
+        new s_var -> DatumVar(x, ty),
         s_def -[ `VAR ]-> s_var,
         expr(s, e, ty)
   
   | DefBindTyped(x, tyann, e) ->
         {s_var, ty1, ty2}
-        new s_var -> (x, ty1),
+        new s_var -> DatumVar(x, ty1),
         s_def -[ `VAR ]-> s_var,
         type(s, tyann, ty1),
         expr(s, e, ty2),
@@ -235,13 +234,13 @@ par-bind(inh: s, b, inh: s_def) :- b match {
 
     DefBind(x, e) ->
         {s_var, ty}
-        new s_var -> (x, ty),
+        new s_var -> DatumVar(x, ty),
         s_def -[ `VAR ]-> s_var,
         expr(s, e, ty)
   
   | DefBindTyped(x, tyann, e) ->
         {s_var, ty}
-        new s_var -> (x, ty),
+        new s_var -> DatumVar(x, ty),
         s_def -[ `VAR ]-> s_var,
         type(s, tyann, ty),
         expr(s, e, ty)
@@ -255,7 +254,7 @@ arg-decl(inh: s, d, syn: ty) :- d match {
     ArgDecl(x, tyann) ->
         {s_var, ty1}
         type(s, tyann, ty1),
-        new s_var -> (x, ty1),
+        new s_var -> DatumVar(x, ty1),
         s -[ `VAR ]-> s_var,
         ty := ty1
 
@@ -288,7 +287,7 @@ mod-ref(inh: s, r, syn: p) :- r match {
     ModRef(x) ->
         {mods, xmods, xmods'}
         query s `LEX*`IMP? `MOD as mods,
-        filter mods((x', _) where x' == x) xmods,
+        filter mods(DatumMod(x', _) where x' == x) xmods,
         min-refs(xmods, xmods'),
         only(xmods', p)
 
@@ -297,7 +296,7 @@ mod-ref(inh: s, r, syn: p) :- r match {
         mod-ref(s, r, p_mod),
         tgt(p_mod, s_mod),
         query s_mod `MOD as mods,
-        filter mods((x', _) where x' == x) xmods,
+        filter mods(DatumMod(x', _) where x' == x) xmods,
         only(xmods, p)
 }.
 

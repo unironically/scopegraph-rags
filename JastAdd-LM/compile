@@ -5,7 +5,3 @@
 #ant jar
 
 ant jar
-
-./fix_ntas
-
-ant jar

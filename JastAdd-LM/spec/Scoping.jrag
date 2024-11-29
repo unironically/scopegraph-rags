@@ -162,10 +162,10 @@ aspect Scoping {
     ArrayList<Edge> impEdges = new ArrayList<Edge>();
     ArrayList<Resolution> ress = getDs().impTentatives();
 
-    { ArrayList<String> modRefs = new ArrayList<String>();
-      modRefs.add("A");  todo
-      modRefs.add("B"); 
-      modRefs.add("C"); }
+    ArrayList<String> modRefs = new ArrayList<String>();
+    modRefs.add("A");  // todo
+    modRefs.add("B"); 
+    modRefs.add("C");
     //
     // loop over modrefs
 
