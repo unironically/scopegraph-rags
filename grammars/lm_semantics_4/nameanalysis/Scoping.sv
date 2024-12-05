@@ -179,7 +179,7 @@ top::Expr ::= r::VarRef
 
   local pair2::(Boolean, String, Type) =
     case d1 of
-    | datumVar(x, ty) -> (true, x, ty)
+    | datumVar(x, ty) -> (true, x, ^ty) -- QUESTION: why need ^ here?
     | _ -> (false, error("sadness"), error("sadness"))
     end;
   local ok2::Boolean = pair1.1;
@@ -188,7 +188,7 @@ top::Expr ::= r::VarRef
 
   top.ok <- ok2;
 
-  top.ty = ty;
+  top.ty = ^ty;
   top.lex_s = r.lex_s;
   top.imp_s = r.imp_s;
   top.var_s = r.var_s;
@@ -204,8 +204,8 @@ top::Expr ::= e1::Expr e2::Expr
   local ty1::Type = e1.ty;
   local ty2::Type = e2.ty;
 
-  top.ok <- ty1 == tInt();
-  top.ok <- ty2 == tInt();
+  top.ok <- ^ty1 == tInt(); -- QUESTION: why need ^ here?
+  top.ok <- ^ty2 == tInt(); -- QUESTION: why need ^ here?
 
   top.ty = tInt();
   top.lex_s = e1.lex_s ++ e2.lex_s;
@@ -223,8 +223,8 @@ top::Expr ::= e1::Expr e2::Expr
   local ty1::Type = e1.ty;
   local ty2::Type = e2.ty;
 
-  top.ok <- ty1 == tInt();
-  top.ok <- ty2 == tInt();
+  top.ok <- ^ty1 == tInt(); -- QUESTION: why need ^ here?
+  top.ok <- ^ty2 == tInt(); -- QUESTION: why need ^ here?
 
   top.ty = tInt();
   top.lex_s = e1.lex_s ++ e2.lex_s;
@@ -242,8 +242,8 @@ top::Expr ::= e1::Expr e2::Expr
   local ty1::Type = e1.ty;
   local ty2::Type = e2.ty;
 
-  top.ok <- ty1 == tInt();
-  top.ok <- ty2 == tInt();
+  top.ok <- ^ty1 == tInt(); -- QUESTION: why need ^ here?
+  top.ok <- ^ty2 == tInt(); -- QUESTION: why need ^ here?
 
   top.ty = tInt();
   top.lex_s = e1.lex_s ++ e2.lex_s;
@@ -261,8 +261,8 @@ top::Expr ::= e1::Expr e2::Expr
   local ty1::Type = e1.ty;
   local ty2::Type = e2.ty;
 
-  top.ok <- ty1 == tInt();
-  top.ok <- ty2 == tInt();
+  top.ok <- ^ty1 == tInt(); -- QUESTION: why need ^ here?
+  top.ok <- ^ty2 == tInt(); -- QUESTION: why need ^ here?
 
   top.ty = tInt();
   top.lex_s = e1.lex_s ++ e2.lex_s;
@@ -280,8 +280,8 @@ top::Expr ::= e1::Expr e2::Expr
   local ty1::Type = e1.ty;
   local ty2::Type = e2.ty;
 
-  top.ok <- ty1 == tBool();
-  top.ok <- ty2 == tBool();
+  top.ok <- ^ty1 == tBool(); -- QUESTION: why need ^ here?
+  top.ok <- ^ty2 == tBool(); -- QUESTION: why need ^ here?
 
   top.ty = tBool();
   top.lex_s = e1.lex_s ++ e2.lex_s;
@@ -299,8 +299,8 @@ top::Expr ::= e1::Expr e2::Expr
   local ty1::Type = e1.ty;
   local ty2::Type = e2.ty;
 
-  top.ok <- ty1 == tBool();
-  top.ok <- ty2 == tBool();
+  top.ok <- ^ty1 == tBool(); -- QUESTION: why need ^ here?
+  top.ok <- ^ty2 == tBool(); -- QUESTION: why need ^ here?
 
   top.ty = tBool();
   top.lex_s = e1.lex_s ++ e2.lex_s;
@@ -318,7 +318,7 @@ top::Expr ::= e1::Expr e2::Expr
   local ty1::Type = e1.ty;
   local ty2::Type = e2.ty;
 
-  top.ok <- ty1 == ty2;
+  top.ok <- ^ty1 == ^ty2; -- QUESTION: why need ^ here?
 
   top.ty = tBool();
   top.lex_s = e1.lex_s ++ e2.lex_s;
@@ -338,17 +338,17 @@ top::Expr ::= e1::Expr e2::Expr
 
   local tup1::(Boolean, Type, Type) = 
     case tyF of
-    | tFun(ty1, ty2) -> (true, ty1, ty2)
+    | tFun(ty1, ty2) -> (true, ^ty1, ^ty2) -- QUESTION: why need ^ here?
     | _ -> (false, error("sadness"), error("sadness"))
     end;
   local ok1::Boolean = tup1.1;
   local ty1::Type = tup1.2;
   local ty2::Type = tup1.3;
 
-  top.ok <- tyF == tFun(ty1, ty2);
-  top.ok <- ty1 == ty3;
+  top.ok <- ^tyF == tFun(^ty1, ^ty2); -- QUESTION: why need ^ here?
+  top.ok <- ^ty1 == ^ty3;             -- QUESTION: why need ^ here?
 
-  top.ty = ty2;
+  top.ty = ^ty2;
   top.lex_s = e1.lex_s ++ e2.lex_s;
   top.imp_s = e1.imp_s ++ e2.imp_s;
   top.var_s = e1.var_s ++ e2.var_s;
@@ -366,10 +366,10 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
   local ty2::Type = e2.ty;
   local ty3::Type = e3.ty;
 
-  top.ok <- ty1 == tBool();
-  top.ok <- ty2 == ty3;
+  top.ok <- ^ty1 == tBool(); -- QUESTION: why need ^ here?
+  top.ok <- ^ty2 == ^ty3;    -- QUESTION: why need ^ here?
 
-  top.ty = ty2;
+  top.ty = ^ty2; -- QUESTION: why need ^ here?
   top.lex_s = e1.lex_s ++ e2.lex_s ++ e2.lex_s;
   top.imp_s = e1.imp_s ++ e2.imp_s ++ e3.imp_s;
   top.var_s = e1.var_s ++ e2.var_s ++ e3.var_s;
@@ -393,7 +393,7 @@ top::Expr ::= d::ArgDecl e::Expr
   local ty1::Type = d.ty;
   local ty2::Type = e.ty;
   
-  top.ty = tFun(ty1, ty2);
+  top.ty = tFun(^ty1, ^ty2); -- QUESTION: why need ^ here?
   top.lex_s = d.lex_s;
   top.imp_s = d.imp_s;
   top.var_s = d.var_s;
@@ -566,7 +566,7 @@ aspect production seqBindTyped
 top::SeqBind ::= tyann::Type id::String e::Expr
 {
   local s_var::SGScope = mkScope(location=top.location);
-  s_var.datum = datumVar(id, ty1, location=top.location);
+  s_var.datum = datumVar(id, ^ty1, location=top.location); -- QUESTION: why need ^ here?
   s_var.lex = [];
   s_var.imp = [];
   s_var.mod = [];
@@ -578,7 +578,7 @@ top::SeqBind ::= tyann::Type id::String e::Expr
   local ty1::Type = tyann.ty;
   local ty2::Type = e.ty;
 
-  top.ok <- ty1 == ty2;
+  top.ok <- ^ty1 == ^ty2; -- QUESTION: why need ^ here?
 
   top.lex_s = e.lex_s;
   top.imp_s = e.imp_s;
@@ -670,7 +670,7 @@ aspect production parBindTyped
 top::ParBind ::= tyann::Type id::String e::Expr
 {
   local s_var::SGScope = mkScope(location=top.location);
-  s_var.datum = datumVar(id, ty1, location=top.location);
+  s_var.datum = datumVar(id, ^ty1, location=top.location); -- QUESTION: why need ^ here?
   s_var.lex = [];
   s_var.imp = [];
   s_var.mod = [];
@@ -682,7 +682,7 @@ top::ParBind ::= tyann::Type id::String e::Expr
   local ty1::Type = tyann.ty;
   local ty2::Type = e.ty;
 
-  top.ok <- ty1 == ty2;
+  top.ok <- ^ty1 == ^ty2; -- QUESTION: why need ^ here?
 
   top.lex_s = e.lex_s;
   top.imp_s = e.imp_s;
@@ -707,7 +707,7 @@ aspect production argDecl
 top::ArgDecl ::= id::String tyann::Type
 {
   local s_var::SGScope = mkScope(location=top.location);
-  s_var.datum = datumVar(id, ty1, location=top.location);
+  s_var.datum = datumVar(id, ^ty1, location=top.location); -- QUESTION: why need ^ here?
   s_var.lex = [];
   s_var.imp = [];
   s_var.mod = [];
@@ -717,7 +717,7 @@ top::ArgDecl ::= id::String tyann::Type
 
   local ty1::Type = tyann.ty;
 
-  top.ty = ty1;
+  top.ty = ^ty1; -- QUESTION: why need ^ here?
   top.lex_s = tyann.lex_s;
   top.imp_s = tyann.imp_s;
   top.var_s = s_var :: tyann.var_s;
@@ -800,7 +800,7 @@ top::ModRef ::= name::String
   local p::Path = pair1.2;
 
   top.ok <- ok;
-  top.p = p;
+  top.p = ^p; -- QUESTION: why need ^ here?
   top.lex_s = [];
   top.imp_s = [];
   top.var_s = [];
@@ -831,7 +831,7 @@ top::VarRef ::= name::String
   local p::Path = pair1.2;
 
   top.ok <- ok;
-  top.p = p;
+  top.p = ^p; -- QUESTION: why need ^ here?
   top.lex_s = [];
   top.imp_s = [];
   top.var_s = [];

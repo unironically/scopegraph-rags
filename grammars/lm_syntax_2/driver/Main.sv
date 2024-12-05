@@ -49,7 +49,7 @@ IO<Integer> ::= largs::[String]
       };
 }
 
-fun writeStatixAterm IO<Integer> ::= fileN::String aterm::String = do {
+fun writeStatixAterm IO<Unit> ::= fileN::String aterm::String = do {
   writeFile("out/" ++ fileN ++ ".aterm", aterm ++ "\n");
   print("[✔] See out/" ++ fileN ++ ".aterm for the resulting Ministatix term\n");
 };

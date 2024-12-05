@@ -55,7 +55,7 @@ function tgt
   return
     case p of
     | pEnd(s) -> (true, s)
-    | pEdge(s, l, ps) -> tgt(ps)
+    | pEdge(s, l, ps) -> tgt(^ps) -- QUESTION: why need ^ here?
     | pBad() -> (false, error("sadness"))
     end;
 }
@@ -74,7 +74,7 @@ function src
 function datumOf
 (Boolean, SGDatum) ::= p::Path
 {
-  local pair1::(Boolean, Decorated SGScope) = tgt(p);
+  local pair1::(Boolean, Decorated SGScope) = tgt(^p); -- QUESTION: why need ^ here?
   local ok1::Boolean = pair1.1;
   local s::Decorated SGScope = pair1.2;
 

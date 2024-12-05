@@ -39,7 +39,7 @@ IO<Integer> ::= largs::[String]
                 --writeSilverEquations(filePath, file, ast.silverEquations);
                 --writeJastEquations(filePath, file, ast.jastEquations);
                 writeStatixAterm(fileName, ast.statix);
-                --res::Integer <- printBinds(ast.binds);
+                --printBinds(ast.binds);
                 --programOk(ast.ok);
                 writeJava(fileName, ast.java);
                 return 0;
@@ -60,19 +60,19 @@ IO<Integer> ::= largs::[String]
       };
 }
 
-fun writeStatixAterm IO<Integer> ::= fileN::String aterm::String = do {
+fun writeStatixAterm IO<Unit> ::= fileN::String aterm::String = do {
   writeFile("out/" ++ fileN ++ ".aterm", aterm ++ "\n");
   print("[✔] See out/" ++ fileN ++ ".aterm for the resulting Ministatix term\n");
 };
 
-fun writeJava IO<Integer> ::= fileN::String java::[String] = do {
+fun writeJava IO<Unit> ::= fileN::String java::[String] = do {
   let imploded::String = implode("\n", java);
   writeFile("out/java_" ++ fileN ++ ".txt", imploded ++ "\n");
   print("[✔] See out/java_" ++ fileN ++ ".txt for the resulting Java ast\n");
 };
 
 
-fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[String] = do {
+fun writeStatixConstraints IO<Unit> ::= fname::String code::String cs::[String] = do {
   let numberedLines::[String] = snd(foldr(eqsNumbered, (length(cs), []), cs));
   let toWrite::[String] =
     ("## Statix core constraints for " ++ fname ++ "\n") ::
@@ -83,7 +83,7 @@ fun writeStatixConstraints IO<Integer> ::= fname::String code::String cs::[Strin
   print("[✔] See out/SilverEquations.md for the resulting flattened Statix constraints\n");
 };
 
-fun writeStatixConstraints2 IO<Integer> ::= fname::String code::String cs::[String] = do {
+fun writeStatixConstraints2 IO<Unit> ::= fname::String code::String cs::[String] = do {
   let numberedLines::[String] = snd(foldr(eqsNumbered, (length(cs), []), cs));
   let toWrite::[String] =
     ("## Statix core constraints 2 for " ++ fname ++ "\n") ::
@@ -105,7 +105,7 @@ fun writeStatixConstraints2 IO<Integer> ::= fname::String code::String cs::[Stri
   print("[✔] See out/SilverEquations.md for the resulting flattened Silver equations\n");
 };
 
-fun writeJastEquations IO<Integer> ::= fname::String code::String es::[String] = do {
+fun writeJastEquations IO<Unit> ::= fname::String code::String es::[String] = do {
   let numberedLines::[String] = snd(foldr(eqsNumbered, (length(es), []), es));
   let toWrite::[String] =
     ("## Jast equations for " ++ fname ++ "\n") ::
@@ -116,15 +116,15 @@ fun writeJastEquations IO<Integer> ::= fname::String code::String es::[String] =
   print("[✔] See out/JastEquations.md for the resulting flattened Silver equations\n");
 };-}
 
-fun printBinds IO<Integer> ::= binds::[(String, String)] = do {
+
+fun printBinds IO<Unit> ::= binds::[(String, String)] = do {
   let bindEachStr::[String] = map((\p::(String, String) -> "\t" ++ fst(p) ++ "\t-[binds to]->\t" ++ snd(p)), binds);
   let bindsStr::String = implode("\n", bindEachStr);
   let anyUnfound::Boolean = length(filter((\p::(String, String) -> snd(p) == "?"), binds)) != 0;
   print("[" ++ (if anyUnfound then "✗" else "✔") ++ "] Resulting program bindings:\n" ++ bindsStr ++ "\n");
-  return if anyUnfound then -1 else 0;
 };
 
-fun programOk IO<Integer> ::= ok::Boolean = do {
+fun programOk IO<Unit> ::= ok::Boolean = do {
   print(if ok then "[✔] Program is well-typed\n" else "[✗] Program is not well-typed [TODO: better messages..]\n");
 };
 

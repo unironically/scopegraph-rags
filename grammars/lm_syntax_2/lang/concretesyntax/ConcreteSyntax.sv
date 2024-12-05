@@ -216,8 +216,8 @@ top::ParBinds_c ::=
 
 concrete production parBindsOne_c
 top::ParBinds_c ::= s::ParBind_c
-{
-  forwards to parBindsCons_c(s, ',', parBindsNil_c(location=top.location), location=top.location);
+{ -- QUESTION: unsure why i need ^s (i.e. "new(s)") instead of s here
+  forwards to parBindsCons_c(^s, ',', parBindsNil_c(location=top.location), location=top.location);
 }
 
 concrete production parBindsCons_c

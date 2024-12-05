@@ -266,15 +266,17 @@ top::Type ::=
   top.statix = "TErr()";
 }
 
+fun eqType Boolean ::= t1::Type t2::Type =
+  case t1, t2 of
+  | tInt(), tInt() -> true
+  | tBool(), tBool() -> true              -- QUESTION: why need to use ^ here?
+  | tFun(t1_1, t1_2), tFun(t2_1, t2_2) -> eqType(^t1_1, ^t2_1) && eqType(^t1_2, ^t2_2)
+  | tErr(), tErr() -> true
+  | _, _ -> false
+  end;
+
 instance Eq Type {
-  eq = \l1::Type l2::Type ->
-    case l1, l2 of
-    | tInt(), tInt() -> true
-    | tBool(), tBool() -> true
-    | tFun(t1_1, t1_2), tFun(t2_1, t2_2) -> (t1_1 == t2_1) && (t1_2 == t2_2)
-    | tErr(), tErr() -> true
-    | _, _ -> false
-    end;
+  eq = eqType;
 }
 
 --------------------------------------------------

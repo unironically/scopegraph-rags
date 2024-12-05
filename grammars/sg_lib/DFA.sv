@@ -187,7 +187,7 @@ Boolean ::= f::(Boolean ::= SGDatum) p::Path
   return
     case p of
       pEnd(s)         -> f(s.datum)
-    | pEdge(s, l, ps) -> pathFilterOne(f, ps)
+    | pEdge(s, l, ps) -> pathFilterOne(f, ^ps) -- QUESTION: why need ^ here?
     | pBad()          -> false
     end;
 }

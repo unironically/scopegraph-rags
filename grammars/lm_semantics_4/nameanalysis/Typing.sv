@@ -207,8 +207,6 @@ top::ArgDecl ::= id::String tyann::Type
 --------------------------------------------------
 
 
--- A little absurd, but doing this to make equations look closer to the statix constraints
-
 aspect production tInt
 top::Type ::=
 {
