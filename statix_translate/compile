@@ -1,0 +1,5 @@
+#!/bin/sh
+
+silver -I .. --mwda --onejar $@ statix_translate:driver
+
+rm build.xml > /dev/null 2>&1
