@@ -84,7 +84,7 @@ terminal End_t       'End'            lexer classes {KWD};
 
 terminal Reverse_t   'reverse-lexico' lexer classes {KWD};
 terminal Lexico_t    'lexico'         lexer classes {KWD};
-terminal Eps_t       'e'              lexer classes {KWD};
+terminal Eps_t       'e';             --lexer classes {KWD};
 terminal Scala_t     'scala'          lexer classes {KWD};
 terminal Import_t    'import'         lexer classes {KWD};
 terminal Order_t     'order'          lexer classes {KWD};
@@ -128,6 +128,6 @@ ignore terminal LineComment_t   /\/\/.*/;
 --ignore terminal Comment_t       /\/\*(\/\*([^\*]|\*+[^\/\*])*\*+\/|[^\*]|\*+[^\/\*])*\*+\//;
 
 terminal String_t      /[\"]([^\r\n\"\\]|[\\][\"]|[\\][\\]|[\\]b|[\\]n|[\\]r|[\\]f|[\\]t)*[\"]/;
-terminal Name_t        /[a-z][a-zA-Z_0-9_\-]*/ submits to {KWD};
+terminal Name_t        /[a-z][a-zA-Z_0-9_\-\']*/ submits to {KWD};
 terminal Constructor_t /[A-Z][a-zA-Z_0-9_\-]*/ submits to {KWD};
 terminal Quote_t       /\'/;

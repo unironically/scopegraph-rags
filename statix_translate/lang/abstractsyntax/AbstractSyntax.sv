@@ -114,8 +114,8 @@ abstract production termListCons
 top::TermList ::= t::Term ts::TermList
 {}
 
-abstract production termListOne
-top::TermList ::= t::Term
+abstract production termListNil
+top::TermList ::=
 {}
 
 nonterminal Label;
@@ -260,8 +260,8 @@ abstract production patternListCons
 top::PatternList ::= p::Pattern ps::PatternList
 {}
 
-abstract production patternListOne
-top::PatternList ::= p::Pattern
+abstract production patternListNil
+top::PatternList ::=
 {}
 
 --------------------------------------------------

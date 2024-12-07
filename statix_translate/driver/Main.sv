@@ -29,6 +29,7 @@ IO<Integer> ::= largs::[String]
           }
           else do {
             print("[✗] Parse failure\n");
+            print(result.parseErrors);
             return -1;
           };
       }

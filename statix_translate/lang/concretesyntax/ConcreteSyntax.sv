@@ -91,6 +91,10 @@ concrete production labelArgTerm_c
 top::Term_c ::= lab::Label_c '(' t::Term_c ')'
 { top.ast = labelArgTerm(lab.ast, t.ast); }
 
+concrete production constructorTermEmpty_c
+top::Term_c ::= name::Constructor_t '(' ')'
+{ top.ast = constructorTerm(name.lexeme, termListNil()); }
+
 concrete production constructorTerm_c
 top::Term_c ::= name::Constructor_t '(' ts::TermList_c ')'
 { top.ast = constructorTerm(name.lexeme, ts.ast); }
@@ -127,7 +131,7 @@ top::TermList_c ::= t::Term_c ',' ts::TermList_c
 
 concrete production termListOne_c
 top::TermList_c ::= t::Term_c
-{ top.ast = termListOne(t.ast); }
+{ top.ast = termListCons(t.ast, termListNil()); }
 
 nonterminal Label_c with ast<Label>;
 
@@ -180,7 +184,7 @@ top::Constraint_c ::= src::Name_t '-[' lab::Term_c ']->' tgt::Name_t
 { top.ast = edgeConstraint(src.lexeme, lab.ast, tgt.lexeme); }
 
 concrete production queryConstraint_c
-top::Constraint_c ::= 'query' src::Name_t r::Regex_c res::Name_t
+top::Constraint_c ::= 'query' src::Name_t r::Regex_c 'as' res::Name_t
 { top.ast = queryConstraint(src.lexeme, r.ast, res.lexeme); }
 
 concrete production oneConstraint_c
@@ -247,7 +251,11 @@ concrete production namePattern_c
 top::Pattern_c ::= name::Name_t
 { top.ast = namePattern(name.lexeme); }
 
-concrete production constructorPattern_c
+concrete production constructorPatternEmpty_c
+top::Pattern_c ::= name::Constructor_t '(' ')'
+{ top.ast = constructorPattern(name.lexeme, patternListNil()); }
+
+concrete production constructorPatternPlus_c
 top::Pattern_c ::= name::Constructor_t '(' ps::PatternList_c ')'
 { top.ast = constructorPattern(name.lexeme, ps.ast); }
 
@@ -279,7 +287,7 @@ top::PatternList_c ::= p::Pattern_c ',' ps::PatternList_c
 
 concrete production patternListOne_c
 top::PatternList_c ::= p::Pattern_c
-{ top.ast = patternListOne(p.ast); }
+{ top.ast = patternListCons(p.ast, patternListNil()); }
 
 --------------------------------------------------
 

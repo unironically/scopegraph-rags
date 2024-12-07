@@ -137,9 +137,9 @@ aspect production termListCons
 top::TermList ::= t::Term ts::TermList
 { top.doc = prodDoc("termListCons", [t.doc, ts.doc]); }
 
-aspect production termListOne
-top::TermList ::= t::Term
-{ top.doc = prodDoc("termListOne", [t.doc]); }
+aspect production termListNil
+top::TermList ::=
+{ top.doc = prodDoc("termListNil", []); }
 
 attribute doc occurs on Label;
 
@@ -281,9 +281,9 @@ aspect production patternListCons
 top::PatternList ::= p::Pattern ps::PatternList
 { top.doc = prodDoc("patternListCons", [p.doc, ps.doc]); }
 
-aspect production patternListOne
-top::PatternList ::= p::Pattern
-{ top.doc = prodDoc("patternListOne", [p.doc]); }
+aspect production patternListNil
+top::PatternList ::=
+{ top.doc = prodDoc("patternListNil", []); }
 
 --------------------------------------------------
 
