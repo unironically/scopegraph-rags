@@ -24,6 +24,7 @@ IO<Integer> ::= largs::[String]
         if result.parseSuccess
           then do {
             print("[✔] Parse success\n");
+            print(ast.pp);
             return 0;
           }
           else do {
