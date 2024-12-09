@@ -81,19 +81,55 @@ top::Predicates ::=
 
 attribute doc occurs on Predicate;
 
-aspect production predicate 
+aspect production syntaxPredicate 
 top::Predicate ::= name::String nameLst::NameList const::Constraint
-{ top.doc = prodDoc("predicate", [strDoc(name), nameLst.doc, const.doc]); } 
+{ top.doc = prodDoc("syntaxPredicate", [strDoc(name), nameLst.doc, const.doc]); } 
+
+aspect production functionalPredicate 
+top::Predicate ::= name::String nameLst::NameList const::Constraint
+{ top.doc = prodDoc("functionalPredicate", [strDoc(name), nameLst.doc, const.doc]); } 
+
+--------------------------------------------------
 
 attribute doc occurs on NameList;
 
 aspect production nameListCons
-top::NameList ::= name::String names::NameList
-{ top.doc = prodDoc("nameListCons", [strDoc(name), names.doc]); }
+top::NameList ::= name::Name names::NameList
+{ top.doc = prodDoc("nameListCons", [name.doc, names.doc]); }
 
 aspect production nameListOne
-top::NameList ::= name::String
-{ top.doc = prodDoc("nameListOne", [strDoc(name)]); }
+top::NameList ::= name::Name
+{ top.doc = prodDoc("nameListOne", [name.doc]); }
+
+attribute doc occurs on Name;
+
+aspect production nameSyn
+top::Name ::= name::String ty::TypeAnn
+{ top.doc = prodDoc("nameSyn", [strDoc(name), ty.doc]); }
+
+aspect production nameInh
+top::Name ::= name::String ty::TypeAnn
+{ top.doc = prodDoc("nameInh", [strDoc(name), ty.doc]); }
+
+aspect production nameRet
+top::Name ::= name::String ty::TypeAnn
+{ top.doc = prodDoc("nameRet", [strDoc(name), ty.doc]); }
+
+aspect production nameUntagged
+top::Name ::= name::String ty::TypeAnn
+{ top.doc = prodDoc("nameUntagged", [strDoc(name), ty.doc]); }
+
+--------------------------------------------------
+
+attribute doc occurs on TypeAnn;
+
+aspect production nameType
+top::TypeAnn ::= name::String
+{ top.doc = prodDoc("nameType", [text(name)]); }
+
+aspect production listType
+top::TypeAnn ::= ty::TypeAnn
+{ top.doc = prodDoc("listType", [ty.doc]); }
 
 --------------------------------------------------
 
@@ -164,7 +200,7 @@ top::Constraint ::= c1::Constraint c2::Constraint
 { top.doc = prodDoc("conjConstraint", [c1.doc, c2.doc]); }
 
 aspect production existsConstraint
-top::Constraint ::= names::NameList c::Constraint
+top::Constraint ::= names::RefNameList c::Constraint
 { top.doc = prodDoc("existsConstraint", [names.doc, c.doc]); }
 
 aspect production eqConstraint
@@ -223,6 +259,22 @@ aspect production matchConstraint
 top::Constraint ::= t::Term bs::BranchList
 { top.doc = prodDoc("matchConstraint", [t.doc, bs.doc]); }
 
+aspect production defConstraint
+top::Constraint ::= name::String t::Term
+{ top.doc = prodDoc("defConstraint", [text(name), t.doc]); }
+
+--------------------------------------------------
+
+attribute doc occurs on RefNameList;
+
+aspect production refNameListCons
+top::RefNameList ::= name::String names::RefNameList
+{ top.doc = prodDoc("refNameListCons", [text(name), names.doc]); }
+
+aspect production refNameListOne
+top::RefNameList ::= name::String
+{ top.doc = prodDoc("refNameListOne", [text(name)]); }
+
 --------------------------------------------------
 
 attribute doc occurs on Matcher;
@@ -252,8 +304,8 @@ top::Pattern ::= p::Pattern
 { top.doc = prodDoc("endPattern", [p.doc]); }
 
 aspect production namePattern
-top::Pattern ::= name::String
-{ top.doc = prodDoc("namePattern", [strDoc(name)]); }
+top::Pattern ::= name::String ty::TypeAnn
+{ top.doc = prodDoc("namePattern", [strDoc(name), ty.doc]); }
 
 aspect production constructorPattern
 top::Pattern ::= name::String ps::PatternList

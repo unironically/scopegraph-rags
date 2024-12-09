@@ -58,18 +58,54 @@ top::Predicates ::=
 
 nonterminal Predicate;
 
-abstract production predicate 
+abstract production syntaxPredicate 
 top::Predicate ::= name::String nameLst::NameList const::Constraint
 {} 
+
+abstract production functionalPredicate
+top::Predicate ::= name::String nameLst::NameList const::Constraint
+{} 
+
+--------------------------------------------------
 
 nonterminal NameList;
 
 abstract production nameListCons
-top::NameList ::= name::String names::NameList
+top::NameList ::= name::Name names::NameList
 {}
 
 abstract production nameListOne
-top::NameList ::= name::String
+top::NameList ::= name::Name
+{}
+
+nonterminal Name;
+
+abstract production nameSyn
+top::Name ::= name::String ty::TypeAnn
+{}
+
+abstract production nameInh
+top::Name ::= name::String ty::TypeAnn
+{}
+
+abstract production nameRet
+top::Name ::= name::String ty::TypeAnn
+{}
+
+abstract production nameUntagged
+top::Name ::= name::String ty::TypeAnn
+{}
+
+--------------------------------------------------
+
+nonterminal TypeAnn;
+
+abstract production nameType
+top::TypeAnn ::= name::String
+{}
+
+abstract production listType
+top::TypeAnn ::= ty::TypeAnn
 {}
 
 --------------------------------------------------
@@ -143,7 +179,7 @@ top::Constraint ::= c1::Constraint c2::Constraint
 {}
 
 abstract production existsConstraint
-top::Constraint ::= names::NameList c::Constraint
+top::Constraint ::= names::RefNameList c::Constraint
 {}
 
 abstract production eqConstraint
@@ -202,6 +238,22 @@ abstract production matchConstraint
 top::Constraint ::= t::Term bs::BranchList
 {}
 
+abstract production defConstraint
+top::Constraint ::= name::String t::Term
+{}
+
+--------------------------------------------------
+
+nonterminal RefNameList;
+
+abstract production refNameListCons
+top::RefNameList ::= name::String names::RefNameList
+{}
+
+abstract production refNameListOne
+top::RefNameList ::= name::String
+{}
+
 --------------------------------------------------
 
 nonterminal Matcher;
@@ -231,7 +283,7 @@ top::Pattern ::= p::Pattern
 {}
 
 abstract production namePattern
-top::Pattern ::= name::String
+top::Pattern ::= name::String ty::TypeAnn
 {}
 
 abstract production constructorPattern
