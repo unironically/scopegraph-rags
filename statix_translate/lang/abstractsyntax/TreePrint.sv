@@ -2,24 +2,25 @@ grammar statix_translate:lang:abstractsyntax;
 
 imports silver:langutil:pp;
 
-synthesized attribute doc::Document;
 synthesized attribute pp::String;
+synthesized attribute doc::Document;
 
-global indentNo::Integer = 4;
-
-fun itemDoc Document ::= acc::Document ch::Document =
-  cat(acc, cat(line(), ch));
+fun itemDoc Document ::= acc::Document ch::Document = cat(acc, cat(line(), ch));
+fun strDoc Document ::= s::String = text("\"" ++ s ++ "\"");
 
 fun prodDoc Document ::= prod::String children::[Document] =
+  let indentSize::Integer = 4
+  in
   let childrenDoc::Document = foldl(itemDoc, cat(line(), head(children)), 
-                                             tail(children)) in
-    cat (
-      text (prod ++ " ("),
-      if null(children)
+                                             tail(children))
+  in
+    cat(text (prod ++ " ("),
+        if null(children)
         then text(")")
-        else cat(nest(indentNo, group (childrenDoc)), cat(line(), text(")")))        
-    )
-  end;
+        else if length(children) == 1
+        then cat (head(children), text(")"))
+        else cat(nest(indentSize, group(childrenDoc)), {-cat(line(), -}text(")"){-)-}))
+  end end;
 
 --------------------------------------------------
 
@@ -27,8 +28,7 @@ attribute pp occurs on Module;
 
 aspect production module
 top::Module ::= imps::Imports ords::Orders preds::Predicates
-{
-  top.pp = showDoc(0, prodDoc("module", [imps.doc, ords.doc, preds.doc]))
+{ top.pp = showDoc(0, prodDoc("module", [imps.doc, ords.doc, preds.doc])) 
            ++ "\n"; }
  
 --------------------------------------------------
@@ -47,7 +47,7 @@ attribute doc occurs on Order;
 
 aspect production order
 top::Order ::= name::String pc::PathComp
-{ top.doc = prodDoc("order", [text("\"" ++ name ++ "\""), pc.doc]); }
+{ top.doc = prodDoc("order", [strDoc(name), pc.doc]); }
 
 --------------------------------------------------
 
@@ -83,17 +83,17 @@ attribute doc occurs on Predicate;
 
 aspect production predicate 
 top::Predicate ::= name::String nameLst::NameList const::Constraint
-{ top.doc = prodDoc("predicate", [text("\"" ++ name ++ "\""), nameLst.doc, const.doc]); } 
+{ top.doc = prodDoc("predicate", [strDoc(name), nameLst.doc, const.doc]); } 
 
 attribute doc occurs on NameList;
 
 aspect production nameListCons
 top::NameList ::= name::String names::NameList
-{ top.doc = prodDoc("nameListCons", [text("\"" ++ name ++ "\""), names.doc]); }
+{ top.doc = prodDoc("nameListCons", [strDoc(name), names.doc]); }
 
 aspect production nameListOne
 top::NameList ::= name::String
-{ top.doc = prodDoc("nameListOne", [text("\"" ++ name ++ "\"")]); }
+{ top.doc = prodDoc("nameListOne", [strDoc(name)]); }
 
 --------------------------------------------------
 
@@ -109,11 +109,11 @@ top::Term ::= lab::Label t::Term
 
 aspect production constructorTerm
 top::Term ::= name::String ts::TermList
-{ top.doc = prodDoc("constructorTerm", [text("\"" ++ name ++ "\""), ts.doc]); }
+{ top.doc = prodDoc("constructorTerm", [strDoc(name), ts.doc]); }
 
 aspect production nameTerm
 top::Term ::= name::String
-{ top.doc = prodDoc("nameTerm", [text("\"" ++ name ++ "\"")]); }
+{ top.doc = prodDoc("nameTerm", [strDoc(name)]); }
 
 aspect production consTerm
 top::Term ::= t1::Term t2::Term
@@ -129,7 +129,7 @@ top::Term ::= ts::TermList
 
 aspect production stringTerm
 top::Term ::= s::String
-{ top.doc = prodDoc("stringTerm", [text("\"" ++ s ++ "\"")]); }
+{ top.doc = prodDoc("stringTerm", [strDoc(s)]); }
 
 attribute doc occurs on TermList;
 
@@ -145,7 +145,7 @@ attribute doc occurs on Label;
 
 aspect production label
 top::Label ::= label::String
-{ top.doc = prodDoc("label", [text("\"" ++ label ++ "\"")]); }
+{ top.doc = prodDoc("label", [strDoc(label)]); }
 
 --------------------------------------------------
 
@@ -177,47 +177,47 @@ top::Constraint ::= t1::Term t2::Term
 
 aspect production newConstraintDatum
 top::Constraint ::= name::String t::Term
-{ top.doc = prodDoc("newConstraintDatum", [text("\"" ++ name ++ "\""), t.doc]); }
+{ top.doc = prodDoc("newConstraintDatum", [strDoc(name), t.doc]); }
 
 aspect production newConstraint
 top::Constraint ::= name::String
-{ top.doc = prodDoc("newConstraint", [text("\"" ++ name ++ "\"")]); }
+{ top.doc = prodDoc("newConstraint", [strDoc(name)]); }
 
 aspect production dataConstraint
 top::Constraint ::= name::String t::Term
-{ top.doc = prodDoc("dataConstraint", [text("\"" ++ name ++ "\""), t.doc]); }
+{ top.doc = prodDoc("dataConstraint", [strDoc(name), t.doc]); }
 
 aspect production edgeConstraint
 top::Constraint ::= src::String lab::Term tgt::String
-{ top.doc = prodDoc("edgeConstraint", [text("\"" ++ src ++ "\""), lab.doc, text("\"" ++ tgt ++ "\"")]); }
+{ top.doc = prodDoc("edgeConstraint", [strDoc(src), lab.doc, strDoc(tgt)]); }
 
 aspect production queryConstraint
 top::Constraint ::= src::String r::Regex res::String
-{ top.doc = prodDoc("queryConstraint", [text("\"" ++ src ++ "\""), r.doc, text("\"" ++ res ++ "\"")]); }
+{ top.doc = prodDoc("queryConstraint", [strDoc(src), r.doc, strDoc(res)]); }
 
 aspect production oneConstraint
 top::Constraint ::= name::String t::Term
-{ top.doc = prodDoc("oneConstraint", [text("\"" ++ name ++ "\""), t.doc]); }
+{ top.doc = prodDoc("oneConstraint", [strDoc(name), t.doc]); }
 
 aspect production nonEmptyConstraint
 top::Constraint ::= name::String
-{ top.doc = prodDoc("nonEmptyConstraint", [text("\"" ++ name ++ "\"")]); }
+{ top.doc = prodDoc("nonEmptyConstraint", [strDoc(name)]); }
 
 aspect production minConstraint
 top::Constraint ::= set::String pc::PathComp res::String
-{ top.doc = prodDoc("minConstraint", [text("\"" ++ set ++ "\""), pc.doc, text("\"" ++ res ++ "\"")]); }
+{ top.doc = prodDoc("minConstraint", [strDoc(set), pc.doc, strDoc(res)]); }
 
 aspect production applyConstraint
 top::Constraint ::= name::String ts::TermList
-{ top.doc = prodDoc("queryConstraint", [text("\"" ++ name ++ "\""), ts.doc]); }
+{ top.doc = prodDoc("queryConstraint", [strDoc(name), ts.doc]); }
 
 aspect production everyConstraint
 top::Constraint ::= name::String lam::Lambda
-{ top.doc = prodDoc("everyConstraint", [text("\"" ++ name ++ "\""), lam.doc]); }
+{ top.doc = prodDoc("everyConstraint", [strDoc(name), lam.doc]); }
 
 aspect production filterConstraint
 top::Constraint ::= set::String m::Matcher res::String
-{ top.doc = prodDoc("filterConstraint", [text("\"" ++ set ++ "\""), m.doc, text("\"" ++ res ++ "\"")]); }
+{ top.doc = prodDoc("filterConstraint", [strDoc(set), m.doc, strDoc(res)]); }
 
 aspect production matchConstraint
 top::Constraint ::= t::Term bs::BranchList
@@ -253,11 +253,11 @@ top::Pattern ::= p::Pattern
 
 aspect production namePattern
 top::Pattern ::= name::String
-{ top.doc = prodDoc("namePattern", [text("\"" ++ name ++ "\"")]); }
+{ top.doc = prodDoc("namePattern", [strDoc(name)]); }
 
 aspect production constructorPattern
 top::Pattern ::= name::String ps::PatternList
-{ top.doc = prodDoc("constructorPattern", [text("\"" ++ name ++ "\""), ps.doc]); }
+{ top.doc = prodDoc("constructorPattern", [strDoc(name), ps.doc]); }
 
 aspect production consPattern
 top::Pattern ::= p1::Pattern p2::Pattern
@@ -399,7 +399,7 @@ top::PathComp ::=
 
 aspect production namedPathComp
 top::PathComp ::= name::String
-{ top.doc = prodDoc("namedPathComp", [text("\"" ++ name ++ "\"")]); }
+{ top.doc = prodDoc("namedPathComp", [strDoc(name)]); }
 
 
 attribute doc occurs on LabelLTs;
@@ -418,8 +418,8 @@ attribute doc occurs on QualName;
 
 aspect production qualNameDot
 top::QualName ::= qn::QualName name::String
-{ top.doc = prodDoc("qualNameDot", [qn.doc, text("\"" ++ name ++ "\"")]); }
+{ top.doc = prodDoc("qualNameDot", [qn.doc, strDoc(name)]); }
 
 aspect production qualNameName
 top::QualName ::= name::String
-{ top.doc = prodDoc("qualNameName", [text("\"" ++ name ++ "\"")]); }
+{ top.doc = prodDoc("qualNameName", [strDoc(name)]); }
