@@ -82,8 +82,8 @@ top::Predicates ::=
 attribute doc occurs on Predicate;
 
 aspect production syntaxPredicate 
-top::Predicate ::= name::String nameLst::NameList const::Constraint
-{ top.doc = prodDoc("syntaxPredicate", [strDoc(name), nameLst.doc, const.doc]); } 
+top::Predicate ::= name::String nameLst::NameList t::String bs::BranchList
+{ top.doc = prodDoc("syntaxPredicate", [strDoc(name), nameLst.doc, text(t), bs.doc]); }
 
 aspect production functionalPredicate 
 top::Predicate ::= name::String nameLst::NameList const::Constraint
@@ -232,8 +232,8 @@ top::Constraint ::= src::String r::Regex res::String
 { top.doc = prodDoc("queryConstraint", [strDoc(src), r.doc, strDoc(res)]); }
 
 aspect production oneConstraint
-top::Constraint ::= name::String t::Term
-{ top.doc = prodDoc("oneConstraint", [strDoc(name), t.doc]); }
+top::Constraint ::= name::String out::String
+{ top.doc = prodDoc("oneConstraint", [strDoc(name), text(out)]); }
 
 aspect production nonEmptyConstraint
 top::Constraint ::= name::String
@@ -244,8 +244,8 @@ top::Constraint ::= set::String pc::PathComp res::String
 { top.doc = prodDoc("minConstraint", [strDoc(set), pc.doc, strDoc(res)]); }
 
 aspect production applyConstraint
-top::Constraint ::= name::String ts::TermList
-{ top.doc = prodDoc("queryConstraint", [strDoc(name), ts.doc]); }
+top::Constraint ::= name::String vs::RefNameList
+{ top.doc = prodDoc("queryConstraint", [strDoc(name), vs.doc]); }
 
 aspect production everyConstraint
 top::Constraint ::= name::String lam::Lambda
@@ -260,8 +260,8 @@ top::Constraint ::= t::Term bs::BranchList
 { top.doc = prodDoc("matchConstraint", [t.doc, bs.doc]); }
 
 aspect production defConstraint
-top::Constraint ::= name::String t::Term
-{ top.doc = prodDoc("defConstraint", [text(name), t.doc]); }
+top::Constraint ::= name::String ty::TypeAnn t::Term
+{ top.doc = prodDoc("defConstraint", [text(name), ty.doc, t.doc]); }
 
 --------------------------------------------------
 
@@ -394,8 +394,8 @@ top::BranchList ::= b::Branch
 attribute doc occurs on Lambda;
 
 aspect production lambda
-top::Lambda ::= b::Branch
-{ top.doc = prodDoc("lambda", [b.doc]); }
+top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
+{ top.doc = prodDoc("lambda", [text(arg), ty.doc, wc.doc, c.doc]); }
 
 --------------------------------------------------
 

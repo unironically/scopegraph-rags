@@ -59,7 +59,7 @@ top::Predicates ::=
 nonterminal Predicate;
 
 abstract production syntaxPredicate 
-top::Predicate ::= name::String nameLst::NameList const::Constraint
+top::Predicate ::= name::String nameLst::NameList t::String bs::BranchList
 {} 
 
 abstract production functionalPredicate
@@ -210,8 +210,12 @@ abstract production queryConstraint
 top::Constraint ::= src::String r::Regex res::String
 {}
 
+{- In mstx syntax, the `out` arg can be any term, but only a variable
+ - name is used in examples. We make the restriction that it can only
+ - be a variable name.
+ -}
 abstract production oneConstraint
-top::Constraint ::= name::String t::Term
+top::Constraint ::= name::String out::String
 {}
 
 abstract production nonEmptyConstraint
@@ -223,7 +227,7 @@ top::Constraint ::= set::String pc::PathComp res::String
 {}
 
 abstract production applyConstraint
-top::Constraint ::= name::String ts::TermList
+top::Constraint ::= name::String vs::RefNameList
 {}
 
 abstract production everyConstraint
@@ -239,7 +243,7 @@ top::Constraint ::= t::Term bs::BranchList
 {}
 
 abstract production defConstraint
-top::Constraint ::= name::String t::Term
+top::Constraint ::= name::String ty::TypeAnn t::Term
 {}
 
 --------------------------------------------------
@@ -373,7 +377,7 @@ top::BranchList ::= b::Branch
 nonterminal Lambda;
 
 abstract production lambda
-top::Lambda ::= b::Branch
+top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
 {}
 
 --------------------------------------------------

@@ -2,6 +2,7 @@ grammar statix_translate:driver;
 
 imports statix_translate:lang:concretesyntax;
 imports statix_translate:lang:abstractsyntax;
+import statix_translate:translation;
 
 parser parse :: Module_c { statix_translate:lang:concretesyntax; }
 
@@ -24,7 +25,8 @@ IO<Integer> ::= largs::[String]
         if result.parseSuccess
           then do {
             print("[✔] Parse success\n");
-            print(ast.pp);
+            --print(ast.pp);
+            print(ast.moduleTrans);
             return 0;
           }
           else do {

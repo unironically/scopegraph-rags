@@ -64,10 +64,13 @@ top::Predicates_c ::=
 
 nonterminal Predicate_c with ast<Predicate>;
 
+{- syntactic requirement that syntaxPredicates only contain a match on the 
+ - syntax term argument
+ -}
 concrete production syntaxPredicate_c 
 top::Predicate_c ::= 'syntax' ':' name::Name_t '(' nameLst::NameList_c ')'
-                     LeftArr_t const::Constraint_c '.'
-{ top.ast = syntaxPredicate(name.lexeme, nameLst.ast, const.ast); }
+                     LeftArr_t t::Name_t bs::BranchList_c '.'
+{ top.ast = syntaxPredicate(name.lexeme, nameLst.ast, t.lexeme, bs.ast); }
 
 concrete production functionalPredicate_c 
 top::Predicate_c ::= name::Name_t '(' nameLst::NameList_c ')'
@@ -226,8 +229,8 @@ top::Constraint_c ::= 'query' src::Name_t r::Regex_c 'as' res::Name_t
 { top.ast = queryConstraint(src.lexeme, r.ast, res.lexeme); }
 
 concrete production oneConstraint_c
-top::Constraint_c ::= 'only' '(' name::Name_t ',' t::Term_c ')'
-{ top.ast = oneConstraint(name.lexeme, t.ast); }
+top::Constraint_c ::= 'only' '(' name::Name_t ',' out::Name_t ')'
+{ top.ast = oneConstraint(name.lexeme, out.lexeme); }
 
 concrete production nonEmptyConstraint_c
 top::Constraint_c ::= 'inhabited' '(' name::Name_t ')'
@@ -237,9 +240,10 @@ concrete production minConstraint_c
 top::Constraint_c ::= 'min' set::Name_t pc::PathComp_c res::Name_t
 { top.ast = minConstraint(set.lexeme, pc.ast, res.lexeme); }
 
+{- Restrict predicate applications so that only variables are allowed as args -}
 concrete production applyConstraint_c
-top::Constraint_c ::= name::Name_t '(' ts::TermList_c ')'
-{ top.ast = applyConstraint(name.lexeme, ts.ast); }
+top::Constraint_c ::= name::Name_t '(' vs::RefNameList_c ')'
+{ top.ast = applyConstraint(name.lexeme, vs.ast); }
 
 concrete production everyConstraint_c
 top::Constraint_c ::= 'every' name::Name_t lam::Lambda_c
@@ -258,8 +262,8 @@ top::Constraint_c ::= '(' c::Constraint_c ')'
 { top.ast = c.ast; }
 
 concrete production defConstraint_c
-top::Constraint_c ::= name::Name_t ':=' t::Term_c
-{ top.ast = defConstraint(name.lexeme, t.ast); }
+top::Constraint_c ::= name::Name_t '::' ty::TypeAnn_c ':=' t::Term_c
+{ top.ast = defConstraint(name.lexeme, ty.ast, t.ast); }
 
 --------------------------------------------------
 
@@ -399,9 +403,14 @@ top::BranchList_c ::= b::Branch_c
 
 nonterminal Lambda_c with ast<Lambda>;
 
+{- in mstx examples lambda args are only ever variable names,
+ - despite use of nt Pattern in the syntax spec which allows
+ - unification of lambda args. We make the reasonable restriction
+ - that the lambda arg must be a name.
+ -}
 concrete production lambda_c
-top::Lambda_c ::= '(' b::Branch_c ')'
-{ top.ast = lambda(b.ast); }
+top::Lambda_c ::= '(' name::Name_t '::' ty::TypeAnn_c wc::WhereClause_c '->' c::Constraint_c ')'
+{ top.ast = lambda(name.lexeme, ty.ast, wc.ast, c.ast); }
 
 --------------------------------------------------
 
