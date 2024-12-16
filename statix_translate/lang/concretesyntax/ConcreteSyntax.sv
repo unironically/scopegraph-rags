@@ -197,7 +197,7 @@ top::Constraint_c ::= c1::Constraint_c ',' c2::Constraint_c
 { top.ast = conjConstraint(c1.ast, c2.ast); }
 
 concrete production existsConstraint_c
-top::Constraint_c ::= '{' names::RefNameList_c '}' c::Constraint_c
+top::Constraint_c ::= '{' names::NameList_c '}' c::Constraint_c
 { top.ast = existsConstraint(names.ast, c.ast); }
 
 concrete production eqConstraint_c

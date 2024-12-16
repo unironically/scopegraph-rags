@@ -10,4 +10,4 @@ src(p::path, ret: s::scope) :- p match {
   | Edge(x::scope, l::label, xs::path) -> s::scope := x
 }.
 
-datumOf(p::path, ret: d::datum) :- {s} tgt(p, s), s -> d.
+datumOf(p::path, ret: d::datum) :- {s::scope} tgt(p, s), s -> d.

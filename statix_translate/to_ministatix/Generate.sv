@@ -39,7 +39,9 @@ attribute mstxPP occurs on Module;
 
 aspect production module
 top::Module ::= imps::Imports ords::Orders preds::Predicates
-{ top.mstxPP = showDoc(0, cat(imps.mstx, cat(ords.mstx, preds.mstx))) ++ "\n"; }
+{ top.mstxPP = showDoc(0, cat(text("// Generated Ministatix spec"), 
+                          cat(cat(line(), line()), 
+                          cat(imps.mstx, cat(ords.mstx, preds.mstx))))) ++ "\n"; }
  
 --------------------------------------------------
 
@@ -210,7 +212,7 @@ top::Constraint ::= c1::Constraint c2::Constraint
 { top.mstx = cat(c1.mstx, cat(text(","), cat(line(), c2.mstx))); }
 
 aspect production existsConstraint
-top::Constraint ::= names::RefNameList c::Constraint
+top::Constraint ::= names::NameList c::Constraint
 { top.mstx = cat(
                text("{"),
                cat(

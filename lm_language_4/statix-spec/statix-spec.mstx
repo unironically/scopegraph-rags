@@ -1,3 +1,5 @@
+// Generated Ministatix spec
+
 import statixlib.paths
 import statixlib.sets
 

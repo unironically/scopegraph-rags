@@ -6,7 +6,7 @@ syntax:
 main(p::main) :- p match {
 
     Program(ds::decls):[] ->
-      {s}
+      {s::scope}
       new s,
       decls(s, ds)
 
@@ -32,14 +32,14 @@ syntax:
 decl(inh: s::scope, d::decl) :- d match {
     
     DeclModule(x::string, ds::decls) ->
-      {s_mod}
+      {s_mod::scope}
       new s_mod -> DatumMod(x, s_mod),
       s -[ `MOD ]-> s_mod,
       s_mod -[ `LEX ]-> s,
       decls(s_mod, ds)
 
   | DeclImport(r::mod-ref) ->
-      {p, x, s_mod, d}
+      {p::path, x::string, s_mod::scope, d::datum}
       mod-ref(s, r, p),
 
       datumOf(p, d),
@@ -67,13 +67,13 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
       ty::type := BOOL()
 
   | ExprVar(r::var-ref) ->
-      {p, x, d}
+      {p::path, x::string, d::datum}
       var-ref(s, r, p),
       d == DatumVar(x, ty),
       datumOf(p, d)
 
   | ExprAdd(e1::expr, e2::expr) ->
-      {ty1, ty2}
+      {ty1::type, ty2::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
       ty1 == INT(),
@@ -81,7 +81,7 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
       ty::type := INT()
 
   | ExprSub(e1::expr, e2::expr) ->
-      {ty1, ty2}
+      {ty1::type, ty2::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
       ty1 == INT(),
@@ -89,7 +89,7 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
       ty::type := INT()
 
   | ExprMul(e1::expr, e2::expr) ->
-      {ty1, ty2}
+      {ty1::type, ty2::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
       ty1 == INT(),
@@ -97,7 +97,7 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
       ty::type := INT()
 
   | ExprDiv(e1::expr, e2::expr) ->
-      {ty1, ty2}
+      {ty1::type, ty2::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
       ty1 == INT(),
@@ -105,7 +105,7 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
       ty::type := INT()
 
   | ExprAnd(e1::expr, e2::expr) ->
-      {ty1, ty2}
+      {ty1::type, ty2::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
       ty1 == BOOL(),
@@ -113,7 +113,7 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
       ty::type := BOOL()
 
   | ExprOr(e1::expr, e2::expr) ->
-      {ty1, ty2}
+      {ty1::type, ty2::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
       ty1 == BOOL(),
@@ -121,14 +121,14 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
       ty::type := BOOL()
 
   | ExprEq(e1::expr, e2::expr) ->
-      {ty1, ty2}
+      {ty1::type, ty2::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
       ty1 == ty2,
       ty::type := BOOL()
 
   | ExprApp(e1::expr, e2::expr) ->
-      {tyF, ty1, ty2, ty3}
+      {tyF::type, ty1::type, ty2::type, ty3::type}
       expr(s, e1, tyF),
       expr(s, e2, ty3),
       tyF == FUN(ty1, ty2), // interesting case with unification, can translate to binding of locals based on matching
@@ -136,7 +136,7 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
       ty::type := ty2
 
   | ExprIf(e1::expr, e2::expr, e3::expr) ->
-      {ty1, ty2, ty3}
+      {ty1::type, ty2::type, ty3::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
       expr(s, e3, ty3),
@@ -145,7 +145,7 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
       ty::type := ty2
 
   | ExprFun(d::arg-decl, e::expr) ->
-      {s_fun, ty1, ty2}
+      {s_fun::scope, ty1::type, ty2::type}
       new s_fun,
       s_fun -[ `LEX ]-> s,
       arg-decl(s_fun, d, ty1),
@@ -153,20 +153,20 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
       ty::type := FUN(ty1, ty2)
 
   | ExprLet(bs::seq-binds, e::expr) ->
-      {s_let}
+      {s_let::scope}
       new s_let,
       seq-binds(s, bs, s_let),
       expr(s_let, e, ty)
 
   | ExprLetRec(bs::par-binds, e::expr) ->
-      {s_let}
+      {s_let::scope}
       new s_let,
       s_let -[ `LEX ]-> s,
       par-binds(s_let, bs, s_let),
       expr(s_let, e, ty)
 
   | ExprLetPar(bs::par-binds, e::expr) ->
-      {s_let}
+      {s_let::scope}
       new s_let,
       s_let -[ `LEX ]-> s,
       par-binds(s, bs, s_let),
@@ -187,7 +187,7 @@ seq-binds(inh: s::scope, bs::seq-binds, inh: s_def::scope) :- bs match {
         seq-bind(s, b, s_def)
 
   | SeqBindsCons(b::seq-bind, bs::seq-binds) ->
-        {s_def'}
+        {s_def'::scope}
         new s_def',
         s_def' -[ `LEX ]-> s,
         seq-bind(s, b, s_def'),
@@ -201,13 +201,13 @@ syntax:
 seq-bind(inh: s::scope, b::seq-bind, inh: s_def::scope) :- b match {
     
     DefBind(x::string, e::expr) ->
-        {s_var, ty}
+        {s_var::scope, ty::type}
         new s_var -> DatumVar(x, ty),
         s_def -[ `VAR ]-> s_var,
         expr(s, e, ty)
   
   | DefBindTyped(x::string, tyann::type, e::expr) ->
-        {s_var, ty1, ty2}
+        {s_var::scope, ty1::type, ty2::type}
         new s_var -> DatumVar(x, ty1),
         s_def -[ `VAR ]-> s_var,
         type(s, tyann, ty1),
@@ -236,13 +236,13 @@ syntax:
 par-bind(inh: s::scope, b::par-bind, inh: s_def::scope) :- b match {
 
     DefBind(x::string, e::expr) ->
-        {s_var, ty}
+        {s_var::scope, ty::type}
         new s_var -> DatumVar(x, ty),
         s_def -[ `VAR ]-> s_var,
         expr(s, e, ty)
   
   | DefBindTyped(x::string, tyann::type, e::expr) ->
-        {s_var, ty}
+        {s_var::scope, ty::type}
         new s_var -> DatumVar(x, ty),
         s_def -[ `VAR ]-> s_var,
         type(s, tyann, ty),
@@ -255,7 +255,7 @@ par-bind(inh: s::scope, b::par-bind, inh: s_def::scope) :- b match {
 arg-decl(inh: s::scope, d::arg-decl, syn: ty::type) :- d match {
 
     ArgDecl(x::string, tyann::type) ->
-        {s_var, ty1}
+        {s_var::scope, ty1::type}
         type(s, tyann, ty1),
         new s_var -> DatumVar(x, ty1),
         s -[ `VAR ]-> s_var,
@@ -275,7 +275,7 @@ type(inh: s::scope, tyann::type, syn: ty::type) :- tyann match {
         ty::type := BOOL()
   
   | TArrow(tyann1::type, tyann2::type) ->
-        {ty1, ty2}
+        {ty1::type, ty2::type}
         type(s, tyann1, ty1),
         type(s, tyann2, ty2),
         ty::type := FUN(ty1, ty2)
@@ -288,16 +288,14 @@ syntax:
 mod-ref(inh: s::scope, r::mod-ref, syn: p::path) :- r match {
     
     ModRef(x::string) ->
-        {mods, xmods, xmods'}
+        {mods::[path], xmods::[path], xmods'::[path]}
         query s `LEX*`IMP? `MOD as mods,
-
         filter mods (DatumMod(x'::string, _) where x' == x) xmods,
-
         min-refs(xmods, xmods'),
         only(xmods', p)
 
   | ModQRef(r::mod-ref, x::string) ->
-        {p_mod, s_mod, mods, xmods}
+        {p_mod::path, s_mod::[path], mods::[path], xmods::[path]}
         mod-ref(s, r, p_mod),
         tgt(p_mod, s_mod),
         query s_mod `MOD as mods,
@@ -311,14 +309,14 @@ syntax:
 var-ref(inh: s::scope, r::var-ref, syn: p::path) :- r match {
 
     VarRef(x::string) ->
-        {vars, xvars, xvars'}
+        {vars::[path], xvars::[path], xvars'::[path]}
         query s `LEX*(`EXT*|`IMP?) `VAR as vars,
         filter vars(DatumVar(x'::string, _) where x' == x) xvars,
         min-refs(xvars, xvars'),
         only(xvars', p)
 
   | VarQRef(r::mod-ref, x::string) ->
-        {p_mod, s_mod, vars, xvars}
+        {p_mod::path, s_mod::[path], vars::[path], xvars::[path]}
         mod-ref(s, r, p_mod),
         tgt(p_mod, s_mod),
         query s_mod `VAR as vars,

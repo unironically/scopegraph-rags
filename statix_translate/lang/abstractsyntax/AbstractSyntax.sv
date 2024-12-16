@@ -179,7 +179,7 @@ top::Constraint ::= c1::Constraint c2::Constraint
 {}
 
 abstract production existsConstraint
-top::Constraint ::= names::RefNameList c::Constraint
+top::Constraint ::= names::NameList c::Constraint
 {}
 
 abstract production eqConstraint

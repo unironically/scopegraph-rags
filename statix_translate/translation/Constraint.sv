@@ -59,7 +59,7 @@ top::Constraint ::= c1::Constraint c2::Constraint
 }
 
 aspect production existsConstraint
-top::Constraint ::= names::RefNameList c::Constraint
+top::Constraint ::= names::NameList c::Constraint
 {
   -- ignoring RefNameList here
   top.constraintTrans = c.constraintTrans;

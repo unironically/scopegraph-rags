@@ -200,7 +200,7 @@ top::Constraint ::= c1::Constraint c2::Constraint
 { top.doc = prodDoc("conjConstraint", [c1.doc, c2.doc]); }
 
 aspect production existsConstraint
-top::Constraint ::= names::RefNameList c::Constraint
+top::Constraint ::= names::NameList c::Constraint
 { top.doc = prodDoc("existsConstraint", [names.doc, c.doc]); }
 
 aspect production eqConstraint
