@@ -40,6 +40,18 @@ top::Regex ::=
   top.regexTrans = error("regexAny TODO");
 }
 
+aspect production regexPlus
+top::Regex ::= r::Regex
+{
+  top.regexTrans = error("regexPlus TODO");
+}
+
+aspect production regexOptional
+top::Regex ::= r::Regex
+{
+  top.regexTrans = error("regexOpt TODO");
+}
+
 aspect production regexNeg
 top::Regex ::= r::Regex
 {
@@ -50,4 +62,10 @@ aspect production regexEps
 top::Regex ::=
 {
   top.regexTrans = error("regexEps TODO");
+}
+
+aspect production regexParens
+top::Regex ::= r::Regex
+{
+  top.regexTrans = error("regexParens TODO");
 }

@@ -12,6 +12,8 @@ synthesized attribute lambdaName::String occurs on Lambda;
 attribute knownFuncPreds occurs on Lambda;
 propagate knownFuncPreds on Lambda;
 
+attribute namesInScope occurs on Lambda;
+
 aspect production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
 {
@@ -38,6 +40,8 @@ top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
     "}";
 
   top.lambdaName = lambdaName;
+
+  c.namesInScope = (arg, ^ty)::top.namesInScope;
 }
 
 --------------------------------------------------

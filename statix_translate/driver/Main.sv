@@ -3,7 +3,7 @@ grammar statix_translate:driver;
 imports statix_translate:lang:concretesyntax;
 imports statix_translate:lang:abstractsyntax;
 
---import statix_translate:translation;
+import statix_translate:translation;
 import statix_translate:to_ministatix;
 
 parser parse :: Module_c { statix_translate:lang:concretesyntax; }
@@ -28,8 +28,8 @@ IO<Integer> ::= largs::[String]
           then do {
             --print("[✔] Parse success\n");
             --print(ast.pp);
-            --print(ast.moduleTrans);
-            print(ast.mstxPP);
+            print(ast.moduleTrans);
+            --print(ast.mstxPP);
             return 0;
           }
           else do {

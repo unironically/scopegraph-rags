@@ -53,6 +53,8 @@ top::Predicate ::=
     "}";
 
   top.functionalPreds := [(name, nameLst.allFuncArgDecls)];
+
+  const.namesInScope = nameLst.nameListDefs;
 }
 
 --------------------------------------------------

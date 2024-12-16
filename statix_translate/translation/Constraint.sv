@@ -30,6 +30,9 @@ propagate definedNonLocals on Constraint excluding existsConstraint, matchConstr
 attribute knownFuncPreds occurs on Constraint;
 propagate knownFuncPreds on Constraint;
 
+inherited attribute namesInScope::[(String, TypeAnn)] occurs on Constraint;
+propagate namesInScope on Constraint excluding existsConstraint;
+
 --------------------------------------------------
 
 aspect production trueConstraint
@@ -64,8 +67,9 @@ top::Constraint ::= names::NameList c::Constraint
   -- ignoring RefNameList here
   top.constraintTrans = c.constraintTrans;
   top.definedNonLocals :=
-    filter ((\p::(String, TypeAnn) -> !contains(p.1, names.refNamesList)), 
+    filter ((\p::(String, TypeAnn) -> !contains(p.1, map(fst, names.nameListDefs))), 
             c.definedNonLocals);
+  c.namesInScope = names.nameListDefs ++ top.namesInScope;
 }
 
 aspect production eqConstraint
@@ -256,54 +260,40 @@ top::Constraint ::= set::String m::Matcher res::String
 aspect production matchConstraint
 top::Constraint ::= t::Term bs::BranchList
 {
-  {- `local (Boolean, T1, T2, ...) = case t of ... end`
-   - where `Boolean` is the `ok` return.
-   - `T1`, `T2`, ... are the types of the names given definitions inside
-   - of the branches.
-   -}
-
-  --top.constraintTrans = error("matchConstraint.constraintTrans TODO");
-  top.definedNonLocals := []; -- TODO?
-
+  -- name of the match block
   local matchName::String = "match_" ++ toString(genInt());
 
-  local resultLocals::String = 
-    let pairedNums::[(String, Integer)] = 
-      foldr ((\id::String acc::(String, Integer) -> (id, head(acc).2 + 1)::acc), 
-             [(head(bs.definedNonLocals), 2)], tail(bs.definedNonLocals))
-    in
-      if !null(bs.definedNonLocals)
-      then map (
-             (\p::(String, Integer) -> 
-                "local " ++ p.1 ++ "::" -- todo
-             ),
-             pairedNums
-           )
-      else ""
-    end;
+  -- ok name
+  local okName::String = okNameGen();
+  top.okNames <- [okName];
 
-  local matchResTy::String = 
-    if null(bs.definedNonLocals)
-    then "Boolean"
-    else "(Boolean, " ++ implode (", ", map(\p::(String, TypeAnn) -> p.2.typeTrans, 
-                                            bs.definedNonLocals)) ++ ")";
+  -- tell the branch list that it is a functional pred
+  bs.isFunctionalPred = true;
+  bs.expRetTys = retNamesTypes;
 
-  {- case bodies should also allow forward referencing, so translating to a seq
-   - of `let` exprs in Silver will not do. We could translate each case body
-   - to a procedure-style function, but this would need to be passed all of the
-   - external names that are in scope for the case bodies. Only solution? 
-   - 
-   - all names in scope: all of the names that are either passed as arg to the 
-   - current predicate we are in, or appear in some ancestor exists constraint
-   -}
+  -- types of the match results
+  local retNamesTypes::[(String, TypeAnn)] = (okName, nameType("Boolean"))::bs.definedNonLocals;
+  local retTypes::[TypeAnn] = map(snd, retNamesTypes);
+  local retNames::[String]  = map(fst, retNamesTypes);
+  local retTypeStr::String = "(" ++ implode(", ", retNames) ++ ")";
 
-  top.constraintTrans =
-    "local " ++ matchName ++ "::" ++ matchResTy ++ " = " ++
-    "case " ++ t.termTrans ++ " of " ++ 
-      implode ("|", bs.branchListTrans) ++ 
-    "end;" ++ 
-    resultLocals;
+  -- translation
+  top.constraintTrans = 
+    "local " ++ matchName ++ "::" ++ retTypeStr ++ " = " ++
+      "case " ++ t.termTrans ++ " of " ++
+        implode("|", bs.branchListTrans) ++
+      " end;" ++
+    (foldl (
+      (\acc::(String, Integer) p::(String, TypeAnn) ->
+         (acc.1 ++ "local " ++ p.1 ++ "::" ++ p.2.typeTrans ++ " = " ++ 
+           matchName ++ "." ++ toString(acc.2) ++ ";", acc.2 + 1)),
+      ("", 1),
+      retNamesTypes
+    )).1;
 
+  top.definedNonLocals := tail(retNamesTypes); -- don't want okName? (todo - verify)
+
+  top.lambdas <- bs.lambdas;
 }
 
 aspect production defConstraint

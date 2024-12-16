@@ -7,8 +7,12 @@ synthesized attribute matcherTrans::String occurs on Matcher;
 aspect production matcher
 top::Matcher ::= p::Pattern wc::WhereClause
 {
-  top.matcherTrans = p.patternTrans;
-  -- todo, where clause
+  top.matcherTrans = 
+    p.patternTrans ++
+    case wc.whereClauseTrans of
+    | just(t) -> " " ++ t
+    | _ -> ""
+    end;
 }
 
 --------------------------------------------------
