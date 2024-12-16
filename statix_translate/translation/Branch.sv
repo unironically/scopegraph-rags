@@ -32,7 +32,7 @@ top::Branch ::= m::Matcher c::Constraint
   top.branchTrans = 
     m.matcherTrans ++ " -> " ++
     if top.isFunctionalPred
-    then branchName ++ "(" ++ implode(", ", map(fst, top.namesInScope)) ++ ")" -- call branch fun
+    then branchName ++ "(" ++ implode(", ", map(fst, top.namesInScope ++ m.patternDefs)) ++ ")" -- call branch fun
     else c.constraintTrans;
 
   c.localScopes = c.localScopesSyn;
@@ -55,7 +55,7 @@ top::Branch ::= m::Matcher c::Constraint
 
   local args::String =
     implode (" ", map(\p::(String, TypeAnn) -> p.1 ++ "::" ++ p.2.typeTrans, 
-                      tail(top.expRetTys)));
+                      tail(top.expRetTys) ++ m.patternDefs));
 
   local branchFun::String = 
     "function " ++ branchName ++ " " ++

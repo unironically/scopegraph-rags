@@ -4,6 +4,9 @@ grammar statix_translate:translation;
 
 synthesized attribute matcherTrans::String occurs on Matcher;
 
+attribute patternDefs occurs on Matcher;
+propagate patternDefs on Matcher;
+
 aspect production matcher
 top::Matcher ::= p::Pattern wc::WhereClause
 {
@@ -20,6 +23,9 @@ top::Matcher ::= p::Pattern wc::WhereClause
 --nonterminal Pattern;
 
 synthesized attribute patternTrans::String occurs on Pattern;
+
+monoid attribute patternDefs::[(String, TypeAnn)] occurs on Pattern;
+propagate patternDefs on Pattern;
 
 aspect production labelPattern
 top::Pattern ::= lab::Label
@@ -52,6 +58,7 @@ top::Pattern ::= name::String ty::TypeAnn
 {
   top.patternTrans = name;
   -- todo, handle type
+  top.patternDefs <- [(name, ^ty)];
 }
 
 aspect production constructorPattern
@@ -89,6 +96,9 @@ top::Pattern ::=
 --nonterminal PatternList;
 
 synthesized attribute patternsTrans::[String] occurs on PatternList;
+
+attribute patternDefs occurs on PatternList;
+propagate patternDefs on PatternList;
 
 
 aspect production patternListCons

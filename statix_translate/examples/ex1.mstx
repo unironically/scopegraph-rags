@@ -1,9 +1,14 @@
 import stdlib.a  import stdlib.b
 
-tgt(p::path, ret: s::scope) :- p match {
+tgt(p::path, ret: s::scope) :- 
+
+  p match {
     End(x::scope)                      -> s::scope := x
-  | Edge(x::scope, l::label, xs::path) -> tgt(xs, s)
-}.
+  | Edge(x::scope, l::label, xs::path) -> xs match {
+                                            End(x::scope) -> s::scope := x
+                                          | Edge(x::scope, l::label, xs::path) -> tgt(xs, s)
+                                          }
+  }.
 
 src(p::path, ret: s::scope) :- p match {
     End(x::scope) -> s::scope := x
