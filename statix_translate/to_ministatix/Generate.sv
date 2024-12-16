@@ -13,9 +13,6 @@ fun itemDoc Document ::= acc::Document ch::Document = cat(acc, cat(line(), ch));
 fun strDoc Document ::= s::String = text("\"" ++ s ++ "\"");
 
 fun predDoc Document ::= pred::String argsDoc::Document body::Document =
-  --let childrenDoc::Document = 
-  --  foldl(itemDoc, cat(line(), head(children)), tail(children))
-  --in
     cat (
       text(pred ++ " ("),
       cat (
@@ -54,7 +51,7 @@ top::Orders ::= ord::Order ords::Orders
 
 aspect production ordersNil
 top::Orders ::= 
-{ top.mstx = text(""); }
+{ top.mstx = line(); }
 
 attribute mstx occurs on Order;
 
@@ -72,7 +69,7 @@ top::Imports ::= imp::Import imps::Imports
 
 aspect production importsNil
 top::Imports ::=
-{ top.mstx = text(""); }
+{ top.mstx = line(); }
 
 attribute mstx occurs on Import;
 
