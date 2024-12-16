@@ -1,6 +1,13 @@
 import stdlib.a  import stdlib.b
 
-tgt(p::path, ret: s::scope) :- true.
-src(p::path, ret: s::scope) :- true.
+tgt(p::path, ret: s::scope) :- p match {
+    End(x::scope)                      -> s::scope := x
+  | Edge(x::scope, l::label, xs::path) -> tgt(xs, s)
+}.
+
+src(p::path, ret: s::scope) :- p match {
+    End(x::scope) -> s::scope := x
+  | Edge(x::scope, l::label, xs::path) -> s::scope := x
+}.
 
 datumOf(p::path, ret: d::datum) :- {s} tgt(p, s), s -> d.

@@ -69,7 +69,7 @@ nonterminal Predicate_c with ast<Predicate>;
  -}
 concrete production syntaxPredicate_c 
 top::Predicate_c ::= 'syntax' ':' name::Name_t '(' nameLst::NameList_c ')'
-                     LeftArr_t t::Name_t bs::BranchList_c '.'
+                     LeftArr_t t::Name_t 'match' '{' bs::BranchList_c '}' '.'
 { top.ast = syntaxPredicate(name.lexeme, nameLst.ast, t.lexeme, bs.ast); }
 
 concrete production functionalPredicate_c 
@@ -442,11 +442,11 @@ top::Regex_c ::= '.'
 
 concrete production regexPlus_c
 top::Regex_c ::= r::Regex_c '+'
-{ forwards to regexSeq_c(^r, '', regexStar_c(^r, '*')); }
+{ top.ast = regexPlus(r.ast); }
 
 concrete production regexOptional_c
 top::Regex_c ::= r::Regex_c '?'
-{ forwards to regexAlt_c(^r, '|', regexEps_c('e')); }
+{ top.ast = regexOptional(r.ast); }
 
 concrete production regexNeg_c
 top::Regex_c ::= '~' r::Regex_c
@@ -458,7 +458,7 @@ top::Regex_c ::= 'e'
 
 concrete production regexParens_c
 top::Regex_c ::= '(' r::Regex_c ')'
-{ top.ast = r.ast; }
+{ top.ast = regexParens(r.ast); }
 
 --------------------------------------------------
 

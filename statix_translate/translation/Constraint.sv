@@ -25,7 +25,7 @@ propagate lambdas on Constraint;
 
 -- non-locals that are defined within the constraint
 monoid attribute definedNonLocals::[(String, TypeAnn)] with [], ++ occurs on Constraint;
-propagate definedNonLocals on Constraint excluding existsConstraint;
+propagate definedNonLocals on Constraint excluding existsConstraint, matchConstraint;
 
 attribute knownFuncPreds occurs on Constraint;
 propagate knownFuncPreds on Constraint;
@@ -262,8 +262,48 @@ top::Constraint ::= t::Term bs::BranchList
    - of the branches.
    -}
 
-  top.constraintTrans = error("matchConstraint.constraintTrans TODO");
-  top.definedNonLocals <- []; -- TODO
+  --top.constraintTrans = error("matchConstraint.constraintTrans TODO");
+  top.definedNonLocals := []; -- TODO?
+
+  local matchName::String = "match_" ++ toString(genInt());
+
+  local resultLocals::String = 
+    let pairedNums::[(String, Integer)] = 
+      foldr ((\id::String acc::(String, Integer) -> (id, head(acc).2 + 1)::acc), 
+             [(head(bs.definedNonLocals), 2)], tail(bs.definedNonLocals))
+    in
+      if !null(bs.definedNonLocals)
+      then map (
+             (\p::(String, Integer) -> 
+                "local " ++ p.1 ++ "::" -- todo
+             ),
+             pairedNums
+           )
+      else ""
+    end;
+
+  local matchResTy::String = 
+    if null(bs.definedNonLocals)
+    then "Boolean"
+    else "(Boolean, " ++ implode (", ", map(\p::(String, TypeAnn) -> p.2.typeTrans, 
+                                            bs.definedNonLocals)) ++ ")";
+
+  {- case bodies should also allow forward referencing, so translating to a seq
+   - of `let` exprs in Silver will not do. We could translate each case body
+   - to a procedure-style function, but this would need to be passed all of the
+   - external names that are in scope for the case bodies. Only solution? 
+   - 
+   - all names in scope: all of the names that are either passed as arg to the 
+   - current predicate we are in, or appear in some ancestor exists constraint
+   -}
+
+  top.constraintTrans =
+    "local " ++ matchName ++ "::" ++ matchResTy ++ " = " ++
+    "case " ++ t.termTrans ++ " of " ++ 
+      implode ("|", bs.branchListTrans) ++ 
+    "end;" ++ 
+    resultLocals;
+
 }
 
 aspect production defConstraint

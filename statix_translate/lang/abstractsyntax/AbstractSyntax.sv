@@ -408,12 +408,24 @@ abstract production regexAny
 top::Regex ::=
 {}
 
+abstract production regexPlus
+top::Regex ::= r::Regex
+{}
+
+abstract production regexOptional
+top::Regex ::= r::Regex
+{}
+
 abstract production regexNeg
 top::Regex ::= r::Regex
 {}
 
 abstract production regexEps
 top::Regex ::=
+{}
+
+abstract production regexParens
+top::Regex ::= r::Regex
 {}
 
 --------------------------------------------------

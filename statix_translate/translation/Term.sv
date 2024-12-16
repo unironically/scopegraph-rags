@@ -29,7 +29,7 @@ top::Term ::= name::String ts::TermList
 aspect production nameTerm
 top::Term ::= name::String
 {
-  top.termTrans = error("nameTerm.termTrans TODO");
+  top.termTrans = name;
 }
 
 aspect production consTerm
