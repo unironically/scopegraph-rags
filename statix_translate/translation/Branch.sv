@@ -55,7 +55,7 @@ top::Branch ::= m::Matcher c::Constraint
 
   local args::String =
     implode (" ", map(\p::(String, TypeAnn) -> p.1 ++ "::" ++ p.2.typeTrans, 
-                      tail(top.expRetTys) ++ m.patternDefs));
+                      top.namesInScope ++ m.patternDefs));
 
   local branchFun::String = 
     "function " ++ branchName ++ " " ++

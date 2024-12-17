@@ -54,7 +54,7 @@ top::Predicate ::=
 
   top.functionalPreds := [(name, nameLst.allFuncArgDecls)];
 
-  const.namesInScope = nameLst.nameListDefs;
+  const.namesInScope = nameLst.nameListUntg; -- only the pred args not tagged with ret (or syn/inh)
 }
 
 --------------------------------------------------

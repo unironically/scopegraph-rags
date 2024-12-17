@@ -293,7 +293,6 @@ top::Constraint ::= t::Term bs::BranchList
 
   top.definedNonLocals := tail(retNamesTypes); -- don't want okName? (todo - verify)
 
-  top.lambdas <- bs.lambdas;
 }
 
 aspect production defConstraint
