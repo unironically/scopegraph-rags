@@ -78,6 +78,10 @@ abstract production nameListOne
 top::NameList ::= name::Name
 {}
 
+abstract production nameListNil
+top::NameList ::=
+{}
+
 nonterminal Name;
 
 abstract production nameSyn
@@ -256,6 +260,10 @@ top::RefNameList ::= name::String names::RefNameList
 
 abstract production refNameListOne
 top::RefNameList ::= name::String
+{}
+
+abstract production refNameListNil
+top::RefNameList ::=
 {}
 
 --------------------------------------------------

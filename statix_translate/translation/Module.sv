@@ -9,6 +9,7 @@ top::Module ::= ds::Imports ords::Orders preds::Predicates
 {
   top.moduleTrans = implode ("\n", preds.lambdas ++ preds.predicatesTrans);
   preds.knownFuncPreds = preds.functionalPreds;
+  preds.knownNonterminals = preds.nonterminals;
 }
 
 --------------------------------------------------
@@ -25,6 +26,12 @@ propagate functionalPreds on Predicates;
 
 inherited attribute knownFuncPreds::[(String, [(String, Boolean, TypeAnn)])] occurs on Predicates;
 propagate knownFuncPreds on Predicates;
+
+attribute nonterminals occurs on Predicates;
+propagate nonterminals on Predicates;
+
+inherited attribute knownNonterminals::[Decorated AGNont] occurs on Predicates;
+propagate knownNonterminals on Predicates;
 
 --
 

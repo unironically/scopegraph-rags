@@ -53,8 +53,10 @@ top::Predicate ::=
     "}";
 
   top.functionalPreds := [(name, nameLst.allFuncArgDecls)];
+  top.nonterminals := [];
 
   const.namesInScope = nameLst.nameListUntg; -- only the pred args not tagged with ret (or syn/inh)
+  const.isFunctionalPred = true;
 }
 
 --------------------------------------------------
@@ -71,6 +73,9 @@ synthesized attribute numberUntagged::Integer occurs on NameList;
 
 synthesized attribute allFuncArgDecls::[(String, Boolean, TypeAnn)] occurs on NameList;
 
+synthesized attribute untaggedPos::Integer occurs on NameList;
+synthesized attribute size::Integer occurs on NameList;
+
 aspect production nameListCons
 top::NameList ::= name::Name names::NameList
 {
@@ -80,6 +85,9 @@ top::NameList ::= name::Name names::NameList
     map (\p::(String, TypeAnn) -> (p.1, false, p.2), name.nameListRets) ++
     map (\p::(String, TypeAnn) -> (p.1, true, p.2), name.nameListUntg) ++
     names.allFuncArgDecls;
+
+  top.untaggedPos = case name of nameUntagged(_, _) -> top.size | _ -> names.untaggedPos end;
+  top.size = 1 + names.size;
 }
 
 aspect production nameListOne
@@ -89,6 +97,9 @@ top::NameList ::= name::Name
   top.allFuncArgDecls = 
     map (\p::(String, TypeAnn) -> (p.1, false, p.2), name.nameListRets) ++
     map (\p::(String, TypeAnn) -> (p.1, true, p.2), name.nameListUntg);
+
+  top.size = 1;
+  top.untaggedPos = 1;
 }
 
 --------------------------------------------------

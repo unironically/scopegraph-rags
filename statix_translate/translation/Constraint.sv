@@ -30,8 +30,14 @@ propagate definedNonLocals on Constraint excluding existsConstraint, matchConstr
 attribute knownFuncPreds occurs on Constraint;
 propagate knownFuncPreds on Constraint;
 
+attribute knownNonterminals occurs on Constraint;
+propagate knownNonterminals on Constraint;
+
 inherited attribute namesInScope::[(String, TypeAnn)] occurs on Constraint;
 propagate namesInScope on Constraint excluding existsConstraint;
+
+attribute isFunctionalPred occurs on Constraint;
+propagate isFunctionalPred on Constraint excluding matchConstraint;
 
 --------------------------------------------------
 
@@ -162,14 +168,22 @@ top::Constraint ::= name::String out::String
 
   local onlyName::String = "onlyRes_" ++ toString(genInt());
 
+  local inpListElemsTy::TypeAnn = 
+    let res::(String, TypeAnn) = head(filter((\p::(String, TypeAnn) -> p.1 == name), top.namesInScope)) in
+      case res of
+      | (s, listType(t)) -> ^t
+      | _ -> error("Constraint.oneConstraint.inpListElemsTy expected a list type for " ++ name)
+      end
+    end;
+
   top.constraintTrans = 
-    "local " ++ onlyName ++ "::(Boolean, TODO) = " ++
+    "local " ++ onlyName ++ "::(Boolean, " ++ inpListElemsTy.typeTrans ++ ") = " ++
       "if length(" ++ name ++ ") == 1 " ++
       "then (true, head(" ++ name ++ "))" ++
       "else (false, error(\"\"))" ++
     ";" ++
     "local " ++ okName ++ "::Boolean = " ++ onlyName ++ ".1;" ++
-    "local " ++ out ++ "::TODO = " ++ onlyName ++ ".2;";
+    "local " ++ out ++ "::" ++ inpListElemsTy.typeTrans ++ " = " ++ onlyName ++ ".2;";
   top.definedNonLocals <- [(out, nameType("pathType"))]; -- TODO, can be other than path?
 }
 
@@ -227,10 +241,55 @@ top::Constraint ::= name::String vs::RefNameList
     then "Boolean"
     else "(Boolean, " ++ implode(", ", map((.typeTrans), funcRetTys)) ++ ")";
 
-  top.constraintTrans = 
+  local funPredTrans::String = 
     "local " ++ name ++ "_" ++ toString(genInt()) ++ "::" ++ retTyStr ++ " = " ++
       name ++ "(" ++ implode (", ", funcActualArgNames) ++ ")" ++ ";";
-  top.definedNonLocals <- funcRetNamesTys;
+
+  ----------------------------------------------------------------------------------
+
+  -- nonterminal matching `name`
+  local nont::Maybe<Decorated AGNont> =
+    let matching::[Decorated AGNont] =
+      filter(\nt::Decorated AGNont -> nt.name == upperFirstChar(name), top.knownNonterminals)
+    in if null(matching) then nothing() else just(head(matching)) end;
+
+  -- argument recognized as the syntactic term to the syntactic predicate
+  local synTerm::String = head(drop(vs.size - nont.fromJust.termPos, vs.refNamesList));
+
+  -- get arg list positions corresponding to inheriteds
+  local inhAttrNums::[Integer] = map (compose(fst, snd), nont.fromJust.inhs);
+  local inhAttrNames::[String] = map(fst, nont.fromJust.inhs);
+  -- get all the args from the RefNameList that match those inh positions
+  local inhArgs::[String] = vs.refNamesByPosition(inhAttrNums);
+  -- match with attr names
+  local inhAttrsArgs::[(String, String)] = zip(inhAttrNames, inhArgs);
+  -- inh equations
+  local inhEqs::[String] =
+    map ((\p::(String, String) -> synTerm ++ "." ++ p.1 ++ " = " ++ p.2 ++ ";"),
+         inhAttrsArgs);
+
+  -- get arg list positions corresponding to inheriteds
+  local synAttrNums::[Integer] = map (compose(fst, snd), nont.fromJust.syns);
+  local synAttrTypes::[TypeAnn] = map (compose(snd, snd), nont.fromJust.syns);
+  local synAttrNames::[String] = map(fst, nont.fromJust.syns);
+  -- get all the args from the RefNameList that match those inh positions
+  local synArgs::[String] = vs.refNamesByPosition(synAttrNums);
+  -- match with attr names
+  local synAttrsArgs::[(TypeAnn, (String, String))] = zip(synAttrTypes, zip(synAttrNames, synArgs));
+  -- inh equations
+  local synEqs::[String] =
+    map ((\p::(TypeAnn, (String, String)) -> 
+            "local " ++ snd(snd(p)) ++ "::" ++ p.1.typeTrans ++ " = " ++ synTerm ++ "." ++ fst(snd(p)) ++ ";"),
+         synAttrsArgs);
+
+  local syntaxPredTrans::String = concat(inhEqs) ++ concat(synEqs);
+
+  ----------------------------------------------------------------------------------
+
+  top.constraintTrans = if nont.isJust then syntaxPredTrans else funPredTrans;
+
+  top.definedNonLocals <- if nont.isJust then [] else funcRetNamesTys; -- todo
+
 }
 
 aspect production everyConstraint
@@ -270,6 +329,7 @@ top::Constraint ::= t::Term bs::BranchList
   -- tell the branch list that it is a functional pred
   bs.isFunctionalPred = true;
   bs.expRetTys = retNamesTypes;
+  bs.prodTy = nothing();
 
   -- types of the match results
   local retNamesTypes::[(String, TypeAnn)] = (okName, nameType("Boolean"))::bs.definedNonLocals;

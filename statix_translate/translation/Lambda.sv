@@ -12,7 +12,13 @@ synthesized attribute lambdaName::String occurs on Lambda;
 attribute knownFuncPreds occurs on Lambda;
 propagate knownFuncPreds on Lambda;
 
+attribute knownNonterminals occurs on Lambda;
+propagate knownNonterminals on Lambda;
+
 attribute namesInScope occurs on Lambda;
+
+attribute isFunctionalPred occurs on Lambda;
+propagate isFunctionalPred on Lambda;
 
 aspect production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint

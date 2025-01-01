@@ -74,8 +74,8 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
 
   | ExprAdd(e1::expr, e2::expr) ->
       {ty1::type, ty2::type}
-      expr(s, e1, ty),
-      expr(s, e2, ty),
+      expr(s, e1, ty1),
+      expr(s, e2, ty2),
       ty1 == INT(),
       ty2 == INT(),
       ty::type := INT()
@@ -140,7 +140,7 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
       expr(s, e1, ty1),
       expr(s, e2, ty2),
       expr(s, e3, ty3),
-      ty1::type := BOOL(),
+      ty1 == BOOL(),
       ty2 == ty3,
       ty::type := ty2
 
@@ -154,6 +154,7 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
 
   | ExprLet(bs::seq-binds, e::expr) ->
       {s_let::scope}
+      new s_let,
       seq-binds(s, bs, s_let),
       expr(s_let, e, ty)
 
@@ -176,14 +177,12 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
 
 
 syntax:
-seq-binds(inh: s::scope, bs::seq-binds, syn: s_def::scope) :- bs match {
+seq-binds(inh: s::scope, bs::seq-binds, inh: s_def::scope) :- bs match {
     
     SeqBindsNil()   ->
-        new s_def,
         s_def -[ `LEX ]-> s
         
   | SeqBindsOne(b::seq-bind) ->
-        new s_def,
         s_def -[ `LEX ]-> s,
         seq-bind(s, b, s_def)
 
@@ -252,7 +251,7 @@ par-bind(inh: s::scope, b::par-bind, inh: s_def::scope) :- b match {
 }.
 
 
-
+syntax:
 arg-decl(inh: s::scope, d::arg-decl, syn: ty::type) :- d match {
 
     ArgDecl(x::string, tyann::type) ->
@@ -325,11 +324,3 @@ var-ref(inh: s::scope, r::var-ref, syn: p::path) :- r match {
         only(xvars, p)
 
 }.
-
-
-
-min-refs(z::path, ret: z'::path) :-
-  min z lexico( `MOD < `LEX, `MOD < `IMP,
-                `VAR < `LEX, `VAR < `IMP,
-                `IMP < `LEX
-              ) z'.

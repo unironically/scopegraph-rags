@@ -4,16 +4,41 @@ grammar statix_translate:translation;
 
 synthesized attribute refNamesList::[String] occurs on RefNameList;
 
+attribute size occurs on RefNameList;
+
+synthesized attribute refNamesByPosition::([String] ::= [Integer]) occurs on RefNameList;
+
 aspect production refNameListCons
 top::RefNameList ::= name::String names::RefNameList
 {
   top.refNamesList = name :: names.refNamesList;
+  top.size = 1 + names.size;
+
+  top.refNamesByPosition = 
+    \is::[Integer] -> if contains(top.size, is)
+                      then name :: names.refNamesByPosition(is)
+                      else names.refNamesByPosition(is);
 }
 
 aspect production refNameListOne
 top::RefNameList ::= name::String
 {
   top.refNamesList = [name];
+  top.size = 1;
+
+  top.refNamesByPosition = 
+    \is::[Integer] -> if contains(top.size, is)
+                      then [name]
+                      else [];
+}
+
+aspect production refNameListNil
+top::RefNameList ::=
+{
+  top.refNamesList = [];
+  top.size = 0;
+  top.refNamesByPosition =
+    \is::[Integer] -> [];
 }
 
 --------------------------------------------------
@@ -30,6 +55,12 @@ aspect production nameListOne
 top::NameList ::= name::Name
 {
   top.nameListDefs = [name.nameDef];
+}
+
+aspect production nameListNil
+top::NameList ::=
+{
+  top.nameListDefs = [];
 }
 
 

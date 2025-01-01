@@ -11,6 +11,9 @@ propagate definedNonLocals on Branch;
 attribute knownFuncPreds occurs on Branch;
 propagate knownFuncPreds on Branch;
 
+attribute knownNonterminals occurs on Branch;
+propagate knownNonterminals on Branch;
+
 synthesized attribute branchTrans::String occurs on Branch;
 
 attribute namesInScope occurs on Branch;
@@ -20,8 +23,13 @@ propagate namesInScope on Branch;
 synthesized attribute branchFunName::String;
 
 attribute isFunctionalPred occurs on Branch;
+propagate isFunctionalPred on Branch;
 
 attribute expRetTys occurs on Branch;
+
+inherited attribute prodTy::Maybe<Decorated AGNont> occurs on Branch;
+
+monoid attribute prods::[String] occurs on Branch;
 
 aspect production branch
 top::Branch ::= m::Matcher c::Constraint
@@ -65,7 +73,31 @@ top::Branch ::= m::Matcher c::Constraint
       "return " ++ retExprs ++ ";" ++
     "}";
 
-  top.lambdas <- [branchFun];
+  top.lambdas <- if top.isFunctionalPred then [branchFun] else [];
+
+  -- SYNTAX PRED BRANCH -----------------------
+  
+  local prod::(String, [(String, TypeAnn)]) = m.prod.fromJust;
+  local prodName::String = prod.1;
+
+  local prodChildren::[String] =
+    map ((\ch::(String, TypeAnn) -> ch.1 ++ "::" ++ ch.2.typeTrans), prod.2);
+  local prodChildrenStr::String = implode(" ", prodChildren);
+
+  local nont::Decorated AGNont = top.prodTy.fromJust;
+  local synEqs::[String] = 
+    map ((\syn::(String, Integer, TypeAnn) -> "top." ++ syn.1 ++ " = " ++ syn.1 ++ ";"),
+         nont.syns);
+
+  top.prods := [
+    "production " ++ prodName ++ "\n" ++
+    "top::" ++ nont.name ++ " ::= " ++ prodChildrenStr ++ "\n" ++
+    "{" ++
+      c.constraintTrans ++ "\n" ++
+      implode("\n", synEqs) ++
+    "\n}"
+  ];
+
 }
 
 --------------------------------------------------
@@ -78,6 +110,9 @@ attribute definedNonLocals occurs on BranchList;
 attribute knownFuncPreds occurs on BranchList;
 propagate knownFuncPreds on BranchList;
 
+attribute knownNonterminals occurs on BranchList;
+propagate knownNonterminals on BranchList;
+
 synthesized attribute branchListTrans::[String] occurs on BranchList;
 
 attribute namesInScope occurs on BranchList;
@@ -88,6 +123,12 @@ propagate isFunctionalPred on BranchList;
 
 inherited attribute expRetTys::[(String, TypeAnn)] occurs on BranchList;
 propagate expRetTys on BranchList;
+
+attribute prods occurs on BranchList;
+propagate prods on BranchList;
+
+attribute prodTy occurs on BranchList;
+propagate prodTy on BranchList;
 
 aspect production branchListCons
 top::BranchList ::= b::Branch bs::BranchList

@@ -113,6 +113,10 @@ aspect production nameListOne
 top::NameList ::= name::Name
 { top.mstx = name.mstx; }
 
+aspect production nameListNil
+top::NameList ::=
+{ top.mstx = text(""); }
+
 attribute mstx occurs on Name;
 
 aspect production nameSyn
@@ -296,6 +300,10 @@ top::RefNameList ::= name::String names::RefNameList
 aspect production refNameListOne
 top::RefNameList ::= name::String
 { top.mstx = text(name); }
+
+aspect production refNameListNil
+top::RefNameList ::=
+{ top.mstx = text(""); }
 
 --------------------------------------------------
 

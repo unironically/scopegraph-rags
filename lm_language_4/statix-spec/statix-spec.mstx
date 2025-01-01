@@ -120,7 +120,7 @@ expr (s, e, ty) :- e match {
             ty == FUN(ty1, ty2)
     | ExprLet(bs, e)  -> 
         {s_let}
-            new s_let,
+            //new s_let,
             seq-binds(s, bs, s_let),
             expr(s_let, e, ty)
     | ExprLetRec(bs, e)  -> 
@@ -139,8 +139,10 @@ expr (s, e, ty) :- e match {
 
 seq-binds (s, bs, s_def) :- bs match {
     SeqBindsNil()  -> 
+        new s_def,
         s_def -[ `LEX ]-> s
     | SeqBindsOne(b)  -> 
+        new s_def,
         s_def -[ `LEX ]-> s,
         seq-bind(s, b, s_def)
     | SeqBindsCons(b, bs)  -> 

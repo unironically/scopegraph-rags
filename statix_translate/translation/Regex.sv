@@ -7,65 +7,65 @@ synthesized attribute regexTrans::String occurs on Regex;
 aspect production regexLabel
 top::Regex ::= lab::Label
 {
-  top.regexTrans = error("regexLabel.regexTrans TODO");
+  top.regexTrans = "regexLabel(" ++ lab.labelTrans ++ ")";
 }
 
 aspect production regexSeq
 top::Regex ::= r1::Regex r2::Regex
 {
-  top.regexTrans = error("regexSeq TODO");
+  top.regexTrans = "regexSeq(" ++ r1.regexTrans ++ ", " ++ r2.regexTrans ++ ")";
 }
 
 aspect production regexAlt
 top::Regex ::= r1::Regex r2::Regex
 {
-  top.regexTrans = error("regexAlt TODO");
+  top.regexTrans = "regexAlt(" ++ r1.regexTrans ++ ", " ++ r2.regexTrans ++ ")";
 }
 
 aspect production regexAnd
 top::Regex ::= r1::Regex r2::Regex
 {
-  top.regexTrans = error("regexAnd TODO");
+  top.regexTrans = "regexAnd(" ++ r1.regexTrans ++ ", " ++ r2.regexTrans ++ ")";
 }
 
 aspect production regexStar
 top::Regex ::= r::Regex
 {
-  top.regexTrans = error("regexStar TODO");
+  top.regexTrans = "regexStar(" ++ r.regexTrans ++ ")";
 }
 
 aspect production regexAny
 top::Regex ::=
 {
-  top.regexTrans = error("regexAny TODO");
+  top.regexTrans = "regexAny()";
 }
 
 aspect production regexPlus
 top::Regex ::= r::Regex
 {
-  top.regexTrans = error("regexPlus TODO");
+  top.regexTrans = "regexPlus(" ++ r.regexTrans ++ ")";
 }
 
 aspect production regexOptional
 top::Regex ::= r::Regex
 {
-  top.regexTrans = error("regexOpt TODO");
+  top.regexTrans = "regexOptional(" ++ r.regexTrans ++ ")";
 }
 
 aspect production regexNeg
 top::Regex ::= r::Regex
 {
-  top.regexTrans = error("regexNeg TODO");
+  top.regexTrans = "regexNeg()";
 }
 
 aspect production regexEps
 top::Regex ::=
 {
-  top.regexTrans = error("regexEps TODO");
+  top.regexTrans = "regexEps()";
 }
 
 aspect production regexParens
 top::Regex ::= r::Regex
 {
-  top.regexTrans = error("regexParens TODO");
+  top.regexTrans = r.regexTrans;
 }

@@ -101,6 +101,10 @@ aspect production nameListOne
 top::NameList ::= name::Name
 { top.doc = prodDoc("nameListOne", [name.doc]); }
 
+aspect production nameListNil
+top::NameList ::=
+{ top.doc = prodDoc("nameListNil", []); }
+
 attribute doc occurs on Name;
 
 aspect production nameSyn
@@ -274,6 +278,10 @@ top::RefNameList ::= name::String names::RefNameList
 aspect production refNameListOne
 top::RefNameList ::= name::String
 { top.doc = prodDoc("refNameListOne", [text(name)]); }
+
+aspect production refNameListNil
+top::RefNameList ::=
+{ top.doc = prodDoc("refNameListNil", []); }
 
 --------------------------------------------------
 

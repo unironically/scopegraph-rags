@@ -87,7 +87,7 @@ top::NameList_c ::= name::Name_c ',' names::NameList_c
 
 concrete production nameListOnc_c
 top::NameList_c ::= name::Name_c
-{ top.ast = nameListOne(name.ast); }
+{ top.ast = nameListCons(name.ast, nameListNil()); }
 
 nonterminal Name_c with ast<Name>;
 
@@ -275,7 +275,7 @@ top::RefNameList_c ::= name::Name_t ',' names::RefNameList_c
 
 concrete production refNameListOne_c
 top::RefNameList_c ::= name::Name_t
-{ top.ast = refNameListOne(name.lexeme); }
+{ top.ast = refNameListCons(name.lexeme, refNameListNil()); }
 
 --------------------------------------------------
 

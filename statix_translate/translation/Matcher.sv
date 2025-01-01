@@ -7,9 +7,17 @@ synthesized attribute matcherTrans::String occurs on Matcher;
 attribute patternDefs occurs on Matcher;
 propagate patternDefs on Matcher;
 
+synthesized attribute prod::Maybe<(String, [(String, TypeAnn)])> occurs on Matcher;
+
 aspect production matcher
 top::Matcher ::= p::Pattern wc::WhereClause
 {
+  top.prod = 
+    case p of
+    | constructorPattern(n, ps) -> just((n, ps.patternDefs))
+    | _ -> nothing()
+    end;
+
   top.matcherTrans = 
     p.patternTrans ++
     case wc.whereClauseTrans of

@@ -23,7 +23,7 @@ top::Term ::= lab::Label t::Term
 aspect production constructorTerm
 top::Term ::= name::String ts::TermList
 {
-  top.termTrans = error("constructorTerm.termTrans TODO");
+  top.termTrans = name ++ "(" ++ implode(", ", ts.termTransList) ++ ")";
 }
 
 aspect production nameTerm
@@ -58,13 +58,19 @@ top::Term ::= s::String
 
 --------------------------------------------------
 
+synthesized attribute termTransList::[String] occurs on TermList;
+
 aspect production termListCons
 top::TermList ::= t::Term ts::TermList
-{}
+{
+  top.termTransList = t.termTrans :: ts.termTransList;
+}
 
 aspect production termListNil
 top::TermList ::=
-{}
+{
+  top.termTransList = [];
+}
 
 
 --------------------------------------------------
