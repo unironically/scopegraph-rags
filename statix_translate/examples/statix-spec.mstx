@@ -57,7 +57,7 @@ decl(inh: s::scope, d::decl) :- d match {
 syntax:
 expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
 
-    ExprInt(_) ->
+    ExprInt(i::int) ->
       ty::type := INT()
 
   | ExprTrue() ->
@@ -74,8 +74,8 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
 
   | ExprAdd(e1::expr, e2::expr) ->
       {ty1::type, ty2::type}
-      expr(s, e1, ty),
-      expr(s, e2, ty),
+      expr(s, e1, ty1),
+      expr(s, e2, ty2),
       ty1 == INT(),
       ty2 == INT(),
       ty::type := INT()
@@ -328,8 +328,28 @@ var-ref(inh: s::scope, r::var-ref, syn: p::path) :- r match {
 
 
 
+
 min-refs(z::path, ret: z'::path) :-
   min z lexico( `MOD < `LEX, `MOD < `IMP,
                 `VAR < `LEX, `VAR < `IMP,
                 `IMP < `LEX
               ) z'.
+
+
+
+tgt(p::path, ret: s::scope) :- 
+
+  p match {
+    End(x::scope)                      -> s::scope := x
+  | Edge(x::scope, l::label, xs::path) -> xs match {
+                                            End(x::scope) -> s::scope := x
+                                          | Edge(x::scope, l::label, xs::path) -> tgt(xs, s)
+                                          }
+  }.
+
+src(p::path, ret: s::scope) :- p match {
+    End(x::scope) -> s::scope := x
+  | Edge(x::scope, l::label, xs::path) -> s::scope := x
+}.
+
+datumOf(p::path, ret: d::datum) :- {s::scope} tgt(p, s), s -> d.

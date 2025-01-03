@@ -5,33 +5,37 @@ grammar statix_translate:translation_two;
  -}
 
 
-
 --------------------------------------------------
 
 
 synthesized attribute name::String;
-synthesized attribute attrs::NameList;
+synthesized attribute params::NameList;
 synthesized attribute syns::NameList;
 synthesized attribute inhs::NameList;
+synthesized attribute scopesInhOrSyn::[String]; -- knowing what scopes this pred deals with in its args
+synthesized attribute scopesInh::[String];
+synthesized attribute scopesSyn::[String];
 
-nonterminal SyntaxPred with name, attrs, syns, inhs;
+nonterminal SyntaxPred with name, params, syns, inhs, scopesInhOrSyn, scopesInh, scopesSyn;
 
 production syntaxPred
-top::SyntaxPred ::= name::String attrs::NameList
+top::SyntaxPred ::= name::String params::NameList
 {
   top.name = name;
-  top.attrs = ^attrs;
-  top.syns = filterNameListFor(^attrs, \n::Name -> case n of nameSyn(_, _) -> true 
-                                                           | _ -> false end);
-  top.inhs = filterNameListFor(^attrs, \n::Name -> case n of nameInh(_, _) -> true 
-                                                           | _ -> false end);
+  top.params = ^params;
+  top.syns = filterNameListFor(^params, \n::Name -> case n of nameSyn(_, _) -> true 
+                                                            | _ -> false end);
+  top.inhs = filterNameListFor(^params, \n::Name -> case n of nameInh(_, _) -> true 
+                                                            | _ -> false end);
+  top.scopesSyn = top.syns.scopeDefNames;
+  top.scopesInh = top.inhs.scopeDefNames;
+  top.scopesInhOrSyn = union(top.syns.scopeDefNames, top.inhs.scopeDefNames);
 }
 
 
 --------------------------------------------------
 
 
-synthesized attribute params::NameList;
 synthesized attribute rets::NameList;
 synthesized attribute args::NameList;
 
@@ -63,3 +67,11 @@ NameList ::= input::NameList filt::(Boolean ::= Name) =
       filterNameListFor(^rest, filt)
   | _ -> error("filterNameListFor: case error")
   end;
+
+
+--------------------------------------------------
+
+inherited attribute predicateEnv::PredicateEnv;
+
+type PredicateEnv = Env<PredicateEnvItem>;
+type PredicateEnvItem = Either<SyntaxPred FunctionPred>;

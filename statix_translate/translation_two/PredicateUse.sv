@@ -20,25 +20,33 @@ grammar statix_translate:translation_two;
 synthesized attribute synEqs::String;
 synthesized attribute inhEqs::String;
 synthesized attribute okName::String;
+synthesized attribute ref::String;
 
-nonterminal SyntaxPredUse with synEqs, inhEqs, okName;
+synthesized attribute inhArgs::[AttrUse];
+
+nonterminal SyntaxPredUse with synEqs, inhEqs, okName, ref, inhArgs;
 
 production syntaxPredicateUse
-top::SyntaxPredUse ::= name::String nt::SyntaxPred args::RefNameList
+top::SyntaxPredUse ::= nt::SyntaxPred args::RefNameList
 {
   local okName::String = "ok_" ++ toString(genInt());
 
-  local synsInhs::InhSynPairs = getSynsInhsFromCall(nt.attrs, ^args, okName);
-  local syns::[AttrUse] = synsInhs.1; -- syn attr uses, (attr name, value) list
-  local inhs::[AttrUse] = synsInhs.2; -- inh attr uses, (attr name, value) list
+  local ref::String = getNodeRef(nt.params, ^args); -- name of the node reference
+  top.ref = ref;
+
+  local synsInhs::InhSynPairs = getSynsInhsFromCall(nt.params, ^args, okName);
+  local inhs::[AttrUse] = synsInhs.1; -- syn attr uses, (attr name, value) list
+  local syns::[AttrUse] = synsInhs.2; -- inh attr uses, (attr name, value) list
 
   -- generate equations for giving syn attr values to local attr definitions
   top.synEqs = attrEqs (
-    \use::AttrUse -> genSynEq(name, use.1, use.2, use.3), syns);
+    \use::AttrUse -> genSynEq(ref, use.1, use.2, use.3), syns);
 
   -- generate inherited attribute equations for a node
   top.inhEqs = attrEqs (
-    \use::AttrUse -> genInhEq(name, use.1, use.3), inhs);
+    \use::AttrUse -> genInhEq(ref, use.1, use.3), inhs);
+
+  top.inhArgs = inhs;
 
   top.okName = okName;
 }
@@ -112,13 +120,18 @@ InhSynPairs ::=
 fun getSynsInhsFromCallHelper
 InhSynPairs ::= ds::NameList rs::RefNameList acc::InhSynPairs =
   case ds, rs, acc of
+  
   | nameListNil(), refNameListNil(), _ -> acc
+  
   | nameListCons(nameSyn(sd, t), ds), refNameListCons(sr, rs), (inhs, syns) 
     -> getSynsInhsFromCallHelper(^ds, ^rs, (inhs, (sd, ^t, sr)::syns))
+  
   | nameListCons(nameInh(sd, t), ds), refNameListCons(sr, rs), (inhs, syns) 
     -> getSynsInhsFromCallHelper(^ds, ^rs, ((sd, ^t, sr)::inhs, syns))
+  
   | nameListCons(_, ds), refNameListCons(_, rs), _ 
     -> getSynsInhsFromCallHelper(^ds, ^rs, acc)
+  
   | _, _, _ -> error("getSynsInhsFromCallHelper: different size decl/ref lists")
   end;
 
@@ -143,6 +156,17 @@ String ::= ref::String aName::String var::String =
   ref ++ "." ++ aName ++ " = " ++ var ++ ";";
 
 
+fun getNodeRef
+String ::= ds::NameList rs::RefNameList =
+  case ds, rs of
+  | nameListNil(), refNameListNil() -> "ERRNAME"
+  | nameListCons(nameUntagged(_, _), _), refNameListCons(sr, _) -> sr
+  | nameListCons(_, ds), refNameListCons(_, rs) -> getNodeRef(^ds, ^rs)
+  | _, _ -> error("getNodeRef: different size decl/ref lists")
+  end;
+
+
+
 {- analog of getSynsInhsFromCall, but for function predicate uses
  - returns a pair (rets, args), where:
  -   rets is the list of returns with type and position in the end return value
@@ -153,30 +177,19 @@ RetArgPairs ::=
     decls::NameList 
     uses::RefNameList
     okName::String =
-  getRetsArgsForCallHelper(
-    nameListCons(nameRet("ok", nameType("boolean")), decls),
-    refNameListCons(okName, uses),
-    ([], []), 
-    1
-  );
+  getRetsArgsForCallHelper(decls, uses, ([], []), 2);
 
 fun getRetsArgsForCallHelper
 RetArgPairs ::= ds::NameList rs::RefNameList acc::RetArgPairs pos::Integer =
   case ds, rs, acc of
-  
   | nameListNil(), refNameListNil(), _ -> acc
-  
   | nameListCons(nameUntagged(sd, t), ds), refNameListCons(sr, rs), (rets, args) 
     -> getRetsArgsForCallHelper(^ds, ^rs, (rets, (sd, ^t, sr)::args), pos)
-  
   | nameListCons(nameRet(sd, t), ds), refNameListCons(sr, rs), (rets, args) 
     -> getRetsArgsForCallHelper(^ds, ^rs, ((pos, ^t, sr)::rets, args), pos + 1)
-  
   | nameListCons(_, ds), refNameListCons(_, rs), _ 
     -> getRetsArgsForCallHelper(^ds, ^rs, acc, pos)
-  
   | _, _, _ -> error("getRetsArgsForCallHelper: different size decl/ref lists")
-
   end;
 
 

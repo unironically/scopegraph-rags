@@ -29,7 +29,8 @@ IO<Integer> ::= largs::[String]
             print("[✔] Parse success\n");
             --print(ast.pp);
             --writeFile("ag.sv", ast.moduleTrans);
-            writeFile("statix-spec.mstx", ast.mstxPP);
+            --writeFile("statix-spec.mstx", ast.mstxPP);
+            writeFile("preds.txt", implode("\n\n", ast.prodTmpTrans));
             return 0;
           }
           else do {

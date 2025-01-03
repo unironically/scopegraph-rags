@@ -4,6 +4,12 @@ grammar statix_translate:translation_two;
 
 synthesized attribute typeTrans::String occurs on TypeAnn;
 
+aspect production scopeType
+top::TypeAnn ::=
+{
+  top.typeTrans = "Scope";
+}
+
 aspect production nameType
 top::TypeAnn ::= name::String
 {

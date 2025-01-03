@@ -6,10 +6,36 @@ import statixlib.sets
 
 main (p) :- p match {
     Program(ds):[]  -> 
-        {s}
+        {s, ns}
             new s,
-            decls(s, ds)
+            decls(s, ds),
+            
+            // ns -[ `LEX ]-> s, // this works but the s_let example doesn't?
+            // foo(s, ExprFalse(), ns)
+
     }.
+
+
+// Permission error from this entry:
+
+// Entry {
+//  value = (False,fromList [LEX]), 
+//  reqs = [RDiff 21 21,RLit (fromList [LEX])], 
+//  prov = [PV 21], 
+//  dependants = fromList [], 
+//  doCheck = True, 
+//  predicate = ("statix-spec","main"), 
+//  pos =   16, 
+//  name = "ns" }
+
+// error, since: doCheck is true. fst value is false. and singleton (snd value) is false.
+// comes from `permAnalysis _ (CApply _ qn ts)` since changing `RDiff v v` there to `RV v` changes `RDiff 21 21` in the above to `RV 21`
+
+foo (s, t, ns) :- t match {
+      ExprTrue()  -> new ns
+    | ExprFalse() -> foo(s, ExprTrue(), ns)
+    }.
+
 
 decls (s, ds) :- ds match {
     DeclsNil()  -> 
@@ -118,11 +144,19 @@ expr (s, e, ty) :- e match {
             arg-decl(s_fun, d, ty1),
             expr(s_fun, e, ty2),
             ty == FUN(ty1, ty2)
+
     | ExprLet(bs, e)  -> 
         {s_let}
-            //new s_let,
+
+            //s_let -[ `LEX ]-> s, // why does this cause a permissions error?
+                                   // requires permission to extend s_let. but we don't have that. seq-binds does not give permission to extend s_let because its match doesn't. not the case that every branch creates scope s_def.
+                                   // no permission error when you put `new s_def` within the `SeqBindsCons` case
+
             seq-binds(s, bs, s_let),
+            bar(s_let),                 // ERROR: cannot get ownership of existing node (bar defined at bottom)
+            
             expr(s_let, e, ty)
+
     | ExprLetRec(bs, e)  -> 
         {s_let}
             new s_let,
@@ -246,3 +280,4 @@ var-ref (s, r, p) :- r match {
 min-refs (z, z') :- min z lexico(`MOD<`LEX, `MOD<`IMP, `VAR<`LEX, `VAR<`IMP, `IMP<`LEX) z'.
 
 
+bar(s) :- new s. // ERROR: cannot get ownership of existing node

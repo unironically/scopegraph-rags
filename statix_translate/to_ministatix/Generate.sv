@@ -94,14 +94,34 @@ top::Predicates ::=
 attribute mstx occurs on Predicate;
 
 aspect production syntaxPredicate 
-top::Predicate ::= name::String nameLst::NameList t::String bs::BranchList
-{ top.mstx = predDoc(name, nameLst.mstx, matchConstraint(nameTerm(t), ^bs).mstx); }
+top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
+{ top.mstx = predDoc(name, nameLst.mstx, cat(text(t), cat(text(" match"), cat(text(" {"), cat(cat(predMatchBranches(bs.mstx), line()), text("}")))))); }
 
 aspect production functionalPredicate 
 top::Predicate ::= name::String nameLst::NameList const::Constraint
 { top.mstx = predDoc(name, nameLst.mstx, const.mstx); } 
 
 --------------------------------------------------
+
+attribute mstx occurs on ProdBranch;
+
+aspect production prodBranch
+top::ProdBranch ::= name::String params::NameList c::Constraint
+{ top.mstx = cat(text(name), cat(text("("), cat(params.mstx, cat(text(")"), cat(text(" -> "), 
+              nest(indentSize, group(cat(line(), c.mstx)))))))); }
+
+attribute mstx occurs on ProdBranchList;
+
+aspect production prodBranchListCons
+top::ProdBranchList ::= b::ProdBranch bs::ProdBranchList
+{ top.mstx = cat(b.mstx, cat(line(), cat(text("| "), bs.mstx))); }
+
+aspect production prodBranchListOne
+top::ProdBranchList ::= b::ProdBranch
+{ top.mstx = b.mstx; }
+
+--------------------------------------------------
+
 
 attribute mstx occurs on NameList;
 
@@ -138,6 +158,10 @@ top::Name ::= name::String ty::TypeAnn
 --------------------------------------------------
 
 attribute mstx occurs on TypeAnn;
+
+aspect production scopeType
+top::TypeAnn ::=
+{ top.mstx = text(""); }
 
 aspect production nameType
 top::TypeAnn ::= name::String

@@ -59,12 +59,30 @@ top::Predicates ::=
 nonterminal Predicate;
 
 abstract production syntaxPredicate 
-top::Predicate ::= name::String nameLst::NameList t::String bs::BranchList
-{} 
+top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
+{}
 
 abstract production functionalPredicate
 top::Predicate ::= name::String nameLst::NameList const::Constraint
 {} 
+
+--------------------------------------------------
+
+nonterminal ProdBranch;
+
+abstract production prodBranch
+top::ProdBranch ::= name::String params::NameList c::Constraint
+{}
+
+nonterminal ProdBranchList;
+
+abstract production prodBranchListCons
+top::ProdBranchList ::= b::ProdBranch bs::ProdBranchList
+{}
+
+abstract production prodBranchListOne
+top::ProdBranchList ::= b::ProdBranch
+{}
 
 --------------------------------------------------
 
@@ -103,6 +121,10 @@ top::Name ::= name::String ty::TypeAnn
 --------------------------------------------------
 
 nonterminal TypeAnn;
+
+abstract production scopeType
+top::TypeAnn ::=
+{}
 
 abstract production nameType
 top::TypeAnn ::= name::String

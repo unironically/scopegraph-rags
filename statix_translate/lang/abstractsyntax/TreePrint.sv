@@ -82,12 +82,30 @@ top::Predicates ::=
 attribute doc occurs on Predicate;
 
 aspect production syntaxPredicate 
-top::Predicate ::= name::String nameLst::NameList t::String bs::BranchList
+top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
 { top.doc = prodDoc("syntaxPredicate", [strDoc(name), nameLst.doc, text(t), bs.doc]); }
 
 aspect production functionalPredicate 
 top::Predicate ::= name::String nameLst::NameList const::Constraint
 { top.doc = prodDoc("functionalPredicate", [strDoc(name), nameLst.doc, const.doc]); } 
+
+--------------------------------------------------
+
+attribute doc occurs on ProdBranch;
+
+aspect production prodBranch
+top::ProdBranch ::= name::String params::NameList c::Constraint
+{ top.doc = prodDoc("prodBranch", [text(name), params.doc, c.doc]); }
+
+attribute doc occurs on ProdBranchList;
+
+aspect production prodBranchListCons
+top::ProdBranchList ::= b::ProdBranch bs::ProdBranchList
+{ top.doc = prodDoc("prodBranchListCons", [b.doc, bs.doc]); }
+
+aspect production prodBranchListOne
+top::ProdBranchList ::= b::ProdBranch
+{ top.doc = prodDoc("prodBranchListOne", [b.doc]); }
 
 --------------------------------------------------
 
@@ -126,6 +144,10 @@ top::Name ::= name::String ty::TypeAnn
 --------------------------------------------------
 
 attribute doc occurs on TypeAnn;
+
+aspect production scopeType
+top::TypeAnn ::=
+{ top.doc = prodDoc("scopeType", [text("scope")]); }
 
 aspect production nameType
 top::TypeAnn ::= name::String

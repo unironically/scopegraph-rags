@@ -69,13 +69,35 @@ nonterminal Predicate_c with ast<Predicate>;
  -}
 concrete production syntaxPredicate_c 
 top::Predicate_c ::= 'syntax' ':' name::Name_t '(' nameLst::NameList_c ')'
-                     LeftArr_t t::Name_t 'match' '{' bs::BranchList_c '}' '.'
+                     LeftArr_t t::Name_t 'match' '{' bs::ProdBranchList_c '}' '.'
 { top.ast = syntaxPredicate(name.lexeme, nameLst.ast, t.lexeme, bs.ast); }
 
 concrete production functionalPredicate_c 
 top::Predicate_c ::= name::Name_t '(' nameLst::NameList_c ')'
                      LeftArr_t const::Constraint_c '.'
 { top.ast = functionalPredicate(name.lexeme, nameLst.ast, const.ast); }
+
+--------------------------------------------------
+
+nonterminal ProdBranch_c with ast<ProdBranch>;
+
+concrete production prodBranchNil_c
+top::ProdBranch_c ::= name::Constructor_t '(' ')' '->' c::Constraint_c
+{ top.ast = prodBranch(name.lexeme, nameListNil(), c.ast); }
+
+concrete production prodBranch_c
+top::ProdBranch_c ::= name::Constructor_t '(' nl::NameList_c ')' '->' c::Constraint_c
+{ top.ast = prodBranch(name.lexeme, nl.ast, c.ast); }
+
+nonterminal ProdBranchList_c with ast<ProdBranchList>;
+
+concrete production prodBranchListCons_c
+top::ProdBranchList_c ::= b::ProdBranch_c '|' bs::ProdBranchList_c
+{ top.ast = prodBranchListCons(b.ast, bs.ast); }
+
+concrete production prodBranchListOne_c
+top::ProdBranchList_c ::= b::ProdBranch_c
+{ top.ast = prodBranchListOne(b.ast); }
 
 --------------------------------------------------
 
@@ -113,7 +135,7 @@ nonterminal TypeAnn_c with ast<TypeAnn>;
 
 concrete production nameType_c
 top::TypeAnn_c ::= name::Name_t
-{ top.ast = nameType(name.lexeme); }
+{ top.ast = if name.lexeme == "scope" then scopeType() else nameType(name.lexeme); }
 
 concrete production listType_c
 top::TypeAnn_c ::= '[' ty::TypeAnn_c ']'
