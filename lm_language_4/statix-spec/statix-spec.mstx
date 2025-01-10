@@ -6,34 +6,9 @@ import statixlib.sets
 
 main (p) :- p match {
     Program(ds):[]  -> 
-        {s, ns}
+        {s}
             new s,
             decls(s, ds),
-            
-            // ns -[ `LEX ]-> s, // this works but the s_let example doesn't?
-            // foo(s, ExprFalse(), ns)
-
-    }.
-
-
-// Permission error from this entry:
-
-// Entry {
-//  value = (False,fromList [LEX]), 
-//  reqs = [RDiff 21 21,RLit (fromList [LEX])], 
-//  prov = [PV 21], 
-//  dependants = fromList [], 
-//  doCheck = True, 
-//  predicate = ("statix-spec","main"), 
-//  pos =   16, 
-//  name = "ns" }
-
-// error, since: doCheck is true. fst value is false. and singleton (snd value) is false.
-// comes from `permAnalysis _ (CApply _ qn ts)` since changing `RDiff v v` there to `RV v` changes `RDiff 21 21` in the above to `RV 21`
-
-foo (s, t, ns) :- t match {
-      ExprTrue()  -> new ns
-    | ExprFalse() -> foo(s, ExprTrue(), ns)
     }.
 
 
@@ -53,10 +28,9 @@ decl (s, d) :- d match {
             s_mod -[ `LEX ]-> s,
             decls(s_mod, ds)
     | DeclImport(r)  -> 
-        {p, x, s_mod, d}
+        {p, x, s_mod}
             mod-ref(s, r, p),
-            datumOf(p, d),
-            d == DatumMod(x, s_mod),
+            datumOf(p, DatumMod(x, s_mod)),
             s -[ `IMP ]-> s_mod
     | DeclDef(b)  -> 
         par-bind(s, b, s)
@@ -72,21 +46,16 @@ expr (s, e, ty) :- e match {
     | ExprVar(r)  -> 
         {p, x, d}
             var-ref(s, r, p),
-            d == DatumVar(x, ty),
-            datumOf(p, d)
+            datumOf(p, DatumVar(x, ty))
     | ExprAdd(e1, e2)  -> 
         {ty1, ty2}
-            expr(s, e1, ty1),
-            expr(s, e2, ty2),
-            ty1 == INT(),
-            ty2 == INT(),
+            expr(s, e1, INT()),
+            expr(s, e2, INT()),
             ty == INT()
     | ExprSub(e1, e2)  -> 
         {ty1, ty2}
-            expr(s, e1, ty1),
-            expr(s, e2, ty2),
-            ty1 == INT(),
-            ty2 == INT(),
+            expr(s, e1, INT()),
+            expr(s, e2, INT()),
             ty == INT()
     | ExprMul(e1, e2)  -> 
         {ty1, ty2}
@@ -278,6 +247,3 @@ var-ref (s, r, p) :- r match {
     }.
 
 min-refs (z, z') :- min z lexico(`MOD<`LEX, `MOD<`IMP, `VAR<`LEX, `VAR<`IMP, `IMP<`LEX) z'.
-
-
-bar(s) :- new s. // ERROR: cannot get ownership of existing node
