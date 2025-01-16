@@ -2,21 +2,22 @@ grammar sg_lib;
 
 --------------------------------------------------
 
-synthesized attribute graphvizString::String occurs on SGNode;--, SGRef;
+synthesized attribute graphvizString::String occurs on SGScope;--, SGRef;
 
-aspect production mkNode
-top::SGNode ::=
+aspect production mkScopeDatum
+top::SGScope ::= datum::SGDatum
 {
   local lexEdgesString::String = 
     concat(map(edgeStyle("LEX", "black", top, _), top.lex));
-  --local impEdgesString::String = --"";
-  --  concat(map(edgeStyle("IMP", "green", top, _), top.imp));
+  local impEdgesString::String =
+    concat(map(edgeStyle("IMP", "green", top, _), top.imp));
   local modEdgesString::String = 
     concat(map(edgeStyle("MOD", "blue", top, _), top.mod));
   local varEdgesString::String = 
     concat(map(edgeStyle("VAR", "red", top, _), top.var));
   
-  top.graphvizString = "{" ++ lexEdgesString ++ varEdgesString ++ modEdgesString {-++ impEdgesString-} ++ "}\n";
+  top.graphvizString = "{" ++ lexEdgesString ++ varEdgesString ++ 
+                              modEdgesString {-++ impEdgesString-} ++ "}\n";
 
 }
 
@@ -43,21 +44,16 @@ top::SGRef ::= name::String
 --------------------------------------------------
 
 function graphvizScopes
-String ::= scopes::[Decorated SGNode] --refs::[Decorated SGRef]
+String ::= scopes::[Decorated SGScope]
 {
   return "digraph {layout=dot\n" ++ 
-  
     implode("\n", map(nodeStyle, scopes)) ++ "\n" ++ 
-    --implode("\n", map(refStyle, refs)) ++ "\n" ++ 
-    
     implode("\n", map((.graphvizString), scopes)) ++ "\n" ++
-    --implode("\n", map((.graphvizString), refs)) ++ "\n" ++
-  
   "}\n";
 }
 
 function nodeStyle
-String ::= s::Decorated SGNode
+String ::= s::Decorated SGScope
 {
   local datumString::String =
     case s.datum of
@@ -70,7 +66,7 @@ String ::= s::Decorated SGNode
 }
 
 function edgeStyle
-String ::= lab::String col::String src::Decorated SGNode tgt::Decorated SGNode
+String ::= lab::String col::String src::Decorated SGScope tgt::Decorated SGScope
 {
   return "{edge [label=" ++ lab ++ " color=\"" ++ col ++ "\" " ++ 
     "fontcolor=\"" ++ col ++ "\"] " ++ 
@@ -79,7 +75,7 @@ String ::= lab::String col::String src::Decorated SGNode tgt::Decorated SGNode
 
 {-
 function refEdgeStyle
-String ::= lab::String col::String src::Decorated SGRef tgt::Decorated SGNode
+String ::= lab::String col::String src::Decorated SGRef tgt::Decorated SGScope
 {
   return "{edge [label=" ++ lab ++ " color=\"" ++ col ++ "\" " ++ 
     "fontcolor=\"" ++ col ++ "\"] " ++ 

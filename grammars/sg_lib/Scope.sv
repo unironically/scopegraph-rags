@@ -2,64 +2,70 @@ grammar sg_lib;
 
 --------------------------------------------------
 
-nonterminal SGNode with location;
+nonterminal SGScope with location;
 
-synthesized attribute id::Integer occurs on SGNode;
-inherited attribute datum::SGDatum occurs on SGNode;
+synthesized attribute id::Integer occurs on SGScope;
+synthesized attribute datum::SGDatum occurs on SGScope;
 
-inherited attribute lex::[Decorated SGNode] occurs on SGNode;
-inherited attribute var::[Decorated SGNode] occurs on SGNode;
-inherited attribute mod::[Decorated SGNode] occurs on SGNode;
-inherited attribute imp::[Decorated SGNode] occurs on SGNode;
-
-abstract production mkNode
-top::SGNode ::=
-{ top.id = genInt(); }
+inherited attribute lex::[Decorated SGScope] occurs on SGScope;
+inherited attribute var::[Decorated SGScope] occurs on SGScope;
+inherited attribute mod::[Decorated SGScope] occurs on SGScope;
+inherited attribute imp::[Decorated SGScope] occurs on SGScope;
 
 --------------------------------------------------
-
-type SGScope = SGNode;
 
 abstract production mkScope
 top::SGScope ::=
-{ forwards to mkNode(location=top.location); }
+{ forwards to mkScopeDatum(datumNone(location=top.location), 
+                           location=top.location); }
 
+abstract production mkScopeDatum
+top::SGScope ::= datum::SGDatum
+{
+  top.id = genInt();
+  top.datum = ^datum;
+}
 
 --------------------------------------------------
-
---synthesized attribute test::(Boolean ::= Decorated SGRef);
 
 synthesized attribute name::String;
 
-nonterminal SGDatum with name, location; --, test;
+nonterminal SGDatum with name, location;
 
 abstract production datum
 top::SGDatum ::= name::String
-{
-  top.name = name;
-  --top.test = \r::Decorated SGRef -> r.name == top.name;
-}
+{ top.name = name; }
 
 abstract production datumNone
 top::SGDatum ::= 
-{
-  top.name = "";
-  --top.test = \r::Decorated SGRef -> false;
-}
+{ top.name = ""; }
 
 --------------------------------------------------
 
+
+{-
+tgt(p,s) :- p match
+  { End(x)       -> s == x
+  | Edge(x,l,xs) -> tgt(xs,s)
+  }.
+-}
 function tgt
 (Boolean, Decorated SGScope) ::= p::Path
 {
   return
     case p of
     | pEnd(s) -> (true, s)
-    | pEdge(s, l, ps) -> tgt(^ps) -- QUESTION: why need ^ here?
-    | pBad() -> (false, error("sadness"))
+    | pEdge(s, l, ps) -> tgt(^ps)
+    | _ -> (false, error("sadness"))
     end;
 }
 
+{-
+src(p,s) :- p match
+  { End(x)       -> s == x
+  | Edge(x,l,xs) -> s == x
+  }.
+-}
 function src
 (Boolean, Decorated SGScope) ::= p::Path
 {
@@ -67,16 +73,22 @@ function src
     case p of
     | pEnd(s) -> (true, s)
     | pEdge(s, l, ps) -> (true, s)
-    | pBad() -> (false, error("sadness"))
+    | _ -> (false, error("sadness"))
     end;
 }
 
+{-
+datumOf(p,d) :- 
+  {s} 
+    tgt(p, s), 
+    s -> d.
+-}
 function datumOf
 (Boolean, SGDatum) ::= p::Path
 {
-  local pair1::(Boolean, Decorated SGScope) = tgt(^p); -- QUESTION: why need ^ here?
-  local ok1::Boolean = pair1.1;
-  local s::Decorated SGScope = pair1.2;
+  local tgtRes::(Boolean, Decorated SGScope) = tgt(^p);
+  local ok1::Boolean = tgtRes.1;
+  local s::Decorated SGScope = tgtRes.2;
 
   return (ok1, s.datum);
 }
