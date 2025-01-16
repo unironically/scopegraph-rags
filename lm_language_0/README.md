@@ -1,5 +1,5 @@
-# LM without modules - language 1
-- An implementation of language 1, where the only LM declarations allowed are `def`s.
+# LM without modules - language 0
+- An implementation of language 0, where the only LM declarations allowed are `def`s.
 
 ### Running:
 ```bash
@@ -16,11 +16,11 @@ java -jar lm_language1.jar inputs/letseq.lm         # Compile an example program
 
 ### Directories of interest:
 - `statix-spec/`: here lives the Statix specification for language 1.
-- `silver-grammar/`: a link to the directory holding the Silver abstract grammar for this language (`../grammars/lm_semantics_1`).
-- `inputs/`: a link to the LM example inputs directory at `../grammars/lm_syntax_1/inputs`.
+- `silver-grammar/`: a link to the directory holding the Silver abstract grammar for this language (`../grammars/lm_semantics_0`).
+- `inputs/`: a link to the LM example inputs directory at `../grammars/lm_syntax_0/inputs`.
 - `out/`: dumping ground for the LM compiler output files. This directory is created by the LM compiler if it does not already exist.
 - `../ministatix.hs/`: where Ministatix is cloned to.
-- `../grammars/`: assorted Silver grammars. Those of interest to this language are `lm_syntax_1/` and `lm_semantics_1/`.
+- `../grammars/`: assorted Silver grammars. Those of interest to this language are `lm_syntax_0/` and `lm_semantics_0/`.
 
 ### Concrete Syntax:
 ```

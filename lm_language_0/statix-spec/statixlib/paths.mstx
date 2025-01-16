@@ -11,4 +11,4 @@ src(p,s) :- p match
   }.
 
 // d is the datum of the target of p
-datum(p,d) :- {s} tgt(p, s), s -> d.
+datumOf(p,d) :- {s} tgt(p, s), s -> d.
