@@ -8,9 +8,8 @@ main (p) :- p match {
     Program(ds):[]  -> 
         {s}
             new s,
-            decls(s, ds),
+            decls(s, ds)
     }.
-
 
 decls (s, ds) :- ds match {
     DeclsNil()  -> 
@@ -22,11 +21,13 @@ decls (s, ds) :- ds match {
 
 decl (s, d) :- d match {
     DeclModule(x, ds)  -> 
-        {s_mod}
+        {s_mod, x}
             new s_mod -> DatumMod(x, s_mod),
             s -[ `MOD ]-> s_mod,
             s_mod -[ `LEX ]-> s,
-            decls(s_mod, ds)
+            decls(s_mod, ds),
+            x == s_mod,
+            x -[ `LEX ]-> s
     | DeclImport(r)  -> 
         {p, x, s_mod}
             mod-ref(s, r, p),
@@ -121,9 +122,7 @@ expr (s, e, ty) :- e match {
                                    // requires permission to extend s_let. but we don't have that. seq-binds does not give permission to extend s_let because its match doesn't. not the case that every branch creates scope s_def.
                                    // no permission error when you put `new s_def` within the `SeqBindsCons` case
 
-            seq-binds(s, bs, s_let),
-            bar(s_let),                 // ERROR: cannot get ownership of existing node (bar defined at bottom)
-            
+            seq-binds(s, bs, s_let),            
             expr(s_let, e, ty)
 
     | ExprLetRec(bs, e)  -> 

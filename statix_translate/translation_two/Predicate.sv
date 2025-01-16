@@ -1,5 +1,6 @@
 grammar statix_translate:translation_two;
 
+monoid attribute predicatesTrans::[String] with [], ++;
 
 --------------------------------------------------
 
@@ -11,22 +12,32 @@ propagate predicateEnv on Predicate;
 
 attribute predicateDecls occurs on Predicate;
 
-attribute prodTmpTrans occurs on Predicate;
-propagate prodTmpTrans on Predicate;
+attribute predicatesTrans occurs on Predicate;
 
 aspect production syntaxPredicate 
 top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
 {
+  local pred::SyntaxPred = syntaxPred(name, ^nameLst);
+
   top.predicateCalls :=
     ["For syntax predicate " ++ name ++ ":\n" ++
     implode("\n", map(\s::String -> "\t - " ++ s, bs.predicateCalls))];
 
-  top.predicateDecls := [(name, left(syntaxPred(name, ^nameLst)))];
+  top.predicateDecls := [(name, left(^pred))];
 
 
   -- all scope instances that are inherited
   bs.inhScopeInstances =
     map ((\id::String -> localScopeInstance(id, "INH")), nameLst.scopeDefNamesInh);
+
+  bs.prodType = ^pred;
+
+  top.predicatesTrans := 
+    let 
+      prodsTrans::[String] = bs.prodBranchListTrans
+    in
+      ["nonterminal " ++ name ++ ";\n" ++ implode("\n", prodsTrans)]
+    end;
 
 }
 
@@ -46,6 +57,8 @@ top::Predicate ::=
 
   top.predicateDecls := [(name, right(functionPred(name, ^nameLst)))];
 
+  top.predicatesTrans := []; -- todo
+
 }
 
 
@@ -61,8 +74,8 @@ propagate predicateEnv on Predicates;
 attribute predicateDecls occurs on Predicates;
 propagate predicateDecls on Predicates;
 
-attribute prodTmpTrans occurs on Predicates;
-propagate prodTmpTrans on Predicates;
+attribute predicatesTrans occurs on Predicates;
+propagate predicatesTrans on Predicates;
 
 aspect production predicatesCons
 top::Predicates ::= pred::Predicate preds::Predicates

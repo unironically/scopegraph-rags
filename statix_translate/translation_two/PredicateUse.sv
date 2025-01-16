@@ -147,7 +147,14 @@ String ::=
 {- Generate a synthesized equation -}
 fun genSynEq
 String ::= ref::String aName::String ty::TypeAnn var::String =
-  "local " ++ var ++ "::" ++ ty.typeTrans ++ " = " ++ ref ++ "." ++ aName ++ ";";
+  let 
+    varTrans::String = case ty of scopeType() -> var ++ "_UNDEC" | _ -> var end
+  in
+  let
+    aNameTrans::String = case ty of scopeType() -> aName ++ "_UNDEC" | _ -> aName end
+  in
+    "local " ++ varTrans ++ "::" ++ ty.typeTrans ++ " = " ++ ref ++ "." ++ aNameTrans ++ ";"
+  end end;
 
 
 {- Generate an inherited equation -}

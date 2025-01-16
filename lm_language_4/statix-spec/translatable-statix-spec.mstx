@@ -306,7 +306,7 @@ var-ref(inh: s::scope, r::var-ref, syn: p::path) :- r match {
 
     VarRef(x::string) ->
         {vars, xvars, xvars'}
-        query s `LEX*(`EXT*|`IMP?) `VAR as vars,
+        query s `LEX* IMP? `VAR as vars,
         filter vars((x', _) where x' == x) xvars,
         min-refs(xvars, xvars'),
         only(xvars', p)

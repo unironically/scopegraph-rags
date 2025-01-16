@@ -30,7 +30,7 @@ IO<Integer> ::= largs::[String]
             --print(ast.pp);
             --writeFile("ag.sv", ast.moduleTrans);
             --writeFile("statix-spec.mstx", ast.mstxPP);
-            writeFile("preds.txt", implode("\n\n", ast.prodTmpTrans));
+            writeFile("preds.txt", ast.moduleTrans);
             return 0;
           }
           else do {

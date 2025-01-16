@@ -39,6 +39,7 @@ decl(inh: s::scope, d::decl) :- d match {
       decls(s_mod, ds)
 
   | DeclImport(r::mod-ref) ->
+
       {p::path, x::string, s_mod::scope, d::datum}
       mod-ref(s, r, p),
 
@@ -76,48 +77,36 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
       {ty1::type, ty2::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
-      ty1 == INT(),
-      ty2 == INT(),
       ty::type := INT()
 
   | ExprSub(e1::expr, e2::expr) ->
       {ty1::type, ty2::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
-      ty1 == INT(),
-      ty2 == INT(),
       ty::type := INT()
 
   | ExprMul(e1::expr, e2::expr) ->
       {ty1::type, ty2::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
-      ty1 == INT(),
-      ty2 == INT(),
       ty::type := INT()
 
   | ExprDiv(e1::expr, e2::expr) ->
       {ty1::type, ty2::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
-      ty1 == INT(),
-      ty2 == INT(),
       ty::type := INT()
 
   | ExprAnd(e1::expr, e2::expr) ->
       {ty1::type, ty2::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
-      ty1 == BOOL(),
-      ty2 == BOOL(),
       ty::type := BOOL()
 
   | ExprOr(e1::expr, e2::expr) ->
       {ty1::type, ty2::type}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
-      ty1 == BOOL(),
-      ty2 == BOOL(),
       ty::type := BOOL()
 
   | ExprEq(e1::expr, e2::expr) ->
@@ -131,8 +120,6 @@ expr(inh: s::scope, e::expr, syn: ty::type) :- e match {
       {tyF::type, ty1::type, ty2::type, ty3::type}
       expr(s, e1, tyF),
       expr(s, e2, ty3),
-      tyF == FUN(ty1, ty2), // interesting case with unification, can translate to binding of locals based on matching
-      ty1 == ty3,
       ty::type := ty2
 
   | ExprIf(e1::expr, e2::expr, e3::expr) ->

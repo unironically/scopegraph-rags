@@ -45,7 +45,7 @@ top::LocalName ::= ni::LocalNameInstance
 nonterminal LocalScopeInstance with name, scopeSource, flowsToNodes, localContribs;
 
 synthesized attribute scopeSource::String;              -- "INH"/"SYN"/"LOCAL" - signifying where the scope instance comes from (parent/child/local)
-inherited attribute flowsToNodes::[String];             -- for what children is this scope inherited
+inherited attribute flowsToNodes::[(String, String)];             -- for what children is this scope inherited by, with its local name and its name within the child
 inherited attribute localContribs::[(Label, String)];   -- any edge contributions made whose source is this scope. with (label, target scope name)
 
 abstract production localScopeInstance
