@@ -46,11 +46,11 @@ attribute allScopes occurs on SeqBind;
 
 aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
-{ top.allScopes := top.vars ++ e.allScopes; }
+{ top.allScopes := top.VAR_s ++ e.allScopes; }
 
 aspect production seqBindTyped
 top::SeqBind ::= ty::Type id::String e::Expr
-{ top.allScopes := top.vars ++ e.allScopes; }
+{ top.allScopes := top.VAR_s ++ e.allScopes; }
 
 attribute allScopes occurs on ParBinds;
 propagate allScopes on ParBinds;
@@ -59,14 +59,14 @@ attribute allScopes occurs on ParBind;
 
 aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
-{ top.allScopes := top.vars ++ e.allScopes; }
+{ top.allScopes := top.VAR_s ++ e.allScopes; }
 
 aspect production parBindTyped
 top::ParBind ::= ty::Type id::String e::Expr
-{ top.allScopes := top.vars ++ e.allScopes; }
+{ top.allScopes := top.VAR_s ++ e.allScopes; }
 
 attribute allScopes occurs on ArgDecl;
 
 aspect production argDecl
 top::ArgDecl ::= id::String ty::Type
-{ top.allScopes := top.vars; }
+{ top.allScopes := top.VAR_s; }

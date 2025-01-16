@@ -39,8 +39,8 @@ IO<Integer> ::= largs::[String]
                 --writeSilverEquations(filePath, file, ast.silverEquations);
                 --writeJastEquations(filePath, file, ast.jastEquations);
                 writeStatixAterm(fileName, ast.statix);
-                res::Integer <- printBinds(ast.binds);
-                programOk(ast.ok);
+                --res::Integer <- printBinds(ast.binds);
+                res::Integer <- programOk(ast.ok);
                 return res;
               }
               else do {
@@ -105,8 +105,9 @@ fun printBinds IO<Integer> ::= binds::[(String, String)] = do {
   return if anyUnfound then -1 else 0;
 };
 
-fun programOk IO<Unit> ::= ok::Boolean = do {
-  print(if ok then "[✔] Program is well-typed\n" else "[✗] Program is not well-typed [TODO: better messages..]\n");
+fun programOk IO<Integer> ::= ok::Boolean = do {
+  print(if ok then "[✔] ok = true\n" else "[✗] ok = false\n");
+  return if ok then 0 else -1;
 };
 
 fun eqsNumbered(Integer, [String]) ::= line::String acc::(Integer, [String]) =

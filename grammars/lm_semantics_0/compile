@@ -1,5 +1,5 @@
 #!/bin/sh
 
-silver -I .. --mwda --onejar $@ lm_semantics_0:driver
+silver -I .. --onejar $@ lm_semantics_0:driver
 
 rm build.xml > /dev/null 2>&1

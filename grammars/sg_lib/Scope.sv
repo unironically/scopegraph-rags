@@ -92,3 +92,12 @@ function datumOf
 
   return (ok1, s.datum);
 }
+
+-- only(ps, p), a builtin for statix-core
+-- returns `p` if `ps == [p]`
+fun onlyPath
+(Boolean, Path) ::= ps::[Path] =
+  case ps of
+  | [p] -> (true, p)
+  | _   -> (false, error("sadness"))
+  end;

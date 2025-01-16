@@ -158,11 +158,12 @@ seq-bind(s, b, s_def) :- b match {
         expr(s, e, ty)
   
   | DefBindTyped(x, tyann, e) ->
-        {s_var, ty}
-        new s_var -> DatumVar(x, ty),
+        {s_var, ty1, ty2}
+        new s_var -> DatumVar(x, ty1),
         s_def -[ `VAR ]-> s_var,
-        type(s, tyann, ty),
-        expr(s, e, ty)
+        type(s, tyann, ty1),
+        expr(s, e, ty2),
+        ty1 == ty2
 
 }.
 
