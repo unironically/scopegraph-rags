@@ -56,7 +56,7 @@ function tgt
     case p of
     | pEnd(s) -> (true, s)
     | pEdge(s, l, ps) -> tgt(^ps)
-    | _ -> (false, error("sadness"))
+    | _ -> (false, error("tgt: sadness"))
     end;
 }
 
@@ -73,7 +73,7 @@ function src
     case p of
     | pEnd(s) -> (true, s)
     | pEdge(s, l, ps) -> (true, s)
-    | _ -> (false, error("sadness"))
+    | _ -> (false, error("src: sadness"))
     end;
 }
 
@@ -99,5 +99,5 @@ fun onlyPath
 (Boolean, Path) ::= ps::[Path] =
   case ps of
   | [p] -> (true, p)
-  | _   -> (false, error("sadness"))
+  | _   -> (false, error("onlyPath: sadness"))
   end;

@@ -160,7 +160,7 @@ top::Expr ::= r::VarRef
   local pair::(Boolean, String, Type) = 
     case d of
       datumVar(x, ty) -> (true, x, ^ty)
-    | _               -> (false, error("sadness"))
+    | _               -> (false, error("exprVar: sadness"))
     end;
   local eqOk::Boolean = pair.1;
   local x::String = pair.2;
@@ -172,6 +172,7 @@ top::Expr ::= r::VarRef
   -- var-ref(s, r, p)
   r.s = top.s;
   top.VAR_s = r.VAR_s;
+  top.LEX_s = r.LEX_s;
   local p::Path = r.p;
   
   -- ok-ness
@@ -504,7 +505,7 @@ top::SeqBinds ::= s::SeqBind
   top.VAR_s = s.VAR_s;
   top.LEX_s = s.LEX_s;
   top.VAR_s_def = s.VAR_s_def;
-  top.LEX_s_def = s.LEX_s_def;
+  top.LEX_s_def = top.s :: s.LEX_s_def;
 
   -- ok-ness
   top.ok = s.ok;

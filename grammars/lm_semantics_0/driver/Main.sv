@@ -65,10 +65,11 @@ fun writeStatixAterm IO<Unit> ::= fileN::String aterm::String = do {
 };
 
 fun writeStatixConstraints IO<Unit> ::= fname::String code::String cs::[String] = do {
-  let numberedLines::[String] = snd(foldr(eqsNumbered, (length(cs), []), cs));
+  let nonCommentList::[String] = filter((\s::String -> !startsWith("--", s)), cs);
+  let numberedLines::[String] = snd(foldr(eqsNumbered, (length(nonCommentList), []), cs));
   let toWrite::[String] =
     ("## Statix core constraints for " ++ fname ++ "\n") ::
-    ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
+    ("### Input program:\n```" ++ code ++ "```\n") ::
     ("### Constraints:\n```") ::
     (numberedLines ++ ["```\n"]);
   writeFile("out/StatixConstraints.md", implode("\n", toWrite));
@@ -76,12 +77,13 @@ fun writeStatixConstraints IO<Unit> ::= fname::String code::String cs::[String] 
 };
 
 fun writeSilverEquations IO<Unit> ::= fname::String code::String es::[String] = do {
-  let numberedLines::[String] = snd(foldr(eqsNumbered, (length(es), []), es));
+  let nonCommentList::[String] = filter((\s::String -> !startsWith("--", s)), es);
+  let numberedLines::[String] = snd(foldr(eqsNumbered, (length(nonCommentList), []), es));
   let toWrite::[String] =
     ("## Silver equations for " ++ fname ++ "\n") ::
-    ("### Input program:\n```\n" ++ code ++ "\n```\n") ::
-    ("### Equations:\n```\n") ::
-    (numberedLines ++ ["\n```\n"]);
+    ("### Input program:\n```" ++ code ++ "```\n") ::
+    ("### Equations:\n```") ::
+    (numberedLines ++ ["```\n"]);
   writeFile("out/SilverEquations.md", implode("\n", toWrite));
   print("[✔] See out/SilverEquations.md for the resulting flattened Silver equations\n");
 };
@@ -111,8 +113,18 @@ fun programOk IO<Integer> ::= ok::Boolean = do {
 };
 
 fun eqsNumbered(Integer, [String]) ::= line::String acc::(Integer, [String]) =
-  let num::Integer = fst(acc) in
-  let numStr::String = toString(fst(acc)) in
-  let numPad::String = if num < 10 then "0" ++ numStr else numStr in
-    (num - 1, (numPad ++ ": " ++ line)::snd(acc))
-  end end end;
+  if startsWith("--", line)
+  then
+    (fst(acc), ("     " ++ line)::snd(acc))
+  else
+    let num::Integer = fst(acc) in
+    let numStr::String = toString(fst(acc)) in
+    let numPad::String = 
+      (if num < 10 
+      then "00" ++ numStr 
+      else if num < 100 
+      then "0" ++ numStr
+      else numStr)
+    in
+      (num - 1, (numPad ++ ": " ++ line)::snd(acc))
+    end end end;
