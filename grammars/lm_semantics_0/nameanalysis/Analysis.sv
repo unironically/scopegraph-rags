@@ -867,13 +867,13 @@ top::VarRef ::= name::String
   );
 
   -- only(xvars_, p)
-  local onlyPath::(Boolean, Path) = onlyPath(xvars_);
-  top.p = onlyPath.2;
+  local onlyResult::(Boolean, Path) = onlyPath(xvars_);
+  top.p = onlyResult.2;
 
   -- no assertions, not passed
   top.VAR_s = [];
   top.LEX_s = [];
 
   -- ok-ness
-  top.ok = onlyPath.1;
+  top.ok = onlyResult.1;
 }

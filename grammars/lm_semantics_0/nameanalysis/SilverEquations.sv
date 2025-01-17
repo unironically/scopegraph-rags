@@ -645,12 +645,12 @@ top::VarRef ::= x::String
                         "\\d -> case d of datumVar(x, _) -> x = \"" ++ x ++ "\" | _ -> false end" ++
                       ")",
 
-    top.topName ++ ".onlyPath = onlyPath(" ++ xvars_Name ++ ")",
-    top.topName ++ ".p = " ++ top.topName ++ ".onlyPath.2",
+    top.topName ++ ".onlyResult = onlyPath(" ++ xvars_Name ++ ")",
+    top.topName ++ ".p = " ++ top.topName ++ ".onlyResult.2",
 
     top.topName ++ ".VAR_s = []",
     top.topName ++ ".LEX_s = []",
 
-    top.topName ++ ".ok = " ++ top.topName ++ ".onlyPath.1" 
+    top.topName ++ ".ok = " ++ top.topName ++ ".onlyResult.1" 
   ];
 }
