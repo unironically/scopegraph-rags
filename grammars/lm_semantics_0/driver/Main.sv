@@ -35,8 +35,9 @@ IO<Integer> ::= largs::[String]
                 print("[✔] Parse success\n");
                 mkdir("out");
                 --system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
-                writeStatixConstraints(filePath, file, ast.flattened);
-                writeSilverEquations(filePath, file, ast.equations);
+                writeStatixConstraints(filePath, file, ast.flattened, "StatixConstraints");
+                writeSilverEquations(filePath, file, ast.equations, "SilverEquations");
+                writeSilverEquations(filePath, file, ast.equationsSolvedCopies, "SilverEquationsSolvedCopies");
                 --writeJastEquations(filePath, file, ast.jastEquations);
                 writeStatixAterm(fileName, ast.statix);
                 --res::Integer <- printBinds(ast.binds);
@@ -64,7 +65,7 @@ fun writeStatixAterm IO<Unit> ::= fileN::String aterm::String = do {
   print("[✔] See out/" ++ fileN ++ ".aterm for the resulting Ministatix term\n");
 };
 
-fun writeStatixConstraints IO<Unit> ::= fname::String code::String cs::[String] = do {
+fun writeStatixConstraints IO<Unit> ::= fname::String code::String cs::[String] outFName::String = do {
   let nonCommentList::[String] = filter((\s::String -> !startsWith("--", s)), cs);
   let numberedLines::[String] = snd(foldr(eqsNumbered, (length(nonCommentList), []), cs));
   let toWrite::[String] =
@@ -72,11 +73,11 @@ fun writeStatixConstraints IO<Unit> ::= fname::String code::String cs::[String] 
     ("### Input program:\n```" ++ code ++ "```\n") ::
     ("### Constraints:\n```") ::
     (numberedLines ++ ["```\n"]);
-  writeFile("out/StatixConstraints.md", implode("\n", toWrite));
-  print("[✔] See out/StatixConstraints.md for the resulting flattened Statix constraints\n");
+  writeFile("out/" ++ outFName ++ ".md", implode("\n", toWrite));
+  print("[✔] See out/" ++ outFName ++ ".md for the resulting flattened Statix constraints\n");
 };
 
-fun writeSilverEquations IO<Unit> ::= fname::String code::String es::[String] = do {
+fun writeSilverEquations IO<Unit> ::= fname::String code::String es::[String] outFName::String = do {
   let nonCommentList::[String] = filter((\s::String -> !startsWith("--", s)), es);
   let numberedLines::[String] = snd(foldr(eqsNumbered, (length(nonCommentList), []), es));
   let toWrite::[String] =
@@ -84,8 +85,8 @@ fun writeSilverEquations IO<Unit> ::= fname::String code::String es::[String] = 
     ("### Input program:\n```" ++ code ++ "```\n") ::
     ("### Equations:\n```") ::
     (numberedLines ++ ["```\n"]);
-  writeFile("out/SilverEquations.md", implode("\n", toWrite));
-  print("[✔] See out/SilverEquations.md for the resulting flattened Silver equations\n");
+  writeFile("out/" ++ outFName ++ ".md", implode("\n", toWrite));
+  print("[✔] See out/" ++ outFName ++ ".md for the resulting flattened Silver equations\n");
 };
 
 {-fun writeJastEquations IO<Integer> ::= fname::String code::String es::[String] = do {

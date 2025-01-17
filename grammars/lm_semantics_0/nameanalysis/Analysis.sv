@@ -631,8 +631,11 @@ aspect production parBindsNil
 top::ParBinds ::=
 { 
   -- no assertions from s, nor is it passed
-  top.VAR_s = []; 
-  top.LEX_s = []; 
+  top.VAR_s = [];
+  top.LEX_s = [];
+
+  top.VAR_s_def = [];
+  top.LEX_s_def = [];
 
   -- ok-ness
   top.ok = true;

@@ -4,13 +4,14 @@ grammar lm_semantics_0:nameanalysis;
 
 synthesized attribute equations::[String];
 
+synthesized attribute topNameRoot::String;
 inherited attribute topName::String;
 
 fun genName String ::= id::String = id ++ "_" ++ toString(genInt()); 
 
 --------------------------------------------------
 
-attribute equations occurs on Main;
+attribute equations, topNameRoot occurs on Main;
 
 aspect production program
 top::Main ::= ds::Decls
@@ -29,6 +30,8 @@ top::Main ::= ds::Decls
     sName ++ ".lex = " ++ dsName ++ ".LEX_s",
     topName ++ ".ok = " ++ dsName ++ ".ok"
   ] ++ ds.equations;
+
+  top.topNameRoot = topName;
 }
 
 --------------------------------------------------
@@ -60,7 +63,8 @@ top::Decls ::=
   top.equations = [
     "-- from " ++ top.topName,
     top.topName ++ ".VAR_s = []",
-    top.topName ++ ".LEX_s = []"
+    top.topName ++ ".LEX_s = []",
+    top.topName ++ ".ok = true"
   ];
 }
 
@@ -78,8 +82,9 @@ top::Decl ::= b::ParBind
   top.equations = [
     "-- from " ++ top.topName,
     bName ++ ".s = " ++ top.topName ++ ".s",
-    top.topName ++ ".VAR_s = " ++ bName ++ ".VAR_s",
-    top.topName ++ ".LEX_s = " ++ bName ++ ".LEX_s",
+    bName ++ ".s_def = " ++ top.topName ++ ".s",
+    top.topName ++ ".VAR_s = " ++ bName ++ ".VAR_s ++" ++ bName ++ ".VAR_s_def",
+    top.topName ++ ".LEX_s = " ++ bName ++ ".LEX_s ++ " ++ bName ++ ".LEX_s_def",
     top.topName ++ ".ok = " ++ bName ++ ".ok"
   ] ++ b.equations;
 }
@@ -159,7 +164,7 @@ top::Expr ::= r::VarRef
     pName ++ " = " ++ rName ++ ".p",
     top.topName ++ ".ok = " ++ okTgtName ++ " && " ++ rName ++ ".ok && " ++
                                                       eqOkName
-  ];
+  ] ++ r.equations;
 }
 
 aspect production exprAdd
@@ -505,6 +510,8 @@ top::ParBinds ::=
     "-- from " ++ top.topName,
     top.topName ++ ".VAR_s = []",
     top.topName ++ ".LEX_s = []",
+    top.topName ++ ".VAR_s_def = []",
+    top.topName ++ ".LEX_s_def = []",
     top.topName ++ "ok = true"
   ];
 }
@@ -610,7 +617,7 @@ top::ArgDecl ::= id::String tyann::Type
     s_var_Name ++ ".lex = []",
     tyannName ++ ".s = " ++ top.topName ++ ".s",
     top.topName ++ ".ty = " ++ tyannName ++ ".ty",
-    top.topName ++ ".VAR_s :: " ++ tyannName ++ ".VAR_s",
+    top.topName ++ ".VAR_s = " ++ s_var_Name ++ " :: " ++ tyannName ++ ".VAR_s",
     top.topName ++ ".LEX_s = " ++ tyannName ++ ".LEX_s",
     top.topName ++ ".ok = true"
   ] ++ tyann.equations;
@@ -688,7 +695,7 @@ top::Type ::=
 
 --------------------------------------------------
 
-attribute topName , equations occurs on VarRef;
+attribute topName, equations occurs on VarRef;
 
 aspect production varRef
 top::VarRef ::= x::String
