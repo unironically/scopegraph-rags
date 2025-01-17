@@ -157,14 +157,14 @@ top::Expr ::= r::VarRef
   local d::SGDatum = s_.datum;
 
   -- d == DatumVar(x, ty')
-  local pair::(Boolean, String, Type) = 
+  local datumPair::(Boolean, String, Type) = 
     case d of
       datumVar(x, ty) -> (true, x, ^ty)
-    | _               -> (false, error("exprVar: sadness"))
+    | _               -> (false, "", tErr())
     end;
-  local eqOk::Boolean = pair.1;
-  local x::String = pair.2;
-  local ty_::Type = pair.3;
+  local eqOk::Boolean = datumPair.1;
+  local x::String = datumPair.2;
+  local ty_::Type = datumPair.3;
 
   -- ty == ty'
   top.ty = ^ty_;

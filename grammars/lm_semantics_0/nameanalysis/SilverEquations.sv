@@ -129,10 +129,36 @@ top::Expr ::= r::VarRef
 {
   local rName::String = genName("varRef");
 
+  local tgtPairName::String = top.topName ++ ".tgtPair";
+  local okTgtName::String = top.topName ++ ".okTgt";
+  local s_Name::String = top.topName ++ ".s_";
+  local dName::String = top.topName ++ ".d";
+  local datumPairName::String = top.topName ++ ".datumPair";
+  local eqOkName::String = top.topName ++ ".eqOk";
+  local xName::String = top.topName ++ ".x";
+  local ty_Name::String = top.topName ++ ".ty_";
+  local pName::String = top.topName ++ ".p";
+
   r.topName = rName;
 
   top.equations = [
-    "TODO"
+    tgtPairName ++ " = tgt(" ++ pName ++ ")",
+    okTgtName ++ " = " ++ tgtPairName ++ ".1",
+    s_Name ++ " = " ++ tgtPairName ++ ".2",
+    dName ++ " = " ++ s_Name ++ ".datum",
+    datumPairName ++ " = case " ++ dName ++ " of " ++
+                        "| daumVar(x, ty) -> (true, x, ty) " ++
+                        "| _ -> (false, \"\", tErr()) end",
+    eqOkName ++ " = " ++ datumPairName ++ ".1",
+    xName ++ " = " ++ datumPairName ++ ".2",
+    ty_Name ++ " = " ++ datumPairName ++ ".3",
+    top.topName ++ ".ty = " ++ ty_Name,
+    rName ++ ".s = " ++ top.topName ++ ".s",
+    top.topName ++ ".VAR_s = " ++ rName ++ ".VAR_s",
+    top.topName ++ ".LEX_s = " ++ rName ++ ".LEX_s",
+    pName ++ " = " ++ rName ++ ".p",
+    top.topName ++ ".ok = " ++ okTgtName ++ " && " ++ rName ++ ".ok && " ++
+                                                      eqOkName
   ];
 }
 
