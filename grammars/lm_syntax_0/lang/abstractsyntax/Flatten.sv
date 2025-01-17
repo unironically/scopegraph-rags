@@ -317,7 +317,7 @@ top::Expr ::= bs::SeqBinds e::Expr
 
   top.flattened = [
     "new " ++ s_let
-  ] ++ bs.flattened ++ e.flattened
+  ] ++ bs.flattened ++ e.flattened;
 }
 
 aspect production exprLetRec
@@ -508,7 +508,7 @@ top::ArgDecl ::= id::String ty::Type
 
   top.flattened = ty.flattened ++ [
     "new " ++ s_var ++ " -> DatumVar(" ++ id ++ ", " ++ top.ty ++ ")",
-    top.s ++ " -[ `VAR ]-> " ++ s_var,
+    top.s ++ " -[ `VAR ]-> " ++ s_var
   ];
 }
 
