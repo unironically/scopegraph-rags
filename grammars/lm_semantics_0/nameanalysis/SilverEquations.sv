@@ -16,14 +16,14 @@ aspect production program
 top::Main ::= ds::Decls
 {
   local topName::String = genName("program");
-  local sName::String = genName("s");
+  local sName::String = topName ++ ".s";
   local dsName::String = genName("decls");
 
   ds.topName = dsName;
 
   top.equations = [
     "-- from " ++ topName,
-    topName ++ "." ++ sName ++ " = mkScope()",
+    sName ++ " = mkScope()",
     dsName ++ ".s = " ++ sName,
     sName ++ ".var = " ++ dsName ++ ".VAR_s",
     sName ++ ".lex = " ++ dsName ++ ".LEX_s",
@@ -49,6 +49,7 @@ top::Decls ::= d::Decl ds::Decls
     dName ++ ".s = " ++ top.topName ++ ".s",
     dsName ++ ".s = " ++ top.topName ++ ".s",
     top.topName ++ ".VAR_s = " ++ dName ++ ".VAR_s ++ " ++ dsName ++ ".VAR_s",
+    top.topName ++ ".LEX_s = " ++ dName ++ ".LEX_s ++ " ++ dsName ++ ".LEX_s",
     top.topName ++ ".ok = " ++ dName ++ ".ok && " ++ dsName ++ ".ok"
   ] ++ d.equations ++ ds.equations;
 }
@@ -376,10 +377,10 @@ top::SeqBinds ::= s::SeqBind
   top.equations = [
     "-- from " ++ top.topName,
     sName ++ ".s = " ++ top.topName ++ ".s",
-    top.topName ++ "VAR_s = " ++ sName ++ ".VAR_s",
-    top.topName ++ "LEX_s = " ++ sName ++ ".LEX_s",
-    top.topName ++ "VAR_s_def = " ++ sName ++ "VAR_s_def",
-    top.topName ++ "LEX_s_def = " ++ top.topName ++ ".s :: " ++ sName ++ "LEX_s_def",
+    top.topName ++ ".VAR_s = " ++ sName ++ ".VAR_s",
+    top.topName ++ ".LEX_s = " ++ sName ++ ".LEX_s",
+    top.topName ++ ".VAR_s_def = " ++ sName ++ ".VAR_s_def",
+    top.topName ++ ".LEX_s_def = " ++ top.topName ++ ".s :: " ++ sName ++ ".LEX_s_def",
     top.topName ++ ".ok = " ++ sName ++ ".ok"
   ] ++ s.equations;
 }
