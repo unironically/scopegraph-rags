@@ -299,7 +299,7 @@ top::Expr ::= d::ArgDecl e::Expr
   top.flattened = [
     "new " ++ s_fun,
     s_fun ++ " -[ `LEX ]-> " ++ top.s
-  ] ++ e.flattened ++ [
+  ] ++ d.flattened ++ e.flattened ++ [
     top.ty ++ " == FUN(" ++ ty1 ++ ", " ++ ty2 ++ ")"
   ];
 }
@@ -308,57 +308,48 @@ aspect production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
   local s_let::String = "s_let_" ++ toString(genInt());
-  local ty1::String = toString(genInt());
   
   bs.s = top.s;
   bs.s_def = s_let;
 
   e.s = s_let;
-  e.ty = ty1;
+  e.ty = top.ty;
 
   top.flattened = [
     "new " ++ s_let
-  ] ++ bs.flattened ++ e.flattened ++ [
-    top.ty ++ " == " ++ ty1
-  ];
+  ] ++ bs.flattened ++ e.flattened
 }
 
 aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
   local s_let::String = "s_let_" ++ toString(genInt());
-  local ty1::String = toString(genInt());
   
   bs.s = s_let;
   bs.s_def = s_let;
 
   e.s = s_let;
-  e.ty = ty1;
+  e.ty = top.ty;
 
   top.flattened = [
     "new " ++ s_let
-  ] ++ bs.flattened ++ e.flattened ++ [
-    top.ty ++ " == " ++ ty1
-  ];
+  ] ++ bs.flattened ++ e.flattened;
 }
 
 aspect production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
   local s_let::String = "s_let_" ++ toString(genInt());
-  local ty1::String = toString(genInt());
   
   bs.s = top.s;
   bs.s_def = s_let;
 
   e.s = s_let;
-  e.ty = ty1;
+  e.ty = top.ty;
 
   top.flattened = [
     "new " ++ s_let
-  ] ++ bs.flattened ++ e.flattened ++ [
-    top.ty ++ " == " ++ ty1
-  ];
+  ] ++ bs.flattened ++ e.flattened;
 }
 
 --------------------------------------------------
@@ -511,15 +502,13 @@ aspect production argDecl
 top::ArgDecl ::= id::String ty::Type
 {
   local s_var::String = "s_var_" ++ toString(genInt());
-  local ty1::String = "ty_" ++ toString(genInt());
 
   ty.s = top.s;
-  ty.ty = ty1;
+  ty.ty = top.ty;
 
   top.flattened = ty.flattened ++ [
-    "new " ++ s_var ++ " -> DatumVar(" ++ id ++ ", " ++ ty1 ++ ")",
+    "new " ++ s_var ++ " -> DatumVar(" ++ id ++ ", " ++ top.ty ++ ")",
     top.s ++ " -[ `VAR ]-> " ++ s_var,
-    top.ty ++ " == " ++ ty1
   ];
 }
 
