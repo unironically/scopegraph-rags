@@ -35,7 +35,7 @@ IO<Integer> ::= largs::[String]
                 print("[✔] Parse success\n");
                 mkdir("out");
                 --system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
-                --writeStatixConstraints(filePath, file, ast.statixConstraints);
+                writeStatixConstraints(filePath, file, ast.flattened);
                 --writeSilverEquations(filePath, file, ast.silverEquations);
                 --writeJastEquations(filePath, file, ast.jastEquations);
                 writeStatixAterm(fileName, ast.statix);
@@ -72,7 +72,7 @@ fun writeStatixConstraints IO<Unit> ::= fname::String code::String cs::[String] 
     ("### Constraints:\n```") ::
     (numberedLines ++ ["```\n"]);
   writeFile("out/StatixConstraints.md", implode("\n", toWrite));
-  print("[✔] See out/SilverEquations.md for the resulting flattened Statix constraints\n");
+  print("[✔] See out/StatixConstraints.md for the resulting flattened Statix constraints\n");
 };
 
 {-fun writeSilverEquations IO<Integer> ::= fname::String code::String es::[String] = do {
