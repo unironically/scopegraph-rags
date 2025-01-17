@@ -56,6 +56,7 @@ top::Decls ::= d::Decl ds::Decls
 
   -- s is passed to decl as s and decls as s
   top.VAR_s = d.VAR_s ++ ds.VAR_s;
+  top.LEX_s = d.LEX_s ++ ds.LEX_s;
 
   -- ok-ness
   top.ok = d.ok && ds.ok;
@@ -193,6 +194,7 @@ top::Expr ::= e1::Expr e2::Expr
 
   -- s is passed down to e1 and e2
   top.VAR_s = e1.VAR_s ++ e2.VAR_s;
+  top.LEX_s = e1.LEX_s ++ e2.LEX_s;
 
   -- ok-ness
   top.ok = e1.ok && e2.ok &&
@@ -215,6 +217,7 @@ top::Expr ::= e1::Expr e2::Expr
 
   -- s is passed down to e1 and e2
   top.VAR_s = e1.VAR_s ++ e2.VAR_s;
+  top.LEX_s = e1.LEX_s ++ e2.LEX_s;
 
   -- ok-ness
   top.ok = e1.ok && e2.ok &&
@@ -237,6 +240,7 @@ top::Expr ::= e1::Expr e2::Expr
 
   -- s is passed down to e1 and e2
   top.VAR_s = e1.VAR_s ++ e2.VAR_s;
+  top.LEX_s = e1.LEX_s ++ e2.LEX_s;
 
   -- ok-ness
   top.ok = e1.ok && e2.ok &&
@@ -259,6 +263,7 @@ top::Expr ::= e1::Expr e2::Expr
 
   -- s is passed down to e1 and e2
   top.VAR_s = e1.VAR_s ++ e2.VAR_s;
+  top.LEX_s = e1.LEX_s ++ e2.LEX_s;
 
   -- ok-ness
   top.ok = e1.ok && e2.ok &&
@@ -281,6 +286,7 @@ top::Expr ::= e1::Expr e2::Expr
 
   -- s is passed down to e1 and e2
   top.VAR_s = e1.VAR_s ++ e2.VAR_s;
+  top.LEX_s = e1.LEX_s ++ e2.LEX_s;
 
   -- ok-ness
   top.ok = e1.ok && e2.ok &&
@@ -303,6 +309,7 @@ top::Expr ::= e1::Expr e2::Expr
 
   -- s is passed down to e1 and e2
   top.VAR_s = e1.VAR_s ++ e2.VAR_s;
+  top.LEX_s = e1.LEX_s ++ e2.LEX_s;
 
   -- ok-ness
   top.ok = e1.ok && e2.ok &&
@@ -325,6 +332,7 @@ top::Expr ::= e1::Expr e2::Expr
 
   -- s is passed down to e1 and e2
   top.VAR_s = e1.VAR_s ++ e2.VAR_s;
+  top.LEX_s = e1.LEX_s ++ e2.LEX_s;
 
   -- ok-ness, ty1 == ty2
   top.ok = e1.ok && e2.ok &&
@@ -859,13 +867,13 @@ top::VarRef ::= name::String
   );
 
   -- only(xvars_, p)
-  local pair::(Boolean, Path) = onlyPath(xvars_);
-  top.p = pair.2;
+  local onlyPath::(Boolean, Path) = onlyPath(xvars_);
+  top.p = onlyPath.2;
 
   -- no assertions, not passed
   top.VAR_s = [];
   top.LEX_s = [];
 
   -- ok-ness
-  top.ok = pair.1;
+  top.ok = onlyPath.1;
 }
