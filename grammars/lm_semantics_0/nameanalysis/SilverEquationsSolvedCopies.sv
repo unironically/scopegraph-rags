@@ -6,11 +6,15 @@ synthesized attribute equationsSolvedCopies::[String];
 
 inherited attribute sName::String;
 
-synthesized attribute eqVAR_s::String;
-synthesized attribute eqLEX_s::String;
+synthesized attribute eqVAR_s::[String];
+synthesized attribute eqLEX_s::[String];
 
-synthesized attribute eqVAR_s_def::String;
-synthesized attribute eqLEX_s_def::String;
+synthesized attribute eqVAR_s_def::[String];
+synthesized attribute eqLEX_s_def::[String];
+
+synthesized attribute eqOk::String;
+
+synthesized attribute eqTy::String;
 
 --------------------------------------------------
 
@@ -27,16 +31,16 @@ top::Main ::= ds::Decls
 
   top.equationsSolvedCopies = [
     "-- from " ++ topName,
+    topName ++ ".ok = " ++ ds.eqOk,
     sName ++ " = mkScope()",
-    sName ++ ".var = " ++ ds.eqVAR_s,
-    sName ++ ".lex = " ++ ds.eqLEX_s,
-    topName ++ ".ok = " ++ dsName ++ ".ok"
+    sName ++ ".var = [" ++ implode(", ", ds.eqVAR_s) ++ "]",
+    sName ++ ".lex = [" ++ implode(", ", ds.eqLEX_s) ++ "]"
   ] ++ ds.equationsSolvedCopies;
 }
 
 --------------------------------------------------
 
-attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s occurs on Decls;
+attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqOk occurs on Decls;
 
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
@@ -49,29 +53,30 @@ top::Decls ::= d::Decl ds::Decls
   ds.sName = top.sName;
 
   top.equationsSolvedCopies = [
-    "-- from " ++ top.topName,
-    top.topName ++ ".ok = " ++ dName ++ ".ok && " ++ dsName ++ ".ok"
+    "-- from " ++ top.topName
   ] ++ d.equationsSolvedCopies ++ ds.equationsSolvedCopies;
 
-  top.eqVAR_s = d.eqVAR_s ++ " ++ " ++ ds.eqVAR_s;
-  top.eqLEX_s = d.eqLEX_s ++ " ++ " ++ ds.eqLEX_s;
+  top.eqVAR_s = d.eqVAR_s ++ ds.eqVAR_s;
+  top.eqLEX_s = d.eqLEX_s ++ ds.eqLEX_s;
+  top.eqOk = d.eqOk ++ " && " ++ ds.eqOk;
 }
 
 aspect production declsNil
 top::Decls ::=
 {
   top.equationsSolvedCopies = [
-    "-- from " ++ top.topName,
-    top.topName ++ ".ok = true"
+    "-- from " ++ top.topName
   ];
 
-  top.eqVAR_s = "[]";
-  top.eqLEX_s = "[]";
+  top.eqVAR_s = [];
+  top.eqLEX_s = [];
+
+  top.eqOk = "true";
 }
 
 --------------------------------------------------
 
-attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s occurs on Decl;
+attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqOk occurs on Decl;
 
 aspect production declDef
 top::Decl ::= b::ParBind
@@ -81,55 +86,62 @@ top::Decl ::= b::ParBind
   b.sName = top.sName;
 
   top.equationsSolvedCopies = [
-    "-- from " ++ top.topName,
-    top.topName ++ ".ok = " ++ bName ++ ".ok"
+    "-- from " ++ top.topName
   ] ++ b.equationsSolvedCopies;
 
-  top.eqVAR_s = b.eqVAR_s ++ " ++ " ++ b.eqVAR_s_def;
-  top.eqLEX_s = b.eqLEX_s ++ " ++ " ++ b.eqLEX_s_def;
+  top.eqVAR_s = b.eqVAR_s ++ b.eqVAR_s_def;
+  top.eqLEX_s = b.eqLEX_s ++ b.eqLEX_s_def;
+
+  top.eqOk = b.eqOk;
 }
 
 --------------------------------------------------
 
-attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s occurs on Expr;
+attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqOk, eqTy occurs on Expr;
 
 aspect production exprInt
 top::Expr ::= i::Integer
 {
   top.equationsSolvedCopies = [
-    "-- from " ++ top.topName,
-    top.topName ++ ".ty = tInt()",
-    top.topName ++ ".ok = true"
+    "-- from " ++ top.topName
   ];
 
-  top.eqVAR_s = "[]";
-  top.eqLEX_s = "[]";
+  top.eqVAR_s = [];
+  top.eqLEX_s = [];
+  
+  top.eqOk = "true";
+
+  top.eqTy = "tInt()";
 }
 
 aspect production exprTrue
 top::Expr ::=
 {
   top.equationsSolvedCopies = [
-    "-- from " ++ top.topName,
-    top.topName ++ ".ty = tBool()",
-    top.topName ++ ".ok = true"
+    "-- from " ++ top.topName
   ];
 
-  top.eqVAR_s = "[]";
-  top.eqLEX_s = "[]";
+  top.eqVAR_s = [];
+  top.eqLEX_s = [];
+
+  top.eqOk = "true";
+
+  top.eqTy = "tBool()";
 }
 
 aspect production exprFalse
 top::Expr ::=
 {
   top.equationsSolvedCopies = [
-    "-- from " ++ top.topName,
-    top.topName ++ ".ty = tBool()",
-    top.topName ++ ".ok = true"
+    "-- from " ++ top.topName
   ];
 
-  top.eqVAR_s = "[]";
-  top.eqLEX_s = "[]";
+  top.eqVAR_s = [];
+  top.eqLEX_s = [];
+
+  top.eqOk = "true";
+
+  top.eqTy = "tBool()";
 }
 
 aspect production exprVar
@@ -160,14 +172,15 @@ top::Expr ::= r::VarRef
     eqOkName ++ " = " ++ datumPairName ++ ".1",
     xName ++ " = " ++ datumPairName ++ ".2",
     ty_Name ++ " = " ++ datumPairName ++ ".3",
-    top.topName ++ ".ty = " ++ ty_Name,
-    pName ++ " = " ++ rName ++ ".p",
-    top.topName ++ ".ok = " ++ okTgtName ++ " && " ++ rName ++ ".ok && " ++
-                                                      eqOkName
+    pName ++ " = " ++ rName ++ ".p"
   ] ++ r.equationsSolvedCopies;
 
   top.eqVAR_s = r.eqVAR_s;
   top.eqLEX_s = r.eqLEX_s;
+
+  top.eqOk = okTgtName ++ " && " ++ r.eqOk ++ " && " ++ eqOkName;
+
+  top.eqTy = ty_Name;
 }
 
 aspect production exprAdd
@@ -183,14 +196,16 @@ top::Expr ::= e1::Expr e2::Expr
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
     top.topName ++ ".ty1 = " ++ e1Name ++ ".ty",
-    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty",
-    top.topName ++ ".ty = tInt()",
-    top.topName ++ ".ok = " ++ e1Name ++ ".ok && " ++ e2Name ++ ".ok && " ++
-      top.topName ++ ".ty1 == tInt() && " ++ top.topName ++ ".ty2 == tInt"
+    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty"
   ] ++ e1.equationsSolvedCopies ++ e2.equationsSolvedCopies;
 
-  top.eqVAR_s = e1.eqVAR_s ++ " ++ " ++ e2.eqVAR_s;
-  top.eqLEX_s = e1.eqLEX_s ++ " ++ " ++ e2.eqLEX_s;
+  top.eqVAR_s = e1.eqVAR_s ++ e2.eqVAR_s;
+  top.eqLEX_s = e1.eqLEX_s ++ e2.eqLEX_s;
+
+  top.eqOk = e1.eqOk ++ " && " ++ e2.eqOk ++ " && " ++ 
+            top.topName ++ ".ty1 == tInt() && " ++ top.topName ++ ".ty2 == tInt()";
+
+  top.eqTy = "tInt()";
 }
 
 aspect production exprSub
@@ -206,14 +221,16 @@ top::Expr ::= e1::Expr e2::Expr
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
     top.topName ++ ".ty1 = " ++ e1Name ++ ".ty",
-    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty",
-    top.topName ++ ".ty = tInt()",
-    top.topName ++ ".ok = " ++ e1Name ++ ".ok && " ++ e2Name ++ ".ok && " ++
-      top.topName ++ ".ty1 == tInt() && " ++ top.topName ++ ".ty2 == tInt"
+    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty"
   ] ++ e1.equationsSolvedCopies ++ e2.equationsSolvedCopies;
 
-  top.eqVAR_s = e1.eqVAR_s ++ " ++ " ++ e2.eqVAR_s;
-  top.eqLEX_s = e1.eqLEX_s ++ " ++ " ++ e2.eqLEX_s;
+  top.eqVAR_s = e1.eqVAR_s ++ e2.eqVAR_s;
+  top.eqLEX_s = e1.eqLEX_s ++ e2.eqLEX_s;
+
+  top.eqOk = e1.eqOk ++ " && " ++ e2.eqOk ++ " && " ++ 
+            top.topName ++ ".ty1 == tInt() && " ++ top.topName ++ ".ty2 == tInt()";
+
+  top.eqTy = "tInt()";
 }
 
 aspect production exprMul
@@ -229,14 +246,16 @@ top::Expr ::= e1::Expr e2::Expr
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
     top.topName ++ ".ty1 = " ++ e1Name ++ ".ty",
-    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty",
-    top.topName ++ ".ty = tInt()",
-    top.topName ++ ".ok = " ++ e1Name ++ ".ok && " ++ e2Name ++ ".ok && " ++
-      top.topName ++ ".ty1 == tInt() && " ++ top.topName ++ ".ty2 == tInt"
+    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty"
   ] ++ e1.equationsSolvedCopies ++ e2.equationsSolvedCopies;
 
-  top.eqVAR_s = e1.eqVAR_s ++ " ++ " ++ e2.eqVAR_s;
-  top.eqLEX_s = e1.eqLEX_s ++ " ++ " ++ e2.eqLEX_s;
+  top.eqVAR_s = e1.eqVAR_s ++ e2.eqVAR_s;
+  top.eqLEX_s = e1.eqLEX_s ++ e2.eqLEX_s;
+
+  top.eqOk = e1.eqOk ++ " && " ++ e2.eqOk ++ " && " ++ 
+            top.topName ++ ".ty1 == tInt() && " ++ top.topName ++ ".ty2 == tInt()";
+
+  top.eqTy = "tInt()";
 }
 
 aspect production exprDiv
@@ -252,14 +271,16 @@ top::Expr ::= e1::Expr e2::Expr
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
     top.topName ++ ".ty1 = " ++ e1Name ++ ".ty",
-    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty",
-    top.topName ++ ".ty = tInt()",
-    top.topName ++ ".ok = " ++ e1Name ++ ".ok && " ++ e2Name ++ ".ok && " ++
-      top.topName ++ ".ty1 == tInt() && " ++ top.topName ++ ".ty2 == tInt"
+    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty"
   ] ++ e1.equationsSolvedCopies ++ e2.equationsSolvedCopies;
 
-  top.eqVAR_s = e1.eqVAR_s ++ " ++ " ++ e2.eqVAR_s;
-  top.eqLEX_s = e1.eqLEX_s ++ " ++ " ++ e2.eqLEX_s;
+  top.eqVAR_s = e1.eqVAR_s ++ e2.eqVAR_s;
+  top.eqLEX_s = e1.eqLEX_s ++ e2.eqLEX_s;
+
+  top.eqOk = e1.eqOk ++ " && " ++ e2.eqOk ++ " && " ++ 
+            top.topName ++ ".ty1 == tInt() && " ++ top.topName ++ ".ty2 == tInt()";
+
+  top.eqTy = "tInt()";
 }
 
 aspect production exprAnd
@@ -275,14 +296,16 @@ top::Expr ::= e1::Expr e2::Expr
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
     top.topName ++ ".ty1 = " ++ e1Name ++ ".ty",
-    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty",
-    top.topName ++ ".ty = tBool()",
-    top.topName ++ ".ok = " ++ e1Name ++ ".ok && " ++ e2Name ++ ".ok && " ++
-      top.topName ++ ".ty1 == tBool() && " ++ top.topName ++ ".ty2 == tBool"
+    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty"
   ] ++ e1.equationsSolvedCopies ++ e2.equationsSolvedCopies;
 
-  top.eqVAR_s = e1.eqVAR_s ++ " ++ " ++ e2.eqVAR_s;
-  top.eqLEX_s = e1.eqLEX_s ++ " ++ " ++ e2.eqLEX_s;
+  top.eqVAR_s = e1.eqVAR_s ++ e2.eqVAR_s;
+  top.eqLEX_s = e1.eqLEX_s ++ e2.eqLEX_s;
+
+  top.eqOk = e1.eqOk ++ " && " ++ e2.eqOk ++ " && " ++ 
+            top.topName ++ ".ty1 == tBool() && " ++ top.topName ++ ".ty2 == tBool()";
+
+  top.eqTy = "tBool()";
 }
 
 aspect production exprOr
@@ -298,14 +321,16 @@ top::Expr ::= e1::Expr e2::Expr
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
     top.topName ++ ".ty1 = " ++ e1Name ++ ".ty",
-    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty",
-    top.topName ++ ".ty = tBool()",
-    top.topName ++ ".ok = " ++ e1Name ++ ".ok && " ++ e2Name ++ ".ok && " ++
-      top.topName ++ ".ty1 == tBool() && " ++ top.topName ++ ".ty2 == tBool"
+    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty"
   ] ++ e1.equationsSolvedCopies ++ e2.equationsSolvedCopies;
 
-  top.eqVAR_s = e1.eqVAR_s ++ " ++ " ++ e2.eqVAR_s;
-  top.eqLEX_s = e1.eqLEX_s ++ " ++ " ++ e2.eqLEX_s;
+  top.eqVAR_s = e1.eqVAR_s ++ e2.eqVAR_s;
+  top.eqLEX_s = e1.eqLEX_s ++ e2.eqLEX_s;
+
+  top.eqOk = e1.eqOk ++ " && " ++ e2.eqOk ++ " && " ++ 
+            top.topName ++ ".ty1 == tBool() && " ++ top.topName ++ ".ty2 == tBool()";
+
+  top.eqTy = "tBool()";
 }
 
 aspect production exprEq
@@ -321,14 +346,16 @@ top::Expr ::= e1::Expr e2::Expr
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
     top.topName ++ ".ty1 = " ++ e1Name ++ ".ty",
-    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty",
-    top.topName ++ ".ty = tBool()",
-    top.topName ++ ".ok = " ++ e1Name ++ ".ok && " ++ e2Name ++ ".ok && " ++
-      top.topName ++ ".ty1 == " ++ top.topName ++ ".ty2 == tBool"
+    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty"
   ] ++ e1.equationsSolvedCopies ++ e2.equationsSolvedCopies;
 
-  top.eqVAR_s = e1.eqVAR_s ++ " ++ " ++ e2.eqVAR_s;
-  top.eqLEX_s = e1.eqLEX_s ++ " ++ " ++ e2.eqLEX_s;
+  top.eqVAR_s = e1.eqVAR_s ++ e2.eqVAR_s;
+  top.eqLEX_s = e1.eqLEX_s ++ e2.eqLEX_s;
+
+  top.eqOk = e1.eqOk ++ " && " ++ e2.eqOk ++ " && " ++ 
+             top.topName ++ ".ty1 == " ++ top.topName ++ ".ty2 == tBool()";
+
+  top.eqTy = "tBool()";
 }
 
 aspect production exprApp
@@ -362,14 +389,16 @@ top::Expr ::= bs::SeqBinds e::Expr
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
     top.topName ++ ".s_let = mkScope()",
-    top.topName ++ ".s_let.var = " ++ bs.eqVAR_s_def ++ " ++ " ++ e.eqVAR_s,
-    top.topName ++ ".s_let.lex = " ++ bs.eqLEX_s_def ++ " ++ " ++ e.eqLEX_s,
-    top.topName ++ ".ty = " ++ eName ++ ".ty",
-    top.topName ++ ".ok = " ++ bsName ++ ".ok && " ++ eName ++ ".ok"
+    top.topName ++ ".s_let.var = [" ++ implode(", ", bs.eqVAR_s_def ++ e.eqVAR_s) ++ "]",
+    top.topName ++ ".s_let.lex = [" ++ implode(", ", bs.eqLEX_s_def ++ e.eqLEX_s) ++ "]"
   ] ++ bs.equationsSolvedCopies ++ e.equationsSolvedCopies;
 
   top.eqVAR_s = bs.eqVAR_s;
   top.eqLEX_s = bs.eqLEX_s;
+
+  top.eqOk = bs.eqOk ++ " && " ++ e.eqOk;
+
+  top.eqTy = e.eqTy;
 }
 
 aspect production exprLetRec
@@ -386,21 +415,22 @@ top::Expr ::= bs::ParBinds e::Expr
 
 --------------------------------------------------
 
-attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqVAR_s_def, eqLEX_s_def occurs on SeqBinds;
+attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqVAR_s_def, eqLEX_s_def, eqOk occurs on SeqBinds;
 
 aspect production seqBindsNil
 top::SeqBinds ::=
 {
   top.equationsSolvedCopies = [
-    "-- from " ++ top.topName,
-    top.topName ++ ".ok = true"
+    "-- from " ++ top.topName
   ];
 
-  top.eqVAR_s = "[]";
-  top.eqLEX_s = "[]";
+  top.eqVAR_s = [];
+  top.eqLEX_s = [];
 
-  top.eqVAR_s_def = "[]";
-  top.eqLEX_s_def = "[" ++ top.sName ++ "]";
+  top.eqVAR_s_def = [];
+  top.eqLEX_s_def = [ top.sName ];
+
+  top.eqOk = "true";
 }
 
 aspect production seqBindsOne
@@ -411,15 +441,16 @@ top::SeqBinds ::= s::SeqBind
   s.sName = top.sName;
 
   top.equationsSolvedCopies = [
-    "-- from " ++ top.topName,
-    top.topName ++ ".ok = " ++ sName ++ ".ok"
+    "-- from " ++ top.topName
   ] ++ s.equationsSolvedCopies;
 
   top.eqVAR_s = s.eqVAR_s;
   top.eqLEX_s = s.eqLEX_s;
 
   top.eqVAR_s_def = s.eqVAR_s_def;
-  top.eqLEX_s_def = top.sName ++ " :: " ++ s.eqLEX_s_def;
+  top.eqLEX_s_def = top.sName :: s.eqLEX_s_def;
+
+  top.eqOk = s.eqOk;
 }
 
 aspect production seqBindsCons
@@ -436,9 +467,8 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
     s_def_Name ++ "_ = mkScope()",
-    s_def_Name ++ ".lex = " ++ top.sName ++ " :: (" ++ s.eqLEX_s_def ++ " ++ " ++ ss.eqLEX_s ++ ")",
-    s_def_Name ++ ".var = " ++ s.eqVAR_s_def ++ " ++ " ++ ss.eqVAR_s,
-    top.topName ++ ".ok = " ++ sName ++ ".ok && " ++ ssName ++ ".ok"
+    s_def_Name ++ ".lex = [" ++ implode(", ", top.sName :: (s.eqLEX_s_def ++ ss.eqLEX_s)) ++ "]",
+    s_def_Name ++ ".var = [" ++ implode(", ", s.eqVAR_s_def ++ ss.eqVAR_s) ++ "]"
   ] ++ s.equationsSolvedCopies ++ ss.equationsSolvedCopies;
 
   top.eqVAR_s = s.eqVAR_s;
@@ -446,11 +476,13 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
 
   top.eqVAR_s_def = ss.eqVAR_s_def;
   top.eqLEX_s_def = ss.eqLEX_s_def;
+
+  top.eqOk = s.eqOk ++ " && " ++ ss.eqOk;
 }
 
 --------------------------------------------------
 
-attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqVAR_s_def, eqLEX_s_def occurs on SeqBind;
+attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqVAR_s_def, eqLEX_s_def, eqOk occurs on SeqBind;
 
 aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
@@ -462,17 +494,18 @@ top::SeqBind ::= id::String e::Expr
 
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
-    s_var_Name ++ " = mkScopeDatum(datumVar(\"" ++ id ++ "\", " ++ eName ++ ".ty))",
+    s_var_Name ++ " = mkScopeDatum(datumVar(\"" ++ id ++ "\", " ++ e.eqTy ++ "))",
     s_var_Name ++ ".lex = []",
-    s_var_Name ++ ".var = []",
-    top.topName ++ ".ok = " ++ eName ++ ".ok" 
+    s_var_Name ++ ".var = []"
   ] ++ e.equationsSolvedCopies;
 
   top.eqVAR_s = e.eqVAR_s;
   top.eqLEX_s = e.eqLEX_s;
 
-  top.eqVAR_s_def = "[" ++ s_var_Name ++ "]";
-  top.eqLEX_s_def = "[]";
+  top.eqVAR_s_def = [ s_var_Name ];
+  top.eqLEX_s_def = [];
+
+  top.eqOk = e.eqOk;
 }
 
 aspect production seqBindTyped
@@ -488,42 +521,43 @@ top::SeqBind ::= ty::Type id::String e::Expr
 
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
-    s_var_Name ++ " = mkScopeDatum(datumVar(\"" ++ id ++ "\", " ++ top.topName ++ ".ty))",
+    s_var_Name ++ " = mkScopeDatum(datumVar(\"" ++ id ++ "\", " ++ top.topName ++ ".ty1))",
     s_var_Name ++ ".lex = []",
     s_var_Name ++ ".var = []",
     
     top.topName ++ ".ty1 = " ++ tyannName ++ ".ty",
 
-    top.topName ++ ".ty2 = " ++ eName ++ ".ty",
-
-    top.topName ++ ".ok = " ++ eName ++ ".ok && " ++ top.topName ++ ".ty1 == " ++
-                                                     top.topName ++ ".ty2"
+    top.topName ++ ".ty2 = " ++ eName ++ ".ty"
   ] ++ ty.equationsSolvedCopies ++ e.equationsSolvedCopies;
 
-  top.eqVAR_s = e.eqVAR_s ++ " ++ " ++ ty.eqVAR_s;
-  top.eqLEX_s = e.eqLEX_s ++ " ++ " ++ ty.eqLEX_s;
+  top.eqVAR_s = e.eqVAR_s ++ ty.eqVAR_s;
+  top.eqLEX_s = e.eqLEX_s ++ ty.eqLEX_s;
 
-  top.eqVAR_s_def = "[" ++ s_var_Name ++ "]";
-  top.eqLEX_s_def = "[]";
+  top.eqVAR_s_def = [ s_var_Name ];
+  top.eqLEX_s_def = [];
+
+  top.eqOk = e.eqOk ++ " && " ++ top.topName ++ ".ty1 == " ++
+                                 top.topName ++ ".ty2";
 }
 
 --------------------------------------------------
 
-attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqVAR_s_def, eqLEX_s_def occurs on ParBinds;
+attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqVAR_s_def, eqLEX_s_def, eqOk occurs on ParBinds;
 
 aspect production parBindsNil
 top::ParBinds ::=
 {
   top.equationsSolvedCopies = [
-    "-- from " ++ top.topName,
-    top.topName ++ "ok = true"
+    "-- from " ++ top.topName
   ];
 
-  top.eqVAR_s = "[]";
-  top.eqLEX_s = "[]";
+  top.eqVAR_s = [];
+  top.eqLEX_s = [];
 
-  top.eqVAR_s_def = "[]";
-  top.eqLEX_s_def = "[]";
+  top.eqVAR_s_def = [];
+  top.eqLEX_s_def = [];
+
+  top.eqOk = "true";
 }
 
 aspect production parBindsCons
@@ -537,20 +571,21 @@ top::ParBinds ::= s::ParBind ss::ParBinds
   ss.sName = top.sName;
 
   top.equationsSolvedCopies = [
-    "-- from " ++ top.topName,
-    top.topName ++ ".ok = " ++ sName ++ ".ok && " ++ ssName ++ ".ok"
+    "-- from " ++ top.topName
   ] ++ s.equationsSolvedCopies ++ ss.equationsSolvedCopies;
 
-  top.eqVAR_s = s.eqVAR_s ++ " ++ " ++ ss.eqVAR_s;
-  top.eqLEX_s = s.eqLEX_s ++ " ++ " ++ ss.eqLEX_s;
+  top.eqVAR_s = s.eqVAR_s ++ ss.eqVAR_s;
+  top.eqLEX_s = s.eqLEX_s ++ ss.eqLEX_s;
 
-  top.eqVAR_s_def = s.eqVAR_s_def ++ " ++ " ++ ss.eqVAR_s_def;
-  top.eqLEX_s_def = s.eqLEX_s_def ++ " ++ " ++ ss.eqLEX_s_def;
+  top.eqVAR_s_def = s.eqVAR_s_def ++ ss.eqVAR_s_def;
+  top.eqLEX_s_def = s.eqLEX_s_def ++ ss.eqLEX_s_def;
+
+  top.eqOk = s.eqOk ++ " && " ++ ss.eqOk;
 }
 
 --------------------------------------------------
 
-attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqVAR_s_def, eqLEX_s_def occurs on ParBind;
+attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqVAR_s_def, eqLEX_s_def, eqOk occurs on ParBind;
 
 aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
@@ -562,17 +597,18 @@ top::ParBind ::= id::String e::Expr
 
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
-    s_var_Name ++ " = mkScopeDatum(datumVar(\"" ++ id ++ "\", " ++ eName ++ ".ty))",
+    s_var_Name ++ " = mkScopeDatum(datumVar(\"" ++ id ++ "\", " ++ e.eqTy ++ "))",
     s_var_Name ++ ".lex = []",
-    s_var_Name ++ ".var = []",
-    top.topName ++ ".ok = " ++ eName ++ ".ok" 
+    s_var_Name ++ ".var = []"
   ] ++ e.equationsSolvedCopies;
 
   top.eqVAR_s = e.eqVAR_s;
   top.eqLEX_s = e.eqLEX_s;
 
-  top.eqVAR_s_def = "[" ++ s_var_Name ++ "]";
-  top.eqLEX_s_def = "[]";
+  top.eqVAR_s_def = [ s_var_Name ];
+  top.eqLEX_s_def = [];
+
+  top.eqOk = e.eqOk;
 }
 
 aspect production parBindTyped
@@ -588,28 +624,28 @@ top::ParBind ::= ty::Type id::String e::Expr
 
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
-    s_var_Name ++ " = mkScopeDatum(datumVar(\"" ++ id ++ "\", " ++ top.topName ++ ".ty))",
+    s_var_Name ++ " = mkScopeDatum(datumVar(\"" ++ id ++ "\", " ++ top.topName ++ ".ty1))",
     s_var_Name ++ ".lex = []",
     s_var_Name ++ ".var = []",
     
     top.topName ++ ".ty1 = " ++ tyannName ++ ".ty",
 
-    top.topName ++ ".ty2 = " ++ eName ++ ".ty",
-
-    top.topName ++ ".ok = " ++ eName ++ ".ok && " ++ top.topName ++ ".ty1 == " ++
-                                                     top.topName ++ ".ty2"
+    top.topName ++ ".ty2 = " ++ eName ++ ".ty"
   ] ++ ty.equationsSolvedCopies ++ e.equationsSolvedCopies;
 
-  top.eqVAR_s = e.eqVAR_s ++ " ++ " ++ ty.eqVAR_s;
-  top.eqLEX_s = e.eqLEX_s ++ " ++ " ++ ty.eqLEX_s;
+  top.eqVAR_s = e.eqVAR_s ++ ty.eqVAR_s;
+  top.eqLEX_s = e.eqLEX_s ++ ty.eqLEX_s;
 
-  top.eqVAR_s_def = "[" ++ s_var_Name ++ "]";
-  top.eqLEX_s_def = "[]";
+  top.eqVAR_s_def = [ s_var_Name ];
+  top.eqLEX_s_def = [];
+
+  top.eqOk = e.eqOk ++ " && " ++ top.topName ++ ".ty1 == " ++
+                                 top.topName ++ ".ty2";
 }
 
 --------------------------------------------------
 
-attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s occurs on ArgDecl;
+attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqOk, eqTy occurs on ArgDecl;
 
 aspect production argDecl
 top::ArgDecl ::= id::String tyann::Type
@@ -621,45 +657,51 @@ top::ArgDecl ::= id::String tyann::Type
 
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
-    s_var_Name ++ " = mkScopeDatum(datumVar(\"" ++ id ++ "\", " ++ tyannName ++ ".ty))",
+    s_var_Name ++ " = mkScopeDatum(datumVar(\"" ++ id ++ "\", " ++ tyann.eqTy ++ "))",
     s_var_Name ++ ".var = []",
-    s_var_Name ++ ".lex = []",
-    top.topName ++ ".ty = " ++ tyannName ++ ".ty",
-    top.topName ++ ".ok = true"
+    s_var_Name ++ ".lex = []"
   ] ++ tyann.equationsSolvedCopies;
 
-  top.eqVAR_s = "(" ++ s_var_Name ++ " :: " ++ tyann.eqVAR_s ++ ")";
+  top.eqVAR_s = s_var_Name  :: tyann.eqVAR_s;
   top.eqLEX_s = tyann.eqLEX_s;
+
+  top.eqOk = "true";
+
+  top.eqTy = tyann.eqTy;
 }
 
 --------------------------------------------------
 
-attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s occurs on Type;
+attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqOk, eqTy occurs on Type;
 
 aspect production tInt
 top::Type ::=
 {
   top.equationsSolvedCopies = [
-    "-- from " ++ top.topName,
-    top.topName ++ ".ty = tInt()",
-    top.topName ++ ".ok = true"
+    "-- from " ++ top.topName
   ];
 
-  top.eqVAR_s = "[]";
-  top.eqLEX_s = "[]";
+  top.eqVAR_s = [];
+  top.eqLEX_s = [];
+
+  top.eqOk = "true";
+
+  top.eqTy = "tInt()";
 }
 
 aspect production tBool
 top::Type ::=
 {
   top.equationsSolvedCopies = [
-    "-- from " ++ top.topName,
-    top.topName ++ ".ty = tBool()",
-    top.topName ++ ".ok = true"
+    "-- from " ++ top.topName
   ];
 
-  top.eqVAR_s = "[]";
-  top.eqLEX_s = "[]";
+  top.eqVAR_s = [];
+  top.eqLEX_s = [];
+
+  top.eqOk = "true";
+
+  top.eqTy = "tBool()";
 }
 
 aspect production tFun
@@ -677,16 +719,15 @@ top::Type ::= tyann1::Type tyann2::Type
 
     top.topName ++ ".ty1 = " ++ tyann1Name ++ ".ty",
 
-    top.topName ++ ".ty1 = " ++ tyann1Name ++ ".ty",
-
-    top.topName ++ ".ty = tFun(" ++ top.topName ++ ".ty1, " ++
-                                    top.topName ++ ".ty2)",
-
-    top.topName ++ ".ok = true"
+    top.topName ++ ".ty1 = " ++ tyann1Name ++ ".ty"
   ] ++ tyann1.equationsSolvedCopies ++ tyann2.equationsSolvedCopies;
 
-  top.eqVAR_s = tyann1.eqVAR_s ++ " ++ " ++ tyann2.eqVAR_s;
-  top.eqLEX_s = tyann1.eqLEX_s ++ " ++ " ++ tyann2.eqLEX_s;
+  top.eqVAR_s = tyann1.eqVAR_s ++ tyann2.eqVAR_s;
+  top.eqLEX_s = tyann1.eqLEX_s ++ tyann2.eqLEX_s;
+
+  top.eqOk = tyann1.eqOk ++ " && " ++ tyann2.eqOk;
+
+  top.eqTy = "tFun(" ++ tyann1.eqTy ++ ", " ++ tyann2.eqTy ++ ")";
 }
 
 aspect production tErr
@@ -694,17 +735,20 @@ top::Type ::=
 {
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
-    top.topName ++ ".ty = tErr()",
-    top.topName ++ ".ok = false"
+    top.topName ++ ".ty = tErr()"
   ];
 
-  top.eqVAR_s = "[]";
-  top.eqLEX_s = "[]";
+  top.eqVAR_s = [];
+  top.eqLEX_s = [];
+
+  top.eqOk = "false";
+
+  top.eqTy = "tErr()";
 }
 
 --------------------------------------------------
 
-attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s occurs on VarRef;
+attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqOk occurs on VarRef;
 
 aspect production varRef
 top::VarRef ::= x::String
@@ -721,11 +765,11 @@ top::VarRef ::= x::String
                       ")",
 
     top.topName ++ ".onlyResult = onlyPath(" ++ xvars_Name ++ ")",
-    top.topName ++ ".p = " ++ top.topName ++ ".onlyResult.2",
-
-    top.topName ++ ".ok = " ++ top.topName ++ ".onlyResult.1" 
+    top.topName ++ ".p = " ++ top.topName ++ ".onlyResult.2"
   ];
 
-  top.eqVAR_s = "[]";
-  top.eqLEX_s = "[]";
+  top.eqVAR_s = [];
+  top.eqLEX_s = [];
+
+  top.eqOk = top.topName ++ ".onlyResult.1";
 }
