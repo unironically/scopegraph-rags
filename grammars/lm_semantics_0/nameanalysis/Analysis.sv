@@ -428,25 +428,32 @@ top::Expr ::= bs::SeqBinds e::Expr
   s_let.imp = []; s_let.mod = [];
 }
 
--- associations todo
 aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  top.VAR_s = [];
-  
+  -- new s_let
   local s_let::SGScope = mkScope(location=top.location);
-  s_let.lex = [top.s];
-  s_let.var = bs.VAR_s;
-  s_let.imp = []; s_let.mod = [];
 
+  -- s_let -[ LEX ]-> s, seq-binds(s_let, bs, s_let), expr(s_let, e, ty)
+  s_let.lex = top.s :: (bs.LEX_s ++ bs.LEX_s ++ e.LEX_s);
+  s_let.var = bs.VAR_s ++ bs.VAR_s_def ++ e.VAR_s;
+  
+  -- par-binds(s_let, bs, s_let)
   bs.s = s_let;
 
+  -- expr(s_let, e, ty)
   e.s = s_let;
-  local ty::Type = e.ty;
+  top.ty = e.ty;
 
-  top.ty = ^ty;
-
+  -- ok-ness
   top.ok = bs.ok && e.ok;
+
+  -- no assertions on s, s not passed
+  top.VAR_s = [];
+  top.LEX_s = [];
+
+  -- ignore
+  s_let.imp = []; s_let.mod = [];
 }
 
 -- associations todo

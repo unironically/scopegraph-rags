@@ -372,7 +372,30 @@ top::Expr ::= bs::SeqBinds e::Expr
 aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  top.equations = ["TODO"];
+  local bsName::String = genName("seqBinds");
+  local eName::String = genName("expr");
+
+  bs.topName = bsName;
+  e.topName = eName;
+
+  top.equations = [
+    "-- from " ++ top.topName,
+
+    top.topName ++ ".s_let = mkScope()",
+    
+    top.topName ++ ".s_let.var = " ++ top.topName ++ ".s :: (" ++ bsName ++ ".VAR_s ++ " ++ bsName ++ ".VAR_s_def" ++ eName ++ ".VAR_s)",
+    top.topName ++ ".s_let.lex = " ++ bsName ++ ".LEX_s ++ " ++ bsName ++ ".LEX_s_def" ++ eName ++ ".LEX_s",
+
+    bsName ++ ".s = " ++ top.topName ++ ".s",
+    
+    eName ++ ".s = " ++ top.topName ++ ".s_let",
+    top.topName ++ ".ty = " ++ eName ++ ".ty",
+    
+    top.topName ++ ".VAR_s = []",
+    top.topName ++ ".LEX_s = []",
+    top.topName ++ ".ok = " ++ bsName ++ ".ok && " ++ eName ++ ".ok"
+
+  ] ++ bs.equations ++ e.equations;
 }
 
 aspect production exprLetPar

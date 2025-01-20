@@ -406,7 +406,26 @@ top::Expr ::= bs::SeqBinds e::Expr
 aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  top.equationsSolvedCopies = ["TODO"];
+  local bsName::String = bs.topName;
+  local eName::String = e.topName;
+
+  bs.sName = top.topName ++ ".s_let";
+
+  e.sName = top.topName ++ ".s_let";
+
+  top.equationsSolvedCopies = [
+    "-- from " ++ top.topName,
+    top.topName ++ ".s_let = mkScope()",
+    top.topName ++ ".s_let.var = [" ++ implode(", ", bs.eqVAR_s ++ bs.eqVAR_s_def ++ e.eqVAR_s) ++ "]",
+    top.topName ++ ".s_let.lex = [" ++ implode(", ", bs.eqLEX_s ++ bs.eqLEX_s_def ++ e.eqLEX_s) ++ "]"
+  ] ++ bs.equationsSolvedCopies ++ e.equationsSolvedCopies;
+
+  top.eqVAR_s = [];
+  top.eqLEX_s = [];
+
+  top.eqOk = bs.eqOk ++ " && " ++ e.eqOk;
+
+  top.eqTy = e.eqTy;
 }
 
 aspect production exprLetPar

@@ -48,7 +48,7 @@ expr(s, e, ty) :- e match {
       ty == BOOL()
 
   | ExprVar(r) -> 
-      {p, d, ty'}
+      {p, d, x, ty'}
         var-ref(s, r, p),
         datumOf(p, d),
         d == DatumVar(x, ty'),
@@ -134,7 +134,7 @@ expr(s, e, ty) :- e match {
       {s_fun, ty1, ty2}
         new s_fun,
         s_fun -[ `LEX ]-> s,
-        arg-decl(s_fun, d, ty1)
+        arg-decl(s_fun, d, ty1),
         expr(s_fun, e, ty2),
         ty == FUN(ty1, ty2)
 
@@ -219,7 +219,14 @@ par-bind(s, b, s_def) :- b match {
     
     DefBind(x, e) ->
       {s_var, ty}
+        
+        // works:
         new s_var -> DatumVar(x, ty),
+        
+        // doesn't work:
+        // new s_var,
+        // s_var  -> DatumVar(x, ty),
+
         s_def -[ `VAR ]-> s_var,
         expr(s, e, ty)
   
