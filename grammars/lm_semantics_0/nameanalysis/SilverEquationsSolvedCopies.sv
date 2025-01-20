@@ -16,6 +16,8 @@ synthesized attribute eqOk::String;
 
 synthesized attribute eqTy::String;
 
+synthesized attribute eqP::String;
+
 --------------------------------------------------
 
 attribute equationsSolvedCopies occurs on Main;
@@ -172,7 +174,7 @@ top::Expr ::= r::VarRef
     eqOkName ++ " = " ++ datumPairName ++ ".1",
     xName ++ " = " ++ datumPairName ++ ".2",
     ty_Name ++ " = " ++ datumPairName ++ ".3",
-    pName ++ " = " ++ rName ++ ".p"
+    pName ++ " = " ++ r.eqP
   ] ++ r.equationsSolvedCopies;
 
   top.eqVAR_s = r.eqVAR_s;
@@ -195,8 +197,8 @@ top::Expr ::= e1::Expr e2::Expr
 
   top.equationsSolvedCopies = [
     "-- from " ++ top.topName,
-    top.topName ++ ".ty1 = " ++ e1Name ++ ".ty",
-    top.topName ++ ".ty2 = " ++ e2Name ++ ".ty"
+    top.topName ++ ".ty1 = " ++ e1.eqTy,
+    top.topName ++ ".ty2 = " ++ e2.eqTy
   ] ++ e1.equationsSolvedCopies ++ e2.equationsSolvedCopies;
 
   top.eqVAR_s = e1.eqVAR_s ++ e2.eqVAR_s;
@@ -748,7 +750,7 @@ top::Type ::=
 
 --------------------------------------------------
 
-attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqOk occurs on VarRef;
+attribute equationsSolvedCopies, sName, eqVAR_s, eqLEX_s, eqOk, eqP occurs on VarRef;
 
 aspect production varRef
 top::VarRef ::= x::String
@@ -764,12 +766,13 @@ top::VarRef ::= x::String
                         "\\d -> case d of datumVar(x, _) -> x = \"" ++ x ++ "\" | _ -> false end" ++
                       ")",
 
-    top.topName ++ ".onlyResult = onlyPath(" ++ xvars_Name ++ ")",
-    top.topName ++ ".p = " ++ top.topName ++ ".onlyResult.2"
+    top.topName ++ ".onlyResult = onlyPath(" ++ xvars_Name ++ ")"
   ];
 
   top.eqVAR_s = [];
   top.eqLEX_s = [];
 
   top.eqOk = top.topName ++ ".onlyResult.1";
+
+  top.eqP = top.topName ++ ".onlyResult.2";
 }
