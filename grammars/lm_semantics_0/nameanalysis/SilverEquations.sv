@@ -331,7 +331,32 @@ top::Expr ::= e1::Expr e2::Expr
 aspect production exprApp
 top::Expr ::= e1::Expr e2::Expr
 {
-  top.equations = ["TODO"];
+  local e1Name::String = genName("expr");
+  local e2Name::String = genName("expr");
+  local eqName::String = top.topName ++ ".eqPair";
+
+  e1.topName = e1Name;
+  e2.topName = e2Name;
+
+  top.equations = [
+    e1Name ++ ".s = " ++ top.topName ++ ".s",
+    e2Name ++ ".s = " ++ top.topName ++ ".s",
+
+    top.topName ++ ".VAR_s = " ++ e1Name ++ ".VAR_s ++ " ++ e2Name ++ ".VAR_s",
+    top.topName ++ ".LEX_s = " ++ e1Name ++ ".LEX_s ++ " ++ e2Name ++ ".LEX_s",
+
+    eqName ++ " = case " ++ e1Name ++ ".ty, " ++ e2Name ++ ".ty of " ++
+                  "| tFun(t1, t2), t3 when t1 == t3 -> (true, t3) " ++
+                  "| _, _ -> (false, tErr()) " ++
+                  "end",
+
+    top.topName ++ ".ty = " ++ eqName ++ ".2",
+
+    top.topName ++ ".ok = " ++ e1Name ++ ".ok && " ++
+                               e2Name ++ ".ok && " ++
+                               eqName ++ ".1"
+
+  ];
 }
 
 aspect production exprIf
@@ -343,7 +368,23 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 aspect production exprFun
 top::Expr ::= d::ArgDecl e::Expr
 {
-  top.equations = ["TODO"];
+  local dName::String = genName("argDecl");
+  local eName::String = genName("expr");
+
+  d.topName = dName;
+  e.topName = eName;
+
+  top.equations = [
+    "-- from " ++ top.topName,
+    top.topName ++ ".s_fun = mkScope()",
+    top.topName ++ ".s_fun.var = " ++ dName ++ ".VAR_s ++ " ++ eName ++ ".VAR_s",
+    top.topName ++ ".s_fun.lex = " ++ top.topName ++ ".s :: (" ++ dName ++ ".LEX_s ++ " ++ eName ++ ".LEX_s)",
+    dName ++ ".s = " ++ top.topName ++ ".s_fun",
+    eName ++ ".s = " ++ top.topName ++ ".s_fun",
+    top.topName ++ ".ty = tFun(" ++ dName ++ ".ty, " ++ eName ++ ".ty)",
+    top.topName ++ ".ok = " ++ dName ++ ".ok && " ++ eName ++ ".ok"
+  ] ++ d.equations ++ e.equations;
+
 }
 
 aspect production exprLet

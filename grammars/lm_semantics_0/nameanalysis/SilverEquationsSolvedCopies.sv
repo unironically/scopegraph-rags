@@ -363,7 +363,27 @@ top::Expr ::= e1::Expr e2::Expr
 aspect production exprApp
 top::Expr ::= e1::Expr e2::Expr
 {
-  top.equationsSolvedCopies = ["TODO"];
+  local e1Name::String = e1.topName;
+  local e2Name::String = e2.topName;
+  local eqName::String = top.topName ++ ".eqPair";
+
+  e1.sName = top.sName;
+  e2.sName = top.sName;
+
+  top.equationsSolvedCopies = [
+    eqName ++ " = case " ++ e1.eqTy ++ ", " ++ e2.eqTy ++ " of " ++
+                  "| tFun(t1, t2), t3 when t1 == t3 -> (true, t3) " ++
+                  "| _, _ -> (false, tErr()) " ++
+                  "end"
+  ] ++ e1.equationsSolvedCopies ++ e2.equationsSolvedCopies;
+
+  top.eqVAR_s = e1.eqVAR_s ++ e2.eqVAR_s;
+  top.eqLEX_s = e1.eqLEX_s ++ e2.eqLEX_s;
+
+  top.eqOk = e1.eqOk ++ " && " ++ e2.eqOk;
+
+  top.eqTy = e1Name ++ ".2";
+
 }
 
 aspect production exprIf
@@ -375,7 +395,25 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 aspect production exprFun
 top::Expr ::= d::ArgDecl e::Expr
 {
-  top.equationsSolvedCopies = ["TODO"];
+  local dName::String = d.topName;
+  local eName::String = e.topName;
+
+  d.sName = top.topName ++ ".s_fun";
+  e.sName = top.topName ++ ".s_fun";
+
+  top.equationsSolvedCopies = [
+    "-- from " ++ top.topName,
+    top.topName ++ ".s_fun = mkScope()",
+    top.topName ++ ".s_fun.var = [" ++ implode (", ", d.eqVAR_s ++ e.eqVAR_s) ++ "]",
+    top.topName ++ ".s_fun.lex = [" ++ implode (", ", top.sName :: (d.eqLEX_s ++ e.eqLEX_s)) ++ "]"
+  ] ++ d.equationsSolvedCopies ++ e.equationsSolvedCopies;
+
+  top.eqVAR_s = [];
+  top.eqLEX_s = [];
+
+  top.eqOk = d.eqOk ++ " && " ++ e.eqOk;
+
+  top.eqTy = e.eqTy;
 }
 
 aspect production exprLet

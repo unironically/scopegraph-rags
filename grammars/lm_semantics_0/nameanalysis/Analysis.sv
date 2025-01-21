@@ -344,8 +344,8 @@ top::Expr ::= e1::Expr e2::Expr
 aspect production exprApp
 top::Expr ::= e1::Expr e2::Expr
 {
-  top.VAR_s = [];
-  top.LEX_s = [];
+  top.VAR_s = e1.VAR_s ++ e2.VAR_s;
+  top.LEX_s = e1.LEX_s ++ e2.LEX_s;
   
   e1.s = top.s;
   e2.s = top.s;
@@ -435,7 +435,7 @@ top::Expr ::= bs::ParBinds e::Expr
   local s_let::SGScope = mkScope(location=top.location);
 
   -- s_let -[ LEX ]-> s, seq-binds(s_let, bs, s_let), expr(s_let, e, ty)
-  s_let.lex = top.s :: (bs.LEX_s ++ bs.LEX_s ++ e.LEX_s);
+  s_let.lex = top.s :: (bs.LEX_s ++ bs.LEX_s_def ++ e.LEX_s);
   s_let.var = bs.VAR_s ++ bs.VAR_s_def ++ e.VAR_s;
   
   -- par-binds(s_let, bs, s_let)
@@ -459,22 +459,28 @@ top::Expr ::= bs::ParBinds e::Expr
 -- associations todo
 aspect production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
-{
-  top.VAR_s = [];
-  
+{ 
+  -- new s_let
   local s_let::SGScope = mkScope(location=top.location);
-  s_let.lex = [top.s];
-  s_let.var = bs.VAR_s;
-  s_let.imp = []; s_let.mod = [];
 
-  bs.s = top.s;
-
-  e.s = s_let;
-  local ty::Type = e.ty;
-
-  top.ty = ^ty;
+  -- s_let -[ LEX ]-> s, par-binds(s, bs, s_let), expr(s_let e ty)
+  s_let.lex = top.s :: (bs.LEX_s_def ++ e.LEX_s);
+  s_let.var = bs.VAR_s_def ++ e.VAR_s;
   
+  -- expr(s_let, e ty)
+  e.s = s_let;
+  top.ty = e.ty;
+  
+  -- ok-ness
   top.ok = bs.ok && e.ok;
+  
+  -- s is passed down to bs as s
+  bs.s = top.s;
+  top.VAR_s = bs.VAR_s;
+  top.LEX_s = bs.LEX_s;
+
+  -- ignore
+  s_let.imp = []; s_let.mod = [];
 }
 
 --------------------------------------------------
