@@ -17,8 +17,9 @@ top::Path ::= s::Decorated SGScope lab::String rest::Path
 --------------------------------------------------
 
 synthesized attribute paths::([Path] ::= Decorated SGScope (Boolean ::= SGDatum));
+synthesized attribute start::Decorated DFAState;
 
-nonterminal DFA with paths;
+nonterminal DFA with paths, start;
 
 abstract production varRefDFA
 top::DFA ::=
@@ -49,6 +50,7 @@ top::DFA ::=
   sink.lexT = sink;
 
   top.paths = state0.paths;
+  top.start = state0;
 }
 
 abstract production modRefDFA
@@ -80,6 +82,7 @@ top::DFA ::=
   sink.lexT = sink;
 
   top.paths = state0.paths;
+  top.start = state0;
 }
 
 --------------------------------------------------

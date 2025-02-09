@@ -263,7 +263,7 @@ type(s, tyann, ty) :- tyann match {
         ty == BOOL()
   
   | TArrow(tyann1, tyann2) ->
-        {ty1, ty2}
+      {ty1, ty2}
         type(s, tyann1, ty1),
         type(s, tyann2, ty2),
         ty == FUN(ty1, ty2)
@@ -275,9 +275,9 @@ type(s, tyann, ty) :- tyann match {
 var-ref(s, r, p) :- r match {
     
     VarRef(name) ->
-        {vars, xvars, xvars'}
+      {vars, xvars, xvars'}
         query s `LEX* `VAR as vars,
-        filter vars(DatumVar(x', _) where x' == name) xvars,
+        filter vars (DatumVar(x', _) where x' == name) xvars,
         min-refs(xvars, xvars'),
         only(xvars', p)
 

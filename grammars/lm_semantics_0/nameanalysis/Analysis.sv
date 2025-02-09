@@ -570,7 +570,7 @@ aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
 {
   -- new s_var -> DatumVar(x, ty)
-  local s_var::SGScope = mkScopeDatum(datumVar(id, e.ty, location=top.location),
+  local s_var::SGScope = mkScopeDatum(datumVar(id, ^ty, location=top.location),
                                       location=top.location);
 
   -- no assertions for s_var, nor is it passed
@@ -579,6 +579,7 @@ top::SeqBind ::= id::String e::Expr
 
   -- expr(s, e, ty)
   e.s = top.s;
+  local ty::Type = e.ty;
 
   -- s is passed to expr as s
   top.VAR_s = e.VAR_s;
@@ -871,17 +872,22 @@ attribute ok occurs on VarRef;
 aspect production varRef
 top::VarRef ::= name::String
 {
+  -- nwce
+  local nwce::Boolean = nwce_(top.s, varRefDFA());
+
   -- query s `LEX* `VAR as vars
   -- filter vars (DatumVar(x', _) where x' == x) xvars
   -- min-refs(xvars, xvars')
-  local xvars_::[Path] = query(
-    top.s, 
-    varRefDFA(), 
-    \d::SGDatum -> case d of 
-                   | datumVar(x, _) -> x == name 
-                   | _ -> false 
-                   end
-  );
+  local xvars_::[Path] = if nwce 
+                         then query(
+                                top.s, 
+                                varRefDFA(), 
+                                \d::SGDatum -> case d of 
+                                               | datumVar(x, _) -> x == name 
+                                               | _ -> false 
+                                               end
+                                )
+                         else [];
 
   -- only(xvars_, p)
   local onlyResult::(Boolean, Path) = onlyPath(xvars_);

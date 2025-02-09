@@ -42,6 +42,30 @@ top::SGDatum ::=
 
 --------------------------------------------------
 
+-- nwce
+
+function nwce_
+Boolean ::= s::Decorated SGScope 
+            dfa::DFA
+{
+  return nwceState(s, dfa.start);
+}
+
+function nwceState
+Boolean ::= s::Decorated SGScope 
+            state::Decorated DFAState
+{
+  return
+    case state of
+      stateVar()   -> all(map(nwceState(_, state.varT), s.var)) &&
+                      all(map(nwceState(_, state.lexT), s.lex))
+    | stateFinal() -> true
+    | stateSink()  -> true
+    | stateMod()   -> true -- ignore for now
+    end;
+}
+
+--------------------------------------------------
 
 {-
 tgt(p,s) :- p match
