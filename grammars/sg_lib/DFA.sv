@@ -153,7 +153,7 @@ top::DFAState ::=
     else if !null(impRes) then impRes
     else lexRes
 
-    end end end;
+    end end end;                                                                
 }
 
 abstract production stateFinal

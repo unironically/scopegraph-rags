@@ -188,7 +188,7 @@ par-binds(inh: s::scope, bs, syn: s_def::scope) :- bs match {
   }.
 
 syntax:
-par-bind(inh: s::scope, b, syn: s_def::scope) :- b match {
+par-bind(inh: s::scope, b, inh: s_def::scope) :- b match {
     
     DefBind(x::string, e::expr) ->
       {s_var::scope, ty::type}

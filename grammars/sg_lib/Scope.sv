@@ -22,7 +22,6 @@ top::SGScope ::=
 abstract production mkScopeDatum
 top::SGScope ::= datum::SGDatum
 {
-  top.id = genInt();
   top.datum = ^datum;
 }
 
@@ -44,26 +43,62 @@ top::SGDatum ::=
 
 -- nwce
 
-function nwce_
-Boolean ::= s::Decorated SGScope 
-            dfa::DFA
+
+production nwce
+FunResult<Boolean> ::= 
+  rx::Regex
+  s::Decorated SGScope 
 {
-  return nwceState(s, dfa.start);
+  top.ret =
+    case rx of
+    | emptySet() -> true
+    | epsilon()  -> case s.datum of _ -> true end
+    | _          -> all(map(nwce(rx.deriv("LEX"), _), s.lex).ret).ret &&
+                    all(map(nwce(rx.deriv("IMP"), _), s.imp).ret).ret &&
+                    all(map(nwce(rx.deriv("VAR"), _), s.var).ret).ret &&
+                    all(map(nwce(rx.deriv("MOD"), _), s.mod).ret).ret
+    end;
+  top.ok = top.ret;
 }
 
-function nwceState
-Boolean ::= s::Decorated SGScope 
-            state::Decorated DFAState
-{
-  return
-    case state of
-      stateVar()   -> all(map(nwceState(_, state.varT), s.var)) &&
-                      all(map(nwceState(_, state.lexT), s.lex))
-    | stateFinal() -> true
-    | stateSink()  -> true
-    | stateMod()   -> true -- ignore for now
-    end;
-}
+
+{-
+nwce :: Regex -> Scope -> Bool
+
+nwce \emptyset _ = true
+nwce \epsilon  s = case s.datum of _ -> true end
+nwce rx        s = all . map (nwce (deriv "LEX" rx)) s.lex &&
+                   all . map (nwce (deriv "VAR" rx)) s.var &&
+                   all . map (nwce (deriv "IMP" rx)) s.imp &&
+                   all . map (nwce (deriv "MOD" rx)) s.mod
+-}
+
+
+{-
+nwce :: Regex -> Scope -> Bool
+
+nwce \emptyset _ = true
+nwce \epsilon s  = demand s.datum; true
+nwce rx s        = \forall l \in \mathcal{L} .
+                     \forall s' in s.l .
+                       nwce(s', deriv l rx)
+
+                 -- or --
+
+                 = \forall s' in s.lex . nwce(s', deriv LEX rx) &&
+                   \forall s' in s.imp . nwce(s', deriv IMP rx) &&
+                   \forall s' in s.var . nwce(s', deriv VAR rx) &&
+                   \forall s' in s.mod . nwce(s', deriv MOD rx)
+-}
+
+
+{-
+nwce(_, \emptyset).
+nwce(s, \epsilon) :- demand s.datum
+nwce(s, rx) :- ?
+-}
+
+
 
 --------------------------------------------------
 
