@@ -4,7 +4,7 @@ imports statix_translate:lang:concretesyntax;
 imports statix_translate:lang:abstractsyntax;
 
 --import statix_translate:translation_two;
---import statix_translate:to_ministatix;
+import statix_translate:to_ministatix;
 
 parser parse :: Module_c { statix_translate:lang:concretesyntax; }
 
@@ -29,7 +29,11 @@ IO<Integer> ::= largs::[String]
             print("[✔] Parse success\n");
             --print(ast.pp);
             --writeFile("ag.sv", ast.moduleTrans);
-            --writeFile("statix-spec.mstx", ast.mstxPP);
+            
+            hasOutDir::Boolean <- isDirectory("out");
+            mkdirSucc::Boolean <- if hasOutDir then do {return true;} else mkdir("out");
+            writeFile("out/statix-spec.mstx", ast.mstxPP);
+
             --writeFile("preds.txt", ast.moduleTrans);
             return 0;
           }

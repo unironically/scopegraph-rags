@@ -127,7 +127,10 @@ attribute mstx occurs on NameList;
 
 aspect production nameListCons
 top::NameList ::= name::Name names::NameList
-{ top.mstx = cat(name.mstx, cat(text(", "), names.mstx)); }
+{ 
+  top.mstx = cat(name.mstx, case names of nameListNil() -> text("") 
+                                        | _ -> cat(text(", "), names.mstx) end); 
+}
 
 aspect production nameListOne
 top::NameList ::= name::Name
@@ -159,15 +162,15 @@ top::Name ::= name::String ty::TypeAnn
 
 attribute mstx occurs on TypeAnn;
 
-aspect production scopeType
-top::TypeAnn ::=
-{ top.mstx = text(""); }
-
 aspect production nameType
 top::TypeAnn ::= name::String
 { top.mstx = text(""); }
 
 aspect production listType
+top::TypeAnn ::= ty::TypeAnn
+{ top.mstx = text(""); }
+
+aspect production setType
 top::TypeAnn ::= ty::TypeAnn
 { top.mstx = text(""); }
 
@@ -211,7 +214,8 @@ attribute mstx occurs on TermList;
 
 aspect production termListCons
 top::TermList ::= t::Term ts::TermList
-{ top.mstx = cat(t.mstx, case ts of termListNil() -> ts.mstx | _ -> cat(text(", "), ts.mstx) end); }
+{ top.mstx = cat(t.mstx, case ts of termListNil() -> ts.mstx
+                                  | _ -> cat(text(", "), ts.mstx) end); }
 
 aspect production termListNil
 top::TermList ::=
@@ -310,7 +314,7 @@ top::Constraint ::= t::Term bs::BranchList
 { top.mstx = cat(t.mstx, cat(text(" match"), cat(text(" {"), cat(cat(predMatchBranches(bs.mstx), line()), text("}"))))); }
 
 aspect production defConstraint
-top::Constraint ::= name::String ty::TypeAnn t::Term
+top::Constraint ::= name::String t::Term
 { top.mstx = cat(text(name), cat(text(" == "), t.mstx)); }
 
 --------------------------------------------------
@@ -319,7 +323,8 @@ attribute mstx occurs on RefNameList;
 
 aspect production refNameListCons
 top::RefNameList ::= name::String names::RefNameList
-{ top.mstx = cat(text(name), cat(text(", "), names.mstx)); }
+{ top.mstx = cat(text(name), case names of refNameListNil() -> text("") 
+                                         | _ -> cat(text(", "), names.mstx) end); }
 
 aspect production refNameListOne
 top::RefNameList ::= name::String
@@ -355,7 +360,7 @@ top::Pattern ::= p1::Pattern p2::Pattern p3::Pattern
 
 aspect production endPattern
 top::Pattern ::= p::Pattern
-{ top.mstx = p.mstx; }
+{ top.mstx = cat(text("End"), cat(text("("), cat(p.mstx, text(")")))); }
 
 aspect production namePattern
 top::Pattern ::= name::String ty::TypeAnn
@@ -385,7 +390,8 @@ attribute mstx occurs on PatternList;
 
 aspect production patternListCons
 top::PatternList ::= p::Pattern ps::PatternList
-{ top.mstx = cat(p.mstx, case ps of patternListNil() -> ps.mstx | _ -> cat(text(", "), ps.mstx) end); }
+{ top.mstx = cat(p.mstx, case ps of patternListNil() -> ps.mstx
+                                  | _ -> cat(text(", "), ps.mstx) end); }
 
 aspect production patternListNil
 top::PatternList ::=
