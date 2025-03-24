@@ -269,7 +269,7 @@ top::Constraint ::= t::Term bs::BranchList
 {}
 
 abstract production defConstraint
-top::Constraint ::= name::String ty::TypeAnn t::Term
+top::Constraint ::= name::String t::Term
 {}
 
 --------------------------------------------------

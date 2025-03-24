@@ -286,8 +286,8 @@ top::Constraint ::= t::Term bs::BranchList
 { top.doc = prodDoc("matchConstraint", [t.doc, bs.doc]); }
 
 aspect production defConstraint
-top::Constraint ::= name::String ty::TypeAnn t::Term
-{ top.doc = prodDoc("defConstraint", [text(name), ty.doc, t.doc]); }
+top::Constraint ::= name::String t::Term
+{ top.doc = prodDoc("defConstraint", [text(name), t.doc]); }
 
 --------------------------------------------------
 

@@ -68,7 +68,7 @@ nonterminal Predicate_c with ast<Predicate>;
  - syntax term argument
  -}
 concrete production syntaxPredicate_c 
-top::Predicate_c ::= '@' 'syntax' ':' name::Name_t '(' nameLst::NameList_c ')'
+top::Predicate_c ::= '@' 'syntax' name::Name_t '(' nameLst::NameList_c ')'
                      LeftArr_t t::Name_t 'match' '{' bs::ProdBranchList_c '}' '.'
 { top.ast = syntaxPredicate(name.lexeme, nameLst.ast, t.lexeme, bs.ast); }
 
@@ -228,8 +228,8 @@ top::Constraint_c ::= '{' names::NameList_c '}' c::Constraint_c
 
 {- our addition -}
 concrete production defConstraint_c
-top::Constraint_c ::= name::Name_t ':' ty::TypeAnn_c ':=' t::Term_c
-{ top.ast = defConstraint(name.lexeme, ty.ast, t.ast); }
+top::Constraint_c ::= name::Name_t ':=' t::Term_c
+{ top.ast = defConstraint(name.lexeme, t.ast); }
 
 concrete production eqConstraint_c
 top::Constraint_c ::= t1::Term_c '==' t2::Term_c
@@ -333,7 +333,7 @@ top::Pattern_c ::= 'End' '(' p::Pattern_c ')'
 { top.ast = endPattern(p.ast); }
 
 concrete production namePattern_c
-top::Pattern_c ::= name::Name_t '::' ty::TypeAnn_c
+top::Pattern_c ::= name::Name_t ':' ty::TypeAnn_c
 { top.ast = namePattern(name.lexeme, ty.ast); }
 
 concrete production constructorPatternEmpty_c
@@ -436,7 +436,7 @@ nonterminal Lambda_c with ast<Lambda>;
  - that the lambda arg must be a name.
  -}
 concrete production lambda_c
-top::Lambda_c ::= '(' name::Name_t '::' ty::TypeAnn_c wc::WhereClause_c '->' c::Constraint_c ')'
+top::Lambda_c ::= '(' name::Name_t ':' ty::TypeAnn_c wc::WhereClause_c '->' c::Constraint_c ')'
 { top.ast = lambda(name.lexeme, ty.ast, wc.ast, c.ast); }
 
 --------------------------------------------------
