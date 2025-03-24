@@ -41,7 +41,7 @@ aspect production module
 top::Module ::= imps::Imports ords::Orders preds::Predicates
 { top.mstxPP = showDoc(0, cat(text("// Generated Ministatix spec"), 
                           cat(cat(line(), line()), 
-                          cat(imps.mstx, cat(ords.mstx, preds.mstx))))) ++ "\n"; }
+                          cat(imps.mstx, cat(ords.mstx, preds.mstx))))); }
  
 --------------------------------------------------
 
@@ -85,7 +85,9 @@ attribute mstx occurs on Predicates;
 
 aspect production predicatesCons
 top::Predicates ::= pred::Predicate preds::Predicates
-{ top.mstx = cat(pred.mstx, cat(line(), cat(line(), preds.mstx))); }
+{ top.mstx = cat(pred.mstx, case preds of predicatesNil() -> text("")
+                                        | _ -> cat(line(), cat(line(), preds.mstx))
+                            end); }
 
 aspect production predicatesNil
 top::Predicates ::= 
