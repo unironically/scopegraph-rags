@@ -145,10 +145,6 @@ top::Name ::= name::String ty::TypeAnn
 
 attribute doc occurs on TypeAnn;
 
-aspect production scopeType
-top::TypeAnn ::=
-{ top.doc = prodDoc("scopeType", [text("scope")]); }
-
 aspect production nameType
 top::TypeAnn ::= name::String
 { top.doc = prodDoc("nameType", [text(name)]); }
@@ -156,6 +152,10 @@ top::TypeAnn ::= name::String
 aspect production listType
 top::TypeAnn ::= ty::TypeAnn
 { top.doc = prodDoc("listType", [ty.doc]); }
+
+aspect production setType
+top::TypeAnn ::= ty::TypeAnn
+{ top.doc = prodDoc("setType", [ty.doc]); }
 
 --------------------------------------------------
 

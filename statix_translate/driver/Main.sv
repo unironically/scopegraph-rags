@@ -3,8 +3,8 @@ grammar statix_translate:driver;
 imports statix_translate:lang:concretesyntax;
 imports statix_translate:lang:abstractsyntax;
 
-import statix_translate:translation_two;
-import statix_translate:to_ministatix;
+--import statix_translate:translation_two;
+--import statix_translate:to_ministatix;
 
 parser parse :: Module_c { statix_translate:lang:concretesyntax; }
 
@@ -30,7 +30,7 @@ IO<Integer> ::= largs::[String]
             --print(ast.pp);
             --writeFile("ag.sv", ast.moduleTrans);
             --writeFile("statix-spec.mstx", ast.mstxPP);
-            writeFile("preds.txt", ast.moduleTrans);
+            --writeFile("preds.txt", ast.moduleTrans);
             return 0;
           }
           else do {

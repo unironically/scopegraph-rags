@@ -29,7 +29,7 @@ terminal Syntax_t    'syntax'         lexer classes {KWD};
 terminal Syn_t       'syn'            lexer classes {KWD};
 terminal Inh_t       'inh'            lexer classes {KWD};
 terminal Ret_t       'ret'            lexer classes {KWD};
-terminal TypeAnn_t   '::';
+terminal TypeAnn_t   ':';
 terminal Def_t       ':=';
 
 terminal At_t        '@';
@@ -40,7 +40,7 @@ terminal Gt_t        '>';
 
 terminal LeftArr_t   /(<\-)|(:\-)/;
 terminal RightArr_t  '->';
-terminal Colon_t     ':'              association = right;
+terminal Colon_t     '::'             association = right;
 terminal Semi_t      ';';
 terminal OpenArr_t   '-[';
 terminal CloseArr_t  ']->';

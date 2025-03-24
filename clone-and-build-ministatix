@@ -2,8 +2,8 @@
 
 orig=$DIR
 
-if [ -d ../ministatix.hs ]; then
-  echo "[✗] Ministatix directory already exists, see ../ministatix.hs"
+if [ -d ministatix.hs ]; then
+  echo "[✗] Ministatix directory already exists, see ministatix.hs"
   exit 0
 fi
 
@@ -14,13 +14,12 @@ else
   exit -1
 fi
 
-mv ministatix.hs ..
-cd ../ministatix.hs
+cd ministatix.hs
 
 if make build; then
-  echo "[✔] Ministatix successfully built at ../ministatix.hs"
+  echo "[✔] Ministatix successfully built at ministatix.hs"
 else
   echo "[✗] Something went wrong when building Ministatix"
 fi
 
-cd ../$orig
+cd ..

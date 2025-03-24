@@ -122,15 +122,15 @@ top::Name ::= name::String ty::TypeAnn
 
 nonterminal TypeAnn;
 
-abstract production scopeType
-top::TypeAnn ::=
-{}
-
 abstract production nameType
 top::TypeAnn ::= name::String
 {}
 
 abstract production listType
+top::TypeAnn ::= ty::TypeAnn
+{}
+
+abstract production setType
 top::TypeAnn ::= ty::TypeAnn
 {}
 

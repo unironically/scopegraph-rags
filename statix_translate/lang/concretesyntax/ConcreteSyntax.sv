@@ -68,7 +68,7 @@ nonterminal Predicate_c with ast<Predicate>;
  - syntax term argument
  -}
 concrete production syntaxPredicate_c 
-top::Predicate_c ::= 'syntax' ':' name::Name_t '(' nameLst::NameList_c ')'
+top::Predicate_c ::= '@' 'syntax' ':' name::Name_t '(' nameLst::NameList_c ')'
                      LeftArr_t t::Name_t 'match' '{' bs::ProdBranchList_c '}' '.'
 { top.ast = syntaxPredicate(name.lexeme, nameLst.ast, t.lexeme, bs.ast); }
 
@@ -114,19 +114,19 @@ top::NameList_c ::= name::Name_c
 nonterminal Name_c with ast<Name>;
 
 concrete production nameSyn_c
-top::Name_c ::= 'syn' ':' name::Name_t '::' ty::TypeAnn_c
+top::Name_c ::= '@' 'syn' name::Name_t ':' ty::TypeAnn_c
 { top.ast = nameSyn(name.lexeme, ty.ast); }
 
 concrete production nameInh_c
-top::Name_c ::= 'inh' ':' name::Name_t '::' ty::TypeAnn_c
+top::Name_c ::= '@' 'inh' name::Name_t ':' ty::TypeAnn_c
 { top.ast = nameInh(name.lexeme, ty.ast); }
 
 concrete production nameRet_c
-top::Name_c ::= 'ret' ':' name::Name_t '::' ty::TypeAnn_c
+top::Name_c ::= '@' 'ret' name::Name_t ':' ty::TypeAnn_c
 { top.ast = nameRet(name.lexeme, ty.ast); }
 
 concrete production nameUntagged_c
-top::Name_c ::= name::Name_t '::' ty::TypeAnn_c
+top::Name_c ::= name::Name_t ':' ty::TypeAnn_c
 { top.ast = nameUntagged(name.lexeme, ty.ast); }
 
 --------------------------------------------------
@@ -135,11 +135,15 @@ nonterminal TypeAnn_c with ast<TypeAnn>;
 
 concrete production nameType_c
 top::TypeAnn_c ::= name::Name_t
-{ top.ast = if name.lexeme == "scope" then scopeType() else nameType(name.lexeme); }
+{ top.ast = nameType(name.lexeme); }
 
 concrete production listType_c
 top::TypeAnn_c ::= '[' ty::TypeAnn_c ']'
 { top.ast = listType(ty.ast); }
+
+concrete production setType_c
+top::TypeAnn_c ::= '{' ty::TypeAnn_c '}'
+{ top.ast = setType(ty.ast); }
 
 --------------------------------------------------
 
@@ -167,7 +171,7 @@ top::Term_c ::= name::Name_t
 { top.ast = nameTerm(name.lexeme); }
 
 concrete production consTerm_c
-top::Term_c ::= t1::Term_c ':' t2::Term_c
+top::Term_c ::= t1::Term_c '::' t2::Term_c
 { top.ast = consTerm(t1.ast, t2.ast); }
 
 concrete production nilTerm_c
@@ -221,6 +225,11 @@ top::Constraint_c ::= c1::Constraint_c ',' c2::Constraint_c
 concrete production existsConstraint_c
 top::Constraint_c ::= '{' names::NameList_c '}' c::Constraint_c
 { top.ast = existsConstraint(names.ast, c.ast); }
+
+{- our addition -}
+concrete production defConstraint_c
+top::Constraint_c ::= name::Name_t ':' ty::TypeAnn_c ':=' t::Term_c
+{ top.ast = defConstraint(name.lexeme, ty.ast, t.ast); }
 
 concrete production eqConstraint_c
 top::Constraint_c ::= t1::Term_c '==' t2::Term_c
@@ -283,10 +292,6 @@ concrete production parenConstraint_c
 top::Constraint_c ::= '(' c::Constraint_c ')'
 { top.ast = c.ast; }
 
-concrete production defConstraint_c
-top::Constraint_c ::= name::Name_t '::' ty::TypeAnn_c ':=' t::Term_c
-{ top.ast = defConstraint(name.lexeme, ty.ast, t.ast); }
-
 --------------------------------------------------
 
 nonterminal RefNameList_c with ast<RefNameList>;
@@ -340,7 +345,7 @@ top::Pattern_c ::= name::Constructor_t '(' ps::PatternList_c ')'
 { top.ast = constructorPattern(name.lexeme, ps.ast); }
 
 concrete production consPattern_c
-top::Pattern_c ::= p1::Pattern_c ':' p2::Pattern_c
+top::Pattern_c ::= p1::Pattern_c '::' p2::Pattern_c
 { top.ast = consPattern(p1.ast, p2.ast); }
 
 concrete production nilPattern_c
