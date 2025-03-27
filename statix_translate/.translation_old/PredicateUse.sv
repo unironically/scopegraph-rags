@@ -1,4 +1,4 @@
-grammar statix_translate:translation_two;
+grammar statix_translate:translation;
 
 
 {- Collecting uses of predicates within the bodies of others.
