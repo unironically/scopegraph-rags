@@ -2,7 +2,7 @@ grammar statix_translate:translation;
 
 --------------------------------------------------
 
-fun topDotLHS AG_LHS ::= String = \s::String -> qualLHS(nameLHS("top"), s);
+fun topDotLHS AG_LHS   ::= String = \s::String -> qualLHS(nameLHS("top"), s);
 fun topDotExpr AG_Expr ::= String = \s::String -> qualExpr(nameExpr("top"), s);
 
 synthesized attribute equations::[AG_Eq] occurs on Constraint;
@@ -173,7 +173,7 @@ top::Constraint ::= set::String pc::PathComp res::String
       topDotLHS(res),
       appExpr (
         "min",
-        [topDotExpr(name), pc.as_lambda]
+        [topDotExpr(name), pc.ag_expr]
       )
     )
   ];
@@ -188,7 +188,7 @@ top::Constraint ::= name::String lam::Lambda
       topDotLHS("ok"),
       appExpr (
         "every",
-        [topDotExpr(name), lam.as_lambda]
+        [topDotExpr(name), lam.ag_expr]
       )
     )
   ];
@@ -203,7 +203,7 @@ top::Constraint ::= set::String m::Matcher res::String
       topDotLHS(res),
       appExpr (
         "filter",
-        [topDotExpr(set), m.as_lambda]
+        [topDotExpr(set), m.ag_expr]
       )
     )
   ];

@@ -4,21 +4,20 @@ grammar statix_translate:translation;
 
 --------------------------------------------------
 
-attribute expr {- ::AG_Expr -} occurs on Lambda;
+attribute ag_expr {- ::AG_Expr -} occurs on Lambda;
+
 attribute ag_decls {- ::[AG_Decl] -} occurs on Lambda;
+propagate ag_decls on Lambda;
 
 aspect production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
 {
   local lam_name::String = "lambda_" ++ toString(genInt());
 
-  top.expr = nameExpr(lam_name);
+  top.ag_expr = nameExpr(lam_name);
 
   top.ag_decls <- [
-    functionDecl (
-      lam_name, [boolType()],
-      body
-    )
+    functionDecl (lam_name, [boolType()], body)
   ];
 
   local body::[AG_Eq] = 
