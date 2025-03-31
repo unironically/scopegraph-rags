@@ -354,8 +354,8 @@ top::Pattern ::= ps::PatternList
 { top.doc = prodDoc("tuplePattern", [ps.doc]); }
 
 aspect production underscorePattern
-top::Pattern ::=
-{ top.doc = prodDoc("underscorePattern", []); }
+top::Pattern ::= ty::TypeAnn
+{ top.doc = prodDoc("underscorePattern", [ty.doc]); }
 
 attribute doc occurs on PatternList;
 

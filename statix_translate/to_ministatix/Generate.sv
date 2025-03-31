@@ -385,7 +385,7 @@ top::Pattern ::= ps::PatternList
 { top.mstx = cat(text("("), cat(ps.mstx, text(")"))); }
 
 aspect production underscorePattern
-top::Pattern ::=
+top::Pattern ::= ty::TypeAnn
 { top.mstx = text("_"); }
 
 attribute mstx occurs on PatternList;

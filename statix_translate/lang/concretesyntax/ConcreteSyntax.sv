@@ -357,8 +357,8 @@ top::Pattern_c ::= '(' p::Pattern_c ',' ps::PatternList_c ')'
 { top.ast = tuplePattern(patternListCons(p.ast, ps.ast)); }
 
 concrete production underscorePattern_c
-top::Pattern_c ::= '_'
-{ top.ast = underscorePattern(); }
+top::Pattern_c ::= '_' ':' ty::TypeAnn_c
+{ top.ast = underscorePattern(ty.ast); }
 
 concrete production parensPattern_c
 top::Pattern_c ::= '(' p::Pattern_c ')'

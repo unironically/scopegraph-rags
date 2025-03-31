@@ -337,7 +337,7 @@ top::Pattern ::= ps::PatternList
 {}
 
 abstract production underscorePattern
-top::Pattern ::=
+top::Pattern ::= ty::TypeAnn
 {}
 
 nonterminal PatternList;
