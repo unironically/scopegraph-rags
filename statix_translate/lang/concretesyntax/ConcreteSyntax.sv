@@ -337,12 +337,12 @@ top::Pattern_c ::= name::Name_t ':' ty::TypeAnn_c
 { top.ast = namePattern(name.lexeme, ty.ast); }
 
 concrete production constructorPatternEmpty_c
-top::Pattern_c ::= name::Constructor_t '(' ')'
-{ top.ast = constructorPattern(name.lexeme, patternListNil()); }
+top::Pattern_c ::= name::Constructor_t '(' ')' ':' ty::TypeAnn_c
+{ top.ast = constructorPattern(name.lexeme, patternListNil(), ty.ast); }
 
 concrete production constructorPatternPlus_c
-top::Pattern_c ::= name::Constructor_t '(' ps::PatternList_c ')'
-{ top.ast = constructorPattern(name.lexeme, ps.ast); }
+top::Pattern_c ::= name::Constructor_t '(' ps::PatternList_c ')' ':' ty::TypeAnn_c
+{ top.ast = constructorPattern(name.lexeme, ps.ast, ty.ast); }
 
 concrete production consPattern_c
 top::Pattern_c ::= p1::Pattern_c '::' p2::Pattern_c

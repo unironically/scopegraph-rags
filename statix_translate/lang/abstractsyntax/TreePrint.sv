@@ -338,8 +338,8 @@ top::Pattern ::= name::String ty::TypeAnn
 { top.doc = prodDoc("namePattern", [strDoc(name), ty.doc]); }
 
 aspect production constructorPattern
-top::Pattern ::= name::String ps::PatternList
-{ top.doc = prodDoc("constructorPattern", [strDoc(name), ps.doc]); }
+top::Pattern ::= name::String ps::PatternList ty::TypeAnn
+{ top.doc = prodDoc("constructorPattern", [strDoc(name), ps.doc, ty.doc]); }
 
 aspect production consPattern
 top::Pattern ::= p1::Pattern p2::Pattern

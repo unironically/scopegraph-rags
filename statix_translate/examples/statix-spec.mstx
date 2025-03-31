@@ -40,7 +40,7 @@ decl(@inh s:scope, d:decl) :- d match {
       {p:path, d:datum, s_mod:scope}
         mod-ref(s, r, p),
         datumOf(p, d),
-        d match { DatumMod(_, dscope:scope) -> s_mod := dscope },
+        d match { DatumMod(_, dscope:scope):datum -> s_mod := dscope },
         s -[ `IMP ]-> s_mod
 
   | DeclDef(b:par-bind) ->
@@ -65,7 +65,7 @@ expr(@inh s:scope, e:expr, @syn ty:type) :- e match {
       {p:path, d:datum}
         var-ref(s, r, p),
         datumOf(p, d),
-        d match { DatumVar(_, dty:type) -> ty := dty }
+        d match { DatumVar(_, dty:type):datum -> ty := dty }
 
   | ExprAdd(e1:expr, e2:expr) ->
       {ty1:type, ty2:type}
@@ -94,7 +94,7 @@ expr(@inh s:scope, e:expr, @syn ty:type) :- e match {
       {ty1:type, ty2:type}
         expr(s, e1, ty1),
         expr(s, e2, ty2),
-        ty1 match { TFun(l:type, r:type) -> ty := r, l == ty2 }
+        ty1 match { TFun(l:type, r:type):type -> ty := r, l == ty2 }
 
   | ExprIf(e1:expr, e2:expr, e3:expr) ->
       {ty1:type, ty2:type, ty3:type}
@@ -241,7 +241,7 @@ mod-ref(@inh s:scope, r:mod-ref, @syn p:path) :- r match {
     ModRef(x:string) -> 
       {mods:{path}, xmods:{path}, xmods':{path}}
         query s `LEX*`IMP? `MOD as mods,
-        filter mods (DatumMod(x':string, _) where x' == x) xmods,
+        filter mods (DatumMod(x':string, _):datum where x' == x) xmods,
         min-refs(xmods, xmods'),
         only(xmods', p)
 
@@ -250,7 +250,7 @@ mod-ref(@inh s:scope, r:mod-ref, @syn p:path) :- r match {
         mod-ref(s, r, p_mod),
         tgt(p_mod, s_mod),
         query s_mod `MOD as mods,
-        filter mods (DatumMod(x':string, _) where x' == x) xmods,
+        filter mods (DatumMod(x':string, _):datum where x' == x) xmods,
         only(xmods, p)
 
   }.
@@ -262,7 +262,7 @@ var-ref(@inh s:scope, r:var-ref, @syn p:path) :- r match {
     VarRef(x:string) -> 
       {vars:{path}, xvars:{path}, xvars':{path}}
         query s `LEX* `IMP? `VAR as vars,
-        filter vars (DatumVar(x':string, _) where x' == x) xvars,
+        filter vars (DatumVar(x':string, _):datum where x' == x) xvars,
         min-refs(xvars, xvars'),
         only(xvars', p)
 
@@ -271,7 +271,7 @@ var-ref(@inh s:scope, r:var-ref, @syn p:path) :- r match {
         mod-ref(s, r, p_mod),
         tgt(p_mod, s_mod),
         query s_mod `VAR as vars,
-        filter vars (DatumVar(x':string, _) where x' == x) xvars,
+        filter vars (DatumVar(x':string, _):datum where x' == x) xvars,
         only(xvars, p)
 
   }.

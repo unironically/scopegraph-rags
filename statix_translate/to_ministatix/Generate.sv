@@ -369,7 +369,7 @@ top::Pattern ::= name::String ty::TypeAnn
 { top.mstx = text(name); }
 
 aspect production constructorPattern
-top::Pattern ::= name::String ps::PatternList
+top::Pattern ::= name::String ps::PatternList ty::TypeAnn
 { top.mstx = cat(text(name), cat(text("("), cat(ps.mstx, text(")")))); }
 
 aspect production consPattern

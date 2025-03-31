@@ -321,7 +321,7 @@ top::Pattern ::= name::String ty::TypeAnn
 {}
 
 abstract production constructorPattern
-top::Pattern ::= name::String ps::PatternList
+top::Pattern ::= name::String ps::PatternList ty::TypeAnn
 {}
 
 abstract production consPattern
