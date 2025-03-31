@@ -12,6 +12,10 @@ abstract production falseExpr
 top::AG_Expr ::=
 {}
 
+abstract production intExpr
+top::AG_Expr ::= i::Integer
+{}
+
 abstract production eqExpr
 top::AG_Expr ::= l::AG_Expr r::AG_Expr
 {}
@@ -42,6 +46,14 @@ top::AG_Expr ::= e::AG_Expr cases::AG_Cases
 
 abstract production demandExpr
 top::AG_Expr ::= lhs::AG_LHS attr::String
+{}
+
+abstract production lambdaExpr
+top::AG_Expr ::= args::[(String, AG_Type)] body::AG_Expr
+{}
+
+abstract production tupleExpr
+top::AG_Expr ::= es::[AG_Expr]
 {}
 
 --------------------------------------------------
