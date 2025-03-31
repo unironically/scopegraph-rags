@@ -1,4 +1,4 @@
-grammar statix_translate:translation;
+grammar statix_translate:to_silver;
 
 --------------------------------------------------
 
@@ -17,7 +17,7 @@ top::AG_Pattern ::= name::String ps::[AG_Pattern]
 {}
 
 abstract production agPatternCons
-top::AG_Pattern ::= ps::[AG_Pattern]
+top::AG_Pattern ::= h::AG_Pattern t::AG_Pattern
 {}
 
 abstract production agPatternNil

@@ -1,11 +1,13 @@
-grammar statix_translate:translation;
+grammar statix_translate:to_silver;
 
 --------------------------------------------------
 
-fun topDotLHS AG_LHS   ::= String = \s::String -> qualLHS(nameLHS("top"), s);
-fun topDotExpr AG_Expr ::= String = \s::String -> qualExpr(nameExpr("top"), s);
+fun topDotLHS  AG_LHS  ::= s::String = qualLHS(nameLHS("top"), s);
+fun topDotExpr AG_Expr ::= s::String = qualExpr(nameExpr("top"), s);
 
 synthesized attribute equations::[AG_Eq] occurs on Constraint;
+synthesized attribute ag_expr::AG_Expr;
+monoid attribute ag_decls::[AG_Decl] with [], ++;
 
 --------------------------------------------------
 
@@ -28,7 +30,7 @@ top::Constraint ::=
   top.equations = [
     contributionEq(
       topDotLHS("ok"), 
-      falseEq()
+      falseExpr()
     )
   ];
 }
@@ -44,7 +46,7 @@ aspect production existsConstraint
 top::Constraint ::= names::NameList c::Constraint
 {
   -- local n::ty; for all (n, ty) in names, then equations from body
-  top.equations = map ((.localDeclEq), names) ++ c.equations;
+  top.equations = names.localDeclEqs ++ c.equations;
 }
 
 aspect production eqConstraint
@@ -101,8 +103,8 @@ top::Constraint ::= name::String t::Term
   -- t = name.datum;
   top.equations = [
     defineEq (
-      topDotLHS(t.to_str),
-      demandEq(topDotLHS(name), "datum")
+      topDotLHS(t.name),
+      demandExpr(topDotLHS(name), "datum")
     )
   ];
 }
@@ -113,7 +115,7 @@ top::Constraint ::= src::String lab::Term tgt::String
   -- top.s_lab <- [tgt];
   top.equations = [
     contributionEq(
-      topDotLHS("src_" ++ lab.to_str),
+      topDotLHS("src_" ++ lab.name),
       trueExpr()
     )
   ];
@@ -126,9 +128,9 @@ top::Constraint ::= src::String r::Regex res::String
   top.equations = [
     defineEq (
       topDotLHS(res),
-      app(
+      appExpr(
         "query",
-        [topDotExpr(src), r.dfaName]
+        [topDotExpr(src), topDotExpr(r.dfa_name)]  -- todo, dfa defs need to flow up
       )
     )
   ];
@@ -141,7 +143,7 @@ top::Constraint ::= name::String out::String
   top.equations = [
     defineEq (
       topDotLHS(out),
-      app(
+      appExpr(
         "one",
         [topDotExpr(name)]
       )
@@ -156,7 +158,7 @@ top::Constraint ::= name::String
   top.equations = [
     contributionEq (
       topDotLHS("ok"),
-      app(
+      appExpr(
         "inhabited",
         [topDotExpr(name)]
       )
@@ -173,7 +175,7 @@ top::Constraint ::= set::String pc::PathComp res::String
       topDotLHS(res),
       appExpr (
         "min",
-        [topDotExpr(name), pc.ag_expr]
+        [pc.ag_expr, topDotExpr(set)] -- todo, fun defs need to flow up, or pc is a lambda expr
       )
     )
   ];
@@ -188,7 +190,7 @@ top::Constraint ::= name::String lam::Lambda
       topDotLHS("ok"),
       appExpr (
         "every",
-        [topDotExpr(name), lam.ag_expr]
+        [lam.ag_expr, topDotExpr(name)]  -- todo, fun defs need to flow up
       )
     )
   ];
@@ -203,7 +205,7 @@ top::Constraint ::= set::String m::Matcher res::String
       topDotLHS(res),
       appExpr (
         "filter",
-        [topDotExpr(set), m.ag_expr]
+        [m.ag_expr, topDotExpr(set)]   -- todo, fun defs need to flow up
       )
     )
   ];

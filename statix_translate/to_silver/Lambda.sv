@@ -1,6 +1,4 @@
-grammar statix_translate:translation;
-
---------------------------------------------------
+grammar statix_translate:to_silver;
 
 --------------------------------------------------
 
@@ -12,30 +10,39 @@ propagate ag_decls on Lambda;
 aspect production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
 {
+  local arg_name::String = arg;
   local lam_name::String = "lambda_" ++ toString(genInt());
+
+  local ag_ty::AG_Type = ty.ag_type;
 
   top.ag_expr = nameExpr(lam_name);
 
   top.ag_decls <- [
-    functionDecl (lam_name, [boolType()], body)
+    -- todo, ag_decl
+    functionDecl (lam_name, nameTypeAG("Boolean"), [(arg_name,  ^ag_ty)], body)
   ];
 
-  local body::[AG_Eq] = 
-    case wc of 
-      nilWhereClause()    -> c.equations
-    | withWhereClause(gl) -> error("lambda.body - withWhereClause TODO")
-    end;
+  local body::[AG_Eq] = c.equations ++ [ -- body with top.ok contributions
+    returnEq(topDotExpr("ok"))          -- return top.ok;
+  ];
+
 }
 
 --------------------------------------------------
 
+synthesized attribute ag_whereClause::AG_WhereClause occurs on WhereClause;
+
 aspect production nilWhereClause
 top::WhereClause ::=
-{}
+{
+  top.ag_whereClause = nilWhereClauseAG();
+}
 
 aspect production withWhereClause
 top::WhereClause ::= gl::GuardList
-{}
+{
+  top.ag_whereClause = withWhereClauseAG(gl.ag_expr);
+}
 
 --------------------------------------------------
 
@@ -55,16 +62,16 @@ top::Guard ::= t1::Term t2::Term
 
 --------------------------------------------------
 
-attribute ag_exprs {- ::[AG_Expr] -} occurs on GuardList;
+attribute ag_expr {- ::AG_Expr -} occurs on GuardList;
 
 aspect production guardListCons
 top::GuardList ::= g::Guard gl::GuardList
 {
-  top.ag_exprs = g.ag_expr :: gl.ag_Exprs;
+  top.ag_expr = andExpr(g.ag_expr, gl.ag_expr);
 }
 
 aspect production guardListOne
 top::GuardList ::= g::Guard
 {
-  top.ag_exps = [g.ag_expr];
+  top.ag_expr = g.ag_expr;
 }
