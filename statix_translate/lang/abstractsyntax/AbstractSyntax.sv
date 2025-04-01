@@ -225,7 +225,7 @@ top::Constraint ::= name::String
 {}
 
 abstract production dataConstraint
-top::Constraint ::= name::String t::Term
+top::Constraint ::= name::String d::String
 {}
 
 abstract production edgeConstraint

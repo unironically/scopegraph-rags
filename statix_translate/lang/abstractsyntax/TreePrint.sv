@@ -246,8 +246,8 @@ top::Constraint ::= name::String
 { top.doc = prodDoc("newConstraint", [strDoc(name)]); }
 
 aspect production dataConstraint
-top::Constraint ::= name::String t::Term
-{ top.doc = prodDoc("dataConstraint", [strDoc(name), t.doc]); }
+top::Constraint ::= name::String d::String
+{ top.doc = prodDoc("dataConstraint", [strDoc(name), strDoc(d)]); }
 
 aspect production edgeConstraint
 top::Constraint ::= src::String lab::Term tgt::String

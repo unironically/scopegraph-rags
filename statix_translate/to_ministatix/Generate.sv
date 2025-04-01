@@ -276,8 +276,8 @@ top::Constraint ::= name::String
 { top.mstx = cat(text("new "), text(name)); }
 
 aspect production dataConstraint
-top::Constraint ::= name::String t::Term
-{ top.mstx = cat(text(name), cat(text(" -> "), t.mstx)); }
+top::Constraint ::= name::String d::String
+{ top.mstx = cat(text(name), cat(text(" -> "), text(name))); }
 
 aspect production edgeConstraint
 top::Constraint ::= src::String lab::Term tgt::String

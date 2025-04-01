@@ -98,12 +98,12 @@ top::Constraint ::= name::String
 }
 
 aspect production dataConstraint
-top::Constraint ::= name::String t::Term
+top::Constraint ::= name::String d::String
 {
   -- t = name.datum;
   top.equations = [
     defineEq (
-      topDotLHS(t.name),
+      topDotLHS(d),
       demandExpr(topDotLHS(name), "datum")
     )
   ];

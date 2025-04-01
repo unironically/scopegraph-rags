@@ -36,7 +36,7 @@ IO<Integer> ::= largs::[String]
             writeFile("out/statix-spec.mstx", ast.mstxPP);
 
             -- testing intermediate lang
-            writeFile ("out.txt",
+            writeFile ("out/trans_testing.txt",
               "ord pp:\n" ++ lmOrd.ag_decl.pp ++ "\n\n" ++
               "exists pp:\n" ++ implode("\n", map((.pp), exists.equations)) ++ "\n\n" ++
               "edge pp:\n" ++ implode("\n", map((.pp), edge.equations))

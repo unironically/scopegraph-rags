@@ -248,8 +248,8 @@ top::Constraint_c ::= 'new' name::Name_t
 { top.ast = newConstraint(name.lexeme); }
 
 concrete production dataConstraint_c
-top::Constraint_c ::= name::Name_t RightArr_t t::Term_c
-{ top.ast = dataConstraint(name.lexeme, t.ast); }
+top::Constraint_c ::= name::Name_t RightArr_t d::Name_t
+{ top.ast = dataConstraint(name.lexeme, d.lexeme); }
 
 concrete production edgeConstraint_c
 top::Constraint_c ::= src::Name_t '-[' lab::Term_c ']->' tgt::Name_t
