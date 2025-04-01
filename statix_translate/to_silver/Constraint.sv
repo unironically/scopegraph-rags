@@ -115,8 +115,8 @@ top::Constraint ::= src::String lab::Term tgt::String
   -- top.s_lab <- [tgt];
   top.equations = [
     contributionEq(
-      topDotLHS("src_" ++ lab.name),
-      trueExpr()
+      topDotLHS(src ++ "_" ++ lab.name),
+      topDotExpr(tgt)
     )
   ];
 }

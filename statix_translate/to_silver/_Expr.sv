@@ -24,6 +24,12 @@ top::AG_Expr ::= i::Integer
   top.pp = "intExpr(" ++ toString(i) ++ ")";
 }
 
+abstract production stringExpr
+top::AG_Expr ::= s::String
+{
+  top.pp = "stringExpr(" ++ s ++ ")";
+}
+
 abstract production eqExpr
 top::AG_Expr ::= l::AG_Expr r::AG_Expr
 {
@@ -82,6 +88,18 @@ abstract production tupleExpr
 top::AG_Expr ::= es::[AG_Expr]
 {
   top.pp = "tupleExpr([" ++ implode(", ", map((.pp), es)) ++ "])";
+}
+
+abstract production consExpr
+top::AG_Expr ::= h::AG_Expr  t::AG_Expr
+{
+  top.pp = "consExpr(" ++ h.pp ++ ", " ++ t.pp ++ ")";
+}
+
+abstract production nilExpr
+top::AG_Expr ::=
+{
+  top.pp = "nilExpr()";
 }
 
 --------------------------------------------------

@@ -19,6 +19,5 @@ top::TypeAnn ::= ty::TypeAnn
 aspect production setType
 top::TypeAnn ::= ty::TypeAnn
 {
-  -- interpret sets as lists
   top.ag_type = listTypeAG(ty.ag_type);
 }

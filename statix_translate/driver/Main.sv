@@ -36,9 +36,13 @@ IO<Integer> ::= largs::[String]
             writeFile("out/statix-spec.mstx", ast.mstxPP);
 
             -- testing intermediate lang
-            print("ord pp:\n" ++ lmOrd.ag_decl.pp ++ "\n");
+            writeFile ("out.txt",
+              "ord pp:\n" ++ lmOrd.ag_decl.pp ++ "\n\n" ++
+              "exists pp:\n" ++ implode("\n", map((.pp), exists.equations)) ++ "\n\n" ++
+              "edge pp:\n" ++ implode("\n", map((.pp), edge.equations))
+            );
 
-            return 0;
+            return 0; 
           }
           else do {
             print("[✗] Parse failure\n");
@@ -66,4 +70,35 @@ global lmOrd::Order =
         )
       )
     )
+  );
+
+global exists::Constraint = 
+  existsConstraint(
+    nameListCons (
+      nameUntagged (
+        "a",
+        nameType("scope")
+      ),
+      nameListCons (
+        nameUntagged (
+          "b",
+          listType(nameType("datum"))
+        ),
+        nameListNil()
+      )
+    ),
+    conjConstraint(
+      trueConstraint(),
+      eqConstraint(
+        nameTerm("a"),
+        nameTerm("b")
+      )
+    )
+  );
+
+global edge::Constraint =
+  edgeConstraint (
+    "s",
+    labelTerm(label("VAR")),
+    "s_var"
   );
