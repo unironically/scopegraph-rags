@@ -271,24 +271,31 @@ top::StxApplication ::=
     matchArgsWithParams(predInfo.inhs, allArgs.names, 0);
   local argNamesOnly::[String] = map(fst, argNamesTys);
 
-  top.equations = [
-    localDeclEq (
-      uniquePairName,
-      if null(retNamesTys) 
-        then nameTypeAG("Boolean")
-        else tupleTypeAG (nameTypeAG("Boolean")::
-                          map((.ag_type), map(snd, retNamesTys)))
-    ),
-    defineEq (
-      topDotLHS(uniquePairName),
-      appExpr(name, map((topDotExpr(_)), argNamesOnly))
-    ),
-    contributionEq (
-      topDotLHS("ok"),
-      tupleSectionExpr(topDotExpr(uniquePairName), 1)
-    )
-  ] ++ foldr(tupleSectionDef(uniquePairName, false, _, _), (2, []), argNamesTys).2
-    ++ foldr(tupleSectionDef(uniquePairName, true, _, _), (2, []), retNamesTys).2;
+  top.equations = 
+    let argEqs::(Integer, [AG_Eq]) = 
+      foldr(tupleSectionDef(uniquePairName, false, _, _), (2, []), argNamesTys)
+    in
+    let retEqs::(Integer, [AG_Eq]) =
+      foldr(tupleSectionDef(uniquePairName, true, _, _), (argEqs.1, []), retNamesTys)
+    in
+    [ 
+      localDeclEq (
+        uniquePairName,
+        if null(retNamesTys) 
+          then nameTypeAG("Boolean")
+          else tupleTypeAG (nameTypeAG("Boolean")::
+                            map((.ag_type), map(snd, retNamesTys)))
+      ),
+      defineEq (
+        topDotLHS(uniquePairName),
+        appExpr(name, map((topDotExpr(_)), argNamesOnly))
+      ),
+      contributionEq (
+        topDotLHS("ok"),
+        tupleSectionExpr(topDotExpr(uniquePairName), 1)
+      )
+    ] ++ argEqs.2 ++ retEqs.2
+    end end;
 
 }
 

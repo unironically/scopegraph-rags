@@ -105,11 +105,13 @@ global funAppGiveNewScope::Decorated Constraint =
   decorate
     applyConstraint (
       "give-new-scope",
-      refNameListOne("s")
+      refNameListCons("s_glob", refNameListOne("s_new"))
     )
   with { nameTyDecls = [];
          predsInh    = [
-           funPredInfo ("give-new-scope", [], [("s'", nameType("scope"), 0)])
+           funPredInfo ("give-new-scope", 
+                        [("s", nameType("scope"), 0)], 
+                        [("s'", nameType("scope"), 1)])
          ];
        };
 
