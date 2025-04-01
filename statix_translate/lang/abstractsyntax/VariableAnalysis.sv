@@ -22,9 +22,9 @@ attribute inhs occurs on PredInfo;
 
 abstract production synPredInfo
 top::PredInfo ::= 
-  name::String 
-  term::(String, TypeAnn, Integer) 
-  inhs::[(String, TypeAnn, Integer)] 
+  name::String
+  term::(String, TypeAnn, Integer)
+  inhs::[(String, TypeAnn, Integer)]
   syns::[(String, TypeAnn, Integer)]
 {
   top.predName = name;
@@ -35,7 +35,7 @@ top::PredInfo ::=
 abstract production funPredInfo
 top::PredInfo ::= 
   name::String
-  args::[(String, TypeAnn, Integer)] 
+  args::[(String, TypeAnn, Integer)]
   rets::[(String, TypeAnn, Integer)]
 {
   top.predName = name;
@@ -50,34 +50,6 @@ top::Module ::= ds::Imports ords::Orders preds::Predicates
 {
   preds.predsInh = preds.predsSyn;
 }
- 
---------------------------------------------------
-
-aspect production ordersCons
-top::Orders ::= ord::Order ords::Orders
-{}
-
-aspect production ordersNil
-top::Orders ::= 
-{}
-
-aspect production order
-top::Order ::= name::String pathComp::PathComp
-{}
-
---------------------------------------------------
-
-aspect production importsCons
-top::Imports ::= imp::Import imps::Imports
-{}
-
-aspect production importsNil
-top::Imports ::=
-{}
-
-aspect production imp
-top::Import ::= qual::QualName
-{}
 
 --------------------------------------------------
 
@@ -214,68 +186,6 @@ top::Name ::= name::String ty::TypeAnn
 {
   top.names := [name];
   top.unlabelled <- [(name, ^ty, top.nameListPos)];
-}
-
---------------------------------------------------
-
-aspect production nameType
-top::TypeAnn ::= name::String
-{}
-
-aspect production listType
-top::TypeAnn ::= ty::TypeAnn
-{}
-
-aspect production setType
-top::TypeAnn ::= ty::TypeAnn
-{}
-
---------------------------------------------------
-
-aspect production labelTerm
-top::Term ::= lab::Label
-{}
-
-aspect production labelArgTerm
-top::Term ::= lab::Label t::Term
-{}
-
-aspect production constructorTerm
-top::Term ::= name::String ts::TermList
-{}
-
-aspect production nameTerm
-top::Term ::= name::String
-{}
-
-aspect production consTerm
-top::Term ::= t1::Term t2::Term
-{}
-
-aspect production nilTerm
-top::Term ::=
-{}
-
-aspect production tupleTerm
-top::Term ::= ts::TermList
-{}
-
-aspect production stringTerm
-top::Term ::= s::String
-{}
-
-aspect production termListCons
-top::TermList ::= t::Term ts::TermList
-{}
-
-aspect production termListNil
-top::TermList ::=
-{}
-
-aspect production label
-top::Label ::= label::String
-{
-
 }
 
 --------------------------------------------------
