@@ -35,7 +35,9 @@ IO<Integer> ::= largs::[String]
             mkdirSucc::Boolean <- if hasOutDir then do {return true;} else mkdir("out");
             writeFile("out/statix-spec.mstx", ast.mstxPP);
 
-            --writeFile("preds.txt", ast.moduleTrans);
+            -- testing intermediate lang
+            print("ord pp:\n" ++ lmOrd.ag_decl.pp ++ "\n");
+
             return 0;
           }
           else do {
@@ -49,3 +51,19 @@ IO<Integer> ::= largs::[String]
             return -1;
       };
 }
+
+global lmOrd::Order = 
+  order(
+    "lm",
+    lexicoPathComp (
+      labelLTsCons (
+        label("VAR"), label("LEX"),
+        labelLTsCons (
+          label("VAR"), label("IMP"),
+          labelLTsOne (
+            label("IMP"),label("LEX")
+          )
+        )
+      )
+    )
+  );
