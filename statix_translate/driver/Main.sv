@@ -39,7 +39,8 @@ IO<Integer> ::= largs::[String]
             writeFile ("out/trans_testing.txt",
               "ord pp:\n" ++ lmOrd.ag_decl.pp ++ "\n\n" ++
               "exists pp:\n" ++ implode("\n", map((.pp), exists.equations)) ++ "\n\n" ++
-              "edge pp:\n" ++ implode("\n", map((.pp), edge.equations))
+              "edge pp:\n" ++ implode("\n", map((.pp), edge.equations)) ++ "\n\n" ++
+              "funapp pp:\n" ++ implode("\n", map((.pp), funApp.equations))
             );
 
             return 0; 
@@ -72,33 +73,53 @@ global lmOrd::Order =
     )
   );
 
-global exists::Constraint = 
-  existsConstraint(
-    nameListCons (
-      nameUntagged (
-        "a",
-        nameType("scope")
-      ),
+global funApp::Decorated Constraint =
+  decorate
+    applyConstraint (
+      "tgt",
+      refNameListCons("p'", refNameListOne("s'"))
+    )
+  with { nameTyDecls = [];
+         predsInh    = [
+           funPredInfo ("tgt", [("p", nameType("path"), 0)], [("s", nameType("scope"), 1)])
+         ];
+       };
+
+global exists::Decorated Constraint = 
+  decorate
+    existsConstraint(
       nameListCons (
         nameUntagged (
-          "b",
-          listType(nameType("datum"))
+          "a",
+          nameType("scope")
         ),
-        nameListNil()
-      )
-    ),
-    conjConstraint(
-      trueConstraint(),
-      eqConstraint(
-        nameTerm("a"),
-        nameTerm("b")
+        nameListCons (
+          nameUntagged (
+            "b",
+            listType(nameType("datum"))
+          ),
+          nameListNil()
+        )
+      ),
+      conjConstraint(
+        trueConstraint(),
+        eqConstraint(
+          nameTerm("a"),
+          nameTerm("b")
+        )
       )
     )
-  );
+  with { nameTyDecls = []; 
+         predsInh    = []; 
+       };
 
-global edge::Constraint =
-  edgeConstraint (
-    "s",
-    labelTerm(label("VAR")),
-    "s_var"
-  );
+global edge::Decorated Constraint =
+  decorate
+    edgeConstraint (
+      "s",
+      labelTerm(label("VAR")),
+      "s_var"
+    )
+  with { nameTyDecls = []; 
+         predsInh    = []; 
+       };

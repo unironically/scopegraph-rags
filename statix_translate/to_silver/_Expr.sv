@@ -102,6 +102,12 @@ top::AG_Expr ::=
   top.pp = "nilExpr()";
 }
 
+abstract production tupleSectionExpr
+top::AG_Expr ::= tup::AG_Expr i::Integer
+{
+  top.pp = "tupleSectionExpr(" ++ tup.pp ++ ", " ++ toString(i) ++ ")";
+}
+
 --------------------------------------------------
 
 nonterminal AG_Exprs;

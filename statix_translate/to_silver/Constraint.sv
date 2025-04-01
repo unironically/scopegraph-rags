@@ -225,16 +225,113 @@ top::Constraint ::= name::String t::Term
 
 --------------------------------------------------
 
-aspect production applyConstraint
-top::Constraint ::= name::String vs::RefNameList
-{
-  -- todo
-  top.equations = [];
-}
-
 aspect production matchConstraint
 top::Constraint ::= t::Term bs::BranchList
 {
   -- todo
   top.equations = [];
+}
+
+aspect production applyConstraint
+top::Constraint ::= name::String vs::RefNameList
+{
+  -- args that are in syn position for syn preds, or in ret position for funs
+  local defs::[(String, TypeAnn)] = top.freeVarsDefined;
+
+  local predInfo::PredInfo = lookupPred(name, top.predsInh).fromJust;
+
+  top.equations = case predInfo of
+                  | synPredInfo(_, _, _, _) -> 
+                      appConstraintSyn(name, predInfo, vs).equations
+                  | funPredInfo(_, _, _)    -> 
+                      appConstraintFun(name, predInfo, vs).equations
+                  end;
+}
+
+--------------------------------------------------
+
+nonterminal StxApplication;
+
+attribute equations occurs on StxApplication;
+
+abstract production appConstraintFun
+top::StxApplication ::=
+  name::String
+  predInfo::Decorated PredInfo
+  allArgs::Decorated RefNameList
+{
+
+  local uniquePairName::String = "pair_" ++ toString(genInt());
+
+  -- [(argument variable given, argument position type)]
+  local retNamesTys::[(String, TypeAnn)] = 
+    matchArgsWithParams(predInfo.syns, allArgs.names, 0);
+
+  local argNamesTys::[(String, TypeAnn)] =
+    matchArgsWithParams(predInfo.inhs, allArgs.names, 0);
+  local argNamesOnly::[String] = map(fst, argNamesTys);
+
+  top.equations = [
+    localDeclEq (
+      uniquePairName,
+      if null(retNamesTys) 
+        then nameTypeAG("Boolean")
+        else tupleTypeAG (nameTypeAG("Boolean")::
+                          map((.ag_type), map(snd, retNamesTys)))
+    ),
+    defineEq (
+      topDotLHS(uniquePairName),
+      appExpr(name, map((topDotExpr(_)), argNamesOnly))
+    ),
+    contributionEq (
+      topDotLHS("ok"),
+      tupleSectionExpr(topDotExpr(uniquePairName), 1)
+    )
+  ] ++ foldr(tupleSectionDef(uniquePairName, _, _), (2, []), retNamesTys).2
+  ;
+
+}
+
+abstract production appConstraintSyn
+top::StxApplication ::=
+  name::String
+  predInfo::Decorated PredInfo
+  allArgs::Decorated RefNameList
+{
+
+  top.equations = []; -- todo
+
+}
+
+--------------------------------------------------
+
+-- returns list of pairs of (argument variable given, argument position type)
+function matchArgsWithParams
+[(String, TypeAnn)] ::= 
+  params::[(String, TypeAnn, Integer)] 
+  args::[String]
+  argIndex::Integer
+{
+  return
+    case args of
+      h::t when !null(params)-> 
+        if argIndex == head(params).3
+        then (h, head(params).2) :: matchArgsWithParams(tail(params), t, argIndex + 1)
+        else matchArgsWithParams(params, t, argIndex + 1)
+    | _ -> []
+    end;
+}
+
+function tupleSectionDef
+(Integer, [AG_Eq]) ::= 
+  pairName::String 
+  item::(String, TypeAnn)
+  acc::(Integer, [AG_Eq])
+{
+  return ( acc.1 + 1,
+           defineEq(
+           topDotLHS(item.1),
+           tupleSectionExpr(topDotExpr(pairName), acc.1)
+           ) :: acc.2
+         );
 }

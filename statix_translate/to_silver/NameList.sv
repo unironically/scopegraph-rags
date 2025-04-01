@@ -59,3 +59,25 @@ top::Name ::= name::String ty::TypeAnn
   top.name = name;
   top.ag_type = ty.ag_type;
 }
+
+--------------------------------------------------
+
+synthesized attribute names::[String] occurs on RefNameList;
+
+aspect production refNameListCons
+top::RefNameList ::= name::String names::RefNameList
+{
+  top.names = name :: names.names;
+}
+
+aspect production refNameListOne
+top::RefNameList ::= name::String
+{
+  top.names = [name];
+}
+
+aspect production refNameListNil
+top::RefNameList ::=
+{
+  top.names = [];
+}

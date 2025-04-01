@@ -15,10 +15,25 @@ monoid attribute syns::[(String, TypeAnn, Integer)] with [], ++;
 
 inherited attribute nameTyDecls::[(String, TypeAnn)];
 
-function lookup
+function lookupVar
 Maybe<(String, TypeAnn)> ::= name::String decls::[(String, TypeAnn)]
 {
-  return nothing(); -- todo
+  return case decls of
+           [] -> nothing()
+         | (n, t)::_ when name == n -> just((n, t))
+         | _::t -> lookupVar(name, t)
+         end;
+}
+
+function lookupPred
+Maybe<PredInfo> ::= name::String preds::[PredInfo]
+{
+  return case preds of
+           [] -> nothing()
+         | funPredInfo(n, _, _)::_    when name == n -> just(head(preds))
+         | synPredInfo(n, _, _, _)::_ when name == n -> just(head(preds))
+         | _::t -> lookupPred(name, t)
+         end;
 }
 
 --------------------------------------------------
@@ -48,8 +63,8 @@ top::PredInfo ::=
   rets::[(String, TypeAnn, Integer)]
 {
   top.predName = name;
-  top.syns := args;
-  top.inhs := rets;
+  top.syns := rets;
+  top.inhs := args;
 }
 
 --------------------------------------------------
@@ -269,7 +284,7 @@ top::Constraint ::= name::String
 aspect production dataConstraint
 top::Constraint ::= name::String d::String
 {
-  top.freeVarsDefined <- [(d, lookup(d, top.nameTyDecls).fromJust.2)];
+  top.freeVarsDefined <- [(d, lookupVar(d, top.nameTyDecls).fromJust.2)];
 }
 
 aspect production edgeConstraint
@@ -279,13 +294,13 @@ top::Constraint ::= src::String lab::Term tgt::String
 aspect production queryConstraint
 top::Constraint ::= src::String r::Regex out::String
 {
-  top.freeVarsDefined <- [(out, lookup(out, top.nameTyDecls).fromJust.2)];
+  top.freeVarsDefined <- [(out, lookupVar(out, top.nameTyDecls).fromJust.2)];
 }
 
 aspect production oneConstraint
 top::Constraint ::= name::String out::String
 {
-  top.freeVarsDefined <- [(out, lookup(out, top.nameTyDecls).fromJust.2)];
+  top.freeVarsDefined <- [(out, lookupVar(out, top.nameTyDecls).fromJust.2)];
 }
 
 aspect production nonEmptyConstraint
@@ -295,7 +310,7 @@ top::Constraint ::= name::String
 aspect production minConstraint
 top::Constraint ::= set::String pc::PathComp out::String
 {
-  top.freeVarsDefined <- [(out, lookup(out, top.nameTyDecls).fromJust.2)];
+  top.freeVarsDefined <- [(out, lookupVar(out, top.nameTyDecls).fromJust.2)];
 }
 
 aspect production applyConstraint
@@ -315,7 +330,7 @@ top::Constraint ::= name::String lam::Lambda
 aspect production filterConstraint
 top::Constraint ::= set::String m::Matcher out::String
 {
-  top.freeVarsDefined <- [(out, lookup(out, top.nameTyDecls).fromJust.2)];
+  top.freeVarsDefined <- [(out, lookupVar(out, top.nameTyDecls).fromJust.2)];
 }
 
 aspect production matchConstraint
@@ -325,7 +340,7 @@ top::Constraint ::= t::Term bs::BranchList
 aspect production defConstraint
 top::Constraint ::= name::String t::Term
 {
-  top.freeVarsDefined <- [(name, lookup(name, top.nameTyDecls).fromJust.2)];
+  top.freeVarsDefined <- [(name, lookupVar(name, top.nameTyDecls).fromJust.2)];
 }
 
 --------------------------------------------------
