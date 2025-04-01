@@ -287,8 +287,8 @@ top::StxApplication ::=
       topDotLHS("ok"),
       tupleSectionExpr(topDotExpr(uniquePairName), 1)
     )
-  ] ++ foldr(tupleSectionDef(uniquePairName, _, _), (2, []), retNamesTys).2
-  ;
+  ] ++ foldr(tupleSectionDef(uniquePairName, false, _, _), (2, []), argNamesTys).2
+    ++ foldr(tupleSectionDef(uniquePairName, true, _, _), (2, []), retNamesTys).2;
 
 }
 
@@ -324,14 +324,49 @@ function matchArgsWithParams
 
 function tupleSectionDef
 (Integer, [AG_Eq]) ::= 
-  pairName::String 
+  pairName::String
+  isRet::Boolean
   item::(String, TypeAnn)
   acc::(Integer, [AG_Eq])
 {
-  return ( acc.1 + 1,
-           defineEq(
-           topDotLHS(item.1),
-           tupleSectionExpr(topDotExpr(pairName), acc.1)
-           ) :: acc.2
-         );
+  local offset::Integer = 
+    if isRet then 1
+    else case item.2 of nameType("scope") -> length(tmpLabelSet) | _ -> 0 end;
+
+  local nextIdx::Integer = acc.1 + offset;
+
+  local tmpLabelSet::[Label] = [
+    label("LEX"), label("VAR"), label("IMP"), label("MOD")
+  ];
+
+  local labelEqs::[AG_Eq] = 
+    case item.2 of
+      nameType("scope") when !isRet -> 
+        foldr (
+          (\lab::Label acc::(Integer, [AG_Eq]) ->
+              (acc.1 - 1,
+               contributionEq (
+                 topDotLHS(item.1 ++ "_" ++ lab.name),
+                 tupleSectionExpr(topDotExpr(pairName), acc.1)
+               ) :: acc.2)
+          ),
+          (nextIdx - 1, []), tmpLabelSet
+        ).2
+    | _ -> []
+    end;
+
+  local retEq::[AG_Eq] = 
+    if isRet
+    then [
+      defineEq(
+        topDotLHS(item.1),
+        tupleSectionExpr(topDotExpr(pairName), acc.1)
+      )
+    ]
+    else [];
+
+  return ( 
+    nextIdx,
+    (retEq ++ labelEqs) ++ acc.2
+  );
 }

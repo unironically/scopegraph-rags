@@ -37,10 +37,14 @@ IO<Integer> ::= largs::[String]
 
             -- testing intermediate lang
             writeFile ("out/trans_testing.txt",
-              "ord pp:\n" ++ lmOrd.ag_decl.pp ++ "\n\n" ++
-              "exists pp:\n" ++ implode("\n", map((.pp), exists.equations)) ++ "\n\n" ++
-              "edge pp:\n" ++ implode("\n", map((.pp), edge.equations)) ++ "\n\n" ++
-              "funapp pp:\n" ++ implode("\n", map((.pp), funApp.equations))
+              implode("\n\n", [
+                "ord pp:\n" ++ lmOrd.ag_decl.pp,
+                "exists pp:\n" ++ implode("\n", map((.pp), exists.equations)),
+                "edge pp:\n" ++ implode("\n", map((.pp), edge.equations)),
+                "funappTgt pp:\n" ++ implode("\n", map((.pp), funAppTgt.equations)),
+                "funappExtend pp:\n" ++ implode("\n", map((.pp), funAppExtend.equations)),
+                "funAppGiveNewScope pp:\n" ++ implode("\n", map((.pp), funAppGiveNewScope.equations))
+              ])
             );
 
             return 0; 
@@ -73,7 +77,7 @@ global lmOrd::Order =
     )
   );
 
-global funApp::Decorated Constraint =
+global funAppTgt::Decorated Constraint =
   decorate
     applyConstraint (
       "tgt",
@@ -82,6 +86,30 @@ global funApp::Decorated Constraint =
   with { nameTyDecls = [];
          predsInh    = [
            funPredInfo ("tgt", [("p", nameType("path"), 0)], [("s", nameType("scope"), 1)])
+         ];
+       };
+
+global funAppExtend::Decorated Constraint =
+  decorate
+    applyConstraint (
+      "extend",
+      refNameListOne("s")
+    )
+  with { nameTyDecls = [];
+         predsInh    = [
+           funPredInfo ("extend", [("s1", nameType("scope"), 0)], [])
+         ];
+       };
+
+global funAppGiveNewScope::Decorated Constraint =
+  decorate
+    applyConstraint (
+      "give-new-scope",
+      refNameListOne("s")
+    )
+  with { nameTyDecls = [];
+         predsInh    = [
+           funPredInfo ("give-new-scope", [], [("s'", nameType("scope"), 0)])
          ];
        };
 
