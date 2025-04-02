@@ -1,4 +1,4 @@
-grammar statix_translate:lang:abstractsyntax;
+grammar statix_translate:lang:analysis;
 
 --------------------------------------------------
 
@@ -30,8 +30,8 @@ Maybe<PredInfo> ::= name::String preds::[PredInfo]
 {
   return case preds of
            [] -> nothing()
-         | funPredInfo(n, _, _)::_    when name == n -> just(head(preds))
-         | synPredInfo(n, _, _, _)::_ when name == n -> just(head(preds))
+         | funPredInfo(n, _, _, _, _, _)::_    when name == n -> just(head(preds))
+         | synPredInfo(n, _, _, _, _, _, _)::_ when name == n -> just(head(preds))
          | _::t -> lookupPred(name, t)
          end;
 }
@@ -41,8 +41,11 @@ Maybe<PredInfo> ::= name::String preds::[PredInfo]
 nonterminal PredInfo;
 
 synthesized attribute predName::String occurs on PredInfo;
+synthesized attribute predConstraint::Constraint occurs on PredInfo;
 attribute syns occurs on PredInfo;
 attribute inhs occurs on PredInfo;
+attribute provides occurs on PredInfo;
+attribute requires occurs on PredInfo;
 
 abstract production synPredInfo
 top::PredInfo ::= 
@@ -50,10 +53,25 @@ top::PredInfo ::=
   term::(String, TypeAnn, Integer)
   inhs::[(String, TypeAnn, Integer)]
   syns::[(String, TypeAnn, Integer)]
+  requires::[String]
+  provides::[String]
+  branches::ProdBranchList
 {
   top.predName = name;
   top.syns := inhs;
   top.inhs := syns;
+  top.requires := requires;
+  top.provides := provides;
+
+  top.predConstraint =
+    let pt::Term =
+      nameTerm(term.1)
+    in
+    let decBranches::Decorated ProdBranchList with {prodTy} = 
+      decorate ^branches with {prodTy = nameType(name);} 
+    in
+      matchConstraint(pt, decBranches.toConstraintBranchList)
+    end end;
 }
 
 abstract production funPredInfo
@@ -61,10 +79,16 @@ top::PredInfo ::=
   name::String
   args::[(String, TypeAnn, Integer)]
   rets::[(String, TypeAnn, Integer)]
+  requires::[String]
+  provides::[String]
+  body::Constraint
 {
   top.predName = name;
   top.syns := rets;
   top.inhs := args;
+  top.requires := requires;
+  top.provides := provides;
+  top.predConstraint = ^body;
 }
 
 --------------------------------------------------
@@ -75,6 +99,20 @@ top::Module ::= ds::Imports ords::Orders preds::Predicates
   preds.predsInh = preds.predsSyn;
 }
 
+--------------------------------------------------
+--------------------------------------------------
+
+function lfpPredicateInfoSyn
+[Decorated PredInfo] ::= current::[Decorated PredInfo] undec::[PredInfo]
+{
+  return
+    let step::[Decorated PredInfo] = []
+    in
+      []
+    end;
+}
+
+--------------------------------------------------
 --------------------------------------------------
 
 attribute predsSyn occurs on Predicates;
@@ -102,15 +140,17 @@ aspect production syntaxPredicate
 top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
 {
   nameLst.nameListPos = 0;
-  top.predsSyn := [ synPredInfo(name, head(nameLst.unlabelled), nameLst.syns, nameLst.inhs) ];
+  -- todo, improve head(nameLst.unlabelled)
+  top.predsSyn := [ synPredInfo(name, head(nameLst.unlabelled), nameLst.syns, nameLst.inhs, bs.requiresNoApp, bs.providesNoApp, ^bs) ];
   bs.nameTyDecls = nameLst.nameTyDeclsSyn;
+  bs.prodTy = nameType(name);
 }
 
 aspect production functionalPredicate
 top::Predicate ::= name::String nameLst::NameList const::Constraint
 {
   nameLst.nameListPos = 0;
-  top.predsSyn := [ funPredInfo(name, nameLst.syns, nameLst.unlabelled) ];
+  top.predsSyn := [ funPredInfo(name, nameLst.syns, nameLst.unlabelled, const.requiresNoApp, const.providesNoApp, ^const) ];
   const.nameTyDecls = nameLst.nameTyDeclsSyn;
 }
 
@@ -122,10 +162,26 @@ propagate predsInh on ProdBranch;
 attribute nameTyDecls occurs on ProdBranch;
 propagate nameTyDecls on ProdBranch;
 
+synthesized attribute toConstraintBranch::Branch occurs on ProdBranch;
+
+inherited attribute prodTy::TypeAnn occurs on ProdBranch;
+
 aspect production prodBranch
 top::ProdBranch ::= name::String params::NameList c::Constraint
 {
   params.nameListPos = 0;
+  top.toConstraintBranch =
+    branch(
+      matcher (
+        constructorPattern (
+          name,
+          params.toPatternList,
+          top.prodTy
+        ),
+        nilWhereClause()
+      ),
+      ^c
+    );
 }
 
 --------------------------------------------------
@@ -136,13 +192,22 @@ propagate predsInh on ProdBranchList;
 attribute nameTyDecls occurs on ProdBranchList;
 propagate nameTyDecls on ProdBranchList;
 
+synthesized attribute toConstraintBranchList::BranchList occurs on ProdBranchList;
+
+attribute prodTy occurs on ProdBranchList;
+propagate prodTy on ProdBranchList;
+
 aspect production prodBranchListCons
 top::ProdBranchList ::= b::ProdBranch bs::ProdBranchList
-{}
+{
+  top.toConstraintBranchList = branchListCons(b.toConstraintBranch, bs.toConstraintBranchList);
+}
 
 aspect production prodBranchListOne
 top::ProdBranchList ::= b::ProdBranch
-{}
+{
+  top.toConstraintBranchList = branchListOne(b.toConstraintBranch);
+}
 
 --------------------------------------------------
 
@@ -163,22 +228,32 @@ inherited attribute nameListPos::Integer occurs on NameList;
 monoid attribute nameTyDeclsSyn::[(String, TypeAnn)] with [], ++ occurs on NameList;
 propagate nameTyDeclsSyn on NameList;
 
+synthesized attribute toPatternList::PatternList occurs on NameList;
+
 aspect production nameListCons
 top::NameList ::= name::Name names::NameList
 {
   name.nameListPos  = top.nameListPos;
   names.nameListPos = top.nameListPos + 1;
+  top.toPatternList = 
+    patternListCons (
+      name.toNamePattern,
+      names.toPatternList
+    );
 }
 
 aspect production nameListOne
 top::NameList ::= name::Name
 {
   name.nameListPos = top.nameListPos;
+  top.toPatternList = patternListCons(name.toNamePattern, patternListNil());
 }
 
 aspect production nameListNil
 top::NameList ::=
-{}
+{
+  top.toPatternList = patternListNil();
+}
 
 --------------------------------------------------
 
@@ -198,12 +273,15 @@ attribute nameListPos occurs on Name;
 attribute nameTyDeclsSyn occurs on Name;
 propagate nameTyDeclsSyn on Name;
 
+synthesized attribute toNamePattern::Pattern occurs on Name;
+
 aspect production nameSyn
 top::Name ::= name::String ty::TypeAnn
 {
   top.names := [name];
   top.syns  <- [(name, ^ty, top.nameListPos)];
   top.nameTyDeclsSyn <- [(name, ^ty)];
+  top.toNamePattern = namePattern(name, ^ty);
 }
 
 aspect production nameInh
@@ -212,6 +290,7 @@ top::Name ::= name::String ty::TypeAnn
   top.names := [name];
   top.inhs  <- [(name, ^ty, top.nameListPos)];
   top.nameTyDeclsSyn <- [(name, ^ty)];
+  top.toNamePattern = namePattern(name, ^ty);
 }
 
 aspect production nameRet
@@ -220,6 +299,7 @@ top::Name ::= name::String ty::TypeAnn
   top.names := [name];
   top.syns  <- [(name, ^ty, top.nameListPos)];
   top.nameTyDeclsSyn <- [(name, ^ty)];
+  top.toNamePattern = namePattern(name, ^ty);
 }
 
 aspect production nameUntagged
@@ -228,6 +308,7 @@ top::Name ::= name::String ty::TypeAnn
   top.names := [name];
   top.unlabelled  <- [(name, ^ty, top.nameListPos)];
   top.nameTyDeclsSyn <- [(name, ^ty)];
+  top.toNamePattern = namePattern(name, ^ty);
 }
 
 --------------------------------------------------
@@ -316,6 +397,8 @@ top::Constraint ::= set::String pc::PathComp out::String
 aspect production applyConstraint
 top::Constraint ::= name::String vs::RefNameList
 {
+  -- todo, no predicate found error
+
   local pred::PredInfo = 
     head(dropWhile((\p::PredInfo -> p.predName != name), top.predsInh));
 

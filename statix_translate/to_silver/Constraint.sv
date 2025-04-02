@@ -241,9 +241,9 @@ top::Constraint ::= name::String vs::RefNameList
   local predInfo::PredInfo = lookupPred(name, top.predsInh).fromJust;
 
   top.equations = case predInfo of
-                  | synPredInfo(_, _, _, _) -> 
+                  | synPredInfo(_, _, _, _, _, _, _) -> 
                       appConstraintSyn(name, predInfo, vs).equations
-                  | funPredInfo(_, _, _)    -> 
+                  | funPredInfo(_, _, _, _, _, _)    -> 
                       appConstraintFun(name, predInfo, vs).equations
                   end;
 }

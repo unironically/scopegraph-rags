@@ -4,6 +4,14 @@ grammar statix_translate:lang:analysis;
 
 --------------------------------------------------
 
+monoid attribute requires::[String] with [], union;
+monoid attribute provides::[String] with [], union;
+
+monoid attribute requiresNoApp::[String] with [], union;
+monoid attribute providesNoApp::[String] with [], union;
+
+--------------------------------------------------
+
 aspect production module
 top::Module ::= ds::Imports ords::Orders preds::Predicates
 {}
@@ -52,13 +60,27 @@ top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
 
 aspect production functionalPredicate
 top::Predicate ::= name::String nameLst::NameList const::Constraint
-{} 
+{}
 
 --------------------------------------------------
+
+attribute requires, requiresNoApp occurs on ProdBranch;
+propagate requires, requiresNoApp on ProdBranch;
+
+attribute provides, providesNoApp occurs on ProdBranch;
+propagate provides, providesNoApp on ProdBranch;
 
 aspect production prodBranch
 top::ProdBranch ::= name::String params::NameList c::Constraint
 {}
+
+--------------------------------------------------
+
+attribute requires, requiresNoApp occurs on ProdBranchList;
+propagate requires, requiresNoApp on ProdBranchList;
+
+attribute provides, providesNoApp occurs on ProdBranchList;
+propagate provides, providesNoApp on ProdBranchList;
 
 aspect production prodBranchListCons
 top::ProdBranchList ::= b::ProdBranch bs::ProdBranchList
@@ -162,6 +184,19 @@ top::Label ::= label::String
 
 --------------------------------------------------
 
+attribute requires, requiresNoApp occurs on Constraint;
+propagate requires, requiresNoApp on Constraint excluding 
+  existsConstraint,   -- WF-EXISTS
+  edgeConstraint,     -- WF-EDGE
+  applyConstraint;    -- WF-APP [todo]
+
+attribute provides, providesNoApp occurs on Constraint;
+propagate provides, providesNoApp on Constraint excluding
+  existsConstraint,   -- WF-EXISTS
+  newConstraint,      -- WF-NODE-VAR
+  newConstraintDatum, -- WF-NOFE-VAR
+  applyConstraint;    -- WF-APP [todo]
+
 aspect production trueConstraint
 top::Constraint ::=
 {}
@@ -176,7 +211,28 @@ top::Constraint ::= c1::Constraint c2::Constraint
 
 aspect production existsConstraint
 top::Constraint ::= names::NameList c::Constraint
-{}
+{
+  -- WF-EXISTS
+  local requiredButNotProvided::[String] = 
+    foldr (
+      \existsName::String errNames::[String] ->
+        if  contains(existsName, c.requires) &&
+           !contains(existsName, c.provides)
+        then existsName :: errNames
+        else [],
+      [], names.names);
+
+  top.errs <-
+    if !null(requiredButNotProvided)
+    then map(permissionError(_, bogusLoc()), requiredButNotProvided)
+    else [];
+
+  top.requires := removeAll(names.names, c.requires);
+  top.provides := removeAll(names.names, c.provides);
+
+  top.requiresNoApp := top.requires;
+  top.providesNoApp := top.provides;
+}
 
 aspect production eqConstraint
 top::Constraint ::= t1::Term t2::Term
@@ -188,11 +244,19 @@ top::Constraint ::= t1::Term t2::Term
 
 aspect production newConstraintDatum
 top::Constraint ::= name::String t::Term
-{}
+{
+  -- WF-NODE-VAR
+  top.provides := [name];
+  top.providesNoApp := top.provides;
+}
 
 aspect production newConstraint
 top::Constraint ::= name::String
-{}
+{
+  -- WF-NODE-VAR
+  top.provides := [name];
+  top.providesNoApp := top.provides;
+}
 
 aspect production dataConstraint
 top::Constraint ::= name::String d::String
@@ -200,16 +264,16 @@ top::Constraint ::= name::String d::String
 
 aspect production edgeConstraint
 top::Constraint ::= src::String lab::Term tgt::String
-{}
+{
+  -- WF-EDGE
+  top.requires := [src];
+  top.requiresNoApp := top.requires;
+}
 
 aspect production queryConstraint
 top::Constraint ::= src::String r::Regex res::String
 {}
 
-{- In mstx syntax, the `out` arg can be any term, but only a variable
- - name is used in examples. We make the restriction that it can only
- - be a variable name.
- -}
 aspect production oneConstraint
 top::Constraint ::= name::String out::String
 {}
@@ -224,11 +288,21 @@ top::Constraint ::= set::String pc::PathComp res::String
 
 aspect production applyConstraint
 top::Constraint ::= name::String vs::RefNameList
-{}
+{
+  local pred::PredInfo = 
+    unsafeTracePrint(lookupPred(name, top.predsInh).fromJust, "called " ++ name ++ "\n");  -- not found already handled in VariableAnalysis
+  top.requires := pred.requires; -- predLookup.requires;
+  top.provides := pred.provides; -- predLookup.provides;
+
+  top.requiresNoApp := [];
+  top.providesNoApp := [];
+}
 
 aspect production everyConstraint
 top::Constraint ::= name::String lam::Lambda
-{}
+{
+  --  todo?
+}
 
 aspect production filterConstraint
 top::Constraint ::= set::String m::Matcher res::String
@@ -236,7 +310,9 @@ top::Constraint ::= set::String m::Matcher res::String
 
 aspect production matchConstraint
 top::Constraint ::= t::Term bs::BranchList
-{}
+{
+  -- todo?
+}
 
 aspect production defConstraint
 top::Constraint ::= name::String t::Term
@@ -345,6 +421,8 @@ top::GuardList ::= g::Guard
 aspect production branch
 top::Branch ::= m::Matcher c::Constraint
 {}
+
+--------------------------------------------------
 
 aspect production branchListCons
 top::BranchList ::= b::Branch bs::BranchList
