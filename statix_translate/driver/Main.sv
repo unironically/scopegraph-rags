@@ -3,6 +3,8 @@ grammar statix_translate:driver;
 imports statix_translate:lang:concretesyntax;
 imports statix_translate:lang:abstractsyntax;
 
+imports statix_translate:lang:analysis;
+
 --import statix_translate:translation_two;
 import statix_translate:to_ministatix;
 import statix_translate:to_silver;
