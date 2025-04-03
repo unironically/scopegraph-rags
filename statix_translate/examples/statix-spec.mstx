@@ -60,14 +60,14 @@ decl(@inh s:scope, d:decl) :- d match {
 @syntax
 expr(@inh s:scope, e:expr, @syn ty:type) :- e match {
 
-    ExprInt(i:string) ->
-      ty := INT()
+    ExprTInt(i:string) ->
+      ty := TInt()
 
   | True() ->
-      ty := BOOL()
+      ty := TBool()
 
   | ExprFalse() ->
-      ty := BOOL()
+      ty := TBool()
 
   | ExprVar(r:var-ref) ->
       {p:path, d:datum}
@@ -79,24 +79,24 @@ expr(@inh s:scope, e:expr, @syn ty:type) :- e match {
       {ty1:type, ty2:type}
         expr(s, e1, ty1),
         expr(s, e2, ty2),
-        ty1 == INT(),
-        ty2 == INT(),
-        ty := INT()
+        ty1 == TInt(),
+        ty2 == TInt(),
+        ty := TInt()
 
   | ExprAnd(e1:expr, e2:expr) ->
       {ty1:type, ty2:type}
         expr(s, e1, ty1),
         expr(s, e2, ty2),
-        ty1 == BOOL(),
-        ty2 == BOOL(),
-        ty := BOOL()
+        ty1 == TBool(),
+        ty2 == TBool(),
+        ty := TBool()
 
   | ExprEq(e1:expr, e2:expr) ->
       {ty1:type, ty2:type}
         expr(s, e1, ty1),
         expr(s, e2, ty2),
         ty1 == ty2,
-        ty := BOOL()
+        ty := TBool()
 
   | ExprApp(e1:expr, e2:expr) ->
       {ty1:type, ty2:type}
@@ -109,7 +109,7 @@ expr(@inh s:scope, e:expr, @syn ty:type) :- e match {
         expr(s, e1, ty1),
         expr(s, e2, ty2),
         expr(s, e3, ty3),
-        ty1 == BOOL(),
+        ty1 == TBool(),
         ty2 == ty3,
         ty := ty2
 

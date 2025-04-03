@@ -468,6 +468,11 @@ aspect production stringTerm
 top::Term ::= s::String
 {}
 
+--------------------------------------------------
+
+attribute nameTyDecls occurs on TermList;
+propagate nameTyDecls on TermList;
+
 aspect production termListCons
 top::TermList ::= t::Term ts::TermList
 {}

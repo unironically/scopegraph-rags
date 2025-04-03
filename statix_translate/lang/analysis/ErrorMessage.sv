@@ -38,6 +38,14 @@ top::Error ::=
   top.msg = produceError("No known type " ++ name, loc);
 }
 
+abstract production conflictingConstructorsError
+top::Error ::=
+  name::String
+  loc::Location
+{
+  top.msg = produceError("Conflicting term structures for " ++ name, loc);
+}
+
 --------------------------------------------------
 
 fun produceError String ::= msg::String loc::Location =

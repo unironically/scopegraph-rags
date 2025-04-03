@@ -181,6 +181,11 @@ aspect production stringTerm
 top::Term ::= s::String
 {}
 
+--------------------------------------------------
+
+attribute errs occurs on TermList;
+propagate errs on TermList;
+
 aspect production termListCons
 top::TermList ::= t::Term ts::TermList
 {}
@@ -188,6 +193,8 @@ top::TermList ::= t::Term ts::TermList
 aspect production termListNil
 top::TermList ::=
 {}
+
+--------------------------------------------------
 
 aspect production label
 top::Label ::= label::String
