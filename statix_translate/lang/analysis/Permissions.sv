@@ -148,21 +148,20 @@ top::Constraint ::= set::String pc::PathComp res::String
 aspect production applyConstraint
 top::Constraint ::= name::String vs::RefNameList
 {
-  -- no such predicate error already handled in VariableAnalysis
-  local pred::PredInfo = 
-    lookupPred(name, top.predsInh).fromJust;
+  local predMaybe::Maybe<PredInfo> = lookupPred(name, top.predsInh);
+  local pred::PredInfo = predMaybe.fromJust;
 
-  top.requiresNoApp := [];
-  top.providesNoApp := [];
-
-  local getPermsFromArgs::([String] ::= [String]) = \ss::[String] ->
+  local getArgPerms::([String] ::= [String]) = \ss::[String] ->
     let positions::[Integer] = map(pred.getPositionForParam(_), ss) in
       map(vs.nthName(_), positions)
     end;
 
+  top.requiresNoApp := [];
+  top.providesNoApp := [];
+
   -- WF-APP
-  top.requires := getPermsFromArgs(pred.requires);
-  top.provides := getPermsFromArgs(pred.provides);
+  top.requires := if predMaybe.isJust then getArgPerms(pred.requires) else [];
+  top.provides := if predMaybe.isJust then getArgPerms(pred.provides) else [];
 }
 
 aspect production everyConstraint

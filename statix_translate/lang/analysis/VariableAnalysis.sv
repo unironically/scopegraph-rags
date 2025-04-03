@@ -628,7 +628,10 @@ top::Constraint ::= name::String vs::RefNameList
   local predMaybe::Maybe<PredInfo> = lookupPred(name, top.predsInh);
 
   vs.index = 0;
-  vs.predSyns = predMaybe.fromJust.syns;
+  vs.predSyns = case predMaybe of 
+                  just(p) -> p.syns
+                | _ -> error("applyConstraint for " ++ name)
+                end;
 
   top.errs <- if !predMaybe.isJust
               then [ noSuchPredicateError(name, top.location) ]
