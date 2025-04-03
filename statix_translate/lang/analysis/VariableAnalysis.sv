@@ -511,6 +511,8 @@ propagate freeVarsDefined on RefNameList;
 inherited attribute index::Integer occurs on RefNameList;
 inherited attribute predSyns::[(String, TypeAnn, Integer)] occurs on RefNameList;
 
+synthesized attribute nthName::(String ::= Integer) occurs on RefNameList;
+
 aspect production refNameListCons
 top::RefNameList ::= name::String names::RefNameList
 {
@@ -520,6 +522,9 @@ top::RefNameList ::= name::String names::RefNameList
 
   names.index = top.index + 1;
   names.predSyns = if found then tail(top.predSyns) else top.predSyns;
+
+  top.nthName =
+    \i::Integer -> if i == top.index then name else names.nthName(i);
 }
 
 aspect production refNameListOne
@@ -527,11 +532,16 @@ top::RefNameList ::= name::String
 {
   local found::Boolean = !null(top.predSyns) && head(top.predSyns).3 == top.index;
   top.freeVarsDefined <- if found then [] else [(name, head(top.predSyns).2)];
+
+  top.nthName =
+    \i::Integer -> if i == top.index then name else error("refNameListOne.nthName");
 }
 
 aspect production refNameListNil
 top::RefNameList ::=
-{}
+{
+  top.nthName = \i::Integer -> error("refNameListNil.nthName");
+}
 
 --------------------------------------------------
 

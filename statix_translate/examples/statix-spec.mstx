@@ -9,8 +9,8 @@ main(p:main) :- p match {
       {s:scope}
         new s,
         decls(s, ds)
-        ,{s':scope}
-          extendMe(s')
+        //,{s':scope}
+        //  extendMe(s')
   }.
 
 // requires [s]
