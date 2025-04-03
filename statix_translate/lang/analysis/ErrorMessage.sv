@@ -11,7 +11,7 @@ top::Error ::=
   name::String
   loc::Location
 {
-  top.msg = produceError("No permission to extend '" ++ name ++ "'", loc);
+  top.msg = produceError("No permission to extend " ++ name, loc);
 }
 
 abstract production noSuchPredicateError
@@ -19,7 +19,7 @@ top::Error ::=
   name::String
   loc::Location
 {
-  top.msg = produceError("No predicate '" ++ name ++ "'", loc);
+  top.msg = produceError("No known predicate called " ++ name, loc);
 }
 
 --------------------------------------------------

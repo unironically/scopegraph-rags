@@ -216,8 +216,7 @@ top::Constraint ::= names::NameList c::Constraint
   local requiredButNotProvided::[String] = 
     foldr (
       \existsName::String errNames::[String] ->
-        if  contains(existsName, c.requires) &&
-           !contains(existsName, c.provides)
+        if contains(existsName, c.requires) && !contains(existsName, c.provides)
         then existsName :: errNames
         else [],
       [], names.names);
@@ -230,8 +229,8 @@ top::Constraint ::= names::NameList c::Constraint
   top.requires := removeAll(names.names, c.requires);
   top.provides := removeAll(names.names, c.provides);
 
-  top.requiresNoApp := top.requires;
-  top.providesNoApp := top.provides;
+  top.requiresNoApp := removeAll(names.names, c.requiresNoApp);
+  top.providesNoApp := removeAll(names.names, c.providesNoApp);
 }
 
 aspect production eqConstraint
@@ -246,16 +245,16 @@ aspect production newConstraintDatum
 top::Constraint ::= name::String t::Term
 {
   -- WF-NODE-VAR
-  top.provides := [name];
-  top.providesNoApp := top.provides;
+  top.provides      := [name];
+  top.providesNoApp := [name];
 }
 
 aspect production newConstraint
 top::Constraint ::= name::String
 {
   -- WF-NODE-VAR
-  top.provides := [name];
-  top.providesNoApp := top.provides;
+  top.provides      := [name];
+  top.providesNoApp := [name];
 }
 
 aspect production dataConstraint
@@ -266,8 +265,8 @@ aspect production edgeConstraint
 top::Constraint ::= src::String lab::Term tgt::String
 {
   -- WF-EDGE
-  top.requires := [src];
-  top.requiresNoApp := top.requires;
+  top.requires      := [src];
+  top.requiresNoApp := [src];
 }
 
 aspect production queryConstraint
@@ -289,13 +288,20 @@ top::Constraint ::= set::String pc::PathComp res::String
 aspect production applyConstraint
 top::Constraint ::= name::String vs::RefNameList
 {
+    -- no such predicate error already handled in VariableAnalysis
   local pred::PredInfo = 
-    unsafeTracePrint(lookupPred(name, top.predsInh).fromJust, "called " ++ name ++ "\n");  -- not found already handled in VariableAnalysis
-  top.requires := pred.requires; -- predLookup.requires;
-  top.provides := pred.provides; -- predLookup.provides;
+    lookupPred(name, top.predsInh).fromJust;
 
   top.requiresNoApp := [];
   top.providesNoApp := [];
+
+  local getPermsFromArgs::([String] ::= [String]) = \ss::[String] ->
+    let positions::[Integer] = map(pred.getPositionForParam(_), ss) in
+      map(vs.nthName(_), positions)
+    end;
+
+  top.requires := getPermsFromArgs(pred.requires);
+  top.provides := getPermsFromArgs(pred.provides);
 }
 
 aspect production everyConstraint
@@ -320,17 +326,27 @@ top::Constraint ::= name::String t::Term
 
 --------------------------------------------------
 
+synthesized attribute nthName::(String ::= Integer) occurs on RefNameList;
+
 aspect production refNameListCons
 top::RefNameList ::= name::String names::RefNameList
-{}
+{
+  top.nthName =
+    \i::Integer -> if i == top.index then name else names.nthName(i);
+}
 
 aspect production refNameListOne
 top::RefNameList ::= name::String
-{}
+{
+  top.nthName =
+    \i::Integer -> if i == top.index then name else error("refNameListOne.nthName");
+}
 
 aspect production refNameListNil
 top::RefNameList ::=
-{}
+{
+  top.nthName = \i::Integer -> error("refNameListNil.nthName");
+}
 
 --------------------------------------------------
 
@@ -418,11 +434,23 @@ top::GuardList ::= g::Guard
 
 --------------------------------------------------
 
+attribute provides, providesNoApp occurs on Branch;
+propagate provides, providesNoApp on Branch;
+
+attribute requires, requiresNoApp occurs on Branch;
+propagate requires, requiresNoApp on Branch;
+
 aspect production branch
 top::Branch ::= m::Matcher c::Constraint
 {}
 
 --------------------------------------------------
+
+attribute provides, providesNoApp occurs on BranchList;
+propagate provides, providesNoApp on BranchList;
+
+attribute requires, requiresNoApp occurs on BranchList;
+propagate requires, requiresNoApp on BranchList;
 
 aspect production branchListCons
 top::BranchList ::= b::Branch bs::BranchList
@@ -433,6 +461,12 @@ top::BranchList ::= b::Branch
 {}
 
 --------------------------------------------------
+
+attribute provides, providesNoApp occurs on Lambda;
+propagate provides, providesNoApp on Lambda;
+
+attribute requires, requiresNoApp occurs on Lambda;
+propagate requires, requiresNoApp on Lambda;
 
 aspect production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint

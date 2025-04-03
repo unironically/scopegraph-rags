@@ -15,25 +15,29 @@ monoid attribute syns::[(String, TypeAnn, Integer)] with [], ++;
 
 inherited attribute nameTyDecls::[(String, TypeAnn)];
 
+--------------------------------------------------
+
 function lookupVar
 Maybe<(String, TypeAnn)> ::= name::String decls::[(String, TypeAnn)]
 {
-  return case decls of
-           [] -> nothing()
-         | (n, t)::_ when name == n -> just((n, t))
-         | _::t -> lookupVar(name, t)
-         end;
+  return 
+    case decls of
+      [] -> nothing()
+    | (n, t)::_ when name == n -> just((n, t))
+    | _::t -> lookupVar(name, t)
+    end;
 }
 
 function lookupPred
 Maybe<PredInfo> ::= name::String preds::[PredInfo]
 {
-  return case preds of
-           [] -> nothing()
-         | funPredInfo(n, _, _, _, _, _)::_    when name == n -> just(head(preds))
-         | synPredInfo(n, _, _, _, _, _, _)::_ when name == n -> just(head(preds))
-         | _::t -> lookupPred(name, t)
-         end;
+  return 
+    case preds of
+      [] -> nothing()
+    | funPredInfo(n, _, _, _, _, _)::_    when name == n -> just(head(preds))
+    | synPredInfo(n, _, _, _, _, _, _)::_ when name == n -> just(head(preds))
+    | _::t -> lookupPred(name, t)
+    end;
 }
 
 --------------------------------------------------
@@ -46,6 +50,7 @@ attribute syns occurs on PredInfo;
 attribute inhs occurs on PredInfo;
 attribute provides occurs on PredInfo;
 attribute requires occurs on PredInfo;
+synthesized attribute getPositionForParam::(Integer ::= String) occurs on PredInfo;
 
 abstract production synPredInfo
 top::PredInfo ::= 
@@ -63,6 +68,7 @@ top::PredInfo ::=
   top.requires := requires;
   top.provides := provides;
 
+  -- rebuild syntax pred body as a single match constraint
   top.predConstraint =
     let pt::Term =
       nameTerm(term.1)
@@ -72,6 +78,8 @@ top::PredInfo ::=
     in
       matchConstraint(pt, decBranches.toConstraintBranchList)
     end end;
+
+  top.getPositionForParam = getPositionForParamF(name, term::(inhs++syns), _);
 }
 
 abstract production funPredInfo
@@ -89,30 +97,99 @@ top::PredInfo ::=
   top.requires := requires;
   top.provides := provides;
   top.predConstraint = ^body;
+  top.getPositionForParam = getPositionForParamF(name, args ++ rets, _);
 }
+
+fun getPositionForParamF 
+    Integer ::= predName::String args::[(String, TypeAnn, Integer)] s::String =
+  let dropped::[(String, TypeAnn, Integer)] = 
+    dropWhile(\tup::(String, TypeAnn, Integer) -> tup.1 != s, args)
+  in
+    if null(dropped)
+    then error("getPositionForParam(" ++ s ++ ") for predicate " ++ predName)
+    else head(dropped).3
+  end;
 
 --------------------------------------------------
 
 aspect production module
 top::Module ::= ds::Imports ords::Orders preds::Predicates
 {
-  preds.predsInh = preds.predsSyn;
+  -- predicate information including permissions which do not take application
+  -- into account, only the result of local permission analysis.
+  local predsWithNoAppPerms::[PredInfo] = preds.predsSyn; 
+
+
+
+  preds.predsInh = 
+    lfpPredicateInfoSynAll(
+      predsWithNoAppPerms
+    );
+
 }
 
 --------------------------------------------------
---------------------------------------------------
 
-function lfpPredicateInfoSyn
-[Decorated PredInfo] ::= current::[Decorated PredInfo] undec::[PredInfo]
+function lfpPredicateInfoSynAll
+[PredInfo] ::= acc::[PredInfo]
 {
   return
-    let step::[Decorated PredInfo] = []
+    let step::[PredInfo] = map(lfpPredicateInfoSynStepOne(acc, _), acc)
     in
-      []
-    end;
+    let zippedBeforeAfter::[(PredInfo, PredInfo)] = zip(acc, step)
+    in
+      if all(map(noChangePredPerms, zippedBeforeAfter))
+      then step
+      else lfpPredicateInfoSynAll(step)
+    end end;
 }
 
---------------------------------------------------
+-- do the permission analysis for one predicate body, based on known predicates
+function lfpPredicateInfoSynStepOne
+PredInfo ::= acc::[PredInfo] pred::PredInfo
+{
+  return
+    let body::Constraint =
+      pred.predConstraint
+    in
+    let decBody::Decorated Constraint with {predsInh} = 
+      (decorate body with {predsInh = acc;})
+    in
+      case pred of
+        synPredInfo(n, t, is, ss, _, _, body) ->
+          synPredInfo(n, t, is, ss, decBody.requires, decBody.provides, ^body)
+      | funPredInfo(n, args, rets, _, _, body) ->
+          funPredInfo(n, args, rets, decBody.requires, decBody.provides, ^body)
+      end
+    end end;
+}
+
+-- check that one instance of a predInfo is the same as another in terms of permission
+-- before/after needs to be the same predicate
+function noChangePredPerms
+Boolean ::= infos::(PredInfo, PredInfo)
+{
+  return
+    let before::PredInfo = infos.1 in
+    let after::PredInfo  = infos.2 in
+      before.predName == after.predName &&
+      before.requires == after.requires &&
+      before.provides == after.provides
+    end end;
+}
+
+function strPermsForPred
+String ::= pred::PredInfo
+{
+  return
+    pred.predName ++ 
+      ":\n\t\trequires: [" ++ 
+        implode(", ", pred.requires) ++ 
+      "],\n\t\tprovides: [" ++
+        implode(", ", pred.provides) ++
+      "]"; 
+}
+
 --------------------------------------------------
 
 attribute predsSyn occurs on Predicates;
