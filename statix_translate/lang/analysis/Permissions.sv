@@ -199,12 +199,6 @@ top::Branch ::= m::Matcher c::Constraint
 
 --------------------------------------------------
 
---attribute provides, providesNoApp occurs on BranchList;
---propagate provides, providesNoApp on BranchList;
-
---attribute requires, requiresNoApp occurs on BranchList;
---propagate requires, requiresNoApp on BranchList;
-
 synthesized attribute eachBranchRequires::[[String]] occurs on BranchList;
 synthesized attribute eachBranchRequiresNoApp::[[String]] occurs on BranchList;
 
