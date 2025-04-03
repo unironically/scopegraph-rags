@@ -106,6 +106,11 @@ aspect production nameListNil
 top::NameList ::=
 {}
 
+--------------------------------------------------
+
+attribute errs occurs on Name;
+propagate errs on Name;
+
 aspect production nameSyn
 top::Name ::= name::String ty::TypeAnn
 {}

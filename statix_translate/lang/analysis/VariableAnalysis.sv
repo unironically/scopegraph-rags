@@ -3,7 +3,7 @@ grammar statix_translate:lang:analysis;
 --------------------------------------------------
 
 global builtinTypeNames::[String] = [
-  "scope", "datum", "string"
+  "scope", "datum", "string", "path"
 ];
 
 --------------------------------------------------
@@ -36,13 +36,23 @@ Maybe<(String, TypeAnn)> ::= name::String decls::[(String, TypeAnn)]
 
 function lookupPred
 Maybe<PredInfo> ::= name::String preds::[PredInfo]
+{ return lookupPredAux(name, preds, false); }
+
+function lookupSyntaxPred
+Maybe<PredInfo> ::= name::String preds::[PredInfo]
+{ return lookupPredAux(name, preds, true); }
+
+function lookupPredAux
+Maybe<PredInfo> ::= name::String preds::[PredInfo] mustBeSyn::Boolean
 {
   return 
     case preds of
       [] -> nothing()
-    | funPredInfo(n, _, _, _, _, _)::_    when name == n -> just(head(preds))
-    | synPredInfo(n, _, _, _, _, _, _)::_ when name == n -> just(head(preds))
-    | _::t -> lookupPred(name, t)
+    | funPredInfo(n, _, _, _, _, _)::_ when !mustBeSyn && name == n ->
+        just(head(preds))
+    | synPredInfo(n, _, _, _, _, _, _)::_ when name == n ->
+        just(head(preds))
+    | _::t -> lookupPredAux(name, t, mustBeSyn)
     end;
 }
 
@@ -52,7 +62,7 @@ Maybe<TypeAnn> ::= name::String preds::[PredInfo]
   return
     if contains(name, builtinTypeNames)
     then just(nameType(name, location=bogusLoc()))
-    else if lookupPred(name, preds).isJust
+    else if lookupSyntaxPred(name, preds).isJust
          then just(nameType(name, location=bogusLoc()))
          else nothing();
 }
