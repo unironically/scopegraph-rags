@@ -20,6 +20,8 @@ abstract production ordersNil
 top::Orders ::= 
 {}
 
+--------------------------------------------------
+
 nonterminal Order with location;
 
 abstract production order
@@ -37,6 +39,8 @@ top::Imports ::= imp::Import imps::Imports
 abstract production importsNil
 top::Imports ::=
 {}
+
+--------------------------------------------------
 
 nonterminal Import with location;
 
@@ -56,6 +60,8 @@ abstract production predicatesNil
 top::Predicates ::= 
 {}
 
+--------------------------------------------------
+
 nonterminal Predicate with location;
 
 abstract production syntaxPredicate 
@@ -73,6 +79,8 @@ nonterminal ProdBranch with location;
 abstract production prodBranch
 top::ProdBranch ::= name::String params::NameList c::Constraint
 {}
+
+--------------------------------------------------
 
 nonterminal ProdBranchList with location;
 
@@ -170,6 +178,8 @@ abstract production stringTerm
 top::Term ::= s::String
 {}
 
+--------------------------------------------------
+
 nonterminal TermList with location;
 
 abstract production termListCons
@@ -180,12 +190,18 @@ abstract production termListNil
 top::TermList ::=
 {}
 
+--------------------------------------------------
+
 nonterminal Label with location;
 
 abstract production label
 top::Label ::= label::String
-{
+{}
 
+instance Eq Label {
+  eq = \l::Label r::Label -> case l, r of
+                               label(n1), label(n2) -> n1 == n2
+                             end;
 }
 
 --------------------------------------------------
@@ -340,6 +356,8 @@ abstract production underscorePattern
 top::Pattern ::= ty::TypeAnn
 {}
 
+--------------------------------------------------
+
 nonterminal PatternList with location;
 
 abstract production patternListCons
@@ -374,6 +392,8 @@ abstract production neqGuard
 top::Guard ::= t1::Term t2::Term
 {}
 
+--------------------------------------------------
+
 nonterminal GuardList with location;
 
 abstract production guardListCons
@@ -391,6 +411,8 @@ nonterminal Branch with location;
 abstract production branch
 top::Branch ::= m::Matcher c::Constraint
 {}
+
+--------------------------------------------------
 
 nonterminal BranchList with location;
 
@@ -478,6 +500,7 @@ abstract production namedPathComp
 top::PathComp ::= name::String
 {}
 
+--------------------------------------------------
 
 nonterminal LabelLTs with location;
 

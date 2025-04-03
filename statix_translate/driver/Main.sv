@@ -27,29 +27,17 @@ IO<Integer> ::= largs::[String]
         let fileName::String = head(fileNameExplode);
 
         if result.parseSuccess
-          then do {
-            --print("[✔] Parse success\n");
-            --print(ast.pp);
-            --writeFile("ag.sv", ast.moduleTrans);
-
-            code::Integer <-
-              if (null(ast.errs))
-              then do {
-                return 0;
-              }
-              else do {
-                printErrs(ast.errs);
-               return -1;
-              };
-            
-            --hasOutDir::Boolean <- isDirectory("out");
-            --mkdirSucc::Boolean <- if hasOutDir then do {return true;} else mkdir("out");
-            --writeFile("out/statix-spec.mstx", ast.mstxPP);
-
-            --return 0; 
-
-            return code;
-          }
+          then 
+            if null(ast.errs)
+            then do {
+              print("- Known labels: " ++ 
+                    implode(", ", map((.name), ast.labelsSyn)) ++ "\n");
+              return 0;
+            }
+            else do {
+              printErrs(ast.errs); 
+              return -1;
+            }
           else do {
             print("[✗] Parse failure\n");
             print(result.parseErrors);
@@ -62,10 +50,5 @@ IO<Integer> ::= largs::[String]
       };
 }
 
-function printErrs
-IO<Unit> ::= msgs::[Error]
-{
-  return print (
-    implode ("\n", map ((.msg), msgs)) ++ "\n"
-  );
-}
+fun printErrs IO<Unit> ::= msgs::[Error] =
+  print (implode ("\n", map ((.msg), msgs)) ++ "\n");
