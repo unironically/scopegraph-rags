@@ -1,6 +1,7 @@
 import stdlib.paths
 import stdlib.sets
 
+
 // requires []
 // provides []
 @syntax
@@ -10,7 +11,19 @@ main(p:main) :- p match {
       {s:scope}
         new s,
         decls(s, ds)
+        ,{s':scope}
+          extendMe(s')
   }.
+
+
+// requires [s]
+// provides []
+extendMe(s:scope) :- 
+  {s':scope} 
+    new s', 
+    s -[ `LEX ]-> s'
+  . 
+
 
 // requires [s]
 // provides []
@@ -25,6 +38,7 @@ decls(@inh s:scope, ds:decls) :- ds match {
       decls(s, ds)
   }.
 
+
 // requires [s]
 // provides []
 @syntax
@@ -36,6 +50,7 @@ decl(@inh s:scope, d:decl) :- d match {
       s -[ `LEX ]-> s'
 
   }.
+
 
 // requires [s]
 // provides [s]

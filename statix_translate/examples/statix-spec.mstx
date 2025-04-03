@@ -9,17 +9,8 @@ main(p:main) :- p match {
       {s:scope}
         new s,
         decls(s, ds)
-        //,{s':scope}
-        //  extendMe(s')
   }.
 
-// requires [s]
-// provides []
-extendMe(s:scope) :- 
-  {s':scope} 
-    new s', 
-    s -[ `LEX ]-> s'
-  . 
 
 @syntax
 decls(@inh s:scope, ds:decls) :- ds match {
@@ -194,6 +185,7 @@ par-binds(@inh s:scope, bs:par-binds, @syn s_def:scope) :- bs match {
 
   }.
 
+
 @syntax
 par-bind(@inh s:scope, b:par-bind, @inh s_def:scope) :- b match {
     
@@ -285,10 +277,10 @@ var-ref(@inh s:scope, r:var-ref, @syn p:path) :- r match {
   }.
 
 
-/////
+// some function predicates //
 
 tgt(p:path, @ret s:scope) :- p match {
-    End(x:scope)                       -> s := x
+    End(x:scope)                     -> s := x
   | Edge(x:string, l:label, xs:path) -> tgt(xs,s)
   }.
 
@@ -303,8 +295,6 @@ datumOf(p:path, @ret d:datum) :-
     s -> d.
 
 min-refs(z:{path}, @ret z':{path}) :-
-  min z lexico( `MOD < `LEX, `MOD < `IMP, `MOD < `EXT,
-                `REC < `LEX, `REC < `IMP, `REC < `EXT,
-                `VAR < `LEX, `VAR < `IMP, `VAR < `EXT,
-                `IMP < `LEX, `EXT < `LEX
-              ) z'.
+  min z lexico( `MOD < `LEX, `MOD < `IMP,
+                `VAR < `LEX, `VAR < `IMP,
+                `IMP < `LEX ) z'.
