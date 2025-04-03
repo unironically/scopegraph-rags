@@ -1,5 +1,7 @@
 grammar statix_translate:lang:analysis;
 
+--------------------------------------------------
+
 -- todo: Cite Fig. 11, Knowing When to Ask
 
 --------------------------------------------------
@@ -81,7 +83,7 @@ top::Constraint ::= names::NameList c::Constraint
 
   top.errs <-
     if !null(requiredButNotProvided)
-    then map(permissionError(_, bogusLoc()), requiredButNotProvided)
+    then map(permissionError(_, top.location), requiredButNotProvided)
     else [];
 
   top.requires := removeAll(names.names, c.requires);

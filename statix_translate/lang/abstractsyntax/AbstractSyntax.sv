@@ -2,7 +2,7 @@ grammar statix_translate:lang:abstractsyntax;
 
 --------------------------------------------------
 
-nonterminal Module;
+nonterminal Module with location;
 
 abstract production module
 top::Module ::= ds::Imports ords::Orders preds::Predicates
@@ -10,7 +10,7 @@ top::Module ::= ds::Imports ords::Orders preds::Predicates
  
 --------------------------------------------------
 
-nonterminal Orders;
+nonterminal Orders with location;
 
 abstract production ordersCons
 top::Orders ::= ord::Order ords::Orders
@@ -20,7 +20,7 @@ abstract production ordersNil
 top::Orders ::= 
 {}
 
-nonterminal Order;
+nonterminal Order with location;
 
 abstract production order
 top::Order ::= name::String pathComp::PathComp
@@ -28,7 +28,7 @@ top::Order ::= name::String pathComp::PathComp
 
 --------------------------------------------------
 
-nonterminal Imports;
+nonterminal Imports with location;
 
 abstract production importsCons
 top::Imports ::= imp::Import imps::Imports
@@ -38,7 +38,7 @@ abstract production importsNil
 top::Imports ::=
 {}
 
-nonterminal Import;
+nonterminal Import with location;
 
 abstract production imp
 top::Import ::= qual::QualName
@@ -46,7 +46,7 @@ top::Import ::= qual::QualName
 
 --------------------------------------------------
 
-nonterminal Predicates;
+nonterminal Predicates with location;
 
 abstract production predicatesCons
 top::Predicates ::= pred::Predicate preds::Predicates
@@ -56,7 +56,7 @@ abstract production predicatesNil
 top::Predicates ::= 
 {}
 
-nonterminal Predicate;
+nonterminal Predicate with location;
 
 abstract production syntaxPredicate 
 top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
@@ -68,13 +68,13 @@ top::Predicate ::= name::String nameLst::NameList const::Constraint
 
 --------------------------------------------------
 
-nonterminal ProdBranch;
+nonterminal ProdBranch with location;
 
 abstract production prodBranch
 top::ProdBranch ::= name::String params::NameList c::Constraint
 {}
 
-nonterminal ProdBranchList;
+nonterminal ProdBranchList with location;
 
 abstract production prodBranchListCons
 top::ProdBranchList ::= b::ProdBranch bs::ProdBranchList
@@ -86,7 +86,7 @@ top::ProdBranchList ::= b::ProdBranch
 
 --------------------------------------------------
 
-nonterminal NameList;
+nonterminal NameList with location;
 
 abstract production nameListCons
 top::NameList ::= name::Name names::NameList
@@ -100,7 +100,7 @@ abstract production nameListNil
 top::NameList ::=
 {}
 
-nonterminal Name;
+nonterminal Name with location;
 
 abstract production nameSyn
 top::Name ::= name::String ty::TypeAnn
@@ -120,7 +120,7 @@ top::Name ::= name::String ty::TypeAnn
 
 --------------------------------------------------
 
-nonterminal TypeAnn;
+nonterminal TypeAnn with location;
 
 abstract production nameType
 top::TypeAnn ::= name::String
@@ -136,7 +136,7 @@ top::TypeAnn ::= ty::TypeAnn
 
 --------------------------------------------------
 
-nonterminal Term;
+nonterminal Term with location;
 
 abstract production labelTerm
 top::Term ::= lab::Label
@@ -170,7 +170,7 @@ abstract production stringTerm
 top::Term ::= s::String
 {}
 
-nonterminal TermList;
+nonterminal TermList with location;
 
 abstract production termListCons
 top::TermList ::= t::Term ts::TermList
@@ -180,7 +180,7 @@ abstract production termListNil
 top::TermList ::=
 {}
 
-nonterminal Label;
+nonterminal Label with location;
 
 abstract production label
 top::Label ::= label::String
@@ -190,7 +190,7 @@ top::Label ::= label::String
 
 --------------------------------------------------
 
-nonterminal Constraint;
+nonterminal Constraint with location;
 
 abstract production trueConstraint
 top::Constraint ::=
@@ -274,7 +274,7 @@ top::Constraint ::= name::String t::Term
 
 --------------------------------------------------
 
-nonterminal RefNameList;
+nonterminal RefNameList with location;
 
 abstract production refNameListCons
 top::RefNameList ::= name::String names::RefNameList
@@ -290,7 +290,7 @@ top::RefNameList ::=
 
 --------------------------------------------------
 
-nonterminal Matcher;
+nonterminal Matcher with location;
 
 abstract production matcher
 top::Matcher ::= p::Pattern wc::WhereClause
@@ -298,7 +298,7 @@ top::Matcher ::= p::Pattern wc::WhereClause
 
 --------------------------------------------------
 
-nonterminal Pattern;
+nonterminal Pattern with location;
 
 abstract production labelPattern
 top::Pattern ::= lab::Label
@@ -340,7 +340,7 @@ abstract production underscorePattern
 top::Pattern ::= ty::TypeAnn
 {}
 
-nonterminal PatternList;
+nonterminal PatternList with location;
 
 abstract production patternListCons
 top::PatternList ::= p::Pattern ps::PatternList
@@ -352,7 +352,7 @@ top::PatternList ::=
 
 --------------------------------------------------
 
-nonterminal WhereClause;
+nonterminal WhereClause with location;
 
 abstract production nilWhereClause
 top::WhereClause ::=
@@ -364,7 +364,7 @@ top::WhereClause ::= gl::GuardList
 
 --------------------------------------------------
 
-nonterminal Guard;
+nonterminal Guard with location;
 
 abstract production eqGuard
 top::Guard ::= t1::Term t2::Term
@@ -374,7 +374,7 @@ abstract production neqGuard
 top::Guard ::= t1::Term t2::Term
 {}
 
-nonterminal GuardList;
+nonterminal GuardList with location;
 
 abstract production guardListCons
 top::GuardList ::= g::Guard gl::GuardList
@@ -386,13 +386,13 @@ top::GuardList ::= g::Guard
 
 --------------------------------------------------
 
-nonterminal Branch;
+nonterminal Branch with location;
 
 abstract production branch
 top::Branch ::= m::Matcher c::Constraint
 {}
 
-nonterminal BranchList;
+nonterminal BranchList with location;
 
 abstract production branchListCons
 top::BranchList ::= b::Branch bs::BranchList
@@ -404,7 +404,7 @@ top::BranchList ::= b::Branch
 
 --------------------------------------------------
 
-nonterminal Lambda;
+nonterminal Lambda with location;
 
 abstract production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
@@ -412,7 +412,7 @@ top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
 
 --------------------------------------------------
 
-nonterminal Regex;
+nonterminal Regex with location;
 
 abstract production regexLabel
 top::Regex ::= lab::Label
@@ -460,7 +460,7 @@ top::Regex ::= r::Regex
 
 --------------------------------------------------
 
-nonterminal PathComp;
+nonterminal PathComp with location;
 
 abstract production lexicoPathComp
 top::PathComp ::= lts::LabelLTs
@@ -479,7 +479,7 @@ top::PathComp ::= name::String
 {}
 
 
-nonterminal LabelLTs;
+nonterminal LabelLTs with location;
 
 abstract production labelLTsCons
 top::LabelLTs ::= l1::Label l2::Label lts::LabelLTs
@@ -491,7 +491,7 @@ top::LabelLTs ::= l1::Label l2::Label
 
 --------------------------------------------------
 
-nonterminal QualName;
+nonterminal QualName with location;
 
 abstract production qualNameDot
 top::QualName ::= qn::QualName name::String

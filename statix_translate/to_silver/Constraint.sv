@@ -343,7 +343,10 @@ function tupleSectionDef
   local nextIdx::Integer = acc.1 + offset;
 
   local tmpLabelSet::[Label] = [
-    label("LEX"), label("VAR"), label("IMP"), label("MOD")
+    label("LEX", location=bogusLoc()), 
+    label("VAR", location=bogusLoc()), 
+    label("IMP", location=bogusLoc()), 
+    label("MOD", location=bogusLoc())
   ];
 
   local labelEqs::[AG_Eq] = 

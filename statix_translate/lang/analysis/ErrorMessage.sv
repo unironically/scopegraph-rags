@@ -19,10 +19,29 @@ top::Error ::=
   name::String
   loc::Location
 {
-  top.msg = produceError("No known predicate called " ++ name, loc);
+  top.msg = produceError("No known predicate " ++ name, loc);
+}
+
+abstract production noSuchNameError
+top::Error ::=
+  name::String
+  loc::Location
+{
+  top.msg = produceError("No known variable " ++ name, loc);
+}
+
+abstract production noSuchTypeError
+top::Error ::=
+  name::String
+  loc::Location
+{
+  top.msg = produceError("No known type " ++ name, loc);
 }
 
 --------------------------------------------------
 
 fun produceError String ::= msg::String loc::Location =
-  "ERROR at " ++ toString(loc.line) ++ "," ++ toString(loc.column) ++ " " ++ msg;
+  "ERROR " ++ 
+  toString(loc.line) ++ ":" ++ 
+  toString(loc.column) ++ " - " ++ 
+  msg;

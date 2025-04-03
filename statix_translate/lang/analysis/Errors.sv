@@ -91,6 +91,9 @@ top::ProdBranchList ::= b::ProdBranch
 
 --------------------------------------------------
 
+attribute errs occurs on NameList;
+propagate errs on NameList;
+
 aspect production nameListCons
 top::NameList ::= name::Name names::NameList
 {}
@@ -121,6 +124,9 @@ top::Name ::= name::String ty::TypeAnn
 
 --------------------------------------------------
 
+attribute errs occurs on TypeAnn;
+propagate errs on TypeAnn;
+
 aspect production nameType
 top::TypeAnn ::= name::String
 {}
@@ -134,6 +140,9 @@ top::TypeAnn ::= ty::TypeAnn
 {}
 
 --------------------------------------------------
+
+attribute errs occurs on Term;
+propagate errs on Term;
 
 aspect production labelTerm
 top::Term ::= lab::Label
@@ -264,6 +273,9 @@ top::Constraint ::= name::String t::Term
 
 --------------------------------------------------
 
+attribute errs occurs on RefNameList;
+propagate errs on RefNameList;
+
 aspect production refNameListCons
 top::RefNameList ::= name::String names::RefNameList
 {}
@@ -277,6 +289,9 @@ top::RefNameList ::=
 {}
 
 --------------------------------------------------
+
+attribute errs occurs on Matcher;
+propagate errs on Matcher;
 
 aspect production matcher
 top::Matcher ::= p::Pattern wc::WhereClause
@@ -334,6 +349,9 @@ top::PatternList ::=
 
 --------------------------------------------------
 
+attribute errs occurs on WhereClause;
+propagate errs on WhereClause;
+
 aspect production nilWhereClause
 top::WhereClause ::=
 {}
@@ -344,6 +362,9 @@ top::WhereClause ::= gl::GuardList
 
 --------------------------------------------------
 
+attribute errs occurs on Guard;
+propagate errs on Guard;
+
 aspect production eqGuard
 top::Guard ::= t1::Term t2::Term
 {}
@@ -351,6 +372,11 @@ top::Guard ::= t1::Term t2::Term
 aspect production neqGuard
 top::Guard ::= t1::Term t2::Term
 {}
+
+--------------------------------------------------
+
+attribute errs occurs on GuardList;
+propagate errs on GuardList;
 
 aspect production guardListCons
 top::GuardList ::= g::Guard gl::GuardList
