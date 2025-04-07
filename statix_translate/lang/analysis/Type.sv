@@ -52,3 +52,36 @@ Boolean ::= ty1::Type ty2::Type
     | _, _ -> false
     end;
 }
+
+function eqTys
+Boolean ::= tysP::[Type] tysM::[Maybe<Type>]
+{
+  return
+    case tysP, tysM of
+    | [], [] -> true
+    | h1::t1, [] -> false
+    | [], h2::t2 -> false
+    | _::_, nothing()::_ -> false
+    | h1::t1, just(h2)::t2 -> eqType(h1, h2) && eqTys(t1, t2)
+    end;
+
+}
+
+function eqTypePair
+Boolean ::= pair::(Type, Type)
+{
+  return eqType(pair.1, pair.2);
+}
+
+function typeStr
+String ::= t::Type
+{
+  return
+    case t of
+    | nameType(s)  -> "nameType(" ++ s ++ ")"
+    | listType(lt) -> "listType(" ++ typeStr(^lt) ++ ")"
+    | setType(st)  -> "setType(" ++ typeStr(^st) ++ ")"
+    | tupleType(ts)-> "tupleType([" ++ implode(", ", map(typeStr, ts)) ++ "])"
+    | varType()    -> "'t"
+    end;
+}

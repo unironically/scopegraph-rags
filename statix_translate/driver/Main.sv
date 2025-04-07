@@ -30,7 +30,7 @@ IO<Integer> ::= largs::[String]
           then 
             if null(ast.errs)
             then do {
-              print("- Known labels: " ++
+              print("Known labels: " ++
                     implode(", ", map((.name), ast.labelsSyn)) ++ "\n");
               return 0;
             }

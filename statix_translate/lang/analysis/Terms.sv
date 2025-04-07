@@ -6,18 +6,86 @@ grammar statix_translate:lang:analysis;
 
 --------------------------------------------------
 
-monoid attribute termsSyn::[Label] with [], union;
+monoid attribute constructorsSyn::[ConstructorInfo] with [], union;
 
-inherited attribute knownTerms::[Label];
+inherited attribute knownConstructors::[ConstructorInfo];
 
 synthesized attribute termTy::Maybe<Type>;
 synthesized attribute termTys::[Maybe<Type>];
 
 --------------------------------------------------
 
+function lookupConstructor
+Maybe<ConstructorInfo> ::= name::String decls::[ConstructorInfo]
+{
+  return
+    case decls of
+    | constructor(n, _, _, _)::_ when name == n -> just(head(decls)) 
+    | _::t -> lookupConstructor(name, t)
+    | [] -> nothing()
+    end;
+}
+
+--------------------------------------------------
+
+nonterminal ConstructorInfo;
+
+attribute name occurs on ConstructorInfo;
+synthesized attribute constructorType::Type occurs on ConstructorInfo;
+synthesized attribute constructorArgTys::[Type] occurs on ConstructorInfo;
+synthesized attribute constructorLoc::Location occurs on ConstructorInfo;
+
+abstract production constructor
+top::ConstructorInfo ::=
+  name::String
+  ty::Type
+  argTys::[Type]
+  loc::Location
+{
+  top.name = name;
+  top.constructorType = ^ty;
+  top.constructorArgTys = argTys;
+  top.constructorLoc = loc;
+}
+
+instance Eq ConstructorInfo {
+  eq = \l::ConstructorInfo r::ConstructorInfo ->
+    l.name == r.name &&
+    eqType(l.constructorType, r.constructorType) &&
+    length(l.constructorArgTys) == length(r.constructorArgTys) &&
+    all(map(eqTypePair, zip(l.constructorArgTys, r.constructorArgTys)));
+}
+
+function constructorStr
+String ::= c::ConstructorInfo
+{
+  return
+    c.name ++ ": " ++ typeStr(c.constructorType) ++ " ::= " ++
+    implode(" ", map(typeStr, c.constructorArgTys));
+
+}
+
+function duplConstructorErrs
+[Error] ::= cs::[ConstructorInfo]
+{
+  return
+    case cs of
+    | []   -> []
+    | h::t -> if containsBy(\l::ConstructorInfo r::ConstructorInfo -> l.name == r.name, h, t)
+              then [ duplicateConstructorError(h.name, h.constructorLoc) ] -- don't continue looking
+              else duplConstructorErrs(t)
+    end;
+}
+
+--------------------------------------------------
+
 aspect production module
 top::Module ::= ds::Imports ords::Orders preds::Predicates
-{}
+{
+  preds.knownConstructors = preds.constructorsSyn;
+
+  top.errs <- duplConstructorErrs(preds.constructorsSyn);
+}
  
 --------------------------------------------------
 
@@ -53,11 +121,11 @@ top::Import ::= qual::QualName
 
 --------------------------------------------------
 
-attribute termsSyn occurs on Predicates;
-propagate termsSyn on Predicates;
+attribute constructorsSyn occurs on Predicates;
+propagate constructorsSyn on Predicates;
 
-attribute knownTerms occurs on Predicates;
-propagate knownTerms on Predicates;
+attribute knownConstructors occurs on Predicates;
+propagate knownConstructors on Predicates;
 
 aspect production predicatesCons
 top::Predicates ::= pred::Predicate preds::Predicates
@@ -69,11 +137,11 @@ top::Predicates ::=
 
 --------------------------------------------------
 
-attribute termsSyn occurs on Predicate;
-propagate termsSyn on Predicate;
+attribute constructorsSyn occurs on Predicate;
+propagate constructorsSyn on Predicate;
 
-attribute knownTerms occurs on Predicate;
-propagate knownTerms on Predicate;
+attribute knownConstructors occurs on Predicate;
+propagate knownConstructors on Predicate;
 
 aspect production syntaxPredicate 
 top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
@@ -85,23 +153,27 @@ top::Predicate ::= name::String nameLst::NameList const::Constraint
 
 --------------------------------------------------
 
-attribute termsSyn occurs on ProdBranch;
-propagate termsSyn on ProdBranch;
+attribute constructorsSyn occurs on ProdBranch;
+propagate constructorsSyn on ProdBranch;
 
-attribute knownTerms occurs on ProdBranch;
-propagate knownTerms on ProdBranch;
+attribute knownConstructors occurs on ProdBranch;
+propagate knownConstructors on ProdBranch;
 
 aspect production prodBranch
 top::ProdBranch ::= name::String params::NameList c::Constraint
-{}
+{
+  top.constructorsSyn <- [
+    constructor(name, top.prodTyAnn.termTy.fromJust, map(snd, params.nameTyDeclsSyn), top.location)
+  ];
+}
 
 --------------------------------------------------
 
-attribute termsSyn occurs on ProdBranchList;
-propagate termsSyn on ProdBranchList;
+attribute constructorsSyn occurs on ProdBranchList;
+propagate constructorsSyn on ProdBranchList;
 
-attribute knownTerms occurs on ProdBranchList;
-propagate knownTerms on ProdBranchList;
+attribute knownConstructors occurs on ProdBranchList;
+propagate knownConstructors on ProdBranchList;
 
 aspect production prodBranchListCons
 top::ProdBranchList ::= b::ProdBranch bs::ProdBranchList
@@ -167,59 +239,113 @@ top::TypeAnn ::= ty::TypeAnn
 
 --------------------------------------------------
 
-attribute termsSyn occurs on Term;
-propagate termsSyn on Term;
+attribute constructorsSyn occurs on Term;
+propagate constructorsSyn on Term;
 
-attribute knownTerms occurs on Term;
-propagate knownTerms on Term;
+attribute knownConstructors occurs on Term;
+propagate knownConstructors on Term;
+
+attribute termTy occurs on Term;
 
 aspect production labelTerm
 top::Term ::= lab::Label
-{}
+{
+  top.termTy = just(nameType("label"));
+}
 
 aspect production labelArgTerm
 top::Term ::= lab::Label t::Term
-{}
+{
+  top.termTy = just(nameType("label"));
+}
 
 aspect production constructorTerm
 top::Term ::= name::String ts::TermList
-{}
+{
+  local constrMaybe::Maybe<ConstructorInfo> = lookupConstructor(name, top.knownConstructors);
+
+  top.termTy = case constrMaybe of
+               | just(c) -> just(c.constructorType)
+               | _ -> nothing()
+               end;
+
+  top.errs <- case constrMaybe of
+              | just(c) -> []
+              | nothing() -> [ noSuchConstructorError(name, top.location) ]
+              end;
+
+  top.errs <- case constrMaybe of
+              | just(c) ->
+                  let argTys::[Type] = c.constructorArgTys in
+                    if eqTys(argTys, ts.termTys)
+                    then []
+                    else [ badConstructorArgsError(name, top.location) ]
+                  end
+              | nothing() -> []
+              end;
+}
 
 aspect production nameTerm
 top::Term ::= name::String
-{}
+{
+  local nameMaybe::Maybe<(String, Type)> = lookupVar(name, top.nameTyDecls);
+
+  top.termTy = case nameMaybe of
+               | just((s, t)) -> just(t)
+               | _ -> nothing()
+               end;
+}
 
 aspect production consTerm
 top::Term ::= t1::Term t2::Term
-{}
+{
+  top.termTy = case t1.termTy, t2.termTy of
+               | just(t1ty), just(listType(t2ty)) when eqType(t1ty, ^t2ty) -> just(listType(t1ty))
+               | _, _ -> nothing()
+               end;
+}
 
 aspect production nilTerm
 top::Term ::=
-{}
+{
+  top.termTy = just(listType(varType()));
+}
 
 aspect production tupleTerm
 top::Term ::= ts::TermList
-{}
+{
+  top.termTy = if all(map((.isJust), ts.termTys))
+               then just(tupleType(map((.fromJust), ts.termTys)))
+               else nothing();
+}
 
 aspect production stringTerm
 top::Term ::= s::String
-{}
+{
+  top.termTy = just(nameType("string"));
+}
 
 --------------------------------------------------
 
-attribute termsSyn occurs on TermList;
-propagate termsSyn on TermList;
+attribute constructorsSyn occurs on TermList;
+propagate constructorsSyn on TermList;
 
-attribute knownTerms occurs on TermList;
-propagate knownTerms on TermList;
+attribute knownConstructors occurs on TermList;
+propagate knownConstructors on TermList;
+
+attribute termTys occurs on TermList;
 
 aspect production termListCons
 top::TermList ::= t::Term ts::TermList
-{}
+{
+  top.termTys = t.termTy :: ts.termTys;
+}
 
 aspect production termListNil
 top::TermList ::=
-{}
+{
+  top.termTys = [];
+}
 
 --------------------------------------------------
 
@@ -229,11 +355,11 @@ top::Label ::= label::String
 
 --------------------------------------------------
 
-attribute termsSyn occurs on Constraint;
-propagate termsSyn on Constraint;
+attribute constructorsSyn occurs on Constraint;
+propagate constructorsSyn on Constraint;
 
-attribute knownTerms occurs on Constraint;
-propagate knownTerms on Constraint;
+attribute knownConstructors occurs on Constraint;
+propagate knownConstructors on Constraint;
 
 aspect production trueConstraint
 top::Constraint ::=
@@ -327,11 +453,11 @@ top::RefNameList ::=
 
 --------------------------------------------------
 
-attribute termsSyn occurs on Matcher;
-propagate termsSyn on Matcher;
+attribute constructorsSyn occurs on Matcher;
+propagate constructorsSyn on Matcher;
 
-attribute knownTerms occurs on Matcher;
-propagate knownTerms on Matcher;
+attribute knownConstructors occurs on Matcher;
+propagate knownConstructors on Matcher;
 
 aspect production matcher
 top::Matcher ::= p::Pattern wc::WhereClause
@@ -339,11 +465,11 @@ top::Matcher ::= p::Pattern wc::WhereClause
 
 --------------------------------------------------
 
-attribute termsSyn occurs on Pattern;
-propagate termsSyn on Pattern;
+attribute constructorsSyn occurs on Pattern;
+propagate constructorsSyn on Pattern;
 
-attribute knownTerms occurs on Pattern;
-propagate knownTerms on Pattern;
+attribute knownConstructors occurs on Pattern;
+propagate knownConstructors on Pattern;
 
 attribute termTy occurs on Pattern;
 
@@ -380,6 +506,7 @@ top::Pattern ::= name::String ty::TypeAnn
 aspect production constructorPattern
 top::Pattern ::= name::String ps::PatternList ty::TypeAnn
 {
+  top.constructorsSyn <- [constructor(name, ty.termTy.fromJust, map((.fromJust), ps.termTys), top.location)];
   top.termTy = just(toType(^ty));
 }
 
@@ -414,11 +541,11 @@ top::Pattern ::= ty::TypeAnn
 
 --------------------------------------------------
 
-attribute termsSyn occurs on PatternList;
-propagate termsSyn on PatternList;
+attribute constructorsSyn occurs on PatternList;
+propagate constructorsSyn on PatternList;
 
-attribute knownTerms occurs on PatternList;
-propagate knownTerms on PatternList;
+attribute knownConstructors occurs on PatternList;
+propagate knownConstructors on PatternList;
 
 attribute termTys occurs on PatternList;
 
@@ -436,6 +563,12 @@ top::PatternList ::=
 
 --------------------------------------------------
 
+attribute constructorsSyn occurs on WhereClause;
+propagate constructorsSyn on WhereClause;
+
+attribute knownConstructors occurs on WhereClause;
+propagate knownConstructors on WhereClause;
+
 aspect production nilWhereClause
 top::WhereClause ::=
 {}
@@ -445,6 +578,12 @@ top::WhereClause ::= gl::GuardList
 {}
 
 --------------------------------------------------
+
+attribute constructorsSyn occurs on Guard;
+propagate constructorsSyn on Guard;
+
+attribute knownConstructors occurs on Guard;
+propagate knownConstructors on Guard;
 
 aspect production eqGuard
 top::Guard ::= t1::Term t2::Term
@@ -456,6 +595,12 @@ top::Guard ::= t1::Term t2::Term
 
 --------------------------------------------------
 
+attribute constructorsSyn occurs on GuardList;
+propagate constructorsSyn on GuardList;
+
+attribute knownConstructors occurs on GuardList;
+propagate knownConstructors on GuardList;
+
 aspect production guardListCons
 top::GuardList ::= g::Guard gl::GuardList
 {}
@@ -466,11 +611,11 @@ top::GuardList ::= g::Guard
 
 --------------------------------------------------
 
-attribute termsSyn occurs on Branch;
-propagate termsSyn on Branch;
+attribute constructorsSyn occurs on Branch;
+propagate constructorsSyn on Branch;
 
-attribute knownTerms occurs on Branch;
-propagate knownTerms on Branch;
+attribute knownConstructors occurs on Branch;
+propagate knownConstructors on Branch;
 
 aspect production branch
 top::Branch ::= m::Matcher c::Constraint
@@ -478,11 +623,11 @@ top::Branch ::= m::Matcher c::Constraint
 
 --------------------------------------------------
 
-attribute termsSyn occurs on BranchList;
-propagate termsSyn on BranchList;
+attribute constructorsSyn occurs on BranchList;
+propagate constructorsSyn on BranchList;
 
-attribute knownTerms occurs on BranchList;
-propagate knownTerms on BranchList;
+attribute knownConstructors occurs on BranchList;
+propagate knownConstructors on BranchList;
 
 aspect production branchListCons
 top::BranchList ::= b::Branch bs::BranchList
@@ -494,11 +639,11 @@ top::BranchList ::= b::Branch
 
 --------------------------------------------------
 
-attribute termsSyn occurs on Lambda;
-propagate termsSyn on Lambda;
+attribute constructorsSyn occurs on Lambda;
+propagate constructorsSyn on Lambda;
 
-attribute knownTerms occurs on Lambda;
-propagate knownTerms on Lambda;
+attribute knownConstructors occurs on Lambda;
+propagate knownConstructors on Lambda;
 
 aspect production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint

@@ -38,12 +38,28 @@ top::Error ::=
   top.msg = produceError("No known type " ++ name, loc);
 }
 
-abstract production conflictingConstructorsError
+abstract production noSuchConstructorError
 top::Error ::=
   name::String
   loc::Location
 {
-  top.msg = produceError("Conflicting term structures for " ++ name, loc);
+  top.msg = produceError("No known constructor " ++ name, loc);
+}
+
+abstract production duplicateConstructorError
+top::Error ::=
+  name::String
+  loc::Location
+{
+  top.msg = produceError("Conflicting term types for " ++ name, loc);
+}
+
+abstract production badConstructorArgsError
+top::Error ::=
+  name::String
+  loc::Location
+{
+  top.msg = produceError("Bad term arguments for " ++ name, loc);
 }
 
 --------------------------------------------------

@@ -51,10 +51,11 @@ decl(@inh s:scope, d:decl) :- d match {
 @syntax
 expr(@inh s:scope, e:expr, @syn ty:type) :- e match {
 
-    ExprTInt(i:string) ->
-      ty := TInt()
+    ExprInt(i:string) ->
+      ty := TInt(),
+      ty := TInt(s)
 
-  | True() ->
+  | ExprTrue() ->
       ty := TBool()
 
   | ExprFalse() ->
@@ -157,13 +158,13 @@ seq-binds(@inh s:scope, bs:seq-binds, @inh s_def:scope) :- bs match {
 @syntax
 seq-bind(@inh s:scope, b:seq-bind, @syn s_def:scope) :- b match { 
   
-    DefBind(x:string, e:expr) -> 
+    DefBindSeq(x:string, e:expr) -> 
       {s_var:scope, ty:type}
         new s_var -> (x, ty),
         s -[ `VAR ]-> s_var,
         expr(s, e, ty)
 
-  | DefBindTyped(x:string, tyann:type, e:expr) -> 
+  | DefBindTypedSeq(x:string, tyann:type, e:expr) -> 
       {s_var:scope, ty:type}
         new s_var -> (x, ty),
         s -[ `VAR ]-> s_var,
@@ -189,13 +190,13 @@ par-binds(@inh s:scope, bs:par-binds, @syn s_def:scope) :- bs match {
 @syntax
 par-bind(@inh s:scope, b:par-bind, @inh s_def:scope) :- b match {
     
-    DefBind(x:string, e:expr) ->
+    DefBindPar(x:string, e:expr) ->
       {s_var:scope, ty:type}
         new s_var -> (x, ty),
         s_def -[ `VAR ]-> s_var,
         expr(s, e, ty)
 
-  | DefBindTyped(x:string, tyann:type, e:expr) -> 
+  | DefBindTypedPar(x:string, tyann:type, e:expr) -> 
       {s_var:scope, ty:type}
         new s_var -> (x, ty),
         s_def -[ `VAR ]-> s_var,
@@ -222,6 +223,9 @@ type(@inh s:scope, tyann:type, @syn ty:type) :- tyann match {
   
     TInt() ->
       ty := TInt()
+
+  | TInt(s:scope) ->
+      ty := TInt(s)
 
   | TBool() ->
       ty := TBool()
