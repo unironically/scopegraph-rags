@@ -62,6 +62,14 @@ top::Error ::=
   top.msg = produceError("Bad term arguments for " ++ name, loc);
 }
 
+abstract production typeError
+top::Error ::=
+  msg::String
+  loc::Location
+{
+  top.msg = produceError("Type error " ++ msg, loc);
+}
+
 --------------------------------------------------
 
 fun produceError String ::= msg::String loc::Location =

@@ -52,8 +52,7 @@ decl(@inh s:scope, d:decl) :- d match {
 expr(@inh s:scope, e:expr, @syn ty:type) :- e match {
 
     ExprInt(i:string) ->
-      ty := TInt(),
-      ty := TInt(s)
+      ty := TInt()
 
   | ExprTrue() ->
       ty := TBool()
@@ -223,9 +222,6 @@ type(@inh s:scope, tyann:type, @syn ty:type) :- tyann match {
   
     TInt() ->
       ty := TInt()
-
-  | TInt(s:scope) ->
-      ty := TInt(s)
 
   | TBool() ->
       ty := TBool()

@@ -684,6 +684,14 @@ top::Constraint ::= name::String t::Term
   top.errs <- if !nameMaybe.isJust
               then [ noSuchNameError(name, top.location) ]
               else [];
+
+  top.errs <- case nameMaybe, t.termTy of
+              | just((_, t1)), just(t2) -> if !eqType(t1, t2)
+                                           then [ typeError("TODO", top.location) ]
+                                           else []
+              | nothing(), _ -> []
+              | _, nothing() -> []
+              end;
 }
 
 -------------------------------------------------- todo cleanup:

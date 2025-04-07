@@ -303,6 +303,18 @@ top::Term ::= t1::Term t2::Term
                | just(t1ty), just(listType(t2ty)) when eqType(t1ty, ^t2ty) -> just(listType(t1ty))
                | _, _ -> nothing()
                end;
+
+  top.errs <- case t1.termTy, t2.termTy of
+               | just(t1ty), just(lt) -> 
+                    case lt of 
+                      listType(t2ty) -> if eqType(t1ty, ^t2ty)
+                                        then []
+                                        else [ typeError("todo", top.location) ]
+                    | _ -> [ typeError("todo", top.location) ]
+                    end
+               | nothing(), _ -> []
+               | _, nothing() -> []
+               end;
 }
 
 aspect production nilTerm
