@@ -145,15 +145,15 @@ nonterminal TypeAnn_c with ast<TypeAnn>, location;
 
 concrete production nameType_c
 top::TypeAnn_c ::= name::Name_t
-{ top.ast = nameType(name.lexeme, location=top.location); }
+{ top.ast = nameTypeAnn(name.lexeme, location=top.location); }
 
 concrete production listType_c
 top::TypeAnn_c ::= '[' ty::TypeAnn_c ']'
-{ top.ast = listType(ty.ast, location=top.location); }
+{ top.ast = listTypeAnn(ty.ast, location=top.location); }
 
 concrete production setType_c
 top::TypeAnn_c ::= '{' ty::TypeAnn_c '}'
-{ top.ast = setType(ty.ast, location=top.location); }
+{ top.ast = setTypeAnn(ty.ast, location=top.location); }
 
 --------------------------------------------------
 

@@ -130,15 +130,15 @@ top::Name ::= name::String ty::TypeAnn
 
 nonterminal TypeAnn with location;
 
-abstract production nameType
+abstract production nameTypeAnn
 top::TypeAnn ::= name::String
 {}
 
-abstract production listType
+abstract production listTypeAnn
 top::TypeAnn ::= ty::TypeAnn
 {}
 
-abstract production setType
+abstract production setTypeAnn
 top::TypeAnn ::= ty::TypeAnn
 {}
 

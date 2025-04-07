@@ -145,17 +145,17 @@ top::Name ::= name::String ty::TypeAnn
 
 attribute doc occurs on TypeAnn;
 
-aspect production nameType
+aspect production nameTypeAnn
 top::TypeAnn ::= name::String
-{ top.doc = prodDoc("nameType", [text(name)]); }
+{ top.doc = prodDoc("nameTypeAnn", [text(name)]); }
 
-aspect production listType
+aspect production listTypeAnn
 top::TypeAnn ::= ty::TypeAnn
-{ top.doc = prodDoc("listType", [ty.doc]); }
+{ top.doc = prodDoc("listTypeAnn", [ty.doc]); }
 
-aspect production setType
+aspect production setTypeAnn
 top::TypeAnn ::= ty::TypeAnn
-{ top.doc = prodDoc("setType", [ty.doc]); }
+{ top.doc = prodDoc("setTypeAnn", [ty.doc]); }
 
 --------------------------------------------------
 

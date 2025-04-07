@@ -8,23 +8,23 @@ global builtinTypeNames::[String] = [
 
 --------------------------------------------------
 
-monoid attribute freeVarsDefined::[(String, TypeAnn)] with [], 
-  unionBy((\l::(String, TypeAnn) r::(String, TypeAnn) -> l.1 == r.1), _, _);
+monoid attribute freeVarsDefined::[(String, Type)] with [], 
+  unionBy((\l::(String, Type) r::(String, Type) -> l.1 == r.1), _, _);
 
 monoid attribute names::[String] with [], ++;
 
 monoid attribute predsSyn::[PredInfo] with [], ++;
 inherited attribute predsInh::[PredInfo];
 
-monoid attribute inhs::[(String, TypeAnn, Integer)] with [], ++;
-monoid attribute syns::[(String, TypeAnn, Integer)] with [], ++;
+monoid attribute inhs::[(String, Type, Integer)] with [], ++;
+monoid attribute syns::[(String, Type, Integer)] with [], ++;
 
-inherited attribute nameTyDecls::[(String, TypeAnn)];
+inherited attribute nameTyDecls::[(String, Type)];
 
 --------------------------------------------------
 
 function lookupVar
-Maybe<(String, TypeAnn)> ::= name::String decls::[(String, TypeAnn)]
+Maybe<(String, Type)> ::= name::String decls::[(String, Type)]
 {
   return 
     case decls of
@@ -57,13 +57,13 @@ Maybe<PredInfo> ::= name::String preds::[PredInfo] mustBeSyn::Boolean
 }
 
 function lookupType
-Maybe<TypeAnn> ::= name::String preds::[PredInfo]
+Maybe<Type> ::= name::String preds::[PredInfo]
 {
   return
     if contains(name, builtinTypeNames)
-    then just(nameType(name, location=bogusLoc()))
+    then just(nameType(name))
     else if lookupSyntaxPred(name, preds).isJust
-         then just(nameType(name, location=bogusLoc()))
+         then just(nameType(name))
          else nothing();
 }
 
@@ -82,9 +82,9 @@ attribute requires occurs on PredInfo;
 abstract production synPredInfo
 top::PredInfo ::= 
   name::String
-  term::(String, TypeAnn, Integer)
-  inhs::[(String, TypeAnn, Integer)]
-  syns::[(String, TypeAnn, Integer)]
+  term::(String, Type, Integer)
+  inhs::[(String, Type, Integer)]
+  syns::[(String, Type, Integer)]
   requires::[String]
   provides::[String]
   branches::ProdBranchList
@@ -100,8 +100,8 @@ top::PredInfo ::=
     let pt::Term =
       nameTerm(term.1, location=bogusLoc())
     in
-    let decBranches::Decorated ProdBranchList with {prodTy} = 
-      decorate ^branches with {prodTy = nameType(name, location=bogusLoc());} 
+    let decBranches::Decorated ProdBranchList with {prodTyAnn} = 
+      decorate ^branches with {prodTyAnn = nameTypeAnn(name, location=bogusLoc());} 
     in
       matchConstraint(pt, decBranches.toConstraintBranchList, location=bogusLoc())
     end end;
@@ -112,8 +112,8 @@ top::PredInfo ::=
 abstract production funPredInfo
 top::PredInfo ::= 
   name::String
-  args::[(String, TypeAnn, Integer)]
-  rets::[(String, TypeAnn, Integer)]
+  args::[(String, Type, Integer)]
+  rets::[(String, Type, Integer)]
   requires::[String]
   provides::[String]
   body::Constraint
@@ -128,9 +128,9 @@ top::PredInfo ::=
 }
 
 fun getPositionForParamF 
-    Integer ::= predName::String args::[(String, TypeAnn, Integer)] s::String =
-  let dropped::[(String, TypeAnn, Integer)] = 
-    dropWhile(\tup::(String, TypeAnn, Integer) -> tup.1 != s, args)
+    Integer ::= predName::String args::[(String, Type, Integer)] s::String =
+  let dropped::[(String, Type, Integer)] = 
+    dropWhile(\tup::(String, Type, Integer) -> tup.1 != s, args)
   in
     if null(dropped)
     then error("getPositionForParam(" ++ s ++ ") for predicate " ++ predName)
@@ -219,7 +219,7 @@ top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
   nameLst.nameListPos = 0;
 
   bs.nameTyDecls = nameLst.nameTyDeclsSyn;
-  bs.prodTy = nameType(name, location=bogusLoc());
+  bs.prodTyAnn = nameTypeAnn(name, location=top.location);
 
   top.predsSyn := [ synPredInfo(name, head(nameLst.unlabelled), 
                                 nameLst.syns, nameLst.inhs, 
@@ -242,7 +242,7 @@ top::Predicate ::= name::String nameLst::NameList const::Constraint
 
 synthesized attribute toConstraintBranch::Branch occurs on ProdBranch;
 
-inherited attribute prodTy::TypeAnn occurs on ProdBranch;
+inherited attribute prodTyAnn::TypeAnn occurs on ProdBranch;
 
 attribute predsInh occurs on ProdBranch;
 propagate predsInh on ProdBranch;
@@ -256,7 +256,7 @@ top::ProdBranch ::= name::String params::NameList c::Constraint
   top.toConstraintBranch =
     branch(
       matcher (
-        constructorPattern (name, params.toPatternList, top.prodTy, location=bogusLoc()),
+        constructorPattern (name, params.toPatternList, top.prodTyAnn, location=bogusLoc()),
         nilWhereClause(location=bogusLoc()),
         location=bogusLoc()
       ),
@@ -277,8 +277,8 @@ propagate predsInh on ProdBranchList;
 attribute nameTyDecls occurs on ProdBranchList;
 propagate nameTyDecls on ProdBranchList;
 
-attribute prodTy occurs on ProdBranchList;
-propagate prodTy on ProdBranchList;
+attribute prodTyAnn occurs on ProdBranchList;
+propagate prodTyAnn on ProdBranchList;
 
 aspect production prodBranchListCons
 top::ProdBranchList ::= b::ProdBranch bs::ProdBranchList
@@ -297,10 +297,10 @@ top::ProdBranchList ::= b::ProdBranch
 
 --------------------------------------------------
 
-monoid attribute unlabelled::[(String, TypeAnn, Integer)] with [], ++ occurs on NameList;
+monoid attribute unlabelled::[(String, Type, Integer)] with [], ++ occurs on NameList;
 propagate unlabelled on NameList;
 
-monoid attribute nameTyDeclsSyn::[(String, TypeAnn)] with [], ++ occurs on NameList;
+monoid attribute nameTyDeclsSyn::[(String, Type)] with [], ++ occurs on NameList;
 propagate nameTyDeclsSyn on NameList;
 
 inherited attribute nameListPos::Integer occurs on NameList;
@@ -370,8 +370,8 @@ aspect production nameSyn
 top::Name ::= name::String ty::TypeAnn
 {
   top.names := [name];
-  top.syns  <- [(name, ^ty, top.nameListPos)];
-  top.nameTyDeclsSyn <- [(name, ^ty)];
+  top.syns  <- [(name, ty.termTy.fromJust, top.nameListPos)];
+  top.nameTyDeclsSyn <- [(name, ty.termTy.fromJust)];
   top.toNamePattern = namePattern(name, ^ty, location=bogusLoc());
 }
 
@@ -379,8 +379,8 @@ aspect production nameInh
 top::Name ::= name::String ty::TypeAnn
 {
   top.names := [name];
-  top.inhs  <- [(name, ^ty, top.nameListPos)];
-  top.nameTyDeclsSyn <- [(name, ^ty)];
+  top.inhs  <- [(name, ty.termTy.fromJust, top.nameListPos)];
+  top.nameTyDeclsSyn <- [(name, ty.termTy.fromJust)];
   top.toNamePattern = namePattern(name, ^ty, location=bogusLoc());
 }
 
@@ -388,8 +388,8 @@ aspect production nameRet
 top::Name ::= name::String ty::TypeAnn
 {
   top.names := [name];
-  top.syns  <- [(name, ^ty, top.nameListPos)];
-  top.nameTyDeclsSyn <- [(name, ^ty)];
+  top.syns  <- [(name, ty.termTy.fromJust, top.nameListPos)];
+  top.nameTyDeclsSyn <- [(name, ty.termTy.fromJust)];
   top.toNamePattern = namePattern(name, ^ty, location=bogusLoc());
 }
 
@@ -397,8 +397,8 @@ aspect production nameUntagged
 top::Name ::= name::String ty::TypeAnn
 {
   top.names := [name];
-  top.unlabelled  <- [(name, ^ty, top.nameListPos)];
-  top.nameTyDeclsSyn <- [(name, ^ty)];
+  top.unlabelled  <- [(name, ty.termTy.fromJust, top.nameListPos)];
+  top.nameTyDeclsSyn <- [(name, ty.termTy.fromJust)];
   top.toNamePattern = namePattern(name, ^ty, location=bogusLoc());
 }
 
@@ -407,21 +407,21 @@ top::Name ::= name::String ty::TypeAnn
 attribute predsInh occurs on TypeAnn;
 propagate predsInh on TypeAnn;
 
-aspect production nameType
+aspect production nameTypeAnn
 top::TypeAnn ::= name::String
 {
-  local nameMaybe::Maybe<TypeAnn> = lookupType(name, top.predsInh);
+  local nameMaybe::Maybe<Type> = lookupType(name, top.predsInh);
 
   top.errs <- if !nameMaybe.isJust
               then [ noSuchTypeError(name, top.location) ]
               else [];
 }
 
-aspect production listType
+aspect production listTypeAnn
 top::TypeAnn ::= ty::TypeAnn
 {}
 
-aspect production setType
+aspect production setTypeAnn
 top::TypeAnn ::= ty::TypeAnn
 {}
 
@@ -445,7 +445,7 @@ top::Term ::= name::String ts::TermList
 aspect production nameTerm
 top::Term ::= name::String
 {
-  local nameMaybe::Maybe<(String, TypeAnn)> = lookupVar(name, top.nameTyDecls);
+  local nameMaybe::Maybe<(String, Type)> = lookupVar(name, top.nameTyDecls);
 
   top.errs <- if !nameMaybe.isJust
               then [ noSuchNameError(name, top.location) ]
@@ -481,9 +481,15 @@ aspect production termListNil
 top::TermList ::=
 {}
 
+--------------------------------------------------
+
+synthesized attribute name::String occurs on Label;
+
 aspect production label
 top::Label ::= label::String
-{}
+{
+  top.name = label;
+}
 
 --------------------------------------------------
 
@@ -512,7 +518,7 @@ aspect production existsConstraint
 top::Constraint ::= names::NameList c::Constraint
 {
   top.freeVarsDefined := 
-    removeAllBy((\l::(String, TypeAnn) r::(String, TypeAnn) -> l.1 == r.1), 
+    removeAllBy((\l::(String, Type) r::(String, Type) -> l.1 == r.1), 
                 names.nameTyDeclsSyn, c.freeVarsDefined);
 
   c.nameTyDecls = names.nameTyDeclsSyn ++ top.nameTyDecls;
@@ -529,9 +535,9 @@ top::Constraint ::= t1::Term t2::Term
 aspect production newConstraintDatum
 top::Constraint ::= name::String t::Term
 {
-  local nameMaybe::Maybe<(String, TypeAnn)> = lookupVar(name, top.nameTyDecls);
+  local nameMaybe::Maybe<(String, Type)> = lookupVar(name, top.nameTyDecls);
 
-  top.freeVarsDefined <- [(name, nameType("scope", location=bogusLoc()))];
+  top.freeVarsDefined <- [(name, nameType("scope"))];
 
   top.errs <- if !nameMaybe.isJust
               then [ noSuchNameError(name, top.location) ]
@@ -541,9 +547,9 @@ top::Constraint ::= name::String t::Term
 aspect production newConstraint
 top::Constraint ::= name::String
 {
-  local nameMaybe::Maybe<(String, TypeAnn)> = lookupVar(name, top.nameTyDecls);
+  local nameMaybe::Maybe<(String, Type)> = lookupVar(name, top.nameTyDecls);
 
-  top.freeVarsDefined <- [(name, nameType("scope", location=bogusLoc()))];
+  top.freeVarsDefined <- [(name, nameType("scope"))];
 
   top.errs <- if !nameMaybe.isJust
               then [ noSuchNameError(name, top.location) ]
@@ -553,8 +559,8 @@ top::Constraint ::= name::String
 aspect production dataConstraint
 top::Constraint ::= name::String d::String
 {
-  local nameMaybe::Maybe<(String, TypeAnn)> = lookupVar(name, top.nameTyDecls);
-  local dMaybe::Maybe<(String, TypeAnn)> = lookupVar(d, top.nameTyDecls);
+  local nameMaybe::Maybe<(String, Type)> = lookupVar(name, top.nameTyDecls);
+  local dMaybe::Maybe<(String, Type)> = lookupVar(d, top.nameTyDecls);
 
   top.freeVarsDefined <- [(d, dMaybe.fromJust.2)];
 
@@ -570,8 +576,8 @@ top::Constraint ::= name::String d::String
 aspect production edgeConstraint
 top::Constraint ::= src::String lab::Term tgt::String
 {
-  local srcMaybe::Maybe<(String, TypeAnn)> = lookupVar(src, top.nameTyDecls);
-  local tgtMaybe::Maybe<(String, TypeAnn)> = lookupVar(tgt, top.nameTyDecls);
+  local srcMaybe::Maybe<(String, Type)> = lookupVar(src, top.nameTyDecls);
+  local tgtMaybe::Maybe<(String, Type)> = lookupVar(tgt, top.nameTyDecls);
 
   top.errs <- if !srcMaybe.isJust
               then [ noSuchNameError(src, top.location) ]
@@ -585,8 +591,8 @@ top::Constraint ::= src::String lab::Term tgt::String
 aspect production queryConstraint
 top::Constraint ::= src::String r::Regex out::String
 {
-  local srcMaybe::Maybe<(String, TypeAnn)> = lookupVar(src, top.nameTyDecls);
-  local outMaybe::Maybe<(String, TypeAnn)> = lookupVar(out, top.nameTyDecls);
+  local srcMaybe::Maybe<(String, Type)> = lookupVar(src, top.nameTyDecls);
+  local outMaybe::Maybe<(String, Type)> = lookupVar(out, top.nameTyDecls);
 
   top.freeVarsDefined <- [(out, outMaybe.fromJust.2)];
 
@@ -602,7 +608,7 @@ top::Constraint ::= src::String r::Regex out::String
 aspect production oneConstraint
 top::Constraint ::= name::String out::String
 {
-  local nameMaybe::Maybe<(String, TypeAnn)> = lookupVar(name, top.nameTyDecls);
+  local nameMaybe::Maybe<(String, Type)> = lookupVar(name, top.nameTyDecls);
 
   top.freeVarsDefined <- [(out, lookupVar(out, top.nameTyDecls).fromJust.2)];
 
@@ -614,7 +620,7 @@ top::Constraint ::= name::String out::String
 aspect production nonEmptyConstraint
 top::Constraint ::= name::String
 {
-  local nameMaybe::Maybe<(String, TypeAnn)> = lookupVar(name, top.nameTyDecls);
+  local nameMaybe::Maybe<(String, Type)> = lookupVar(name, top.nameTyDecls);
 
   top.errs <- if !nameMaybe.isJust
               then [ noSuchNameError(name, top.location) ]
@@ -650,8 +656,8 @@ top::Constraint ::= name::String lam::Lambda
 aspect production filterConstraint
 top::Constraint ::= set::String m::Matcher out::String
 {
-  local setMaybe::Maybe<(String, TypeAnn)> = lookupVar(set, top.nameTyDecls);
-  local outMaybe::Maybe<(String, TypeAnn)> = lookupVar(out, top.nameTyDecls);
+  local setMaybe::Maybe<(String, Type)> = lookupVar(set, top.nameTyDecls);
+  local outMaybe::Maybe<(String, Type)> = lookupVar(out, top.nameTyDecls);
 
   top.freeVarsDefined <- [ (out, outMaybe.fromJust.2) ];
 
@@ -671,7 +677,7 @@ top::Constraint ::= t::Term bs::BranchList
 aspect production defConstraint
 top::Constraint ::= name::String t::Term
 {
-  local nameMaybe::Maybe<(String, TypeAnn)> = lookupVar(name, top.nameTyDecls);
+  local nameMaybe::Maybe<(String, Type)> = lookupVar(name, top.nameTyDecls);
 
   top.freeVarsDefined <- [(name, lookupVar(name, top.nameTyDecls).fromJust.2)];
 
@@ -683,7 +689,7 @@ top::Constraint ::= name::String t::Term
 -------------------------------------------------- todo cleanup:
 
 inherited attribute index::Integer occurs on RefNameList;
-inherited attribute predSyns::[(String, TypeAnn, Integer)] occurs on RefNameList;
+inherited attribute predSyns::[(String, Type, Integer)] occurs on RefNameList;
 
 synthesized attribute nthName::(String ::= Integer) occurs on RefNameList;
 
@@ -696,7 +702,7 @@ propagate nameTyDecls on RefNameList;
 aspect production refNameListCons
 top::RefNameList ::= name::String names::RefNameList
 {
-  local nameMaybe::Maybe<(String, TypeAnn)> = lookupVar(name, top.nameTyDecls);
+  local nameMaybe::Maybe<(String, Type)> = lookupVar(name, top.nameTyDecls);
   local found::Boolean = !null(top.predSyns) && head(top.predSyns).3 == top.index;
 
   top.freeVarsDefined <- if found then [(name, head(top.predSyns).2)] else [];
@@ -715,7 +721,7 @@ top::RefNameList ::= name::String names::RefNameList
 aspect production refNameListOne
 top::RefNameList ::= name::String
 {
-  local nameMaybe::Maybe<(String, TypeAnn)> = lookupVar(name, top.nameTyDecls);
+  local nameMaybe::Maybe<(String, Type)> = lookupVar(name, top.nameTyDecls);
   local found::Boolean = !null(top.predSyns) && head(top.predSyns).3 == top.index;
 
   top.freeVarsDefined <- if found then [] else [(name, head(top.predSyns).2)];
@@ -772,7 +778,7 @@ top::Pattern ::= p::Pattern
 aspect production namePattern
 top::Pattern ::= name::String ty::TypeAnn
 {
-  top.nameTyDeclsSyn := [(name, ^ty)];
+  top.nameTyDeclsSyn := [(name, ty.termTy.fromJust)];
 }
 
 aspect production constructorPattern
@@ -897,6 +903,6 @@ attribute nameTyDecls occurs on Lambda;
 aspect production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
 {
-  wc.nameTyDecls = (arg, ^ty) :: top.nameTyDecls;
-  c.nameTyDecls  = (arg, ^ty) :: top.nameTyDecls;
+  wc.nameTyDecls = (arg, ty.termTy.fromJust) :: top.nameTyDecls;
+  c.nameTyDecls  = (arg, ty.termTy.fromJust) :: top.nameTyDecls;
 }

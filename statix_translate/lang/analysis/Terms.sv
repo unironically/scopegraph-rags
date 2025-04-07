@@ -2,12 +2,18 @@ grammar statix_translate:lang:analysis;
 
 --------------------------------------------------
 
-monoid attribute errs::[Error] with [], ++; 
+-- collect all constructor terms, check for conflicts
 
 --------------------------------------------------
 
-attribute errs occurs on Module;
-propagate errs on Module;
+monoid attribute termsSyn::[Label] with [], union;
+
+inherited attribute knownTerms::[Label];
+
+synthesized attribute termTy::Maybe<Type>;
+synthesized attribute termTys::[Maybe<Type>];
+
+--------------------------------------------------
 
 aspect production module
 top::Module ::= ds::Imports ords::Orders preds::Predicates
@@ -23,6 +29,8 @@ aspect production ordersNil
 top::Orders ::= 
 {}
 
+--------------------------------------------------
+
 aspect production order
 top::Order ::= name::String pathComp::PathComp
 {}
@@ -37,14 +45,19 @@ aspect production importsNil
 top::Imports ::=
 {}
 
+--------------------------------------------------
+
 aspect production imp
 top::Import ::= qual::QualName
 {}
 
 --------------------------------------------------
 
-attribute errs occurs on Predicates;
-propagate errs on Predicates;
+attribute termsSyn occurs on Predicates;
+propagate termsSyn on Predicates;
+
+attribute knownTerms occurs on Predicates;
+propagate knownTerms on Predicates;
 
 aspect production predicatesCons
 top::Predicates ::= pred::Predicate preds::Predicates
@@ -56,8 +69,11 @@ top::Predicates ::=
 
 --------------------------------------------------
 
-attribute errs occurs on Predicate;
-propagate errs on Predicate;
+attribute termsSyn occurs on Predicate;
+propagate termsSyn on Predicate;
+
+attribute knownTerms occurs on Predicate;
+propagate knownTerms on Predicate;
 
 aspect production syntaxPredicate 
 top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
@@ -69,8 +85,11 @@ top::Predicate ::= name::String nameLst::NameList const::Constraint
 
 --------------------------------------------------
 
-attribute errs occurs on ProdBranch;
-propagate errs on ProdBranch;
+attribute termsSyn occurs on ProdBranch;
+propagate termsSyn on ProdBranch;
+
+attribute knownTerms occurs on ProdBranch;
+propagate knownTerms on ProdBranch;
 
 aspect production prodBranch
 top::ProdBranch ::= name::String params::NameList c::Constraint
@@ -78,8 +97,11 @@ top::ProdBranch ::= name::String params::NameList c::Constraint
 
 --------------------------------------------------
 
-attribute errs occurs on ProdBranchList;
-propagate errs on ProdBranchList;
+attribute termsSyn occurs on ProdBranchList;
+propagate termsSyn on ProdBranchList;
+
+attribute knownTerms occurs on ProdBranchList;
+propagate knownTerms on ProdBranchList;
 
 aspect production prodBranchListCons
 top::ProdBranchList ::= b::ProdBranch bs::ProdBranchList
@@ -90,9 +112,6 @@ top::ProdBranchList ::= b::ProdBranch
 {}
 
 --------------------------------------------------
-
-attribute errs occurs on NameList;
-propagate errs on NameList;
 
 aspect production nameListCons
 top::NameList ::= name::Name names::NameList
@@ -107,9 +126,6 @@ top::NameList ::=
 {}
 
 --------------------------------------------------
-
-attribute errs occurs on Name;
-propagate errs on Name;
 
 aspect production nameSyn
 top::Name ::= name::String ty::TypeAnn
@@ -129,25 +145,33 @@ top::Name ::= name::String ty::TypeAnn
 
 --------------------------------------------------
 
-attribute errs occurs on TypeAnn;
-propagate errs on TypeAnn;
+attribute termTy occurs on TypeAnn;
 
 aspect production nameTypeAnn
 top::TypeAnn ::= name::String
-{}
+{
+  top.termTy = just(nameType(name));
+}
 
 aspect production listTypeAnn
 top::TypeAnn ::= ty::TypeAnn
-{}
+{
+  top.termTy = just(listType(ty.termTy.fromJust));
+}
 
 aspect production setTypeAnn
 top::TypeAnn ::= ty::TypeAnn
-{}
+{
+  top.termTy = just(setType(ty.termTy.fromJust));
+}
 
 --------------------------------------------------
 
-attribute errs occurs on Term;
-propagate errs on Term;
+attribute termsSyn occurs on Term;
+propagate termsSyn on Term;
+
+attribute knownTerms occurs on Term;
+propagate knownTerms on Term;
 
 aspect production labelTerm
 top::Term ::= lab::Label
@@ -183,8 +207,11 @@ top::Term ::= s::String
 
 --------------------------------------------------
 
-attribute errs occurs on TermList;
-propagate errs on TermList;
+attribute termsSyn occurs on TermList;
+propagate termsSyn on TermList;
+
+attribute knownTerms occurs on TermList;
+propagate knownTerms on TermList;
 
 aspect production termListCons
 top::TermList ::= t::Term ts::TermList
@@ -198,14 +225,15 @@ top::TermList ::=
 
 aspect production label
 top::Label ::= label::String
-{
-
-}
+{}
 
 --------------------------------------------------
 
-attribute errs occurs on Constraint;
-propagate errs on Constraint;
+attribute termsSyn occurs on Constraint;
+propagate termsSyn on Constraint;
+
+attribute knownTerms occurs on Constraint;
+propagate knownTerms on Constraint;
 
 aspect production trueConstraint
 top::Constraint ::=
@@ -285,9 +313,6 @@ top::Constraint ::= name::String t::Term
 
 --------------------------------------------------
 
-attribute errs occurs on RefNameList;
-propagate errs on RefNameList;
-
 aspect production refNameListCons
 top::RefNameList ::= name::String names::RefNameList
 {}
@@ -302,8 +327,11 @@ top::RefNameList ::=
 
 --------------------------------------------------
 
-attribute errs occurs on Matcher;
-propagate errs on Matcher;
+attribute termsSyn occurs on Matcher;
+propagate termsSyn on Matcher;
+
+attribute knownTerms occurs on Matcher;
+propagate knownTerms on Matcher;
 
 aspect production matcher
 top::Matcher ::= p::Pattern wc::WhereClause
@@ -311,58 +339,102 @@ top::Matcher ::= p::Pattern wc::WhereClause
 
 --------------------------------------------------
 
+attribute termsSyn occurs on Pattern;
+propagate termsSyn on Pattern;
+
+attribute knownTerms occurs on Pattern;
+propagate knownTerms on Pattern;
+
+attribute termTy occurs on Pattern;
+
 aspect production labelPattern
 top::Pattern ::= lab::Label
-{}
+{
+  top.termTy = just(nameType("label"));
+}
 
 aspect production labelArgsPattern
 top::Pattern ::= lab::Label p::Pattern
-{}
+{
+  top.termTy = just(nameType("label"));
+}
 
 aspect production edgePattern
 top::Pattern ::= p1::Pattern p2::Pattern p3::Pattern
-{}
+{
+  top.termTy = just(nameType("path"));
+}
 
 aspect production endPattern
 top::Pattern ::= p::Pattern
-{}
+{
+  top.termTy = just(nameType("path"));
+}
 
 aspect production namePattern
 top::Pattern ::= name::String ty::TypeAnn
-{}
+{
+  top.termTy = just(toType(^ty));
+}
 
 aspect production constructorPattern
 top::Pattern ::= name::String ps::PatternList ty::TypeAnn
-{}
+{
+  top.termTy = just(toType(^ty));
+}
 
 aspect production consPattern
 top::Pattern ::= p1::Pattern p2::Pattern
-{}
+{
+  top.termTy = case p1.termTy, p2.termTy of
+               | just(t1), just(listType(t2)) when eqType(t1, ^t2) -> just(listType(t1))
+               | _, _ -> nothing()
+               end;
+}
 
 aspect production nilPattern
 top::Pattern ::=
-{}
+{
+  top.termTy = just(listType(varType()));
+}
 
 aspect production tuplePattern
 top::Pattern ::= ps::PatternList
-{}
+{
+  top.termTy = if all(map((.isJust), ps.termTys))
+               then just(tupleType(map((.fromJust), ps.termTys)))
+               else nothing();
+}
 
 aspect production underscorePattern
 top::Pattern ::= ty::TypeAnn
-{}
-
-aspect production patternListCons
-top::PatternList ::= p::Pattern ps::PatternList
-{}
-
-aspect production patternListNil
-top::PatternList ::=
-{}
+{
+  top.termTy = just(toType(^ty));
+}
 
 --------------------------------------------------
 
-attribute errs occurs on WhereClause;
-propagate errs on WhereClause;
+attribute termsSyn occurs on PatternList;
+propagate termsSyn on PatternList;
+
+attribute knownTerms occurs on PatternList;
+propagate knownTerms on PatternList;
+
+attribute termTys occurs on PatternList;
+
+aspect production patternListCons
+top::PatternList ::= p::Pattern ps::PatternList
+{
+  top.termTys = p.termTy :: ps.termTys;
+}
+
+aspect production patternListNil
+top::PatternList ::=
+{
+  top.termTys = [];
+}
+
+--------------------------------------------------
 
 aspect production nilWhereClause
 top::WhereClause ::=
@@ -374,9 +446,6 @@ top::WhereClause ::= gl::GuardList
 
 --------------------------------------------------
 
-attribute errs occurs on Guard;
-propagate errs on Guard;
-
 aspect production eqGuard
 top::Guard ::= t1::Term t2::Term
 {}
@@ -386,9 +455,6 @@ top::Guard ::= t1::Term t2::Term
 {}
 
 --------------------------------------------------
-
-attribute errs occurs on GuardList;
-propagate errs on GuardList;
 
 aspect production guardListCons
 top::GuardList ::= g::Guard gl::GuardList
@@ -400,8 +466,11 @@ top::GuardList ::= g::Guard
 
 --------------------------------------------------
 
-attribute errs occurs on Branch;
-propagate errs on Branch;
+attribute termsSyn occurs on Branch;
+propagate termsSyn on Branch;
+
+attribute knownTerms occurs on Branch;
+propagate knownTerms on Branch;
 
 aspect production branch
 top::Branch ::= m::Matcher c::Constraint
@@ -409,8 +478,11 @@ top::Branch ::= m::Matcher c::Constraint
 
 --------------------------------------------------
 
-attribute errs occurs on BranchList;
-propagate errs on BranchList;
+attribute termsSyn occurs on BranchList;
+propagate termsSyn on BranchList;
+
+attribute knownTerms occurs on BranchList;
+propagate knownTerms on BranchList;
 
 aspect production branchListCons
 top::BranchList ::= b::Branch bs::BranchList
@@ -422,8 +494,11 @@ top::BranchList ::= b::Branch
 
 --------------------------------------------------
 
-attribute errs occurs on Lambda;
-propagate errs on Lambda;
+attribute termsSyn occurs on Lambda;
+propagate termsSyn on Lambda;
+
+attribute knownTerms occurs on Lambda;
+propagate knownTerms on Lambda;
 
 aspect production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
@@ -493,6 +568,7 @@ aspect production namedPathComp
 top::PathComp ::= name::String
 {}
 
+--------------------------------------------------
 
 aspect production labelLTsCons
 top::LabelLTs ::= l1::Label l2::Label lts::LabelLTs

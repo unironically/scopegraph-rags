@@ -5,8 +5,8 @@ imports statix_translate:lang:abstractsyntax;
 
 imports statix_translate:lang:analysis;
 
-imports statix_translate:to_ministatix;
-imports statix_translate:to_silver;
+--imports statix_translate:to_ministatix;
+--imports statix_translate:to_silver;
 
 parser parse :: Module_c { statix_translate:lang:concretesyntax; }
 
@@ -30,7 +30,7 @@ IO<Integer> ::= largs::[String]
           then 
             if null(ast.errs)
             then do {
-              print("- Known labels: " ++ 
+              print("- Known labels: " ++
                     implode(", ", map((.name), ast.labelsSyn)) ++ "\n");
               return 0;
             }
