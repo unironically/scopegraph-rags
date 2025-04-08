@@ -115,7 +115,7 @@ top::Constraint ::= src::String lab::Term tgt::String
   -- top.s_lab <- [tgt];
   top.equations = [
     contributionEq(
-      topDotLHS(src ++ "_" ++ lab.name),
+      topDotLHS(src ++ "_" ++ lab.termName),
       topDotExpr(tgt)
     )
   ];
@@ -236,7 +236,7 @@ aspect production applyConstraint
 top::Constraint ::= name::String vs::RefNameList
 {
   -- args that are in syn position for syn preds, or in ret position for funs
-  local defs::[(String, TypeAnn)] = top.freeVarsDefined;
+  local defs::[(String, Type)] = top.freeVarsDefined;
 
   local predInfo::PredInfo = lookupPred(name, top.predsInh).fromJust;
 
@@ -264,10 +264,10 @@ top::StxApplication ::=
   local uniquePairName::String = "pair_" ++ toString(genInt());
 
   -- [(argument variable given, argument position type)]
-  local retNamesTys::[(String, TypeAnn)] = 
+  local retNamesTys::[(String, Type)] = 
     matchArgsWithParams(predInfo.syns, allArgs.names, 0);
 
-  local argNamesTys::[(String, TypeAnn)] =
+  local argNamesTys::[(String, Type)] =
     matchArgsWithParams(predInfo.inhs, allArgs.names, 0);
   local argNamesOnly::[String] = map(fst, argNamesTys);
 
@@ -314,8 +314,8 @@ top::StxApplication ::=
 
 -- returns list of pairs of (argument variable given, argument position type)
 function matchArgsWithParams
-[(String, TypeAnn)] ::= 
-  params::[(String, TypeAnn, Integer)] 
+[(String, Type)] ::= 
+  params::[(String, Type, Integer)] 
   args::[String]
   argIndex::Integer
 {
@@ -333,7 +333,7 @@ function tupleSectionDef
 (Integer, [AG_Eq]) ::= 
   pairName::String
   isRet::Boolean
-  item::(String, TypeAnn)
+  item::(String, Type)
   acc::(Integer, [AG_Eq])
 {
   local offset::Integer = 

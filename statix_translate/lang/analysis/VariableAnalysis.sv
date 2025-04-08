@@ -366,9 +366,12 @@ propagate nameTyDeclsSyn on Name;
 attribute predsInh occurs on Name;
 propagate predsInh on Name;
 
+attribute name occurs on Name;
+
 aspect production nameSyn
 top::Name ::= name::String ty::TypeAnn
 {
+  top.name = name;
   top.names := [name];
   top.syns  <- [(name, ty.termTy.fromJust, top.nameListPos)];
   top.nameTyDeclsSyn <- [(name, ty.termTy.fromJust)];
@@ -378,6 +381,7 @@ top::Name ::= name::String ty::TypeAnn
 aspect production nameInh
 top::Name ::= name::String ty::TypeAnn
 {
+  top.name = name;
   top.names := [name];
   top.inhs  <- [(name, ty.termTy.fromJust, top.nameListPos)];
   top.nameTyDeclsSyn <- [(name, ty.termTy.fromJust)];
@@ -387,6 +391,7 @@ top::Name ::= name::String ty::TypeAnn
 aspect production nameRet
 top::Name ::= name::String ty::TypeAnn
 {
+  top.name = name;
   top.names := [name];
   top.syns  <- [(name, ty.termTy.fromJust, top.nameListPos)];
   top.nameTyDeclsSyn <- [(name, ty.termTy.fromJust)];
@@ -396,6 +401,7 @@ top::Name ::= name::String ty::TypeAnn
 aspect production nameUntagged
 top::Name ::= name::String ty::TypeAnn
 {
+  top.name = name;
   top.names := [name];
   top.unlabelled  <- [(name, ty.termTy.fromJust, top.nameListPos)];
   top.nameTyDeclsSyn <- [(name, ty.termTy.fromJust)];

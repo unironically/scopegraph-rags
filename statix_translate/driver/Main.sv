@@ -6,7 +6,7 @@ imports statix_translate:lang:abstractsyntax;
 imports statix_translate:lang:analysis;
 
 imports statix_translate:to_ministatix;
---imports statix_translate:to_silver;
+imports statix_translate:to_silver;
 
 parser parse :: Module_c { statix_translate:lang:concretesyntax; }
 
