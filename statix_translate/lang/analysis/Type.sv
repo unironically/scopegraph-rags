@@ -78,10 +78,10 @@ String ::= t::Type
 {
   return
     case t of
-    | nameType(s)  -> "nameType(" ++ s ++ ")"
-    | listType(lt) -> "listType(" ++ typeStr(^lt) ++ ")"
-    | setType(st)  -> "setType(" ++ typeStr(^st) ++ ")"
-    | tupleType(ts)-> "tupleType([" ++ implode(", ", map(typeStr, ts)) ++ "])"
+    | nameType(s)  -> s
+    | listType(lt) -> "[" ++ typeStr(^lt) ++ "]"
+    | setType(st)  -> "{" ++ typeStr(^st) ++ "}"
+    | tupleType(ts)-> "(" ++ implode(", ", map(typeStr, ts)) ++ ")"
     | varType()    -> "'t"
     end;
 }

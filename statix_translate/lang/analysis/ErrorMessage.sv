@@ -62,12 +62,23 @@ top::Error ::=
   top.msg = produceError("Bad term arguments for " ++ name, loc);
 }
 
-abstract production typeError
+abstract production varTypeError
 top::Error ::=
-  msg::String
+  name::String
+  decl::Type
+  given::Type
   loc::Location
 {
-  top.msg = produceError("Type error " ++ msg, loc);
+  top.msg = produceError(name ++ " declared with type " ++ typeStr(^decl) ++ " but defined with type " ++ typeStr(^given), loc);
+}
+
+abstract production consTypeError
+top::Error ::=
+  hTy::Type
+  tTy::Type
+  loc::Location
+{
+  top.msg = produceError("Ill-typed cons (::) head type given as " ++ typeStr(^hTy) ++ " but tail type given as " ++ typeStr(^tTy), loc);
 }
 
 abstract production branchDefsError

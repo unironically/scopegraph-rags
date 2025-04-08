@@ -231,7 +231,6 @@ type(@inh s:scope, tyann:type, @syn ty:type) :- tyann match {
         type(s, tyann1, ty1),
         type(s, tyann2, ty2),
         ty := TFun(ty1, ty2)
-
   }.
 
 

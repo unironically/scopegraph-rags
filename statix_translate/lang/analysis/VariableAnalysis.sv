@@ -687,7 +687,7 @@ top::Constraint ::= name::String t::Term
 
   top.errs <- case nameMaybe, t.termTy of
               | just((_, t1)), just(t2) -> if !eqType(t1, t2)
-                                           then [ typeError("TODO", top.location) ]
+                                           then [ varTypeError(name, t1, t2, top.location) ]
                                            else []
               | nothing(), _ -> []
               | _, nothing() -> []

@@ -309,8 +309,8 @@ top::Term ::= t1::Term t2::Term
                     case lt of 
                       listType(t2ty) -> if eqType(t1ty, ^t2ty)
                                         then []
-                                        else [ typeError("todo", top.location) ]
-                    | _ -> [ typeError("todo", top.location) ]
+                                        else [ consTypeError(t1ty, lt, top.location) ]
+                    | _ -> [ consTypeError(t1ty, lt, top.location) ]
                     end
                | nothing(), _ -> []
                | _, nothing() -> []
