@@ -5,7 +5,7 @@ imports statix_translate:lang:abstractsyntax;
 
 imports statix_translate:lang:analysis;
 
---imports statix_translate:to_ministatix;
+imports statix_translate:to_ministatix;
 --imports statix_translate:to_silver;
 
 parser parse :: Module_c { statix_translate:lang:concretesyntax; }
@@ -32,6 +32,8 @@ IO<Integer> ::= largs::[String]
             then do {
               print("Known labels: " ++
                     implode(", ", map((.name), ast.labelsSyn)) ++ "\n");
+              mkdir("out");
+              writeFile("out/" ++ fileName ++ ".mstx", ast.mstxPP);
               return 0;
             }
             else do {

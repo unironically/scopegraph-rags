@@ -1,7 +1,3 @@
-import stdlib.paths
-import stdlib.sets
-
-
 @syntax
 main(p:main) :- p match {
   

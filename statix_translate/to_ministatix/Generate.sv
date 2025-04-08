@@ -97,7 +97,8 @@ attribute mstx occurs on Predicate;
 
 aspect production syntaxPredicate 
 top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
-{ top.mstx = predDoc(name, nameLst.mstx, cat(text(t), cat(text(" match"), cat(text(" {"), cat(cat(predMatchBranches(bs.mstx), line()), text("}")))))); }
+{ bs.isMainPred = name == "main";
+  top.mstx = predDoc(name, nameLst.mstx, cat(text(t), cat(text(" match"), cat(text(" {"), cat(cat(predMatchBranches(bs.mstx), line()), text("}")))))); }
 
 aspect production functionalPredicate 
 top::Predicate ::= name::String nameLst::NameList const::Constraint
@@ -106,13 +107,17 @@ top::Predicate ::= name::String nameLst::NameList const::Constraint
 --------------------------------------------------
 
 attribute mstx occurs on ProdBranch;
+inherited attribute isMainPred::Boolean occurs on ProdBranch;
 
 aspect production prodBranch
 top::ProdBranch ::= name::String params::NameList c::Constraint
-{ top.mstx = cat(text(name), cat(text("("), cat(params.mstx, cat(text(")"), cat(text(" -> "), 
+{ top.mstx = cat(text(name), cat(text("("), cat(params.mstx, cat(cat(text(")"), 
+              text(if top.isMainPred then ":[]" else "")), cat(text(" -> "), 
               nest(indentSize, group(cat(line(), c.mstx)))))))); }
 
 attribute mstx occurs on ProdBranchList;
+attribute isMainPred occurs on ProdBranchList;
+propagate isMainPred on ProdBranchList;
 
 aspect production prodBranchListCons
 top::ProdBranchList ::= b::ProdBranch bs::ProdBranchList
@@ -164,15 +169,15 @@ top::Name ::= name::String ty::TypeAnn
 
 attribute mstx occurs on TypeAnn;
 
-aspect production nameType
+aspect production nameTypeAnn
 top::TypeAnn ::= name::String
 { top.mstx = text(""); }
 
-aspect production listType
+aspect production listTypeAnn
 top::TypeAnn ::= ty::TypeAnn
 { top.mstx = text(""); }
 
-aspect production setType
+aspect production setTypeAnn
 top::TypeAnn ::= ty::TypeAnn
 { top.mstx = text(""); }
 
