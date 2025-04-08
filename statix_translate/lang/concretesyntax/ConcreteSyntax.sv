@@ -11,7 +11,7 @@ synthesized attribute ast<a> :: a;
 nonterminal Module_c with ast<Module>, location;
 
 concrete production module_c
-top::Module_c ::= ds::Imports_c ords::Orders_c preds::Predicates_c
+top::Module_c ::= {-ds::Imports_c-} ords::Orders_c preds::Predicates_c
 { top.ast = module(ds.ast, ords.ast, preds.ast, location=top.location); }
  
 --------------------------------------------------
