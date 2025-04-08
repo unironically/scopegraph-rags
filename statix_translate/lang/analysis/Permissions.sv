@@ -12,6 +12,56 @@ monoid attribute provides::[String] with [], union;
 monoid attribute requiresNoApp::[String] with [], union;
 monoid attribute providesNoApp::[String] with [], union;
 
+monoid attribute defs::[String] with [], ++;
+
+--------------------------------------------------
+
+aspect production syntaxPredicate
+top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
+{
+  local pred::PredInfo = head(top.predsSyn);
+  local synsNames::[String] = map(fst, nameLst.syns);
+
+  local branchDefs::[[String]] = map(nub, bs.defsAllBranches);
+  local uniqueBranchDefLists::[[String]] = nub(branchDefs);
+  local defsAllSame::Boolean = length(uniqueBranchDefLists) == 1;
+
+  top.errs <- if defsAllSame
+              then []
+              else [ branchDefsError(top.location) ];
+
+  local collectedDefs::[String] = if defsAllSame
+                                  then head(uniqueBranchDefLists)
+                                  else [];
+
+  top.errs <- checkSynsDefined(name, synsNames, collectedDefs, top.location);
+}
+
+aspect production functionalPredicate
+top::Predicate ::= name::String nameLst::NameList const::Constraint
+{
+  local pred::PredInfo = head(top.predsSyn);
+  local retsNames::[String] = map(fst, nameLst.syns);
+
+  top.errs <- checkSynsDefined(name, retsNames, const.defs, top.location);
+
+  top.errs <- makeMultipleDefErrors(const.defs, top.location);
+}
+
+function checkSynsDefined
+[Error] ::= predName::String syns::[String] defs::[String] loc::Location
+{
+  return
+    foldr (
+      (\var::String errs::[Error] ->
+         if !contains(var, defs)
+         then undefinedSynError(var, predName, loc) :: errs
+         else []),
+      [],
+      syns
+    );
+}
+
 --------------------------------------------------
 
 attribute requires, requiresNoApp occurs on ProdBranch;
@@ -20,9 +70,26 @@ propagate requires, requiresNoApp on ProdBranch;
 attribute provides, providesNoApp occurs on ProdBranch;
 propagate provides, providesNoApp on ProdBranch;
 
+attribute defs occurs on ProdBranch;
+propagate defs on ProdBranch;
+
 aspect production prodBranch
 top::ProdBranch ::= name::String params::NameList c::Constraint
-{}
+{
+  top.errs <- makeMultipleDefErrors(c.defs, top.location);
+}
+
+function makeMultipleDefErrors
+[Error] ::= defs::[String] loc::Location
+{
+  return
+    case defs of
+      h::t  -> if contains(h, t) then multiDefError(h, loc) ::
+                                      makeMultipleDefErrors(t, loc)
+                                 else makeMultipleDefErrors(t, loc)
+    | []    -> []
+    end;
+}
 
 --------------------------------------------------
 
@@ -32,13 +99,19 @@ propagate requires, requiresNoApp on ProdBranchList;
 attribute provides, providesNoApp occurs on ProdBranchList;
 propagate provides, providesNoApp on ProdBranchList;
 
+attribute defsAllBranches occurs on ProdBranchList;
+
 aspect production prodBranchListCons
 top::ProdBranchList ::= b::ProdBranch bs::ProdBranchList
-{}
+{
+  top.defsAllBranches = b.defs :: bs.defsAllBranches;
+}
 
 aspect production prodBranchListOne
 top::ProdBranchList ::= b::ProdBranch
-{}
+{
+  top.defsAllBranches = [b.defs];
+}
 
 --------------------------------------------------
 
@@ -56,6 +129,11 @@ propagate provides, providesNoApp on Constraint excluding
   newConstraintDatum, -- WF-NOFE-VAR
   applyConstraint,    -- WF-APP [todo]
   matchConstraint;    -- WF-MATCH [todo]
+
+attribute defs occurs on Constraint;
+propagate defs on Constraint excluding existsConstraint, newConstraintDatum, 
+  newConstraint, dataConstraint, queryConstraint, oneConstraint, 
+  filterConstraint, minConstraint, applyConstraint, matchConstraint, defConstraint;
 
 aspect production trueConstraint
 top::Constraint ::=
@@ -91,6 +169,8 @@ top::Constraint ::= names::NameList c::Constraint
 
   top.requiresNoApp := removeAll(names.names, c.requiresNoApp);
   top.providesNoApp := removeAll(names.names, c.providesNoApp);
+
+  top.defs := removeAll(names.names, c.defs);
 }
 
 aspect production eqConstraint
@@ -107,6 +187,8 @@ top::Constraint ::= name::String t::Term
   -- WF-NODE-VAR
   top.provides      := [name];
   top.providesNoApp := [name];
+
+  top.defs := [name];
 }
 
 aspect production newConstraint
@@ -115,11 +197,15 @@ top::Constraint ::= name::String
   -- WF-NODE-VAR
   top.provides      := [name];
   top.providesNoApp := [name];
+
+  top.defs := [name];
 }
 
 aspect production dataConstraint
 top::Constraint ::= name::String d::String
-{}
+{
+  top.defs := [d];
+}
 
 aspect production edgeConstraint
 top::Constraint ::= src::String lab::Term tgt::String
@@ -131,11 +217,15 @@ top::Constraint ::= src::String lab::Term tgt::String
 
 aspect production queryConstraint
 top::Constraint ::= src::String r::Regex res::String
-{}
+{
+  top.defs := [res];
+}
 
 aspect production oneConstraint
 top::Constraint ::= name::String out::String
-{}
+{
+  top.defs := [out];
+}
 
 aspect production nonEmptyConstraint
 top::Constraint ::= name::String
@@ -143,7 +233,9 @@ top::Constraint ::= name::String
 
 aspect production minConstraint
 top::Constraint ::= set::String pc::PathComp res::String
-{}
+{
+  top.defs := [res];
+}
 
 aspect production applyConstraint
 top::Constraint ::= name::String vs::RefNameList
@@ -162,6 +254,8 @@ top::Constraint ::= name::String vs::RefNameList
   -- WF-APP
   top.requires := if predMaybe.isJust then getArgPerms(pred.requires) else [];
   top.provides := if predMaybe.isJust then getArgPerms(pred.provides) else [];
+
+  top.defs := if predMaybe.isJust then getArgPerms(map(fst, pred.syns)) else [];
 }
 
 aspect production everyConstraint
@@ -170,7 +264,9 @@ top::Constraint ::= name::String lam::Lambda
 
 aspect production filterConstraint
 top::Constraint ::= set::String m::Matcher res::String
-{}
+{
+  top.defs := [res];
+}
 
 aspect production matchConstraint
 top::Constraint ::= t::Term bs::BranchList
@@ -180,11 +276,24 @@ top::Constraint ::= t::Term bs::BranchList
   top.requiresNoApp := foldr(union, [], bs.eachBranchRequiresNoApp);
   top.provides      := foldr(intersect, [], bs.eachBranchProvides);
   top.providesNoApp := foldr(intersect, [], bs.eachBranchProvidesNoApp);
+
+  local branchDefs::[[String]] = map(nub, bs.defsAllBranches);
+  local uniqueBranchDefLists::[[String]] = nub(branchDefs);
+
+  top.errs <- if(length(uniqueBranchDefLists)) != 1
+              then [ branchDefsError(top.location) ]
+              else [];
+
+  top.defs := if length(uniqueBranchDefLists) == 1
+              then head(uniqueBranchDefLists)
+              else foldr(intersect, [], uniqueBranchDefLists);
 }
 
 aspect production defConstraint
 top::Constraint ::= name::String t::Term
-{}
+{
+  top.defs := [name];
+}
 
 --------------------------------------------------
 
@@ -193,6 +302,9 @@ propagate provides, providesNoApp on Branch;
 
 attribute requires, requiresNoApp occurs on Branch;
 propagate requires, requiresNoApp on Branch;
+
+attribute defs occurs on Branch;
+propagate defs on Branch;
 
 aspect production branch
 top::Branch ::= m::Matcher c::Constraint
@@ -206,6 +318,8 @@ synthesized attribute eachBranchRequiresNoApp::[[String]] occurs on BranchList;
 synthesized attribute eachBranchProvides::[[String]] occurs on BranchList;
 synthesized attribute eachBranchProvidesNoApp::[[String]] occurs on BranchList;
 
+synthesized attribute defsAllBranches::[[String]] occurs on BranchList;
+
 aspect production branchListCons
 top::BranchList ::= b::Branch bs::BranchList
 {
@@ -213,6 +327,8 @@ top::BranchList ::= b::Branch bs::BranchList
   top.eachBranchProvidesNoApp = b.providesNoApp :: bs.eachBranchProvidesNoApp;
   top.eachBranchRequires      = b.requires :: bs.eachBranchRequires;
   top.eachBranchRequiresNoApp = b.requiresNoApp :: bs.eachBranchRequiresNoApp;
+
+  top.defsAllBranches = b.defs :: bs.defsAllBranches;
 }
 
 aspect production branchListOne
@@ -222,6 +338,8 @@ top::BranchList ::= b::Branch
   top.eachBranchProvidesNoApp = [b.providesNoApp];
   top.eachBranchRequires      = [b.requires];
   top.eachBranchRequiresNoApp = [b.requiresNoApp];
+
+  top.defsAllBranches = [b.defs];
 }
 
 --------------------------------------------------
@@ -231,6 +349,9 @@ propagate provides, providesNoApp on Lambda;
 
 attribute requires, requiresNoApp occurs on Lambda;
 propagate requires, requiresNoApp on Lambda;
+
+attribute defs occurs on Lambda;
+propagate defs on Lambda;
 
 aspect production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint

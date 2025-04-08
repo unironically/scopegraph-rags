@@ -155,7 +155,7 @@ seq-binds(@inh s:scope, bs:seq-binds, @inh s_def:scope) :- bs match {
 
 
 @syntax
-seq-bind(@inh s:scope, b:seq-bind, @syn s_def:scope) :- b match { 
+seq-bind(@inh s:scope, b:seq-bind, @inh s_def:scope) :- b match { 
   
     DefBindSeq(x:string, e:expr) -> 
       {s_var:scope, ty:type}
@@ -174,7 +174,7 @@ seq-bind(@inh s:scope, b:seq-bind, @syn s_def:scope) :- b match {
 
 
 @syntax
-par-binds(@inh s:scope, bs:par-binds, @syn s_def:scope) :- bs match {
+par-binds(@inh s:scope, bs:par-binds, @inh s_def:scope) :- bs match {
 
     ParBindsNil()   -> 
       true
@@ -286,7 +286,7 @@ tgt(p:path, @ret s:scope) :- p match {
 
 src(p:path, @ret s:scope) :- p match { 
     End(x:scope)                     -> s := x
-  | Edge(x:string, l:label, xs:path) -> s := x
+  | Edge(x:scope, l:label, xs:path)  -> s := x
   }.
 
 datumOf(p:path, @ret d:datum) :- 

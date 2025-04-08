@@ -70,6 +70,30 @@ top::Error ::=
   top.msg = produceError("Type error " ++ msg, loc);
 }
 
+abstract production branchDefsError
+top::Error ::=
+  loc::Location
+{
+  top.msg = produceError("For each match constraint, all branches need to define the same names", loc);
+}
+
+abstract production undefinedSynError
+top::Error ::=
+  name::String
+  predName::String
+  loc::Location
+{
+  top.msg = produceError("Variable " ++ name ++ " not defined within predicate " ++ predName, loc);
+}
+
+abstract production multiDefError
+top::Error ::=
+  name::String
+  loc::Location
+{
+  top.msg = produceError("Variable " ++ name ++ " is defined multiple times", loc);
+}
+
 --------------------------------------------------
 
 fun produceError String ::= msg::String loc::Location =

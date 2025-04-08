@@ -233,7 +233,7 @@ top::Predicate ::= name::String nameLst::NameList const::Constraint
 
   const.nameTyDecls = nameLst.nameTyDeclsSyn;
 
-  top.predsSyn := [ funPredInfo(name, nameLst.syns, nameLst.unlabelled, 
+  top.predsSyn := [ funPredInfo(name, nameLst.unlabelled, nameLst.syns, 
                                 const.requiresNoApp, const.providesNoApp, 
                                 ^const) ];
 }
