@@ -56,8 +56,8 @@ top::AG_Decl ::=
   syns::[(String, AG_Type)]
 {
   top.pp = "nonterminalDecl(" ++
-    name ++
-    "[" ++ implode(", ", map(\p::(String, AG_Type) -> "(" ++ p.1 ++ "," ++ p.2.pp ++ ")", inhs)) ++ "]" ++
+    name ++ ", " ++
+    "[" ++ implode(", ", map(\p::(String, AG_Type) -> "(" ++ p.1 ++ "," ++ p.2.pp ++ ")", inhs)) ++ "], " ++
     "[" ++ implode(", ", map(\p::(String, AG_Type) -> "(" ++ p.1 ++ "," ++ p.2.pp ++ ")", syns)) ++ "]" ++
   ")";
 }

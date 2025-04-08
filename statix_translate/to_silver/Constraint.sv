@@ -325,14 +325,15 @@ top::Constraint ::= name::String vs::RefNameList
 {
   -- args that are in syn position for syn preds, or in ret position for funs
   local defs::[(String, Type)] = top.freeVarsDefined;
+  vs.idx = 0;
 
   local predInfo::PredInfo = lookupPred(name, top.predsInh).fromJust;
 
   top.equations = case predInfo of
                   | synPredInfo(_, _, _, _, _, _, _) -> 
-                      appConstraintSyn(name, predInfo, vs).equations
+                      appConstraintSyn(name, predInfo, vs, top.knownLabels).equations
                   | funPredInfo(_, _, _, _, _, _)    -> 
-                      appConstraintFun(name, predInfo, vs).equations
+                      appConstraintFun(name, predInfo, vs, top.knownLabels).equations
                   end;
 }
 
@@ -347,24 +348,25 @@ top::StxApplication ::=
   name::String
   predInfo::Decorated PredInfo
   allArgs::Decorated RefNameList
+  knownLabels::[Label]
 {
 
   local uniquePairName::String = "pair_" ++ toString(genInt());
 
   -- [(argument variable given, argument position type)]
-  local retNamesTys::[(String, Type)] =
+  local retNamesTys::[(String, String, Type)] =
     matchArgsWithParams(predInfo.syns, allArgs.names, 0);
 
-  local argNamesTys::[(String, Type)] =
+  local argNamesTys::[(String, String, Type)] =
     matchArgsWithParams(predInfo.inhs, allArgs.names, 0);
   local argNamesOnly::[String] = map(fst, argNamesTys);
 
   top.equations =
     let argEqs::(Integer, [AG_Eq]) = 
-      foldr(tupleSectionDef(uniquePairName, false, _, _), (2, []), argNamesTys)
+      foldr(tupleSectionDef(uniquePairName, false, knownLabels, _, _), (2, []), argNamesTys)
     in
     let retEqs::(Integer, [AG_Eq]) =
-      foldr(tupleSectionDef(uniquePairName, true, _, _), (argEqs.1, []), retNamesTys)
+      foldr(tupleSectionDef(uniquePairName, true, knownLabels, _, _), (argEqs.1, []), retNamesTys)
     in
     [
       localDeclEq (
@@ -372,7 +374,7 @@ top::StxApplication ::=
         if null(retNamesTys) 
           then nameTypeAG("Boolean")
           else tupleTypeAG (nameTypeAG("Boolean")::
-                            map((.ag_type), map(snd, retNamesTys)))
+                            map((.ag_type), map(\p::(String, String, Type) -> p.3, retNamesTys)))
       ),
       defineEq (
         topDotLHS(uniquePairName),
@@ -391,18 +393,65 @@ abstract production appConstraintSyn
 top::StxApplication ::=
   name::String
   predInfo::Decorated PredInfo
-  allArgs::Decorated RefNameList
+  allArgs::Decorated RefNameList with {idx}
+  knownLabels::[Label]
 {
+  -- term
+  local synTermName::String =
+    case predInfo of
+    | synPredInfo(_, (_, _, pos), _, _, _, _ ,_) -> allArgs.nth(pos)
+    | _ -> error("appConstraintSyn")
+    end;
+  local termRef::AG_LHS   = nameLHS(synTermName);
+  local termExpr::AG_Expr = nameExpr(synTermName);
 
-  top.equations = []; -- todo
+  -- inherited attribute equations
+  local argNamesTys::[(String, String, Type)] =
+    matchArgsWithParams(predInfo.inhs, allArgs.names, 0);
+  local inhEqs::[AG_Eq] =
+    map(
+      \arg::(String, String, Type) -> 
+        defineEq(qualLHS(^termRef, arg.2), topDotExpr(arg.1)), argNamesTys);
 
+  -- synthesized attribute equations
+  local retNamesTys::[(String, String, Type)] =
+    matchArgsWithParams(predInfo.syns, allArgs.names, 0);
+  local synEqs::[AG_Eq] =
+    map(
+      \arg::(String, String, Type) -> 
+        defineEq(topDotLHS(arg.1), qualExpr(^termExpr, arg.2)), retNamesTys);
+
+  local okContrib::AG_Eq = 
+    contributionEq(topDotLHS("ok"), qualExpr(^termExpr, "ok"));
+
+  -- edge contributions for scopes passed to the predicate
+  local edgeContribEqs::[AG_Eq] =
+    let scopeArgs::[(String, String, Type)] = -- info for all args that are scopes
+      filter (
+        \p::(String, String, Type) -> 
+          case p.3 of | nameType("scope") -> true | _ -> false end,
+        argNamesTys)
+    in
+      concat (map (
+        (\p::(String, String, Type) ->
+           map (
+             \l::Label ->
+               contributionEq(
+                 topDotLHS(p.1 ++ "_" ++ l.name),
+                 qualExpr(nameExpr(synTermName), p.2 ++ "_" ++ l.name)),
+             knownLabels)),
+        scopeArgs
+      ))
+    end;
+
+  top.equations = ^okContrib :: (inhEqs ++ synEqs ++ edgeContribEqs);
 }
 
 --------------------------------------------------
 
--- returns list of pairs of (argument variable given, argument position type)
+-- returns list of pairs of (argument variable given, param name, argument position type)
 function matchArgsWithParams
-[(String, Type)] ::= 
+[(String, String, Type)] ::= 
   params::[(String, Type, Integer)] 
   args::[String]
   argIndex::Integer
@@ -411,7 +460,7 @@ function matchArgsWithParams
     case args of
       h::t when !null(params)-> 
         if argIndex == head(params).3
-        then (h, head(params).2) :: matchArgsWithParams(tail(params), t, argIndex + 1)
+        then (h, head(params).1, head(params).2) :: matchArgsWithParams(tail(params), t, argIndex + 1)
         else matchArgsWithParams(params, t, argIndex + 1)
     | _ -> []
     end;
@@ -421,24 +470,20 @@ function tupleSectionDef
 (Integer, [AG_Eq]) ::= 
   pairName::String
   isRet::Boolean
-  item::(String, Type)
+  knownLabels::[Label]
+  item::(String, String, Type)
   acc::(Integer, [AG_Eq])
 {
   local offset::Integer = 
     if isRet then 1
-    else case item.2 of nameType("scope") -> length(tmpLabelSet) | _ -> 0 end;
+    else case item.3 of nameType("scope") -> length(tmpLabelSet) | _ -> 0 end;
 
   local nextIdx::Integer = acc.1 + offset;
 
-  local tmpLabelSet::[Label] = [
-    label("LEX", location=bogusLoc()), 
-    label("VAR", location=bogusLoc()), 
-    label("IMP", location=bogusLoc()), 
-    label("MOD", location=bogusLoc())
-  ];
+  local tmpLabelSet::[Label] = knownLabels;
 
   local labelEqs::[AG_Eq] = 
-    case item.2 of
+    case item.3 of
       nameType("scope") when !isRet -> 
         foldr (
           (\lab::Label acc::(Integer, [AG_Eq]) ->

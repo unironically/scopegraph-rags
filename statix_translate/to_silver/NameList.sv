@@ -67,21 +67,27 @@ top::Name ::= name::String ty::TypeAnn
 --------------------------------------------------
 
 synthesized attribute names::[String] occurs on RefNameList;
+synthesized attribute nth::(String ::= Integer) occurs on RefNameList;
+inherited attribute idx::Integer occurs on RefNameList;
 
 aspect production refNameListCons
 top::RefNameList ::= name::String names::RefNameList
 {
   top.names = name :: names.names;
+  names.idx = 1 + top.idx;
+  top.nth = \i::Integer -> if i == top.idx then name else names.nth(i);
 }
 
 aspect production refNameListOne
 top::RefNameList ::= name::String
 {
   top.names = [name];
+  top.nth = \i::Integer -> if i == top.idx then name else error("");
 }
 
 aspect production refNameListNil
 top::RefNameList ::=
 {
   top.names = [];
+  top.nth = \i::Integer -> error("");
 }
