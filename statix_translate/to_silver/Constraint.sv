@@ -259,13 +259,66 @@ top::Constraint ::= t::Term bs::BranchList
     )
   );
 
-  -- todo
+  -- todo: clean up!!!
   top.equations = [
     ^localDecl,
     ^define
-  ];
+  ] ++
+  if null(scopesExtended ++ defs)
+  then
+    [contributionEq (topDotLHS("ok"), topDotExpr(uniquePairName))]
+  else
+    ([
+      contributionEq (
+        topDotLHS("ok"),
+        tupleSectionExpr(topDotExpr(uniquePairName), 1)
+      )
+    ]++
+    let labDefs::(Integer, [AG_Eq]) = -- labels tuple section
+      foldr(
+        (
+          \scope::String acc::(Integer, [AG_Eq]) ->
+            let forLabs::(Integer, [AG_Eq]) =
+              foldr (
+                (
+                  \l::Label acc::(Integer, [AG_Eq]) ->
+                    (acc.1 + 1, 
+                    contributionEq (
+                      topDotLHS(scope ++ "_" ++ l.name), 
+                      tupleSectionExpr(topDotExpr(uniquePairName), acc.1)
+                    )::acc.2)
+                ),
+                (acc.1, []),
+                labs
+              )
+            in
+              (acc.1 + forLabs.1, acc.2 ++ forLabs.2)
+            end
+        ),
+        (2, []),
+        scopesExtended
+      )
+    in
+    let defDefs::(Integer, [AG_Eq]) = -- externals defined by tuple section
+      foldr (
+        (
+          \def::(String, Type) acc::(Integer, [AG_Eq]) ->
+            (acc.1 + 1, 
+            defineEq (
+              topDotLHS(def.1), 
+              tupleSectionExpr(topDotExpr(uniquePairName), acc.1)
+            )::acc.2)
+        ),
+        (labDefs.1, labDefs.2),
+        defNamesTys
+      )
+    in
+      defDefs.2
+    end end);
 
 }
+
+--------------------------------------------------
 
 aspect production applyConstraint
 top::Constraint ::= name::String vs::RefNameList
@@ -299,7 +352,7 @@ top::StxApplication ::=
   local uniquePairName::String = "pair_" ++ toString(genInt());
 
   -- [(argument variable given, argument position type)]
-  local retNamesTys::[(String, Type)] = 
+  local retNamesTys::[(String, Type)] =
     matchArgsWithParams(predInfo.syns, allArgs.names, 0);
 
   local argNamesTys::[(String, Type)] =
@@ -313,7 +366,7 @@ top::StxApplication ::=
     let retEqs::(Integer, [AG_Eq]) =
       foldr(tupleSectionDef(uniquePairName, true, _, _), (argEqs.1, []), retNamesTys)
     in
-    [ 
+    [
       localDeclEq (
         uniquePairName,
         if null(retNamesTys) 
