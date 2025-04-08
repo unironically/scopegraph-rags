@@ -58,7 +58,7 @@ AG_Cases ::= l1::Decorated Label l2::Decorated Label rest::AG_Cases =
       agPatternTuple(
         [agPatternApp(l1.name, []), agPatternApp(l2.name, [])]
       ),
-      nothing(),
+      nilWhereClauseAG(),
       intExpr(-1)
     ),
     agCasesCons(
@@ -66,7 +66,7 @@ AG_Cases ::= l1::Decorated Label l2::Decorated Label rest::AG_Cases =
         agPatternTuple(
           [agPatternApp(l2.name, []), agPatternApp(l1.name, [])]
         ),
-        nothing(),
+        nilWhereClauseAG(),
         intExpr(1)
       ),
       rest

@@ -7,6 +7,9 @@ attribute ag_expr {- ::AG_Expr -} occurs on Matcher;
 attribute ag_decls {- ::[AG_Decl] -} occurs on Matcher;
 propagate ag_decls on Matcher;
 
+attribute ag_pattern occurs on Matcher;
+attribute ag_whereClause occurs on Matcher;
+
 aspect production matcher
 top::Matcher ::= p::Pattern wc::WhereClause
 {
@@ -27,13 +30,16 @@ top::Matcher ::= p::Pattern wc::WhereClause
     caseExpr(
       nameExpr(arg_name),
       agCasesCons(
-        agCase (p.ag_pattern, just(wc.ag_whereClause), trueExpr()),
+        agCase (p.ag_pattern, wc.ag_whereClause, trueExpr()),
         agCasesCons(
-          agCase(agPatternUnderscore(), nothing(), falseExpr()),
+          agCase(agPatternUnderscore(), nilWhereClauseAG(), falseExpr()),
           agCasesNil()
         )
       )
     );
+
+  top.ag_pattern = p.ag_pattern;
+  top.ag_whereClause = wc.ag_whereClause;
 }
 
 --------------------------------------------------

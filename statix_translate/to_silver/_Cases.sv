@@ -31,11 +31,11 @@ nonterminal AG_Case;
 attribute pp occurs on AG_Case;
 
 abstract production agCase
-top::AG_Case ::= pat::AG_Pattern wc::Maybe<AG_WhereClause> body::AG_Expr
+top::AG_Case ::= pat::AG_Pattern wc::AG_WhereClause body::AG_Expr
 {
   top.pp = "agCase(" ++
     pat.pp ++ ", " ++
-    (case wc of nothing() -> "nothing()" | just(agwc) -> "just(" ++ agwc.pp ++ ")" end) ++ ", " ++
+    wc.pp ++ ", " ++
     body.pp ++
   ")";
 }

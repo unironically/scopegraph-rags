@@ -11,6 +11,9 @@ monoid attribute ag_decls::[AG_Decl] with [], ++;
 
 --------------------------------------------------
 
+attribute ag_decls occurs on Constraint;
+propagate ag_decls on Constraint;
+
 aspect production trueConstraint
 top::Constraint ::=
 {
@@ -228,8 +231,40 @@ top::Constraint ::= name::String t::Term
 aspect production matchConstraint
 top::Constraint ::= t::Term bs::BranchList
 {
+  local defs::[String] = foldr(union, [], bs.defsAllBranches);  -- all external statix variables defined within the branches
+  local defNamesTys::[(String, Type)] = filterMap(lookupVar(_, top.nameTyDecls), defs);
+  local scopesExtended::[String] = top.requires;                -- all scopes for which we need to return a (possibly empty) edge tgt list
+  local labs::[Label] = top.knownLabels;                        -- all known labels
+  local labTys::[AG_Type] = map(\l::Label -> nameTypeAG("Label"), labs);
+
+  local uniquePairName::String = "pair_" ++ toString(genInt());
+
+  local pairType::AG_Type = 
+    if null(scopesExtended ++ defs) 
+          then nameTypeAG("Boolean")
+          else tupleTypeAG (nameTypeAG("Boolean")::(
+                            foldr(appendList, [],
+                              map(\s::String -> labTys, scopesExtended)
+                            ) ++
+                            map((.ag_type), map(snd, defNamesTys))  -- var defs
+                           ));
+
+  local localDecl::AG_Eq = localDeclEq (uniquePairName, ^pairType);
+
+  local define::AG_Eq = defineEq (
+    topDotLHS(uniquePairName),
+    caseExpr (
+      t.ag_expr,
+      bs.ag_cases
+    )
+  );
+
   -- todo
-  top.equations = [];
+  top.equations = [
+    ^localDecl,
+    ^define
+  ];
+
 }
 
 aspect production applyConstraint
@@ -271,7 +306,7 @@ top::StxApplication ::=
     matchArgsWithParams(predInfo.inhs, allArgs.names, 0);
   local argNamesOnly::[String] = map(fst, argNamesTys);
 
-  top.equations = 
+  top.equations =
     let argEqs::(Integer, [AG_Eq]) = 
       foldr(tupleSectionDef(uniquePairName, false, _, _), (2, []), argNamesTys)
     in

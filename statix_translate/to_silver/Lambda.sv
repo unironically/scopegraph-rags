@@ -23,7 +23,7 @@ top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
   ];
 
   local body::[AG_Eq] = c.equations ++ [ -- body with top.ok contributions
-    returnEq(topDotExpr("ok"))          -- return top.ok;
+    returnEq(topDotExpr("ok"))           -- return top.ok;
   ];
 
 }
