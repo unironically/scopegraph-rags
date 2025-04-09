@@ -1,6 +1,7 @@
 grammar statix_translate:lang:concretesyntax;
 
 lexer class KWD;
+lexer class BUILTIN;
 
 terminal True_t      'true'           lexer classes {KWD};
 terminal False_t     'false'          lexer classes {KWD};
@@ -15,8 +16,8 @@ terminal Inhabited_t 'inhabited'      lexer classes {KWD};
 terminal Minus_t     'min'            lexer classes {KWD};
 terminal Filter_t    'filter'         lexer classes {KWD};
 terminal Match_t     'match'          lexer classes {KWD};
-terminal Edge_t      'Edge'           lexer classes {KWD};
-terminal End_t       'End'            lexer classes {KWD};
+terminal Edge_t      'Edge'           lexer classes {BUILTIN};
+terminal End_t       'End'            lexer classes {BUILTIN};
 
 terminal Reverse_t   'reverse-lexico' lexer classes {KWD};
 terminal Lexico_t    'lexico'         lexer classes {KWD};

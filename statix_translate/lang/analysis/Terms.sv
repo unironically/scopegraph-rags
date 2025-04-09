@@ -26,6 +26,18 @@ Maybe<ConstructorInfo> ::= name::String decls::[ConstructorInfo]
     end;
 }
 
+global edgeConstructor::ConstructorInfo = constructor (
+  "Edge", nameType("path"), 
+  [nameType("scope"), nameType("label"), nameType("path")],
+  bogusLoc()
+);
+
+global endConstructor::ConstructorInfo = constructor (
+  "End", nameType("path"), 
+  [nameType("scope")],
+  bogusLoc()
+);
+
 --------------------------------------------------
 
 nonterminal ConstructorInfo;
@@ -82,9 +94,9 @@ function duplConstructorErrs
 aspect production module
 top::Module ::= ds::Imports ords::Orders preds::Predicates
 {
-  preds.knownConstructors = preds.constructorsSyn;
+  preds.knownConstructors = preds.constructorsSyn;-- ++ [edgeConstructor, endConstructor];
 
-  top.errs <- duplConstructorErrs(preds.constructorsSyn);
+  top.errs <- duplConstructorErrs(preds.knownConstructors);
 }
  
 --------------------------------------------------
@@ -495,18 +507,6 @@ aspect production labelArgsPattern
 top::Pattern ::= lab::Label p::Pattern
 {
   top.termTy = just(nameType("label"));
-}
-
-aspect production edgePattern
-top::Pattern ::= p1::Pattern p2::Pattern p3::Pattern
-{
-  top.termTy = just(nameType("path"));
-}
-
-aspect production endPattern
-top::Pattern ::= p::Pattern
-{
-  top.termTy = just(nameType("path"));
 }
 
 aspect production namePattern

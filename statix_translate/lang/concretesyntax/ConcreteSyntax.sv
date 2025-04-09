@@ -340,14 +340,6 @@ concrete production labelArgsPattern_c
 top::Pattern_c ::= lab::Label_c '(' p::Pattern_c ')'
 { top.ast = labelArgsPattern(lab.ast, p.ast, location=top.location); }
 
-concrete production edgePattern_c
-top::Pattern_c ::= 'Edge' '(' p1::Pattern_c ',' p2::Pattern_c ',' p3::Pattern_c ')'
-{ top.ast = edgePattern(p1.ast, p2.ast, p3.ast, location=top.location); }
-
-concrete production endPattern_c
-top::Pattern_c ::= 'End' '(' p::Pattern_c ')'
-{ top.ast = endPattern(p.ast, location=top.location); }
-
 concrete production namePattern_c
 top::Pattern_c ::= name::Name_t ':' ty::TypeAnn_c
 { top.ast = namePattern(name.lexeme, ty.ast, location=top.location); }

@@ -400,7 +400,7 @@ top::StxApplication ::=
   local synTermName::String =
     case predInfo of
     | synPredInfo(_, (_, _, pos), _, _, _, _ ,_) -> allArgs.nth(pos)
-    | _ -> error("appConstraintSyn")
+    | _ -> error("appConstraintSyn.synTermName")
     end;
   local termRef::AG_LHS   = nameLHS(synTermName);
   local termExpr::AG_Expr = nameExpr(synTermName);

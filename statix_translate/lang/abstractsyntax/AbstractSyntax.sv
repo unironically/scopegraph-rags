@@ -324,14 +324,6 @@ abstract production labelArgsPattern
 top::Pattern ::= lab::Label p::Pattern
 {}
 
-abstract production edgePattern
-top::Pattern ::= p1::Pattern p2::Pattern p3::Pattern
-{}
-
-abstract production endPattern
-top::Pattern ::= p::Pattern
-{}
-
 abstract production namePattern
 top::Pattern ::= name::String ty::TypeAnn
 {}

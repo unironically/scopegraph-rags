@@ -275,13 +275,13 @@ var-ref(@inh s:scope, r:var-ref, @syn p:path) :- r match {
 // some function predicates //
 
 tgt(p:path, @ret s:scope) :- p match {
-    End(x:scope)                     -> s := x
-  | Edge(x:string, l:label, xs:path) -> tgt(xs,s)
+    End(x:scope):path                     -> s := x
+  | Edge(x:scope, l:label, xs:path):path -> tgt(xs,s)
   }.
 
 src(p:path, @ret s:scope) :- p match { 
-    End(x:scope)                     -> s := x
-  | Edge(x:scope, l:label, xs:path)  -> s := x
+    End(x:scope):path                     -> s := x
+  | Edge(x:scope, l:label, xs:path):path  -> s := x
   }.
 
 datumOf(p:path, @ret d:datum) :- 
@@ -293,3 +293,9 @@ min-refs(z:{path}, @ret z':{path}) :-
   min z lexico( `MOD < `LEX, `MOD < `IMP,
                 `VAR < `LEX, `VAR < `IMP,
                 `IMP < `LEX ) z'.
+
+moo(p:path) :-
+  {p:path, p':path, s':scope}
+    p' := End(s'),
+    p := p'
+.

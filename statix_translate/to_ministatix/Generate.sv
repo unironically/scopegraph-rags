@@ -361,14 +361,6 @@ aspect production labelArgsPattern
 top::Pattern ::= lab::Label p::Pattern
 { top.mstx = cat(lab.mstx, cat(text("("), cat(p.mstx, text(")")))); }
 
-aspect production edgePattern
-top::Pattern ::= p1::Pattern p2::Pattern p3::Pattern
-{ top.mstx = cat(text("Edge"), cat(text("("), cat(p1.mstx, cat(text(", "), cat(p2.mstx, cat(text(", "), cat(p3.mstx, text(")")))))))); }
-
-aspect production endPattern
-top::Pattern ::= p::Pattern
-{ top.mstx = cat(text("End"), cat(text("("), cat(p.mstx, text(")")))); }
-
 aspect production namePattern
 top::Pattern ::= name::String ty::TypeAnn
 { top.mstx = text(name); }

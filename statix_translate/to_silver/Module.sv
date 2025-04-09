@@ -95,12 +95,27 @@ top::Predicate ::= name::String params::NameList c::Constraint
       
     end end end end end end;
 
+  local retsAsLocals::[AG_Eq] = 
+    localDeclEq("ok", nameTypeAG("Boolean")) ::
+    map (\p::(String, Type, Integer) -> localDeclEq(p.1, p.2.ag_type),
+         params.syns);
+
+  local retEq::[AG_Eq] = 
+    if null(params.syns)
+    then [ returnEq(topDotExpr("ok")) ]
+    else [
+      returnEq(tupleExpr(
+        topDotExpr("ok")::
+        map(topDotExpr(_), map(fst, params.syns))
+      ))
+    ];
+
   top.ag_decls <- [
     functionDecl (
       name,
       ^retTy,
-      params.nameAGTys,
-      c.equations
+      map((\p::(String, Type, Integer) -> (p.1, p.2.ag_type)), params.unlabelled),
+      retsAsLocals ++ c.equations ++ retEq
     )
   ];
 }

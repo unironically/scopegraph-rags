@@ -319,14 +319,6 @@ aspect production labelArgsPattern
 top::Pattern ::= lab::Label p::Pattern
 {}
 
-aspect production edgePattern
-top::Pattern ::= p1::Pattern p2::Pattern p3::Pattern
-{}
-
-aspect production endPattern
-top::Pattern ::= p::Pattern
-{}
-
 aspect production namePattern
 top::Pattern ::= name::String ty::TypeAnn
 {}

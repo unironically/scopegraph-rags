@@ -61,21 +61,6 @@ top::Pattern ::= lab::Label p::Pattern
   top.ag_type = nameTypeAG("Label");
 }
 
-aspect production edgePattern
-top::Pattern ::= p1::Pattern p2::Pattern p3::Pattern
-{
-  top.ag_pattern = agPatternApp("edge", 
-                                [p1.ag_pattern, p2.ag_pattern, p3.ag_pattern]);
-  top.ag_type = nameTypeAG("Edge");
-}
-
-aspect production endPattern
-top::Pattern ::= p::Pattern
-{
-  top.ag_pattern = agPatternApp("end", [p.ag_pattern]);
-  top.ag_type = nameTypeAG("Edge");
-}
-
 aspect production namePattern
 top::Pattern ::= name::String ty::TypeAnn
 {

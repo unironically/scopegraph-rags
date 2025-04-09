@@ -325,14 +325,6 @@ aspect production labelArgsPattern
 top::Pattern ::= lab::Label p::Pattern
 { top.doc = prodDoc("labelArgsPattern", [lab.doc, p.doc]); }
 
-aspect production edgePattern
-top::Pattern ::= p1::Pattern p2::Pattern p3::Pattern
-{ top.doc = prodDoc("edgePattern", [p1.doc, p2.doc, p3.doc]); }
-
-aspect production endPattern
-top::Pattern ::= p::Pattern
-{ top.doc = prodDoc("endPattern", [p.doc]); }
-
 aspect production namePattern
 top::Pattern ::= name::String ty::TypeAnn
 { top.doc = prodDoc("namePattern", [strDoc(name), ty.doc]); }
