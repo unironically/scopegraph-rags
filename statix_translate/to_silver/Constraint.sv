@@ -2,8 +2,8 @@ grammar statix_translate:to_silver;
 
 --------------------------------------------------
 
-fun topDotLHS  AG_LHS  ::= s::String = qualLHS(nameLHS("top"), s);
-fun topDotExpr AG_Expr ::= s::String = qualExpr(nameExpr("top"), s);
+fun topDotLHS  AG_LHS  ::= s::String = nameLHS(s);  -- qualLHS(nameLHS("top"), s);
+fun topDotExpr AG_Expr ::= s::String = nameExpr(s); -- qualExpr(nameExpr("top"), s);
 
 synthesized attribute equations::[AG_Eq] occurs on Constraint;
 synthesized attribute ag_expr::AG_Expr;
