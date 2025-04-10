@@ -8,6 +8,8 @@ imports statix_translate:lang:analysis;
 imports statix_translate:to_ministatix;
 imports statix_translate:to_ag;
 
+imports statix_translate:to_ocaml;
+
 parser parse :: Module_c { statix_translate:lang:concretesyntax; }
 
 function main
