@@ -102,7 +102,7 @@ top::Constraint ::= src::String lab::Term tgt::String
                                                       else topDotExpr(tgt);
   top.equations = [
     contributionEq(topDotLHS(src ++ "_" ++ lab.labelName.fromJust),
-                   ^ref)
+                   consExpr(^ref, nilExpr()))
   ];
   top.ag_expr = error("edgeConstraint.ag_expr");
 }
