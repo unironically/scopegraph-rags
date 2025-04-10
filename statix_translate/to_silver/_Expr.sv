@@ -108,6 +108,12 @@ top::AG_Expr ::= tup::AG_Expr i::Integer
   top.pp = "tupleSectionExpr(" ++ tup.pp ++ ", " ++ toString(i) ++ ")";
 }
 
+abstract production termExpr
+top::AG_Expr ::= name::String args::[AG_Expr]
+{
+  top.pp = "termExpr(" ++ name ++ ", [" ++ implode(", ", map((.pp), args)) ++ "])";
+}
+
 --------------------------------------------------
 
 nonterminal AG_Exprs;

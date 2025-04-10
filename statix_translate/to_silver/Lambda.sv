@@ -7,27 +7,30 @@ attribute ag_expr {- ::AG_Expr -} occurs on Lambda;
 attribute ag_decls {- ::[AG_Decl] -} occurs on Lambda;
 propagate ag_decls on Lambda;
 
+-- todo: allow pattern as lambda arg? steps to false if no match
 aspect production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
 {
-  {-top.ag_expr = nameExpr(lam_name);
-
-  top.ag_decls <- [
-    -- todo, ag_decl
-    functionDecl (lam_name, nameTypeAG("Boolean"), [(arg_name,  ^ag_ty)], body)
-  ];
-
-  local body::[AG_Eq] = c.equations ++ [ -- body with top.ok contributions
-    returnEq(topDotExpr("ok"))           -- return top.ok;
-  ];-}
+  local body::AG_Expr = 
+    case wc of 
+      nilWhereClause() -> c.ag_expr
+    | _ ->
+        caseExpr(
+          nameExpr(arg),
+          agCasesCons(
+            agCase (agPatternUnderscore(), wc.ag_whereClause, c.ag_expr),     -- match
+            agCasesCons(
+              agCase(agPatternUnderscore(), nilWhereClauseAG(), falseExpr()), -- no match
+              agCasesNil()
+            )
+          )
+        )
+    end;
 
   top.ag_expr = lambdaExpr (
     [(arg, ty.ag_type)],
-    c.ag_expr
+    ^body
   );
-
-  -- todo, whereclause?
-
 }
 
 --------------------------------------------------

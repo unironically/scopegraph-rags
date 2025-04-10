@@ -2,70 +2,70 @@ grammar statix_translate:to_silver;
 
 --------------------------------------------------
 
-synthesized attribute dfa_name::String occurs on Regex;
+attribute ag_expr occurs on Regex;
 
 aspect production regexLabel
 top::Regex ::= lab::Label
 {
-  top.dfa_name = ""; -- TODO
+  top.ag_expr = termExpr ("regexName", [stringExpr(lab.name)]);
 }
 
 aspect production regexSeq
 top::Regex ::= r1::Regex r2::Regex
 {
-  top.dfa_name = ""; -- TODO
+  top.ag_expr = termExpr ("regexSeq", [r1.ag_expr, r2.ag_expr]);
 }
 
 aspect production regexAlt
 top::Regex ::= r1::Regex r2::Regex
 {
-  top.dfa_name = ""; -- TODO
+  top.ag_expr = termExpr ("regexAlt", [r1.ag_expr, r2.ag_expr]);
 }
 
 aspect production regexAnd
 top::Regex ::= r1::Regex r2::Regex
 {
-  top.dfa_name = ""; -- TODO
+  top.ag_expr = termExpr ("regexAnd", [r1.ag_expr, r2.ag_expr]);
 }
 
 aspect production regexStar
 top::Regex ::= r::Regex
 {
-  top.dfa_name = ""; -- TODO
+  top.ag_expr = termExpr ("regexStar", [r.ag_expr]);
 }
 
 aspect production regexAny
 top::Regex ::=
 {
-  top.dfa_name = ""; -- TODO
+  top.ag_expr = termExpr ("regexAny", []);
 }
 
 aspect production regexPlus
 top::Regex ::= r::Regex
 {
-  top.dfa_name = ""; -- TODO
+  top.ag_expr = termExpr ("regexPlus", [r.ag_expr]);
 }
 
 aspect production regexOptional
 top::Regex ::= r::Regex
 {
-  top.dfa_name = ""; -- TODO
+  top.ag_expr = termExpr ("regexOpt", [r.ag_expr]);
 }
 
 aspect production regexNeg
 top::Regex ::= r::Regex
 {
-  top.dfa_name = ""; -- TODO
+  top.ag_expr = termExpr ("regexNeg", [r.ag_expr]);
 }
 
 aspect production regexEps
 top::Regex ::=
 {
-  top.dfa_name = ""; -- TODO
+  top.ag_expr = termExpr ("regexEps", []);
 }
 
 aspect production regexParens
 top::Regex ::= r::Regex
 {
-  top.dfa_name = ""; -- TODO
+  top.ag_expr = r.ag_expr;
 }

@@ -302,4 +302,3 @@ moo(s:scope, p:path, @ret s_ret:scope) :-
     p match { End(_:scope):path                    -> s_ret := s'
             | Edge(_:scope, _:label, _:path):path  -> s_ret := s' }
 .
-

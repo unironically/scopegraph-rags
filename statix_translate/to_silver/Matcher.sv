@@ -13,31 +13,21 @@ attribute ag_whereClause occurs on Matcher;
 aspect production matcher
 top::Matcher ::= p::Pattern wc::WhereClause
 {
-  -- (DatumVar(x':string, _)::datum where x' == x)
+  local arg_name::String = "lambda_" ++ toString(genInt()) ++ "_arg";
 
-  local arg_name::String = "x";
-  local lam_name::String = "lambda_" ++ toString(genInt());
-
-  top.ag_expr = nameExpr(lam_name);
-
-  top.ag_decls <- [
-    -- todo, ag_decl
-    functionDecl (lam_name, nameTypeAG("Boolean"), [(arg_name, p.ag_type)], [returnEq(^ag_case)])
-  ];
-
-  -- todo, types and prods for below
   local ag_case::AG_Expr = 
     caseExpr(
       nameExpr(arg_name),
       agCasesCons(
-        agCase (p.ag_pattern, wc.ag_whereClause, trueExpr()),
+        agCase (p.ag_pattern, wc.ag_whereClause, trueExpr()),             -- match
         agCasesCons(
-          agCase(agPatternUnderscore(), nilWhereClauseAG(), falseExpr()),
+          agCase(agPatternUnderscore(), nilWhereClauseAG(), falseExpr()), -- no match
           agCasesNil()
         )
       )
     );
 
+  top.ag_expr = lambdaExpr ([(arg_name, p.ag_type)], ^ag_case);
   top.ag_pattern = p.ag_pattern;
   top.ag_whereClause = wc.ag_whereClause;
 }
