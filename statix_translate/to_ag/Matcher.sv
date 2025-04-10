@@ -1,4 +1,4 @@
-grammar statix_translate:to_silver;
+grammar statix_translate:to_ag;
 
 --------------------------------------------------
 
