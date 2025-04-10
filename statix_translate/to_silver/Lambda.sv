@@ -10,12 +10,7 @@ propagate ag_decls on Lambda;
 aspect production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
 {
-  local arg_name::String = arg;
-  local lam_name::String = "lambda_" ++ toString(genInt());
-
-  local ag_ty::AG_Type = ty.ag_type;
-
-  top.ag_expr = nameExpr(lam_name);
+  {-top.ag_expr = nameExpr(lam_name);
 
   top.ag_decls <- [
     -- todo, ag_decl
@@ -24,7 +19,14 @@ top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
 
   local body::[AG_Eq] = c.equations ++ [ -- body with top.ok contributions
     returnEq(topDotExpr("ok"))           -- return top.ok;
-  ];
+  ];-}
+
+  top.ag_expr = lambdaExpr (
+    [(arg, ty.ag_type)],
+    c.ag_expr
+  );
+
+  -- todo, whereclause?
 
 }
 

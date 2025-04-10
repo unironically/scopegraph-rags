@@ -9,6 +9,8 @@ synthesized attribute equations::[AG_Eq] occurs on Constraint;
 synthesized attribute ag_expr::AG_Expr;
 monoid attribute ag_decls::[AG_Decl] with [], ++;
 
+attribute ag_expr occurs on Constraint;
+
 --------------------------------------------------
 
 attribute ag_decls occurs on Constraint;
@@ -24,6 +26,8 @@ top::Constraint ::=
       trueExpr()
     )
   ];
+
+  top.ag_expr = trueExpr();
 }
 
 aspect production falseConstraint
@@ -36,6 +40,8 @@ top::Constraint ::=
       falseExpr()
     )
   ];
+
+  top.ag_expr = falseExpr();
 }
 
 aspect production conjConstraint
@@ -43,6 +49,8 @@ top::Constraint ::= c1::Constraint c2::Constraint
 {
   -- combination of equations from both
   top.equations = c1.equations ++ c2.equations;
+
+  top.ag_expr = error("conjConstraint.ag_expr");
 }
 
 aspect production existsConstraint
@@ -50,6 +58,8 @@ top::Constraint ::= names::NameList c::Constraint
 {
   -- local n::ty; for all (n, ty) in names, then equations from body
   top.equations = names.localDeclEqs ++ c.equations;
+
+  top.ag_expr = error("existsConstraint.ag_expr");
 }
 
 aspect production eqConstraint
@@ -62,6 +72,8 @@ top::Constraint ::= t1::Term t2::Term
       eqExpr(t1.ag_expr, t2.ag_expr)
     )
   ];
+
+  top.ag_expr = eqExpr(t1.ag_expr, t2.ag_expr);
 }
 
 aspect production neqConstraint
@@ -74,6 +86,8 @@ top::Constraint ::= t1::Term t2::Term
       neqExpr(t1.ag_expr, t2.ag_expr)
     )
   ];
+
+  top.ag_expr = neqExpr(t1.ag_expr, t2.ag_expr);
 }
 
 aspect production newConstraintDatum
@@ -86,6 +100,8 @@ top::Constraint ::= name::String t::Term
       appExpr("mkScope", [t.ag_expr])
     )
   ];
+
+  top.ag_expr = appExpr("mkScope", [t.ag_expr]);
 }
 
 aspect production newConstraint
@@ -98,6 +114,8 @@ top::Constraint ::= name::String
       appExpr("mkScope", [])
     )
   ];
+
+  top.ag_expr = appExpr("mkScope", []);
 }
 
 aspect production dataConstraint
@@ -110,6 +128,8 @@ top::Constraint ::= name::String d::String
       demandExpr(topDotLHS(name), "datum")
     )
   ];
+
+  top.ag_expr = demandExpr(topDotLHS(name), "datum");
 }
 
 aspect production edgeConstraint
@@ -122,6 +142,8 @@ top::Constraint ::= src::String lab::Term tgt::String
       topDotExpr(tgt)
     )
   ];
+
+  top.ag_expr = error("edgeConstraint.ag_expr");
 }
 
 aspect production queryConstraint
@@ -137,6 +159,9 @@ top::Constraint ::= src::String r::Regex res::String
       )
     )
   ];
+
+  top.ag_expr = appExpr("query",
+                        [topDotExpr(src), topDotExpr(r.dfa_name)]);  -- todo, dfa defs need to flow up
 }
 
 aspect production oneConstraint
@@ -152,6 +177,8 @@ top::Constraint ::= name::String out::String
       )
     )
   ];
+
+  top.ag_expr = appExpr("one", [topDotExpr(name)]);
 }
 
 aspect production nonEmptyConstraint
@@ -167,6 +194,8 @@ top::Constraint ::= name::String
       )
     )
   ];
+
+  top.ag_expr = appExpr("inhabited", [topDotExpr(name)]);
 }
 
 aspect production minConstraint
@@ -182,6 +211,9 @@ top::Constraint ::= set::String pc::PathComp res::String
       )
     )
   ];
+
+  top.ag_expr = appExpr ("min",
+                        [pc.ag_expr, topDotExpr(set)]);
 }
 
 aspect production everyConstraint
@@ -197,6 +229,9 @@ top::Constraint ::= name::String lam::Lambda
       )
     )
   ];
+
+  top.ag_expr = appExpr ("every",
+                         [lam.ag_expr, topDotExpr(name)]);
 }
 
 aspect production filterConstraint
@@ -212,6 +247,8 @@ top::Constraint ::= set::String m::Matcher res::String
       )
     )
   ];
+
+  top.ag_expr = appExpr ("filter", [m.ag_expr, topDotExpr(set)]);   -- todo, fun defs need to flow up
 }
 
 aspect production defConstraint
@@ -224,6 +261,8 @@ top::Constraint ::= name::String t::Term
       t.ag_expr
     )
   ];
+
+  top.ag_expr = t.ag_expr;
 }
 
 --------------------------------------------------
@@ -231,7 +270,33 @@ top::Constraint ::= name::String t::Term
 aspect production matchConstraint
 top::Constraint ::= t::Term bs::BranchList
 {
-  local defs::[String] = foldr(union, [], bs.defsAllBranches);  -- all external statix variables defined within the branches
+  -- should be empty if an ok contribution, singleton otherwise
+  local bsDefNames::[String] = foldr(union, [], bs.defsAllBranches);
+
+  -- the name and type of the ag case return
+  local nameTyRet::(String, AG_Type) = 
+    case bsDefNames of
+    | [n] -> let nameFromEnv::Maybe<(String, Type)> =
+               lookupVar(n, top.nameTyDecls)
+             in
+               (n, nameFromEnv.fromJust.2.ag_type)
+             end
+    | []  -> ("ok", nameTypeAG("bool"))
+    | _   -> error("matchConstraint.nameTyRet")
+    end;
+  
+  local ag_match::AG_Expr = caseExpr (t.ag_expr, bs.ag_cases);
+
+  top.equations = [
+    defineEq (
+      topDotLHS(nameTyRet.1),
+      ^ag_match
+    )
+  ];
+
+  top.ag_expr = ^ag_match;
+
+  {-local defs::[String] = foldr(union, [], bs.defsAllBranches);  -- all external statix variables defined within the branches
   local defNamesTys::[(String, Type)] = filterMap(lookupVar(_, top.nameTyDecls), defs);
   local scopesExtended::[String] = top.requires;                -- all scopes for which we need to return a (possibly empty) edge tgt list
   local labs::[Label] = top.knownLabels;                        -- all known labels
@@ -314,7 +379,7 @@ top::Constraint ::= t::Term bs::BranchList
       )
     in
       defDefs.2
-    end end);
+    end end);-}
 
 }
 
@@ -324,17 +389,23 @@ aspect production applyConstraint
 top::Constraint ::= name::String vs::RefNameList
 {
   -- args that are in syn position for syn preds, or in ret position for funs
-  local defs::[(String, Type)] = top.freeVarsDefined;
-  vs.idx = 0;
+  --local defs::[(String, Type)] = top.freeVarsDefined;
+  --vs.idx = 0;
 
   local predInfo::PredInfo = lookupPred(name, top.predsInh).fromJust;
+  vs.idx = 0;
 
-  top.equations = case predInfo of
-                  | synPredInfo(_, _, _, _, _, _, _) -> 
-                      appConstraintSyn(name, predInfo, vs, top.knownLabels).equations
-                  | funPredInfo(_, _, _, _, _, _)    -> 
-                      appConstraintFun(name, predInfo, vs, top.knownLabels).equations
-                  end;
+  local apply::StxApplication = 
+    case predInfo of
+    | synPredInfo(_, _, _, _, _, _, _) -> 
+        appConstraintSyn(name, predInfo, vs, top.knownLabels)
+    | funPredInfo(_, _, _, _, _, _)    -> 
+        appConstraintFun(name, predInfo, vs, top.knownLabels)
+    end;
+
+  top.equations = apply.equations;        -- todo
+
+  top.ag_expr = apply.ag_expr; -- todo
 }
 
 --------------------------------------------------
@@ -342,6 +413,7 @@ top::Constraint ::= name::String vs::RefNameList
 nonterminal StxApplication;
 
 attribute equations occurs on StxApplication;
+attribute ag_expr occurs on StxApplication;
 
 abstract production appConstraintFun
 top::StxApplication ::=
@@ -387,6 +459,8 @@ top::StxApplication ::=
     ] ++ argEqs.2 ++ retEqs.2
     end end;
 
+  top.ag_expr = falseExpr();
+
 }
 
 abstract production appConstraintSyn
@@ -396,6 +470,8 @@ top::StxApplication ::=
   allArgs::Decorated RefNameList with {idx}
   knownLabels::[Label]
 {
+  top.ag_expr = error("appConstraintSyn.ag_expr");
+
   -- term
   local synTermName::String =
     case predInfo of

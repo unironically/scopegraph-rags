@@ -12,68 +12,11 @@ propagate ag_decls on Branch;
 aspect production branch
 top::Branch ::= m::Matcher c::Constraint
 {
-  local fun_name::String = "fun_" ++ toString(genInt()) ++ "_" ++ toString(top.location.line);
-  
-  -- args stuff
-
-  local namesInBranchScopeAux::[(String, Type)] = m.nameTyDeclsSyn ++ top.nameTyDecls;
-  local namesInBranchScope::[(String, Type)] = 
-    filter((\p::(String, Type) -> !contains(p.1, c.defs)), namesInBranchScopeAux);
-
-  local namesOfNamesInScope::[String] = map(fst, namesInBranchScope);
-  local tysOfNamesInScope::[Type] = map(snd, namesInBranchScope);
-  local agTysOfNamesInScope::[AG_Type] = map((.ag_type), tysOfNamesInScope);
-  local branchFunArgs::[(String, AG_Type)] = zip(namesOfNamesInScope, agTysOfNamesInScope);
-  local appArgs::[AG_Expr] = map(nameExpr(_), namesOfNamesInScope);
-  local app::AG_Expr = appExpr(fun_name, appArgs);
-
-  -- return stuff
-
-  local defNamesTys::[(String, Type)] = filterMap(lookupVar(_, top.nameTyDecls), c.defs);
-  local scopesExtended::[String] = top.requires;
-  local labs::[Label] = top.knownLabels;
-  local labTys::[AG_Type] = map(\l::Label -> nameTypeAG("Label"), labs);
-  local pairType::AG_Type = 
-    if null(scopesExtended ++ c.defs)
-          then nameTypeAG("Boolean")
-          else tupleTypeAG (nameTypeAG("Boolean")::(
-                            foldr(appendList, [],
-                              map(\s::String -> labTys, scopesExtended)
-                            ) ++
-                            map((.ag_type), map(snd, defNamesTys))  -- var defs
-                           ));
-
-  local perScopeLabRets::[AG_Expr] =
-    concat (map (
-      (\s::String ->
-         map(\l::Label -> nameExpr(s ++ "_" ++ l.name), labs)),
-      scopesExtended
-    ));
-  local defRets::[AG_Expr] = map(topDotExpr(_), map(fst, defNamesTys));
-
-  top.ag_case = agCase(m.ag_pattern, m.ag_whereClause, ^app);
-
-  local retsAsLocals::[AG_Eq] = 
-    localDeclEq("ok", nameTypeAG("Boolean")) ::
-    map (\p::(String, Type, Integer) -> localDeclEq(p.1, p.2.ag_type),
-         params.syns);
-
-  top.ag_decls <- [
-    functionDecl (
-      fun_name,
-      ^pairType,
-      branchFunArgs,
-      retsAsLocals ++
-      c.equations ++
-      [
-        returnEq(tupleExpr(
-          nameExpr("ok") :: -- we always have an ok result
-          (perScopeLabRets ++     -- scope labs for scopes we extend in the case
-          defRets)               -- defs in the case
-        ))
-      ]
-      )
-  ];
+  top.ag_case = agCase(
+    m.ag_pattern, 
+    m.ag_whereClause,
+    c.ag_expr
+  );
 }
 
 --------------------------------------------------

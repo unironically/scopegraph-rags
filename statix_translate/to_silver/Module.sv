@@ -78,37 +78,39 @@ top::Predicate ::= name::String params::NameList c::Constraint
 {
   local pred::PredInfo = head(top.predsSyn);
 
-  local retTy::AG_Type =
+  local retInfo::(AG_Type, AG_Expr, [AG_Eq]) =
     let args::[(String, Type, Integer)] = params.unlabelled in
     let rets::[(String, Type, Integer)] = params.syns in
     let retTys::[Type] = map(\p::(String, Type, Integer) -> fst(snd(p)), rets) in
     
-    let labAGTysTemplate::[AG_Type] = map(\l::Label -> nameTypeAG("Label"), top.knownLabels) in
+    let labAGTysTemplate::[AG_Type] = map(\l::Label -> nameTypeAG("Scope"), top.knownLabels) in
     let labAGTys::[AG_Type] = labTysForScopeArgs(args, labAGTysTemplate) in
     let retAGTys::[AG_Type] = map((.ag_type), retTys) in
 
     if null(labAGTys ++ retAGTys)
-    then nameTypeAG("Boolean")
-    else tupleTypeAG (
-      nameTypeAG("Boolean") :: (labAGTys ++ retAGTys)
+    then (
+      nameTypeAG("Boolean"),
+      nameExpr("ok"),
+      [localDeclEq("ok", nameTypeAG("Boolean"))]
     )
-      
+    else (
+      tupleTypeAG (nameTypeAG("Boolean") :: (labAGTys ++ retAGTys)),
+      tupleExpr(
+        nameExpr("ok") :: (
+          labRetsForScopeArgs(args, top.knownLabels) ++
+          map(nameExpr(_), map(fst, params.syns))
+        )
+      ),
+      localDeclEq("ok", nameTypeAG("Boolean"))::(
+        localDeclsForScopeArgs(args, top.knownLabels) ++
+        map(\p::(String, Type, Integer) -> localDeclEq(p.1, p.2.ag_type), params.syns)
+      )
+    )
     end end end end end end;
 
-  local retsAsLocals::[AG_Eq] = 
-    localDeclEq("ok", nameTypeAG("Boolean")) ::
-    map (\p::(String, Type, Integer) -> localDeclEq(p.1, p.2.ag_type),
-         params.syns);
-
-  local retEq::[AG_Eq] = 
-    if null(params.syns)
-    then [ returnEq(topDotExpr("ok")) ]
-    else [
-      returnEq(tupleExpr(
-        topDotExpr("ok")::
-        map(topDotExpr(_), map(fst, params.syns))
-      ))
-    ];
+  local retTy::AG_Type = retInfo.1;
+  local retEq::[AG_Eq] = [returnEq(retInfo.2)];
+  local retsAsLocals::[AG_Eq] = retInfo.3;
 
   top.ag_decls <- [
     functionDecl (
@@ -118,6 +120,7 @@ top::Predicate ::= name::String params::NameList c::Constraint
       retsAsLocals ++ c.equations ++ retEq
     )
   ];
+  
 }
 
 function labTysForScopeArgs
@@ -130,6 +133,32 @@ function labTysForScopeArgs
         map(listTypeAG(_), labTys) ++
         labTysForScopeArgs(t, labTys)
     | _::t -> labTysForScopeArgs(t, labTys)
+    end;
+}
+
+function labRetsForScopeArgs
+[AG_Expr] ::= args::[(String, Type, Integer)] labTys::[Label]
+{
+  return
+    case args of
+    | [] -> []
+    | (s, nameType("scope"), _)::t ->
+        map(\l::Label -> nameExpr(s ++ "_" ++ l.name), labTys) ++
+        labRetsForScopeArgs(t, labTys)
+    | _::t -> labRetsForScopeArgs(t, labTys)
+    end;
+}
+
+function localDeclsForScopeArgs
+[AG_Eq] ::= args::[(String, Type, Integer)] labTys::[Label]
+{
+  return
+    case args of
+    | [] -> []
+    | (s, nameType("scope"), _)::t ->
+        map(\l::Label -> localDeclEq(s ++ "_" ++ l.name, listTypeAG(nameTypeAG("Scope"))), labTys) ++
+        localDeclsForScopeArgs(t, labTys)
+    | _::t -> localDeclsForScopeArgs(t, labTys)
     end;
 }
 

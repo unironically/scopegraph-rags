@@ -89,7 +89,8 @@ expr(@inh s:scope, e:expr, @syn ty:type) :- e match {
       {ty1:type, ty2:type}
         expr(s, e1, ty1),
         expr(s, e2, ty2),
-        ty1 match { TFun(l:type, r:type):type -> ty := r, l == ty2 }
+        ty1 match { TFun(l:type, r:type):type -> ty := r },
+        ty1 match { TFun(l:type, r:type):type -> ty2 == l }
 
   | ExprIf(e1:expr, e2:expr, e3:expr) ->
       {ty1:type, ty2:type, ty3:type}
@@ -275,7 +276,7 @@ var-ref(@inh s:scope, r:var-ref, @syn p:path) :- r match {
 // some function predicates //
 
 tgt(p:path, @ret s:scope) :- p match {
-    End(x:scope):path                     -> s := x
+    End(x:scope):path                    -> s := x
   | Edge(x:scope, l:label, xs:path):path -> tgt(xs,s)
   }.
 
@@ -294,8 +295,11 @@ min-refs(z:{path}, @ret z':{path}) :-
                 `VAR < `LEX, `VAR < `IMP,
                 `IMP < `LEX ) z'.
 
-moo(p:path) :-
-  {p:path, p':path, s':scope}
-    p' := End(s'),
-    p := p'
+moo(s:scope, p:path, @ret s_ret:scope) :-
+  {p1:path, p2:path, s':scope}
+    p2 := End(s'),
+    p1 := p2,
+    p match { End(_:scope):path                    -> s_ret := s'
+            | Edge(_:scope, _:label, _:path):path  -> s_ret := s' }
 .
+
