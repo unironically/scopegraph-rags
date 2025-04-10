@@ -114,6 +114,12 @@ top::AG_Expr ::= name::String args::[AG_Expr]
   top.pp = "termExpr(" ++ name ++ ", [" ++ implode(", ", map((.pp), args)) ++ "])";
 }
 
+abstract production abortExpr
+top::AG_Expr ::=
+{
+  top.pp = "abortExpr()";
+}
+
 --------------------------------------------------
 
 nonterminal AG_Exprs;

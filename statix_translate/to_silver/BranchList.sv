@@ -40,5 +40,13 @@ top::BranchList ::= b::Branch bs::BranchList
 aspect production branchListOne
 top::BranchList ::= b::Branch
 {
-  top.ag_cases = agCasesOne(b.ag_case);
+  top.ag_cases = 
+    agCasesCons(
+      b.ag_case,
+      agCasesOne(agCase(
+        agPatternUnderscore(),
+        nilWhereClauseAG(),
+        abortExpr()
+      ))
+    );
 }
