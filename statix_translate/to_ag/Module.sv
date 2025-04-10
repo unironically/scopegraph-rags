@@ -160,7 +160,7 @@ function labRetsForScopeArgs
     case args of
     | [] -> []
     | (s, nameType("scope"), _)::t ->
-        map(\l::Label -> nameExpr(s ++ "_" ++ l.name), labTys) ++
+        map(\l::Label -> topDotExpr(s ++ "_" ++ l.name), labTys) ++
         labRetsForScopeArgs(t, labTys)
     | _::t -> labRetsForScopeArgs(t, labTys)
     end;

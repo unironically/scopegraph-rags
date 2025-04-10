@@ -202,7 +202,7 @@ top::Constraint ::= t::Term bs::BranchList
              in
                (n, nameFromEnv.fromJust.2.ag_type)
              end
-    | []  -> ("ok", nameTypeAG("bool"))
+    | []  -> ("ok", nameTypeAG("Boolean"))
     | _   -> error("matchConstraint.nameTyRet")
     end;
   
