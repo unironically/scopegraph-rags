@@ -2,14 +2,17 @@ grammar statix_translate:to_silver;
 
 --------------------------------------------------
 
-fun topDotLHS  AG_LHS  ::= s::String = nameLHS(s);  -- qualLHS(nameLHS("top"), s);
-fun topDotExpr AG_Expr ::= s::String = nameExpr(s); -- qualExpr(nameExpr("top"), s);
+fun topDotLHS  AG_LHS  ::= s::String = qualLHS(nameLHS("top"), s);
+fun topDotExpr AG_Expr ::= s::String = qualExpr(nameExpr("top"), s);
 
 synthesized attribute equations::[AG_Eq] occurs on Constraint;
 synthesized attribute ag_expr::AG_Expr;
 monoid attribute ag_decls::[AG_Decl] with [], ++;
 
 attribute ag_expr occurs on Constraint;
+
+inherited attribute nonAttrs::[String] occurs on Constraint;
+propagate nonAttrs on Constraint;
 
 --------------------------------------------------
 
@@ -63,33 +66,43 @@ top::Constraint ::= t1::Term t2::Term
 aspect production newConstraintDatum
 top::Constraint ::= name::String t::Term
 {
+  local ref::AG_LHS = if contains(name, top.nonAttrs) then nameLHS(name)
+                                                      else topDotLHS(name);
   local mkScopeApp::AG_Expr = appExpr("mkScope", [t.ag_expr]);
-  top.equations = [ defineEq (nameLHS(name), ^mkScopeApp) ];
+  top.equations = [ defineEq (^ref, ^mkScopeApp) ];
   top.ag_expr = ^mkScopeApp;
 }
 
 aspect production newConstraint
 top::Constraint ::= name::String
 {
+  local ref::AG_LHS = if contains(name, top.nonAttrs) then nameLHS(name)
+                                                      else topDotLHS(name);
   local mkScopeApp::AG_Expr = appExpr("mkScope", []);
-  top.equations = [ defineEq (nameLHS(name), ^mkScopeApp) ];
+  top.equations = [ defineEq (^ref, ^mkScopeApp) ];
   top.ag_expr = ^mkScopeApp;
 }
 
 aspect production dataConstraint
 top::Constraint ::= name::String d::String
 {
-  local dmdExpr::AG_Expr = demandExpr(topDotLHS(name), "datum");
-  top.equations = [ defineEq (topDotLHS(d), ^dmdExpr) ];
+  local ref::AG_Expr = if contains(name, top.nonAttrs) then nameExpr(name)
+                                                       else topDotExpr(name);
+  local lhs::AG_LHS = if contains(d, top.nonAttrs) then nameLHS(d)
+                                                   else topDotLHS(d);
+  local dmdExpr::AG_Expr = demandExpr(^ref, "datum");
+  top.equations = [ defineEq (^lhs, ^dmdExpr) ];
   top.ag_expr = ^dmdExpr;
 }
 
 aspect production edgeConstraint
 top::Constraint ::= src::String lab::Term tgt::String
 {
+  local ref::AG_Expr = if contains(tgt, top.nonAttrs) then nameExpr(tgt)
+                                                      else topDotExpr(tgt);
   top.equations = [
     contributionEq(topDotLHS(src ++ "_" ++ lab.labelName.fromJust),
-                   topDotExpr(tgt))
+                   ^ref)
   ];
   top.ag_expr = error("edgeConstraint.ag_expr");
 }
@@ -97,24 +110,33 @@ top::Constraint ::= src::String lab::Term tgt::String
 aspect production queryConstraint
 top::Constraint ::= src::String r::Regex res::String
 {
-  -- todo, dfa defs need to flow up
-  local queryApp::AG_Expr = appExpr("query", [topDotExpr(src), r.ag_expr]);
-  top.equations = [ defineEq (topDotLHS(res), ^queryApp) ];
+  local ref::AG_Expr = if contains(src, top.nonAttrs) then nameExpr(src)
+                                                      else topDotExpr(src);
+  local lhs::AG_LHS = if contains(res, top.nonAttrs) then nameLHS(res)
+                                                     else topDotLHS(res);
+  local queryApp::AG_Expr = appExpr("query", [^ref, r.ag_expr]);
+  top.equations = [ defineEq (^lhs, ^queryApp) ];
   top.ag_expr = ^queryApp;
 }
 
 aspect production oneConstraint
 top::Constraint ::= name::String out::String
 {
-  local oneApp::AG_Expr = appExpr("one", [topDotExpr(name)]);
-  top.equations = [ defineEq (topDotLHS(out), ^oneApp) ];
+  local nameRef::AG_Expr = if contains(name, top.nonAttrs) then nameExpr(name)
+                                                           else topDotExpr(name);
+  local outLHS::AG_LHS = if contains(out, top.nonAttrs) then nameLHS(out)
+                                                        else topDotLHS(out);
+  local oneApp::AG_Expr = appExpr("one", [^nameRef]);
+  top.equations = [ defineEq (^outLHS, ^oneApp) ];
   top.ag_expr = ^oneApp;
 }
 
 aspect production nonEmptyConstraint
 top::Constraint ::= name::String
 {
-  local inhabitedExpr::AG_Expr = appExpr("inhabited", [topDotExpr(name)]);
+  local nameRef::AG_Expr = if contains(name, top.nonAttrs) then nameExpr(name)
+                                                           else topDotExpr(name);
+  local inhabitedExpr::AG_Expr = appExpr("inhabited", [^nameRef]);
   top.equations = [ contributionEq (topDotLHS("ok"), ^inhabitedExpr) ];
   top.ag_expr = ^inhabitedExpr;
 }
@@ -122,15 +144,22 @@ top::Constraint ::= name::String
 aspect production minConstraint
 top::Constraint ::= set::String pc::PathComp res::String
 {
-  local minApp::AG_Expr = appExpr ("min", [pc.ag_expr, topDotExpr(set)]);
-  top.equations = [ defineEq (topDotLHS(res), ^minApp) ];
+  local setExpr::AG_Expr = if contains(set, top.nonAttrs) then nameExpr(set)
+                                                          else topDotExpr(set);
+  local resLHS::AG_LHS = if contains(res, top.nonAttrs) then nameLHS(res)
+                                                        else topDotLHS(res);
+
+  local minApp::AG_Expr = appExpr ("min", [pc.ag_expr, ^setExpr]);
+  top.equations = [ defineEq (^resLHS, ^minApp) ];
   top.ag_expr = ^minApp;
 }
 
 aspect production everyConstraint
 top::Constraint ::= name::String lam::Lambda
 {
-  local everyApp::AG_Expr = appExpr ("every", [lam.ag_expr, topDotExpr(name)]);
+  local nameRef::AG_Expr = if contains(name, top.nonAttrs) then nameExpr(name)
+                                                           else topDotExpr(name);
+  local everyApp::AG_Expr = appExpr ("every", [lam.ag_expr, ^nameRef]);
   top.equations = [ contributionEq (topDotLHS("ok"), ^everyApp) ];
   top.ag_expr = ^everyApp;
 }
@@ -138,15 +167,22 @@ top::Constraint ::= name::String lam::Lambda
 aspect production filterConstraint
 top::Constraint ::= set::String m::Matcher res::String
 {
-  local filterApp::AG_Expr = appExpr ("filter", [m.ag_expr, topDotExpr(set)]);
-  top.equations = [ defineEq (topDotLHS(res), ^filterApp) ];
+  local setExpr::AG_Expr = if contains(set, top.nonAttrs) then nameExpr(set)
+                                                          else topDotExpr(set);
+  local resLHS::AG_LHS = if contains(res, top.nonAttrs) then nameLHS(res)
+                                                        else topDotLHS(res);
+
+  local filterApp::AG_Expr = appExpr ("filter", [m.ag_expr, ^setExpr]);
+  top.equations = [ defineEq (^resLHS, ^filterApp) ];
   top.ag_expr = ^filterApp;
 }
 
 aspect production defConstraint
 top::Constraint ::= name::String t::Term
 {
-  top.equations = [ defineEq (topDotLHS(name), t.ag_expr) ];
+  local lhs::AG_LHS = if contains(name, top.nonAttrs) then nameLHS(name)
+                                                      else topDotLHS(name);
+  top.equations = [ defineEq (^lhs, t.ag_expr) ];
   top.ag_expr = t.ag_expr;
 }
 
@@ -181,91 +217,6 @@ top::Constraint ::= t::Term bs::BranchList
 
   top.ag_expr = ^ag_match;
 
-  {-local defs::[String] = foldr(union, [], bs.defsAllBranches);  -- all external statix variables defined within the branches
-  local defNamesTys::[(String, Type)] = filterMap(lookupVar(_, top.nameTyDecls), defs);
-  local scopesExtended::[String] = top.requires;                -- all scopes for which we need to return a (possibly empty) edge tgt list
-  local labs::[Label] = top.knownLabels;                        -- all known labels
-  local labTys::[AG_Type] = map(\l::Label -> nameTypeAG("Label"), labs);
-
-  local uniquePairName::String = "pair_" ++ toString(genInt());
-
-  local pairType::AG_Type = 
-    if null(scopesExtended ++ defs) 
-          then nameTypeAG("Boolean")
-          else tupleTypeAG (nameTypeAG("Boolean")::(
-                            foldr(appendList, [],
-                              map(\s::String -> labTys, scopesExtended)
-                            ) ++
-                            map((.ag_type), map(snd, defNamesTys))  -- var defs
-                           ));
-
-  local localDecl::AG_Eq = localDeclEq (uniquePairName, ^pairType);
-
-  local define::AG_Eq = defineEq (
-    topDotLHS(uniquePairName),
-    caseExpr (
-      t.ag_expr,
-      bs.ag_cases
-    )
-  );
-
-  -- todo: clean up!!!
-  top.equations = [
-    ^localDecl,
-    ^define
-  ] ++
-  if null(scopesExtended ++ defs)
-  then
-    [contributionEq (topDotLHS("ok"), topDotExpr(uniquePairName))]
-  else
-    ([
-      contributionEq (
-        topDotLHS("ok"),
-        tupleSectionExpr(topDotExpr(uniquePairName), 1)
-      )
-    ]++
-    let labDefs::(Integer, [AG_Eq]) = -- labels tuple section
-      foldr(
-        (
-          \scope::String acc::(Integer, [AG_Eq]) ->
-            let forLabs::(Integer, [AG_Eq]) =
-              foldr (
-                (
-                  \l::Label acc::(Integer, [AG_Eq]) ->
-                    (acc.1 + 1, 
-                    contributionEq (
-                      topDotLHS(scope ++ "_" ++ l.name), 
-                      tupleSectionExpr(topDotExpr(uniquePairName), acc.1)
-                    )::acc.2)
-                ),
-                (acc.1, []),
-                labs
-              )
-            in
-              (acc.1 + forLabs.1, acc.2 ++ forLabs.2)
-            end
-        ),
-        (2, []),
-        scopesExtended
-      )
-    in
-    let defDefs::(Integer, [AG_Eq]) = -- externals defined by tuple section
-      foldr (
-        (
-          \def::(String, Type) acc::(Integer, [AG_Eq]) ->
-            (acc.1 + 1, 
-            defineEq (
-              topDotLHS(def.1), 
-              tupleSectionExpr(topDotExpr(uniquePairName), acc.1)
-            )::acc.2)
-        ),
-        (labDefs.1, labDefs.2),
-        defNamesTys
-      )
-    in
-      defDefs.2
-    end end);-}
-
 }
 
 --------------------------------------------------
@@ -273,10 +224,6 @@ top::Constraint ::= t::Term bs::BranchList
 aspect production applyConstraint
 top::Constraint ::= name::String vs::RefNameList
 {
-  -- args that are in syn position for syn preds, or in ret position for funs
-  --local defs::[(String, Type)] = top.freeVarsDefined;
-  --vs.idx = 0;
-
   local predInfo::PredInfo = lookupPred(name, top.predsInh).fromJust;
   vs.idx = 0;
 
@@ -299,6 +246,9 @@ nonterminal StxApplication;
 
 attribute equations occurs on StxApplication;
 attribute ag_expr occurs on StxApplication;
+
+attribute nonAttrs occurs on StxApplication;
+propagate nonAttrs on StxApplication;
 
 abstract production appConstraintFun
 top::StxApplication ::=

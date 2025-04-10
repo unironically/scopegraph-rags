@@ -7,7 +7,7 @@ synthesized attribute ag_case::AG_Case occurs on Branch;
 attribute ag_decls occurs on Branch;
 propagate ag_decls on Branch;
 
---top::AG_Case ::= pat::AG_Pattern wc::Maybe<AG_WhereClause> body::AG_Expr
+attribute nonAttrs occurs on Branch;
 
 aspect production branch
 top::Branch ::= m::Matcher c::Constraint
@@ -17,6 +17,8 @@ top::Branch ::= m::Matcher c::Constraint
     m.ag_whereClause,
     c.ag_expr
   );
+  c.nonAttrs = top.nonAttrs ++ m.nonAttrsSyn;
+  m.nonAttrs = top.nonAttrs;
 }
 
 --------------------------------------------------
@@ -25,6 +27,9 @@ attribute ag_cases occurs on BranchList;
 
 attribute ag_decls occurs on BranchList;
 propagate ag_decls on BranchList;
+
+attribute nonAttrs occurs on BranchList;
+propagate nonAttrs on BranchList;
 
 aspect production branchListCons
 top::BranchList ::= b::Branch bs::BranchList

@@ -7,6 +7,8 @@ attribute ag_expr {- ::AG_Expr -} occurs on Lambda;
 attribute ag_decls {- ::[AG_Decl] -} occurs on Lambda;
 propagate ag_decls on Lambda;
 
+attribute nonAttrs occurs on Lambda;
+
 -- todo: allow pattern as lambda arg? steps to false if no match
 aspect production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
@@ -31,11 +33,17 @@ top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
     [(arg, ty.ag_type)],
     ^body
   );
+
+  wc.nonAttrs = arg::top.nonAttrs;
+  c.nonAttrs  = arg::top.nonAttrs; -- todo
 }
 
 --------------------------------------------------
 
 synthesized attribute ag_whereClause::AG_WhereClause occurs on WhereClause;
+
+attribute nonAttrs occurs on WhereClause;
+propagate nonAttrs on WhereClause;
 
 aspect production nilWhereClause
 top::WhereClause ::=
@@ -53,6 +61,9 @@ top::WhereClause ::= gl::GuardList
 
 attribute ag_expr {- ::AG_Expr -} occurs on Guard;
 
+attribute nonAttrs occurs on Guard;
+propagate nonAttrs on Guard;
+
 aspect production eqGuard
 top::Guard ::= t1::Term t2::Term
 {
@@ -68,6 +79,9 @@ top::Guard ::= t1::Term t2::Term
 --------------------------------------------------
 
 attribute ag_expr {- ::AG_Expr -} occurs on GuardList;
+
+attribute nonAttrs occurs on GuardList;
+propagate nonAttrs on GuardList;
 
 aspect production guardListCons
 top::GuardList ::= g::Guard gl::GuardList

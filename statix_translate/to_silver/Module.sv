@@ -7,9 +7,14 @@ propagate ag_decls on Module;
 
 aspect production module
 top::Module ::= ds::Imports ords::Orders preds::Predicates
-{}
+{ preds.globalNames = ords.orderNames; }
  
 --------------------------------------------------
+
+-- todo: order expressions as globals?
+
+monoid attribute orderNames::[String] with [], ++ occurs on Orders;
+propagate orderNames on Orders;
 
 aspect production ordersCons
 top::Orders ::= ord::Order ords::Orders
@@ -21,9 +26,11 @@ top::Orders ::=
 
 --------------------------------------------------
 
+attribute orderNames occurs on Order;
+
 aspect production order
 top::Order ::= name::String pathComp::PathComp
-{}
+{ top.orderNames := [name]; }
 
 --------------------------------------------------
 
@@ -46,6 +53,9 @@ top::Import ::= qual::QualName
 attribute ag_decls occurs on Predicates;
 propagate ag_decls on Predicates;
 
+inherited attribute globalNames::[String] occurs on Predicates;
+propagate globalNames on Predicates;
+
 aspect production predicatesCons
 top::Predicates ::= pred::Predicate preds::Predicates
 {}
@@ -59,6 +69,9 @@ top::Predicates ::=
 attribute ag_decls occurs on Predicate;
 propagate ag_decls on Predicate;
 
+attribute globalNames occurs on Predicate;
+propagate globalNames on Predicate;
+
 aspect production syntaxPredicate 
 top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
 {
@@ -71,6 +84,8 @@ top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
          map(toAGNameType, nameLst.inhs),
          map(toAGNameType, nameLst.syns))]
     end;
+
+    bs.nonAttrs = top.globalNames;
 }
 
 aspect production functionalPredicate
@@ -90,15 +105,15 @@ top::Predicate ::= name::String params::NameList c::Constraint
     if null(labAGTys ++ retAGTys)
     then (
       nameTypeAG("Boolean"),
-      nameExpr("ok"),
+      topDotExpr("ok"),
       [localDeclEq("ok", nameTypeAG("Boolean"))]
     )
     else (
       tupleTypeAG (nameTypeAG("Boolean") :: (labAGTys ++ retAGTys)),
       tupleExpr(
-        nameExpr("ok") :: (
+        topDotExpr("ok") :: (
           labRetsForScopeArgs(args, top.knownLabels) ++
-          map(nameExpr(_), map(fst, params.syns))
+          map(topDotExpr(_), map(fst, params.syns))
         )
       ),
       localDeclEq("ok", nameTypeAG("Boolean"))::(
@@ -120,7 +135,9 @@ top::Predicate ::= name::String params::NameList c::Constraint
       retsAsLocals ++ c.equations ++ retEq
     )
   ];
-  
+
+  c.nonAttrs = top.globalNames;
+
 }
 
 function labTysForScopeArgs
@@ -167,6 +184,8 @@ function localDeclsForScopeArgs
 attribute ag_decls occurs on ProdBranch;
 propagate ag_decls on ProdBranch;
 
+attribute globalNames occurs on ProdBranch;
+
 aspect production prodBranch
 top::ProdBranch ::= name::String params::NameList c::Constraint
 {
@@ -178,12 +197,19 @@ top::ProdBranch ::= name::String params::NameList c::Constraint
       c.equations
     )
   ];
+  c.nonAttrs = top.globalNames;
 }
 
 --------------------------------------------------
 
 attribute ag_decls occurs on ProdBranchList;
 propagate ag_decls on ProdBranchList;
+
+attribute nonAttrs occurs on ProdBranchList;
+propagate nonAttrs on ProdBranchList;
+
+attribute globalNames occurs on ProdBranchList;
+propagate globalNames on ProdBranchList;
 
 aspect production prodBranchListCons
 top::ProdBranchList ::= b::ProdBranch bs::ProdBranchList

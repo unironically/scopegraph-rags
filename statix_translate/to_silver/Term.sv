@@ -5,6 +5,9 @@ grammar statix_translate:to_silver;
 attribute ag_expr occurs on Term;
 synthesized attribute labelName::Maybe<String> occurs on Term;
 
+attribute nonAttrs occurs on Term;
+propagate nonAttrs on Term;
+
 aspect production labelTerm
 top::Term ::= lab::Label
 {
@@ -29,7 +32,8 @@ top::Term ::= name::String ts::TermList
 aspect production nameTerm
 top::Term ::= name::String
 {
-  top.ag_expr = topDotExpr(name);
+  top.ag_expr = if contains(name, top.nonAttrs) then nameExpr(name) 
+                                                else topDotExpr(name);
   top.labelName = nothing();
 }
 
@@ -65,6 +69,9 @@ top::Term ::= s::String
 --------------------------------------------------
 
 synthesized attribute ag_exprs::[AG_Expr] occurs on TermList;
+
+attribute nonAttrs occurs on TermList;
+propagate nonAttrs on TermList;
 
 aspect production termListCons
 top::TermList ::= t::Term ts::TermList

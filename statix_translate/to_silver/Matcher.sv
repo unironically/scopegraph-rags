@@ -10,6 +10,11 @@ propagate ag_decls on Matcher;
 attribute ag_pattern occurs on Matcher;
 attribute ag_whereClause occurs on Matcher;
 
+attribute nonAttrs occurs on Matcher;
+
+monoid attribute nonAttrsSyn::[String] with [], ++ occurs on Matcher;
+propagate nonAttrsSyn on Matcher;
+
 aspect production matcher
 top::Matcher ::= p::Pattern wc::WhereClause
 {
@@ -30,12 +35,17 @@ top::Matcher ::= p::Pattern wc::WhereClause
   top.ag_expr = lambdaExpr ([(arg_name, p.ag_type)], ^ag_case);
   top.ag_pattern = p.ag_pattern;
   top.ag_whereClause = wc.ag_whereClause;
+
+  wc.nonAttrs = top.nonAttrs ++ p.nonAttrsSyn;
 }
 
 --------------------------------------------------
 
 synthesized attribute ag_pattern::AG_Pattern occurs on Pattern;
 attribute ag_type {- :: AG_Type -} occurs on Pattern;
+
+attribute nonAttrsSyn occurs on Pattern;
+propagate nonAttrsSyn on Pattern;
 
 aspect production labelPattern
 top::Pattern ::= lab::Label
@@ -56,6 +66,7 @@ top::Pattern ::= name::String ty::TypeAnn
 {
   top.ag_pattern = agPatternName(name);
   top.ag_type = ty.ag_type;
+  top.nonAttrsSyn <- [name];
 }
 
 aspect production constructorPattern
@@ -97,6 +108,9 @@ top::Pattern ::= ty::TypeAnn
 
 synthesized attribute ag_patterns::[AG_Pattern] occurs on PatternList;
 synthesized attribute ag_types::[AG_Type] occurs on PatternList;
+
+attribute nonAttrsSyn occurs on PatternList;
+propagate nonAttrsSyn on PatternList;
 
 aspect production patternListCons
 top::PatternList ::= p::Pattern ps::PatternList

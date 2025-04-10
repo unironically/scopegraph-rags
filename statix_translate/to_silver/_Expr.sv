@@ -73,7 +73,7 @@ top::AG_Expr ::= e::AG_Expr cases::AG_Cases
 }
 
 abstract production demandExpr
-top::AG_Expr ::= lhs::AG_LHS attr::String
+top::AG_Expr ::= lhs::AG_Expr attr::String
 {
   top.pp = "demandExpr(" ++ lhs.pp ++ ", " ++ attr ++ ")";
 }
