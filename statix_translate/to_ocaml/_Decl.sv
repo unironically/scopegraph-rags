@@ -47,7 +47,7 @@ top::AG_Decl ::=
   -- local names
   local allLocals::[String] = map(str, map(fst, locals.1) ++ locals.2);
 
-  top.ocaml_decl = "(" ++
+  top.ocaml_decl = "fun: (" ++
     str(name) ++ ", " ++ str(funTy) ++ ", " ++                    -- name, ty
     "[" ++ implode("; ", argsStr) ++ "], " ++                     -- args
     "[" ++ implode("; ", allLocals) ++ "], " ++                   -- locals
@@ -79,6 +79,8 @@ String ::= contribs::[AG_Expr]
 
 fun str String ::= s::String = "\"" ++ s ++ "\"";
 
+--------------------------------------------------
+
 aspect production productionDecl
 top::AG_Decl ::=
   name::String
@@ -86,7 +88,52 @@ top::AG_Decl ::=
   args::[(String, AG_Type)]
   body::[AG_Eq]
 {
-  top.ocaml_decl = name ++ " todo";
+  -- todo, merge this and functiondecl
+
+  -- all locally defined names
+  local locals::([(String, AG_Type)], [String]) = getLocals(body);
+  local localEdgeLsts::[(String, AG_Type)] = locals.1;
+  local localsRegular::[String] = locals.2;
+
+  -- contribs for monoid locals
+  local contribsAll::[(String, AG_Type, [AG_Expr])] = 
+    map ((\attr::(String, AG_Type) -> (attr.1, attr.2, allContributionsForAttr(attr.1, body))),
+         localEdgeLsts);
+  local contribsTrans::[String] = 
+    map (
+      \p::(String, AG_Type, [AG_Expr]) ->
+        case p.2 of
+        | listTypeAG(nameTypeAG("Scope")) -> 
+            "AttrEq(" ++
+              qualLHS(nameLHS("top"), p.1).ocaml_lhs ++ ", " ++
+              combineEdgeContribs(p.3) ++ 
+            ")"
+        | nameTypeAG("Boolean") ->
+            "AttrEq(" ++
+              qualLHS(nameLHS("top"), p.1).ocaml_lhs ++ ", " ++
+              combineBoolContribs(p.3) ++ 
+            ")"
+        | _ -> error("functionDecl.contribsTrans")
+        end,
+      contribsAll);
+
+  -- type of the function
+  local prodTy::String = ty.ocaml_type;
+
+  -- arg names
+  local argsStr::[String] = map(str, map(fst, args));
+
+  -- local names
+  local allLocals::[String] = map(str, map(fst, locals.1) ++ locals.2);
+
+  top.ocaml_decl = "prod: (" ++
+    str(name) ++ ", " ++ str(prodTy) ++ ", " ++                   -- name, ty
+    "[" ++ implode("; ", argsStr) ++ "], " ++                     -- args
+    "[" ++ implode("; ", allLocals) ++ "], " ++                   -- locals
+    "[" ++ implode("; ", contribsTrans ++                         -- eqs from contribs
+                         filterMap((.ocaml_eq), body)) ++ "]" ++  -- other eqs
+  ")";
+
 }
 
 aspect production nonterminalDecl
@@ -95,7 +142,8 @@ top::AG_Decl ::=
   inhs::[(String, AG_Type)]
   syns::[(String, AG_Type)]
 {
-  top.ocaml_decl = name ++ " todo";
+  local attrs::[String] = map(fst, inhs++syns);
+  top.ocaml_decl = "nt: (" ++ name ++ ", [" ++ implode("; ", attrs) ++ "])";
 }
 
 aspect production globalDecl

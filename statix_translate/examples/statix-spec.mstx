@@ -295,7 +295,7 @@ min-refs(z:{path}, @ret z':{path}) :-
                 `VAR < `LEX, `VAR < `IMP,
                 `IMP < `LEX ) z'.
 
-moo(s:scope, p:path, @ret s_ret:scope) :-
+foo(s:scope, p:path, @ret s_ret:scope) :-
   {p1:path, p2:path, s':scope}
     p2 := End(s'),
     p1 := p2,
