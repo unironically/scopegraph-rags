@@ -50,7 +50,10 @@ type attr_status = Complete of expr
 type node_status = Visited
                  | Unvisited
 
-type equation = AttrEq of node_id * attr_id * expr
+(* AttrEq(AttrRef(VarE("top"), "ok"), 
+          And(TupleSec(AttrRef(VarE("top"), "pair_6"), 1), Bool(true)));  *)
+
+type equation = AttrEq of expr * expr
               | NtaEq  of node_id * expr
 
 type stack = equation list
@@ -102,7 +105,7 @@ let prod_env: prod list = [
   (
     "mkScopeDatum", "Scope",
     ["d"],
-    [ AttrEq("top", "datum", VarE("d")) ]
+    [ AttrEq(AttrRef(VarE("top"), "datum"), VarE("d")) ]
   );
 
   (
@@ -121,38 +124,38 @@ let prod_env: prod list = [
     "program", "Main",
     ["ds"],
     [ NtaEq("s", TermE(TermT("mkScope", [])));
-      AttrEq("s", "lex", AttrRef(VarE("ds"), "LEX_s"));
-      AttrEq("s", "var", AttrRef(VarE("ds"), "VAR_s"));
-      AttrEq("ds", "s", VarE("s"));
-      AttrEq("top", "ok", AttrRef(VarE("ds"), "ok"))
+      AttrEq(AttrRef(VarE("s"), "lex"), AttrRef(VarE("ds"), "LEX_s"));
+      AttrEq(AttrRef(VarE("s"), "var"), AttrRef(VarE("ds"), "VAR_s"));
+      AttrEq(AttrRef(VarE("ds"), "s"), VarE("s"));
+      AttrEq(AttrRef(VarE("top"), "ok"), AttrRef(VarE("ds"), "ok"))
     ]
   );
 
   (
     "declsCons", "Decls",
     ["d"; "ds"],
-    [ AttrEq("d", "s", AttrRef(VarE("top"), "s"));
-      AttrEq("ds", "s", AttrRef(VarE("top"), "s"));
-      AttrEq("top", "VAR_s", AttrRef(TermE(TermT("list_append", [AttrRef(VarE("d"), "VAR_s"); AttrRef(VarE("ds"), "VAR_s")])), "ret"));
-      AttrEq("top", "LEX_s", AttrRef(TermE(TermT("list_append", [AttrRef(VarE("d"), "LEX_s"); AttrRef(VarE("ds"), "LEX_s")])), "ret"));
-      AttrEq("top", "ok", And(AttrRef(VarE("d"), "ok"), AttrRef(VarE("ds"), "ok"))) ]
+    [ AttrEq(AttrRef(VarE("d"), "s"), AttrRef(VarE("top"), "s"));
+      AttrEq(AttrRef(VarE("ds"), "s"), AttrRef(VarE("top"), "s"));
+      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("d"), "VAR_s"); AttrRef(VarE("ds"), "VAR_s")])), "ret"));
+      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("d"), "LEX_s"); AttrRef(VarE("ds"), "LEX_s")])), "ret"));
+      AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("d"), "ok"), AttrRef(VarE("ds"), "ok"))) ]
   );
 
   (
     "declsNil", "Decls",
     [],
-    [ AttrEq("top", "VAR_s", TermE(TermT("listNil", [])));
-      AttrEq("top", "LEX_s", TermE(TermT("listNil", [])));
-      AttrEq("top", "ok", Bool(true)) ]
+    [ AttrEq(AttrRef(VarE("top"), "VAR_s"), TermE(TermT("listNil", [])));
+      AttrEq(AttrRef(VarE("top"), "LEX_s"), TermE(TermT("listNil", [])));
+      AttrEq(AttrRef(VarE("top"), "ok"), Bool(true)) ]
   );
 
   (
     "declDef", "Decl",
     ["pb"],
-    [ AttrEq("pb", "s", AttrRef(VarE("top"), "s"));
-      AttrEq("top", "ok", AttrRef(VarE("pb"), "ok"));
-      AttrEq("top", "VAR_s", AttrRef(TermE(TermT("list_append", [AttrRef(VarE("pb"), "VAR_s"); AttrRef(VarE("pb"), "VAR_s_def")])), "ret"));
-      AttrEq("top", "LEX_s", AttrRef(TermE(TermT("list_append", [AttrRef(VarE("pb"), "LEX_s"); AttrRef(VarE("pb"), "LEX_s_def")])), "ret")) ]
+    [ AttrEq(AttrRef(VarE("pb"), "s"), AttrRef(VarE("top"), "s"));
+      AttrEq(AttrRef(VarE("top"), "ok"), AttrRef(VarE("pb"), "ok"));
+      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("pb"), "VAR_s"); AttrRef(VarE("pb"), "VAR_s_def")])), "ret"));
+      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("pb"), "LEX_s"); AttrRef(VarE("pb"), "LEX_s_def")])), "ret")) ]
   );
 
   (
@@ -160,29 +163,29 @@ let prod_env: prod list = [
     ["id"; "e"],
     [ 
       NtaEq("s_var", TermE(TermT("mkScopeDatum", [TermE(TermT("datumVar", [VarE("id"); AttrRef(VarE("e"), "ty")]))])));
-      AttrEq("s_var", "lex", TermE(TermT("listNil", [])));
-      AttrEq("s_var", "var", TermE(TermT("listNil", [])));
+      AttrEq(AttrRef(VarE("s_var"), "lex"), TermE(TermT("listNil", [])));
+      AttrEq(AttrRef(VarE("s_var"), "var"), TermE(TermT("listNil", [])));
 
-      AttrEq("e", "s", AttrRef(VarE("top"), "s"));
-      AttrEq("top", "VAR_s", AttrRef(VarE("e"), "VAR_s"));
-      AttrEq("top", "LEX_s", AttrRef(VarE("e"), "LEX_s"));
-      AttrEq("top", "VAR_s_def", TermE(TermT("listCons", [VarE("s_var"); TermE(TermT("listNil", []))])));
-      AttrEq("top", "LEX_s_def", TermE(TermT("listNil", [])));
-      AttrEq("top", "ok", AttrRef(VarE("e"), "ok")) ]
+      AttrEq(AttrRef(VarE("e"), "s"), AttrRef(VarE("top"), "s"));
+      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(VarE("e"), "VAR_s"));
+      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(VarE("e"), "LEX_s"));
+      AttrEq(AttrRef(VarE("top"), "VAR_s_def"), TermE(TermT("listCons", [VarE("s_var"); TermE(TermT("listNil", []))])));
+      AttrEq(AttrRef(VarE("top"), "LEX_s_def"), TermE(TermT("listNil", [])));
+      AttrEq(AttrRef(VarE("top"), "ok"), AttrRef(VarE("e"), "ok")) ]
   );
 
   (
     "exprAdd", "Expr",
     ["e1"; "e2"],
-    [ AttrEq("e1", "s", AttrRef(VarE("top"), "s"));
-      AttrEq("e2", "s", AttrRef(VarE("top"), "s"));
-      AttrEq("top", "VAR_s", AttrRef(TermE(TermT("list_append", [AttrRef(VarE("e1"), "VAR_s"); AttrRef(VarE("e2"), "VAR_s")])), "ret"));
-      AttrEq("top", "LEX_s", AttrRef(TermE(TermT("list_append", [AttrRef(VarE("e1"), "LEX_s"); AttrRef(VarE("e2"), "LEX_s")])), "ret"));
-      AttrEq("top", "ok", And(AttrRef(VarE("e1"), "ok"), 
+    [ AttrEq(AttrRef(VarE("e1"), "s"), AttrRef(VarE("top"), "s"));
+      AttrEq(AttrRef(VarE("e2"), "s"), AttrRef(VarE("top"), "s"));
+      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("e1"), "VAR_s"); AttrRef(VarE("e2"), "VAR_s")])), "ret"));
+      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("e1"), "LEX_s"); AttrRef(VarE("e2"), "LEX_s")])), "ret"));
+      AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("e1"), "ok"), 
                             And(AttrRef(VarE("e2"), "ok"),
                               And(Case(AttrRef(VarE("e1"), "ty"), [(TermP("INT", []), Bool(true)); (UnderscoreP, Bool(false))]),
                                   App(Fun("x", Equal(VarE("x"), TermE(TermT("INT", [])))), AttrRef(VarE("e2"), "ty"))))));
-      AttrEq("top", "ty", TermE(TermT("INT", []))) ]
+      AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("INT", []))) ]
   );
 
   (
@@ -190,18 +193,18 @@ let prod_env: prod list = [
     ["sbs"; "e"],
     [ NtaEq("s_let", AttrRef(VarE("sbs"), "s_def_syn"));
 
-      AttrEq("s_let", "var", AttrRef(TermE(TermT("list_append", [AttrRef(VarE("sbs"), "VAR_s_def"); AttrRef(VarE("e"), "VAR_s")])), "ret"));
-      AttrEq("s_let", "lex", AttrRef(TermE(TermT("list_append", [AttrRef(VarE("sbs"), "LEX_s_def"); AttrRef(VarE("e"), "LEX_s")])), "ret"));
+      AttrEq(AttrRef(VarE("s_let"), "var"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("sbs"), "VAR_s_def"); AttrRef(VarE("e"), "VAR_s")])), "ret"));
+      AttrEq(AttrRef(VarE("s_let"), "lex"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("sbs"), "LEX_s_def"); AttrRef(VarE("e"), "LEX_s")])), "ret"));
 
-      AttrEq("sbs", "s", AttrRef(VarE("top"), "s"));
-      AttrEq("sbs", "s_def", VarE("s_let"));
+      AttrEq(AttrRef(VarE("sbs"), "s"), AttrRef(VarE("top"), "s"));
+      AttrEq(AttrRef(VarE("sbs"), "s_def"), VarE("s_let"));
 
-      AttrEq("e", "s", VarE("s_let"));
+      AttrEq(AttrRef(VarE("e"), "s"), VarE("s_let"));
 
-      AttrEq("top", "ty", AttrRef(VarE("e"), "ty"));
-      AttrEq("top", "ok", And(AttrRef(VarE("sbs"), "ok"), AttrRef(VarE("e"), "ok")));
-      AttrEq("top", "VAR_s", AttrRef(VarE("sbs"), "VAR_s"));
-      AttrEq("top", "LEX_s", AttrRef(VarE("sbs"), "LEX_s"));
+      AttrEq(AttrRef(VarE("top"), "ty"), AttrRef(VarE("e"), "ty"));
+      AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("sbs"), "ok"), AttrRef(VarE("e"), "ok")));
+      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(VarE("sbs"), "VAR_s"));
+      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(VarE("sbs"), "LEX_s"));
     ]
   );
 
@@ -210,18 +213,18 @@ let prod_env: prod list = [
   (
     "seqBindsOne", "SeqBinds",
     ["sb"],
-    [ AttrEq("sb", "s", AttrRef(VarE("top"), "s"));
-    AttrEq("sb", "s_def", AttrRef(VarE("top"), "s_def"));
+    [ AttrEq(AttrRef(VarE("sb"), "s"), AttrRef(VarE("top"), "s"));
+    AttrEq(AttrRef(VarE("sb"), "s_def"), AttrRef(VarE("top"), "s_def"));
 
-      AttrEq("top", "VAR_s", AttrRef(VarE("sb"), "VAR_s"));
-      AttrEq("top", "LEX_s", AttrRef(VarE("sb"), "LEX_s"));
+      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(VarE("sb"), "VAR_s"));
+      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(VarE("sb"), "LEX_s"));
 
-      AttrEq("top", "VAR_s_def", AttrRef(VarE("sb"), "VAR_s_def"));
-      AttrEq("top", "LEX_s_def", TermE(TermT("listCons", [AttrRef(VarE("top"), "s"); AttrRef(VarE("sb"), "LEX_s_def")])));
+      AttrEq(AttrRef(VarE("top"), "VAR_s_def"), AttrRef(VarE("sb"), "VAR_s_def"));
+      AttrEq(AttrRef(VarE("top"), "LEX_s_def"), TermE(TermT("listCons", [AttrRef(VarE("top"), "s"); AttrRef(VarE("sb"), "LEX_s_def")])));
       
-      AttrEq("top", "s_def_syn", TermE(TermT("mkScope", [])));
+      AttrEq(AttrRef(VarE("top"), "s_def_syn"), TermE(TermT("mkScope", [])));
 
-      AttrEq("top", "ok", AttrRef(VarE("sb"), "ok")) ]
+      AttrEq(AttrRef(VarE("top"), "ok"), AttrRef(VarE("sb"), "ok")) ]
   );
 
   (
@@ -229,24 +232,24 @@ let prod_env: prod list = [
     ["sb"; "sbs"],
     [ NtaEq("s_def_", TermE(TermT("mkScope", [])));
       
-      AttrEq("s_def_", "lex", TermE(TermT("listCons", [AttrRef(VarE("top"), "s"); AttrRef(TermE(TermT("list_append", [AttrRef(VarE("sb"), "LEX_s_def"); AttrRef(VarE("sbs"), "LEX_s")])), "ret")])));
-      AttrEq("s_def_", "var", AttrRef(TermE(TermT("list_append", [AttrRef(VarE("sb"), "VAR_s_def"); AttrRef(VarE("sbs"), "VAR_s")])), "ret"));
+      AttrEq(AttrRef(VarE("s_def_"), "lex"), TermE(TermT("listCons", [AttrRef(VarE("top"), "s"); AttrRef(TermE(TermT("list_append", [AttrRef(VarE("sb"), "LEX_s_def"); AttrRef(VarE("sbs"), "LEX_s")])), "ret")])));
+      AttrEq(AttrRef(VarE("s_def_"), "var"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("sb"), "VAR_s_def"); AttrRef(VarE("sbs"), "VAR_s")])), "ret"));
       
-      AttrEq("sb", "s", AttrRef(VarE("top"), "s"));
-      AttrEq("sb", "s_def", AttrRef(VarE("top"), "s_def"));
+      AttrEq(AttrRef(VarE("sb"), "s"), AttrRef(VarE("top"), "s"));
+      AttrEq(AttrRef(VarE("sb"), "s_def"), AttrRef(VarE("top"), "s_def"));
       
-      AttrEq("sbs", "s", VarE("s_def_"));
-      AttrEq("sbs", "s_def", AttrRef(VarE("top"), "s_def"));
+      AttrEq(AttrRef(VarE("sbs"), "s"), VarE("s_def_"));
+      AttrEq(AttrRef(VarE("sbs"), "s_def"), AttrRef(VarE("top"), "s_def"));
       
-      AttrEq("top", "VAR_s", AttrRef(VarE("sb"), "VAR_s"));
-      AttrEq("top", "LEX_s", AttrRef(VarE("sb"), "LEX_s"));
+      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(VarE("sb"), "VAR_s"));
+      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(VarE("sb"), "LEX_s"));
 
-      AttrEq("top", "VAR_s_def_", AttrRef(VarE("sbs"), "VAR_s_def"));
-      AttrEq("top", "LEX_s_def_", AttrRef(VarE("sbs"), "LEX_s_def"));
+      AttrEq(AttrRef(VarE("top"), "VAR_s_def_"), AttrRef(VarE("sbs"), "VAR_s_def"));
+      AttrEq(AttrRef(VarE("top"), "LEX_s_def_"), AttrRef(VarE("sbs"), "LEX_s_def"));
 
-      AttrEq("top", "s_def_syn", AttrRef(VarE("sbs"), "s_def_syn"));
+      AttrEq(AttrRef(VarE("top"), "s_def_syn"), AttrRef(VarE("sbs"), "s_def_syn"));
 
-      AttrEq("top", "ok", And(AttrRef(VarE("sb"), "ok"), AttrRef(VarE("sbs"), "ok")))
+      AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("sb"), "ok"), AttrRef(VarE("sbs"), "ok")))
     ]
   );
 
@@ -255,18 +258,18 @@ let prod_env: prod list = [
     ["id"; "e"],
     [
       NtaEq("s_var", TermE(TermT("mkScopeDatum", [TermE(TermT("datumVar", [VarE("id"); AttrRef(VarE("e"), "ty")]))])));
-      AttrEq("s_var", "lex", TermE(TermT("listNil", [])));
-      AttrEq("s_var", "var",  TermE(TermT("listNil", [])));
+      AttrEq(AttrRef(VarE("s_var"), "lex"), TermE(TermT("listNil", [])));
+      AttrEq(AttrRef(VarE("s_var"), "var"),  TermE(TermT("listNil", [])));
 
-      AttrEq("e", "s", AttrRef(VarE("top"), "s"));
+      AttrEq(AttrRef(VarE("e"), "s"), AttrRef(VarE("top"), "s"));
 
-      AttrEq("top", "VAR_s", AttrRef(VarE("e"), "VAR_s"));
-      AttrEq("top", "LEX_s", AttrRef(VarE("e"), "LEX_s"));
+      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(VarE("e"), "VAR_s"));
+      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(VarE("e"), "LEX_s"));
 
-      AttrEq("top", "VAR_s_def", TermE(TermT("listCons", [VarE("s_var"); TermE(TermT("listNil", []))])));
-      AttrEq("top", "LEX_s_def", TermE(TermT("listNil", [])));
+      AttrEq(AttrRef(VarE("top"), "VAR_s_def"), TermE(TermT("listCons", [VarE("s_var"); TermE(TermT("listNil", []))])));
+      AttrEq(AttrRef(VarE("top"), "LEX_s_def"), TermE(TermT("listNil", [])));
 
-      AttrEq("top", "ok", AttrRef(VarE("e"), "ok")); ]
+      AttrEq(AttrRef(VarE("top"), "ok"), AttrRef(VarE("e"), "ok")); ]
   );
 
 
@@ -274,27 +277,27 @@ let prod_env: prod list = [
   (
     "exprInt", "Expr",
     ["i"],
-    [ AttrEq("top", "ok", Bool(true));
-      AttrEq("top", "ty", TermE(TermT("INT", [])));
-      AttrEq("top", "VAR_s", TermE(TermT("listNil", [])));
-      AttrEq("top", "LEX_s", TermE(TermT("listNil", []))) ]
+    [ AttrEq(AttrRef(VarE("top"), "ok"), Bool(true));
+      AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("INT", [])));
+      AttrEq(AttrRef(VarE("top"), "VAR_s"), TermE(TermT("listNil", [])));
+      AttrEq(AttrRef(VarE("top"), "LEX_s"), TermE(TermT("listNil", []))) ]
   );
 
   (
     "exprVar", "Expr",
     ["r"],
-    [ AttrEq("r", "s", AttrRef(VarE("top"), "s"));
-      AttrEq("top", "VAR_s", AttrRef(VarE("r"), "VAR_s"));
-      AttrEq("top", "LEX_s", AttrRef(VarE("r"), "LEX_s"));
+    [ AttrEq(AttrRef(VarE("r"), "s"), AttrRef(VarE("top"), "s"));
+      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(VarE("r"), "VAR_s"));
+      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(VarE("r"), "LEX_s"));
 
-      AttrEq("top", "datumOfResult",
+      AttrEq(AttrRef(VarE("top"), "datumOfResult"),
         AttrRef(
           TermE(TermT("datumOf", [AttrRef(VarE("r"), "p")])),
           "ret"
         )
       );
 
-      AttrEq("top", "okDatumOf", 
+      AttrEq(AttrRef(VarE("top"), "okDatumOf"), 
         Case (
           AttrRef(VarE("top"), "datumOfResult"),
           [
@@ -303,7 +306,7 @@ let prod_env: prod list = [
         )
       );
 
-      AttrEq("top", "d", 
+      AttrEq(AttrRef(VarE("top"), "d"), 
         Case (
           AttrRef(VarE("top"), "datumOfResult"),
           [
@@ -312,7 +315,7 @@ let prod_env: prod list = [
         )
       );
 
-      AttrEq("top", "datumPair",
+      AttrEq(AttrRef(VarE("top"), "datumPair"),
         Case (
           AttrRef(VarE("top"), "d"),
           [
@@ -322,21 +325,21 @@ let prod_env: prod list = [
         )
       );
 
-      AttrEq("top", "okDatumPair",
+      AttrEq(AttrRef(VarE("top"), "okDatumPair"),
         Case (
           AttrRef(VarE("top"), "datumPair"),
             [ (TermP("pair", [VarP("ok'"); UnderscoreP; UnderscoreP]), VarE("ok'")) ]
           )
       );
 
-      AttrEq("top", "ty",
+      AttrEq(AttrRef(VarE("top"), "ty"),
         Case (
           AttrRef(VarE("top"), "datumPair"),
           [ (TermP("pair", [UnderscoreP; UnderscoreP; VarP("ty'")]), VarE("ty'")) ]
         )
       );
 
-      AttrEq("top", "ok", 
+      AttrEq(AttrRef(VarE("top"), "ok"), 
         And (
           AttrRef(VarE("r"), "ok"),
           And (
@@ -357,7 +360,7 @@ let prod_env: prod list = [
       NtaEq("dfa", TermE(TermT("varRefDFA", [])));
       NtaEq("nwceNode", TermE(TermT("nwce", [AttrRef(VarE("top"), "s"); VarE("dfa")])));
 
-      AttrEq("top", "dwf",
+      AttrEq(AttrRef(VarE("top"), "dwf"),
         Fun ("s",
           Case (
             AttrRef(VarE("s"), "datum"),
@@ -371,7 +374,7 @@ let prod_env: prod list = [
       NtaEq("queryNode", TermE(TermT("query", [AttrRef(VarE("top"), "s"); VarE("dfa"); AttrRef(VarE("top"), "dwf")])));
 
       (* needs cleaning, perhaps allow multiple patterns: case l, r of ...*)
-      AttrEq("top", "order",
+      AttrEq(AttrRef(VarE("top"), "order"),
         Fun("l",
           Fun("r",
             Case (
@@ -408,7 +411,7 @@ let prod_env: prod list = [
         )
       );
 
-      AttrEq("top", "vars",
+      AttrEq(AttrRef(VarE("top"), "vars"),
         If (
           AttrRef(VarE("nwceNode"), "ret"),
           AttrRef(VarE("queryNode"), "ret"),
@@ -416,36 +419,36 @@ let prod_env: prod list = [
         )
       );
 
-      AttrEq("top", "xvars",
+      AttrEq(AttrRef(VarE("top"), "xvars"),
         AttrRef(
           TermE(TermT("min-refs", [AttrRef(VarE("top"), "order"); AttrRef(VarE("top"), "vars")])),
           "ret"
         )
       );
 
-      AttrEq("top", "onlyResult",
+      AttrEq(AttrRef(VarE("top"), "onlyResult"),
         AttrRef(
           TermE(TermT("only", [AttrRef(VarE("top"), "xvars")])),
           "ret"
         )
       );
 
-      AttrEq("top", "p",
+      AttrEq(AttrRef(VarE("top"), "p"),
         Case (
           AttrRef(VarE("top"), "onlyResult"),
           [ (TermP("pair", [UnderscoreP; VarP("p'")]), VarE("p'")); ]
         )
       );
 
-      AttrEq("top", "ok",
+      AttrEq(AttrRef(VarE("top"), "ok"),
         Case (
           AttrRef(VarE("top"), "onlyResult"),
           [ (TermP("pair", [VarP("ok'"); UnderscoreP]), VarE("ok'")); ]
         )
       );
 
-      AttrEq("top", "VAR_s", TermE(TermT("listNil", [])));
-      AttrEq("top", "LEX_s", TermE(TermT("listNil", []))) ]
+      AttrEq(AttrRef(VarE("top"), "VAR_s"), TermE(TermT("listNil", [])));
+      AttrEq(AttrRef(VarE("top"), "LEX_s"), TermE(TermT("listNil", []))) ]
   );
 
   (* QUERY *)
@@ -453,7 +456,7 @@ let prod_env: prod list = [
     "query", "FunResult",
     ["s"; "dfa"; "dwf"],
     [
-      AttrEq("top", "ret",
+      AttrEq(AttrRef(VarE("top"), "ret"),
         App(App(AttrRef(VarE("dfa"), "paths"), VarE("s")), VarE("dwf"))
       )
     ]
@@ -465,7 +468,7 @@ let prod_env: prod list = [
     "min-refs", "FunResult",
     ["f"; "lst"],
     [
-      AttrEq("top", "ret",
+      AttrEq(AttrRef(VarE("top"), "ret"),
         Case (
           VarE("lst"),
           [
@@ -512,7 +515,7 @@ let prod_env: prod list = [
     "min-refs-pair", "FunResult",
     ["f"; "p1"; "p2"],
     [
-      AttrEq("top", "ret", App(App(VarE("f"), VarE("p1")), VarE("p2")))
+      AttrEq(AttrRef(VarE("top"), "ret"), App(App(VarE("f"), VarE("p1")), VarE("p2")))
     ]
   );
 
@@ -522,7 +525,7 @@ let prod_env: prod list = [
     "only", "FunResult",
     ["lst"],
     [
-      AttrEq("top", "ret",
+      AttrEq(AttrRef(VarE("top"), "ret"),
         Case (
           VarE("lst"),
           [ (TermP("listCons", [VarP("h"); TermP("listNil", [])]), TermE(TermT("pair", [Bool(true); VarE("h")])));
@@ -538,7 +541,7 @@ let prod_env: prod list = [
     "tgt", "FunResult",
     ["path"],
     [
-      AttrEq("top", "ret",
+      AttrEq(AttrRef(VarE("top"), "ret"),
         Case (
           VarE("path"),
           [
@@ -558,7 +561,7 @@ let prod_env: prod list = [
     [
       NtaEq("tgtNode", TermE(TermT("tgt", [VarE("path")])));
       
-      AttrEq("top", "ret",
+      AttrEq(AttrRef(VarE("top"), "ret"),
         Let (
           "tgtNodeRes", AttrRef(VarE("tgtNode"), "ret"),
           Case (
@@ -580,13 +583,13 @@ let prod_env: prod list = [
     "nwce", "FunResult",
     ["s"; "dfa"],
     [ NtaEq("nwceStateNode", TermE(TermT("nwceState", [VarE("s"); AttrRef(VarE("dfa"), "start")])));
-      AttrEq("top", "ret", AttrRef(VarE("nwceStateNode"), "ret")) ]
+      AttrEq(AttrRef(VarE("top"), "ret"), AttrRef(VarE("nwceStateNode"), "ret")) ]
   );
 
   (
     "nwceState", "FunResult",
     ["s"; "dfa"],
-    [ AttrEq("top", "ret",
+    [ AttrEq(AttrRef(VarE("top"), "ret"),
         Case (VarE("dfa"), [
           (TermP("stateFinal", []), Case(AttrRef(VarE("s"), "datum"), [(UnderscoreP, Bool(true))]));
           (TermP("stateSink", []),  Bool(true));
@@ -626,19 +629,19 @@ let prod_env: prod list = [
     "varRefDFA", "DFA",
     [],
     [ NtaEq("stateStart", TermE(TermT("stateVar", [])));
-      AttrEq("stateStart", "lexT", VarE("stateStart"));
-      AttrEq("stateStart", "varT", VarE("stateFinal"));
+      AttrEq(AttrRef(VarE("stateStart"), "lexT"), VarE("stateStart"));
+      AttrEq(AttrRef(VarE("stateStart"), "varT"), VarE("stateFinal"));
 
       NtaEq("stateFinal", TermE(TermT("stateFinal", [])));
-      AttrEq("stateStart", "lexT", VarE("stateSink"));
-      AttrEq("stateStart", "varT", VarE("stateSink"));
+      AttrEq(AttrRef(VarE("stateStart"), "lexT"), VarE("stateSink"));
+      AttrEq(AttrRef(VarE("stateStart"), "varT"), VarE("stateSink"));
 
       NtaEq("stateSink", TermE(TermT("stateSink", [])));
-      AttrEq("stateStart", "lexT", VarE("stateSink"));
-      AttrEq("stateStart", "varT", VarE("stateSink"));
+      AttrEq(AttrRef(VarE("stateStart"), "lexT"), VarE("stateSink"));
+      AttrEq(AttrRef(VarE("stateStart"), "varT"), VarE("stateSink"));
       
-      AttrEq("top", "start", VarE("stateStart"));
-      AttrEq("top", "paths", AttrRef(VarE("stateStart"), "paths")) ]
+      AttrEq(AttrRef(VarE("top"), "start"), VarE("stateStart"));
+      AttrEq(AttrRef(VarE("top"), "paths"), AttrRef(VarE("stateStart"), "paths")) ]
   );
 
   (* GENERIC LIST *)
@@ -646,7 +649,7 @@ let prod_env: prod list = [
   ( (* good *)
     "list_fold_right", "FunResult",
     ["f"; "lst"; "initial"],
-    [ AttrEq("top", "ret",
+    [ AttrEq(AttrRef(VarE("top"), "ret"),
         Case (
           VarE("lst"),
           [
@@ -671,7 +674,7 @@ let prod_env: prod list = [
     "list_append", "FunResult",
     ["l1"; "l2"],
     [
-      AttrEq("top", "ret",
+      AttrEq(AttrRef(VarE("top"), "ret"),
         Case (VarE("l1"),
           [
             (TermP("listNil", []), 
@@ -693,7 +696,7 @@ let prod_env: prod list = [
   ( (* good *)
     "list_map", "FunResult",
     ["f"; "lst"],
-    [ AttrEq("top", "ret",
+    [ AttrEq(AttrRef(VarE("top"), "ret"),
         AttrRef(
           TermE(TermT("list_fold_right", [
             Fun("item", Fun("acc", TermE(TermT("listCons", [App(VarE("f"), VarE("item")); VarE("acc")]))));
@@ -708,7 +711,7 @@ let prod_env: prod list = [
   ( (* good *)
     "list_concat", "FunResult",
     ["lsts"],
-    [ AttrEq("top", "ret",
+    [ AttrEq(AttrRef(VarE("top"), "ret"),
         AttrRef(
           TermE(TermT("list_fold_right", [
             Fun("item", Fun("acc", AttrRef(TermE(TermT("list_append", [VarE("item"); VarE("acc")])), "ret")));
@@ -723,7 +726,7 @@ let prod_env: prod list = [
   ( (* good *)
     "list_length", "FunResult",
     ["lst"],
-    [ AttrEq("top", "ret",
+    [ AttrEq(AttrRef(VarE("top"), "ret"),
         AttrRef(
           TermE(TermT("list_fold_right", [
             Fun("_", Fun("acc", Plus(Int(1), VarE("acc"))));
@@ -739,7 +742,7 @@ let prod_env: prod list = [
     "list_all", "FunResult",
     ["lst"],
     [
-      AttrEq("top", "ret",
+      AttrEq(AttrRef(VarE("top"), "ret"),
         AttrRef(
           TermE(TermT("list_fold_right", [
             Fun("item", Fun("acc", And(VarE("item"), VarE("acc"))));
@@ -758,7 +761,7 @@ let prod_env: prod list = [
     "stateVar", "DFAState",
     [],
     [
-      AttrEq("top", "paths",
+      AttrEq(AttrRef(VarE("top"), "paths"),
         Fun ("cur_scope",
           Fun ("dwf",
             Let (
@@ -836,7 +839,7 @@ let prod_env: prod list = [
     "stateFinal", "DFAState",
     [],
     [
-      AttrEq("top", "paths",
+      AttrEq(AttrRef(VarE("top"), "paths"),
         Fun("cur_scope",
           Fun("dwf",
             If (
@@ -857,7 +860,7 @@ let prod_env: prod list = [
     "stateSink", "DFAState",
     [],
     [
-      AttrEq("top", "paths",
+      AttrEq(AttrRef(VarE("top"), "paths"),
         Fun("cur_scope",
           Fun("dwf",
             TermE(TermT("listNil", []))
@@ -916,7 +919,7 @@ and str_term (TermT(s, es): term): string =
 
 let rec str_eq (e: equation): string =
   match e with
-  | AttrEq(n, a, e) -> n ^ "." ^ a ^ " = " ^ str_expr e
+  | AttrEq(AttrRef(VarE(n), a), e) -> n ^ "." ^ a ^ " = " ^ str_expr e
   | NtaEq(n, e) -> n ^ " = " ^ str_expr e
 
 let rec str_stack (s: stack): string =
@@ -1079,9 +1082,9 @@ let instantiate_eqs_set (name: string) (node: node_id) (eqs: set): set =
   in
   let instantiate_eq (eq: equation): equation =
     match eq with
-    | AttrEq(n, a, e) -> let e_instantiated: expr = instantiate_expr e in
+    | AttrEq(AttrRef(VarE(n), a), e) -> let e_instantiated: expr = instantiate_expr e in
                          let n' = if n = name then node else n in
-                         AttrEq(n', a, e_instantiated)
+                         AttrEq(AttrRef(VarE(n'), a), e_instantiated)
     | NtaEq(n, e) -> let e_instantiated: expr = instantiate_expr e in
                      let n' = if n = name then node else n in
                      NtaEq(n', e_instantiated)
@@ -1146,7 +1149,7 @@ let rec substitute_expr (s: string) (e': expr) (e: expr): expr =
 let substitute_eqs (s: string) (e': expr) (eqs: set): set =
   let substitute_eq (eq: equation): equation =
     match eq with
-    | AttrEq(n, a, e) -> AttrEq(n, a, substitute_expr s e' e)
+    | AttrEq(AttrRef(VarE(n), a), e) -> AttrEq(AttrRef(VarE(n), a), substitute_expr s e' e)
     | NtaEq(n, e)     -> NtaEq(n, substitute_expr s e' e)
   in
   List.map substitute_eq eqs
@@ -1262,7 +1265,7 @@ let rec unvisited_node (n: node_id) (t: tree): bool =
 let rec remove_attr_eq_for ((n, a): node_id * attr_id) (eqs: set): equation option * set =
   match eqs with
   | [] -> (None, [])
-  | AttrEq(n', a', e)::rest when n = n' && a = a' -> (Some (AttrEq(n', a', e)), rest)
+  | AttrEq(AttrRef(VarE(n'), a'), e)::rest when n = n' && a = a' -> (Some (AttrEq(AttrRef(VarE(n'), a'), e)), rest)
   | h::rest -> let (eq, eqs') = remove_attr_eq_for (n, a) rest in (eq, h::eqs')
   
 
@@ -1326,7 +1329,7 @@ let make_complete ((n, a): node_id * attr_id) (e: expr) (t: tree): tree =
 let rec replace_first ((n, a): node_id * attr_id) (e': expr) (s: stack): stack =
   match s with
   | [] -> []
-  | AttrEq(n', a', e)::rest when n = n' && a = a' -> AttrEq(n, a, e') :: rest
+  | AttrEq(AttrRef(VarE(n'), a'), e)::rest when n = n' && a = a' -> AttrEq(AttrRef(VarE(n), a), e') :: rest
   | h::t -> h :: replace_first (n, a) e' t
 
 
@@ -1659,13 +1662,13 @@ let rec eq_step (t, s, eqs: eq_step_state): eq_step_state =
   match s with
 
     (* done *)
-  | AttrEq("outer", attr, e)::rest when value_expr e ->
+  | AttrEq(AttrRef(VarE("outer"), attr), e)::rest when value_expr e ->
     print_endline ("DONE: outer." ^ attr ^ " = " ^ (str_expr e));
     (t, s, eqs)
 
 
     (* step-simple-value *)
-  | AttrEq(n, a, e)::rest when value_expr e ->
+  | AttrEq(AttrRef(VarE(n), a), e)::rest when value_expr e ->
       
       (match a with
       | "ty" | "var" | "lex" | "nwce" | "ret"
@@ -1677,10 +1680,17 @@ let rec eq_step (t, s, eqs: eq_step_state): eq_step_state =
 
 
     (* step-on-expr-normal *)
-  | AttrEq(n, a, e)::rest when not(value_expr e) ->
+  | AttrEq(AttrRef(VarE(n), a), e)::rest when not(value_expr e) ->
       print_state (t, s, eqs);
       let (e', t', s', eqs') = expr_step (e, t, s, eqs) in
       (t', replace_first (n, a) e' s', eqs')
+
+      
+    (* step-attr-eq-lhs *)
+  | AttrEq(e, _)::rest when not(value_expr e) ->
+      print_state (t, s, eqs);
+      let (e', t', s', eqs') = expr_step (e, t, s, eqs) in
+      (t', s', eqs')
 
 
     (* step-nta-build *)
@@ -1705,15 +1715,16 @@ let rec eq_step (t, s, eqs: eq_step_state): eq_step_state =
     let (e', t', s', eqs') = expr_step (e, t, s, eqs) in
     (t', replace_first_nta n e' s', eqs')
 
+
   | _ -> print_endline "didn't know what to do!"; (t, s, eqs) (* TODO *)
           
   
 
 let rec keep_stepping (state: eq_step_state): unit =
     match state with
-    | (t, AttrEq("outer", attr, e)::rest, eqs) when value_expr e ->
+    | (t, AttrEq(AttrRef(VarE("outer"), attr), e)::rest, eqs) when value_expr e ->
       print_endline ("DONE with outer." ^ attr ^ " = " ^ (str_expr e));
-        let s: stack = AttrEq("outer", attr, e)::rest in
+        let s: stack = AttrEq(AttrRef(VarE("outer"), attr), e)::rest in
         print_state (t, s, eqs);
     | s -> keep_stepping (eq_step s)
 
@@ -1785,7 +1796,7 @@ let add_term_state: eq_step_state =
   let t: tree = mk_tree init_node add_term in
   (
     t, (* initial tree *)
-    AttrEq("outer", "ok", AttrRef(NodeRef(init_node), "ok")) :: [], (* initial stack *)
+    AttrEq(AttrRef(VarE("outer"), "ok"), AttrRef(NodeRef(init_node), "ok")) :: [], (* initial stack *)
     [] (* initial set *)
   )
 
@@ -1795,6 +1806,6 @@ let let_term_state: eq_step_state =
   let t: tree = mk_tree init_node let_term in
   (
     t, (* initial tree *)
-    AttrEq("outer", "ret", AttrRef(NodeRef(init_node), "ok")) :: [], (* initial stack *)
+    AttrEq(AttrRef(VarE("outer"), "ret"), AttrRef(NodeRef(init_node), "ok")) :: [], (* initial stack *)
     [] (* initial set *)
   )
