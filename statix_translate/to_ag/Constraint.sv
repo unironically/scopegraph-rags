@@ -7,7 +7,6 @@ fun topDotExpr AG_Expr ::= s::String = qualExpr(nameExpr("top"), s);
 
 synthesized attribute equations::[AG_Eq] occurs on Constraint;
 synthesized attribute ag_expr::AG_Expr;
-monoid attribute ag_decls::[AG_Decl] with [], ++;
 
 attribute ag_expr occurs on Constraint;
 
@@ -16,8 +15,8 @@ propagate nonAttrs on Constraint;
 
 --------------------------------------------------
 
-attribute ag_decls occurs on Constraint;
-propagate ag_decls on Constraint;
+attribute ag_funs occurs on Constraint;
+propagate ag_funs on Constraint;
 
 aspect production trueConstraint
 top::Constraint ::=
@@ -69,7 +68,7 @@ top::Constraint ::= name::String t::Term
   local ref::AG_LHS = if contains(name, top.nonAttrs) then nameLHS(name)
                                                       else topDotLHS(name);
   local mkScopeApp::AG_Expr = appExpr("mkScope", [t.ag_expr]);
-  top.equations = [ defineEq (^ref, ^mkScopeApp) ];
+  top.equations = [ ntaEq (^ref, ^mkScopeApp) ];
   top.ag_expr = ^mkScopeApp;
 }
 
@@ -79,7 +78,7 @@ top::Constraint ::= name::String
   local ref::AG_LHS = if contains(name, top.nonAttrs) then nameLHS(name)
                                                       else topDotLHS(name);
   local mkScopeApp::AG_Expr = appExpr("mkScope", []);
-  top.equations = [ defineEq (^ref, ^mkScopeApp) ];
+  top.equations = [ ntaEq (^ref, ^mkScopeApp) ];
   top.ag_expr = ^mkScopeApp;
 }
 

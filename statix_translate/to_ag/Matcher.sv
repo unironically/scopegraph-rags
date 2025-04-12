@@ -4,8 +4,8 @@ grammar statix_translate:to_ag;
 
 attribute ag_expr {- ::AG_Expr -} occurs on Matcher;
 
-attribute ag_decls {- ::[AG_Decl] -} occurs on Matcher;
-propagate ag_decls on Matcher;
+attribute ag_funs occurs on Matcher;
+propagate ag_funs on Matcher;
 
 attribute ag_pattern occurs on Matcher;
 attribute ag_whereClause occurs on Matcher;

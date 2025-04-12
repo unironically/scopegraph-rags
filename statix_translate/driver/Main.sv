@@ -37,19 +37,9 @@ IO<Integer> ::= largs::[String]
               mkdir("out");
               writeFile("out/" ++ fileName ++ ".mstx", ast.mstxPP);
 
-              print(
-                implode("\n\n",
-                  map((.pp), ast.ag_decls)
-                ) ++ "\n"
-              );
-
-              print("----------------\n");
-
               writeFile(
                 "ocaml.txt",
-                implode("\n\n",
-                  map((.ocaml_decl), ast.ag_decls)
-                ) ++ "\n"
+                ast.ag.ocaml_ag ++ "\n"
               );
 
               return 0;

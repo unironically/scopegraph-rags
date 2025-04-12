@@ -61,3 +61,31 @@ top::AG_Decl ::=
     "[" ++ implode(", ", map(\p::(String, AG_Type) -> "(" ++ p.1 ++ "," ++ p.2.pp ++ ")", syns)) ++ "]" ++
   ")";
 }
+
+--------------------------------------------------
+
+nonterminal AG_Decls;
+
+abstract production agDeclsCons
+top::AG_Decls ::= h::AG_Decl t::AG_Decls
+{}
+
+abstract production agDeclsNil
+top::AG_Decls ::= 
+{}
+
+abstract production agDeclsOne
+top::AG_Decls ::= h::AG_Decl
+{ forwards to agDeclsCons(^h, agDeclsNil()); }
+
+--------------------------------------------------
+
+function agDeclsCat
+AG_Decls ::= l::AG_Decls r::AG_Decls
+{
+  return
+    case l of
+    | agDeclsCons(h, t) -> agDeclsCons(^h, agDeclsCat(^t, ^r))
+    | agDeclsNil()      -> ^r
+    end;
+}

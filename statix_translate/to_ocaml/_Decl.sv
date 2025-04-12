@@ -3,6 +3,7 @@ grammar statix_translate:to_ocaml;
 --------------------------------------------------
 
 synthesized attribute ocaml_decl::String occurs on AG_Decl;
+attribute knownNts occurs on AG_Decl;
 
 aspect production functionDecl
 top::AG_Decl ::= 
@@ -24,15 +25,15 @@ top::AG_Decl ::=
     map (
       \p::(String, AG_Type, [AG_Expr]) ->
         case p.2 of
-        | listTypeAG(nameTypeAG("Scope")) -> 
+        | listTypeAG(nameTypeAG("scope")) -> 
             "AttrEq(" ++
               qualLHS(nameLHS("top"), p.1).ocaml_lhs ++ ", " ++
-              combineEdgeContribs(p.3) ++ 
+              combineEdgeContribs(p.3) ++
             ")"
         | nameTypeAG("Boolean") ->
             "AttrEq(" ++
               qualLHS(nameLHS("top"), p.1).ocaml_lhs ++ ", " ++
-              combineBoolContribs(p.3) ++ 
+              combineBoolContribs(p.3) ++
             ")"
         | _ -> error("functionDecl.contribsTrans")
         end,
@@ -57,30 +58,6 @@ top::AG_Decl ::=
 
 }
 
-function combineBoolContribs
-String ::= contribs::[AG_Expr]
-{
-  return
-    case contribs of
-    | [] ->   "Bool(true)"
-    | h::t -> "And(" ++ h.ocaml_expr ++ ", " ++ combineBoolContribs(t) ++ ")"
-    end;
-}
-
-function combineEdgeContribs
-String ::= contribs::[AG_Expr]
-{
-  return
-    case contribs of
-    | [] ->   "ListLit([])"
-    | h::t -> "Cons(" ++ h.ocaml_expr ++ ", " ++ combineEdgeContribs(t) ++ ")"
-    end;
-}
-
-fun str String ::= s::String = "\"" ++ s ++ "\"";
-
---------------------------------------------------
-
 aspect production productionDecl
 top::AG_Decl ::=
   name::String
@@ -90,6 +67,12 @@ top::AG_Decl ::=
 {
   -- todo, merge this and functiondecl
 
+  local ntM::Maybe<AG_Decl> = lookupNt(ty.ocaml_type, top.knownNts);
+  local nt::AG_Decl = ntM.fromJust;
+  local syns::[(String, AG_Type)] = case nt of nonterminalDecl(_, _, syns) -> syns 
+                                             | _ -> error("productionDecl.syns") end;
+  local synContribAttrs::[(String, AG_Type)] = unsafeTracePrint(getContribAttrs(syns), "syns for " ++ name ++ ": [" ++ implode(", ", map(fst, syns)) ++ "]\n");
+
   -- all locally defined names
   local locals::([(String, AG_Type)], [String]) = getLocals(body);
   local localEdgeLsts::[(String, AG_Type)] = locals.1;
@@ -98,12 +81,13 @@ top::AG_Decl ::=
   -- contribs for monoid locals
   local contribsAll::[(String, AG_Type, [AG_Expr])] = 
     map ((\attr::(String, AG_Type) -> (attr.1, attr.2, allContributionsForAttr(attr.1, body))),
-         localEdgeLsts);
+         synContribAttrs ++ localEdgeLsts);
+
   local contribsTrans::[String] = 
     map (
       \p::(String, AG_Type, [AG_Expr]) ->
         case p.2 of
-        | listTypeAG(nameTypeAG("Scope")) -> 
+        | listTypeAG(nameTypeAG("scope")) -> 
             "AttrEq(" ++
               qualLHS(nameLHS("top"), p.1).ocaml_lhs ++ ", " ++
               combineEdgeContribs(p.3) ++ 
@@ -163,7 +147,7 @@ function allContributionsForAttr
   return
     case eqs of
     | [] -> []
-    | contributionEq(qualLHS(nameLHS("top"), attr), expr)::t ->
+    | contributionEq(qualLHS(nameLHS("top"), attr_), expr)::t when attr == attr_ ->
         ^expr :: allContributionsForAttr(attr, t)
     | _::t -> allContributionsForAttr(attr, t)
     end;
@@ -179,7 +163,7 @@ function getLocals
     | localDeclEq(l, ty)::t ->
         let rec::([(String, AG_Type)], [String]) = getLocals(t) in
           case ty of
-          | listTypeAG(nameTypeAG("Scope")) -> ((l, ^ty)::rec.1, rec.2)
+          | listTypeAG(nameTypeAG("scope")) -> ((l, ^ty)::rec.1, rec.2)
           | nameTypeAG("Boolean")           -> ((l, ^ty)::rec.1, rec.2)
           | _ -> (rec.1, l::rec.2)
           end
@@ -187,3 +171,61 @@ function getLocals
     | _::t -> getLocals(t)
     end;
 }
+
+function getContribAttrs
+[(String, AG_Type)] ::= attrs::[(String, AG_Type)]
+{
+  return 
+    case attrs of
+    | [] -> []
+    | (n, ty)::t -> case ty of listTypeAG(nameTypeAG("scope")) -> (n, ty)::getContribAttrs(t)
+                             | nameTypeAG("Boolean") -> (n, ty)::getContribAttrs(t)
+                             | _ -> getContribAttrs(t)
+                    end
+    end;
+}
+
+--------------------------------------------------
+
+inherited attribute knownNts::AG_Decls occurs on AG_Decls;
+propagate knownNts on AG_Decls;
+
+synthesized attribute ocaml_decls::String occurs on AG_Decls;
+
+aspect production agDeclsCons
+top::AG_Decls ::= h::AG_Decl t::AG_Decls
+{
+  top.ocaml_decls = h.ocaml_decl ++ "\n" ++ t.ocaml_decls;
+}
+
+aspect production agDeclsNil
+top::AG_Decls ::= 
+{
+  top.ocaml_decls = "";
+}
+
+--------------------------------------------------
+
+function combineBoolContribs
+String ::= contribs::[AG_Expr]
+{
+  return
+    case contribs of
+    | [] ->   "Bool(true)"
+    | h::t -> "And(" ++ h.ocaml_expr ++ ", " ++ combineBoolContribs(t) ++ ")"
+    end;
+}
+
+function combineEdgeContribs
+String ::= contribs::[AG_Expr]
+{
+  return
+    case contribs of
+    | [] ->   "ListLit([])"
+    | h::t -> "Cons(" ++ h.ocaml_expr ++ ", " ++ combineEdgeContribs(t) ++ ")"
+    end;
+}
+
+fun str String ::= s::String = "\"" ++ s ++ "\"";
+
+--------------------------------------------------

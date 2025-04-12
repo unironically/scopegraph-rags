@@ -4,8 +4,8 @@ grammar statix_translate:to_ag;
 
 synthesized attribute ag_case::AG_Case occurs on Branch;
 
-attribute ag_decls occurs on Branch;
-propagate ag_decls on Branch;
+attribute ag_funs occurs on Branch;
+propagate ag_funs on Branch;
 
 attribute nonAttrs occurs on Branch;
 
@@ -25,8 +25,8 @@ top::Branch ::= m::Matcher c::Constraint
 
 attribute ag_cases occurs on BranchList;
 
-attribute ag_decls occurs on BranchList;
-propagate ag_decls on BranchList;
+attribute ag_funs occurs on BranchList;
+propagate ag_funs on BranchList;
 
 attribute nonAttrs occurs on BranchList;
 propagate nonAttrs on BranchList;

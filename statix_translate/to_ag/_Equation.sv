@@ -18,6 +18,12 @@ top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
   top.pp = "defineEq(" ++ lhs.pp ++ ", " ++ expr.pp ++ ")";
 }
 
+abstract production ntaEq
+top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
+{
+  top.pp = "ntaEq(" ++ lhs.pp ++ ", " ++ expr.pp ++ ")";
+}
+
 abstract production returnEq
 top::AG_Eq ::= expr::AG_Expr
 {

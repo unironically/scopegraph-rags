@@ -4,8 +4,8 @@ grammar statix_translate:to_ag;
 
 attribute ag_expr {- ::AG_Expr -} occurs on Lambda;
 
-attribute ag_decls {- ::[AG_Decl] -} occurs on Lambda;
-propagate ag_decls on Lambda;
+attribute ag_funs occurs on Lambda;
+propagate ag_funs on Lambda;
 
 attribute nonAttrs occurs on Lambda;
 

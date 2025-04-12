@@ -29,6 +29,17 @@ top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
   top.ocaml_eq = just(eq);
 }
 
+aspect production ntaEq
+top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
+{
+  local eq::String = "NtaEq(" ++
+    lhs.ocaml_lhs ++ ", " ++
+    expr.ocaml_expr ++
+  ")";
+
+  top.ocaml_eq = just(eq);
+}
+
 aspect production returnEq
 top::AG_Eq ::= expr::AG_Expr
 {
