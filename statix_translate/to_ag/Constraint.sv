@@ -68,7 +68,20 @@ top::Constraint ::= name::String t::Term
   local ref::AG_LHS = if contains(name, top.nonAttrs) then nameLHS(name)
                                                       else topDotLHS(name);
   local mkScopeApp::AG_Expr = appExpr("mkScope", [t.ag_expr]);
-  top.equations = [ ntaEq (^ref, ^mkScopeApp) ];
+
+  local labelLocals::[AG_Eq] = map (
+    \l::Label -> 
+      localDeclEq(name ++ "_" ++ l.name, listTypeAG(nameTypeAG("scope"))),
+    top.knownLabels
+  );
+
+  local edgeInhs::[AG_Eq] = map (
+    \l::Label -> 
+      defineEq(qualLHS(nameLHS(name), l.name), topDotExpr(name ++ "_" ++ l.name)),
+    top.knownLabels
+  );
+
+  top.equations = labelLocals ++ edgeInhs ++ [ ntaEq (^ref, ^mkScopeApp) ];
   top.ag_expr = ^mkScopeApp;
 }
 
@@ -78,7 +91,20 @@ top::Constraint ::= name::String
   local ref::AG_LHS = if contains(name, top.nonAttrs) then nameLHS(name)
                                                       else topDotLHS(name);
   local mkScopeApp::AG_Expr = appExpr("mkScope", []);
-  top.equations = [ ntaEq (^ref, ^mkScopeApp) ];
+  
+  local labelLocals::[AG_Eq] = map (
+    \l::Label -> 
+      localDeclEq(name ++ "_" ++ l.name, listTypeAG(nameTypeAG("scope"))),
+    top.knownLabels
+  );
+
+  local edgeInhs::[AG_Eq] = map (
+    \l::Label -> 
+      defineEq(qualLHS(nameLHS(name), l.name), topDotExpr(name ++ "_" ++ l.name)),
+    top.knownLabels
+  );
+
+  top.equations = labelLocals ++ edgeInhs ++ [ ntaEq (^ref, ^mkScopeApp) ];
   top.ag_expr = ^mkScopeApp;
 }
 
