@@ -56,12 +56,6 @@ top::AG_Expr ::= name::String
   top.ocaml_expr = "VarE(\"" ++ name ++ "\")";
 }
 
-aspect production qualExpr
-top::AG_Expr ::= pre::AG_Expr name::String
-{
-  top.ocaml_expr = "AttrRef(" ++ pre.ocaml_expr ++ ", \"" ++ name ++ "\")"; 
-}
-
 aspect production andExpr
 top::AG_Expr ::= l::AG_Expr r::AG_Expr
 {
@@ -80,7 +74,6 @@ top::AG_Expr ::= e::AG_Expr cases::AG_Cases
 aspect production demandExpr
 top::AG_Expr ::= lhs::AG_Expr attr::String
 {
-  -- todo, remove qualExpr and replace with this
   top.ocaml_expr = "AttrRef(" ++ lhs.ocaml_expr ++ ", \"" ++ attr ++ "\")"; 
 }
 
@@ -96,7 +89,7 @@ top::AG_Expr ::= args::[(String, AG_Type)] body::AG_Expr
 aspect production tupleExpr
 top::AG_Expr ::= es::[AG_Expr]
 {
-  top.ocaml_expr = "Tuple(" ++ implode("; ", map((.ocaml_expr), es)) ++ ")";
+  top.ocaml_expr = "Tuple([" ++ implode("; ", map((.ocaml_expr), es)) ++ "])";
 }
 
 aspect production consExpr
@@ -108,13 +101,15 @@ top::AG_Expr ::= h::AG_Expr  t::AG_Expr
 aspect production nilExpr
 top::AG_Expr ::=
 {
-  top.ocaml_expr = "ListLit([])";
+  top.ocaml_expr = "Nil";
 }
 
 aspect production tupleSectionExpr
 top::AG_Expr ::= tup::AG_Expr i::Integer
 {
+
   top.ocaml_expr = "TupleSec(" ++ tup.ocaml_expr ++ ", " ++ toString(i) ++ ")";
+
 }
 
 aspect production termExpr

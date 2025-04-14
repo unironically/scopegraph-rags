@@ -54,12 +54,6 @@ top::AG_Expr ::= name::String
   top.pp = "nameExpr(" ++ name ++ ")";
 }
 
-abstract production qualExpr
-top::AG_Expr ::= pre::AG_Expr name::String
-{
-  top.pp = "qualExpr(" ++ pre.pp ++ ", " ++ name ++ ")";
-}
-
 abstract production andExpr
 top::AG_Expr ::= l::AG_Expr r::AG_Expr
 {

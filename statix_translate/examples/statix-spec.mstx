@@ -156,13 +156,13 @@ seq-bind(@inh s:scope, b:seq-bind, @inh s_def:scope) :- b match {
   
     DefBindSeq(x:string, e:expr) -> 
       {s_var:scope, ty:type}
-        new s_var -> (x, ty),
+        new s_var -> DatumVar(x, ty),
         s -[ `VAR ]-> s_var,
         expr(s, e, ty)
 
   | DefBindTypedSeq(x:string, tyann:type, e:expr) -> 
       {s_var:scope, ty:type}
-        new s_var -> (x, ty),
+        new s_var -> DatumVar(x, ty),
         s -[ `VAR ]-> s_var,
         type(s, tyann, ty),
         expr(s, e, ty)
@@ -188,13 +188,13 @@ par-bind(@inh s:scope, b:par-bind, @inh s_def:scope) :- b match {
     
     DefBindPar(x:string, e:expr) ->
       {s_var:scope, ty:type}
-        new s_var -> (x, ty),
+        new s_var -> DatumVar(x, ty),
         s_def -[ `VAR ]-> s_var,
         expr(s, e, ty)
 
   | DefBindTypedPar(x:string, tyann:type, e:expr) -> 
       {s_var:scope, ty:type}
-        new s_var -> (x, ty),
+        new s_var -> DatumVar(x, ty),
         s_def -[ `VAR ]-> s_var,
         type(s, tyann, ty),
         expr(s, e, ty)
@@ -208,7 +208,7 @@ arg-decl(@inh s:scope, d:arg-decl, @syn ty:type) :- d match {
     ArgDecl(x:string, tyann:type) ->
       {s_var:scope}
         type(s, tyann, ty),
-        new s_var -> (x, ty),
+        new s_var -> DatumVar(x, ty),
         s -[ `VAR ]-> s_var
 
   }.

@@ -48,7 +48,7 @@ top::AG_Decl ::=
   -- local names
   local allLocals::[String] = map(str, map(fst, locals.1) ++ locals.2);
 
-  top.ocaml_decl = "fun: (" ++
+  top.ocaml_decl = "(" ++
     str(name) ++ ", " ++ str(funTy) ++ ", " ++                    -- name, ty
     "[" ++ implode("; ", argsStr) ++ "], " ++                     -- args
     "[" ++ implode("; ", allLocals) ++ "], " ++                   -- locals
@@ -110,7 +110,7 @@ top::AG_Decl ::=
   -- local names
   local allLocals::[String] = map(str, map(fst, locals.1) ++ locals.2);
 
-  top.ocaml_decl = "prod: (" ++
+  top.ocaml_decl = "(" ++
     str(name) ++ ", " ++ str(prodTy) ++ ", " ++                   -- name, ty
     "[" ++ implode("; ", argsStr) ++ "], " ++                     -- args
     "[" ++ implode("; ", allLocals) ++ "], " ++                   -- locals
@@ -126,8 +126,8 @@ top::AG_Decl ::=
   inhs::[(String, AG_Type)]
   syns::[(String, AG_Type)]
 {
-  local attrs::[String] = map(fst, inhs++syns);
-  top.ocaml_decl = "nt: (" ++ name ++ ", [" ++ implode("; ", attrs) ++ "])";
+  local attrs::[String] = map(str, map(fst, inhs++syns));
+  top.ocaml_decl = "(" ++ name ++ ", [" ++ implode("; ", attrs) ++ "])";
 }
 
 aspect production globalDecl

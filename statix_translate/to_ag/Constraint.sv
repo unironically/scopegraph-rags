@@ -3,7 +3,7 @@ grammar statix_translate:to_ag;
 --------------------------------------------------
 
 fun topDotLHS  AG_LHS  ::= s::String = qualLHS(nameLHS("top"), s);
-fun topDotExpr AG_Expr ::= s::String = qualExpr(nameExpr("top"), s);
+fun topDotExpr AG_Expr ::= s::String = demandExpr(nameExpr("top"), s);
 
 synthesized attribute equations::[AG_Eq] occurs on Constraint;
 synthesized attribute ag_expr::AG_Expr;
@@ -234,10 +234,9 @@ top::Constraint ::= t::Term bs::BranchList
   local ag_match::AG_Expr = caseExpr (t.ag_expr, bs.ag_cases);
 
   top.equations = [
-    defineEq (
-      topDotLHS(nameTyRet.1),
-      ^ag_match
-    )
+    if nameTyRet.1 == "ok"
+    then contributionEq (topDotLHS(nameTyRet.1), ^ag_match)
+    else defineEq (topDotLHS(nameTyRet.1), ^ag_match)
   ];
 
   top.ag_expr = ^ag_match;
@@ -360,10 +359,10 @@ top::StxApplication ::=
   local synEqs::[AG_Eq] =
     map(
       \arg::(String, String, Type) -> 
-        defineEq(topDotLHS(arg.1), qualExpr(^termExpr, arg.2)), retNamesTys);
+        defineEq(topDotLHS(arg.1), demandExpr(^termExpr, arg.2)), retNamesTys);
 
   local okContrib::AG_Eq = 
-    contributionEq(topDotLHS("ok"), qualExpr(^termExpr, "ok"));
+    contributionEq(topDotLHS("ok"), demandExpr(^termExpr, "ok"));
 
   -- edge contributions for scopes passed to the predicate
   local edgeContribEqs::[AG_Eq] =
@@ -379,7 +378,7 @@ top::StxApplication ::=
              \l::Label ->
                contributionEq(
                  topDotLHS(p.1 ++ "_" ++ l.name),
-                 qualExpr(nameExpr(synTermName), p.2 ++ "_" ++ l.name)),
+                 demandExpr(nameExpr(synTermName), p.2 ++ "_" ++ l.name)),
              knownLabels)),
         scopeArgs
       ))
