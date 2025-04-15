@@ -45,15 +45,15 @@ top::AG_Expr ::= name::String args::[AG_Expr]
 {
   top.ocaml_expr =
     "AttrRef(TermE(" ++
-        "TermT(\"" ++ name ++ "\", [" ++
+        "TermT(" ++ str(name) ++ ", [" ++
           implode("; ", map((.ocaml_expr), args)) ++
-        "])), ret)";
+        "])), \"ret\")";
 }
 
 aspect production nameExpr
 top::AG_Expr ::= name::String
 {
-  top.ocaml_expr = "VarE(\"" ++ name ++ "\")";
+  top.ocaml_expr = "VarE(" ++ str(name) ++ ")";
 }
 
 aspect production andExpr
@@ -74,7 +74,7 @@ top::AG_Expr ::= e::AG_Expr cases::AG_Cases
 aspect production demandExpr
 top::AG_Expr ::= lhs::AG_Expr attr::String
 {
-  top.ocaml_expr = "AttrRef(" ++ lhs.ocaml_expr ++ ", \"" ++ attr ++ "\")"; 
+  top.ocaml_expr = "AttrRef(" ++ lhs.ocaml_expr ++ ", " ++ str(attr) ++ ")"; 
 }
 
 aspect production lambdaExpr
@@ -82,7 +82,7 @@ top::AG_Expr ::= args::[(String, AG_Type)] body::AG_Expr
 {
   top.ocaml_expr = 
     foldr((\arg::(String, AG_Type) accOcaml::String ->
-             "Fun(\"" ++ arg.1 ++ "\", " ++ accOcaml ++ ")"),
+             "Fun(" ++ str(arg.1) ++ ", " ++ accOcaml ++ ")"),
           body.ocaml_expr, args);
 }
 
@@ -115,13 +115,13 @@ top::AG_Expr ::= tup::AG_Expr i::Integer
 aspect production termExpr
 top::AG_Expr ::= name::String args::[AG_Expr]
 {
-  top.ocaml_expr = "TermE(TermT(\"" ++ name ++ "\", [" ++ implode("; ", map((.ocaml_expr), args)) ++ "]))";
+  top.ocaml_expr = "TermE(TermT(" ++ str(name) ++ ", [" ++ implode("; ", map((.ocaml_expr), args)) ++ "]))";
 }
 
 aspect production abortExpr
-top::AG_Expr ::=
+top::AG_Expr ::= msg::String
 {
-  top.ocaml_expr = "Abort";
+  top.ocaml_expr = "Abort(" ++ str(msg) ++ ")";
 }
 
 --------------------------------------------------

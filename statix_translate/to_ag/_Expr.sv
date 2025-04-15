@@ -109,9 +109,9 @@ top::AG_Expr ::= name::String args::[AG_Expr]
 }
 
 abstract production abortExpr
-top::AG_Expr ::=
+top::AG_Expr ::= msg::String
 {
-  top.pp = "abortExpr()";
+  top.pp = "abortExpr(" ++ msg ++ ")";
 }
 
 --------------------------------------------------

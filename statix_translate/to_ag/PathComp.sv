@@ -48,7 +48,18 @@ top::LabelLTs ::= l1::Label l2::Label lts::LabelLTs
 aspect production labelLTsOne
 top::LabelLTs ::= l1::Label l2::Label 
 {
-  top.ag_cases = bothCases(l1, l2, agCasesNil());
+  top.ag_cases = 
+    bothCases(l1, l2, 
+      {- default clause - labels are equal -}
+      agCasesCons(
+        agCase (
+          agPatternTuple([agPatternUnderscore(), agPatternUnderscore()]),
+          nilWhereClauseAG(),
+          intExpr(0)
+        ),
+        agCasesNil()
+      )
+    );
 }
 
 fun bothCases 
@@ -56,7 +67,7 @@ AG_Cases ::= l1::Decorated Label l2::Decorated Label rest::AG_Cases =
   agCasesCons (
     agCase (
       agPatternTuple(
-        [agPatternApp(l1.name, []), agPatternApp(l2.name, [])]
+        [agPatternApp(labTermName(l1.name), []), agPatternApp(labTermName(l2.name), [])]
       ),
       nilWhereClauseAG(),
       intExpr(-1)
@@ -64,7 +75,7 @@ AG_Cases ::= l1::Decorated Label l2::Decorated Label rest::AG_Cases =
     agCasesCons(
       agCase (
         agPatternTuple(
-          [agPatternApp(l2.name, []), agPatternApp(l1.name, [])]
+          [agPatternApp(labTermName(l2.name), []), agPatternApp(labTermName(l1.name), [])]
         ),
         nilWhereClauseAG(),
         intExpr(1)
@@ -72,3 +83,5 @@ AG_Cases ::= l1::Decorated Label l2::Decorated Label rest::AG_Cases =
       rest
     )
   );
+
+fun labTermName String ::= l::String = "label" ++ l;

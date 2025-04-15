@@ -12,10 +12,8 @@ top::AG ::=
   funs::AG_Decls
 {
   top.ocaml_ag = 
-    nts.ocaml_decls ++ "\n" ++
-    globs.ocaml_decls ++ "\n" ++
-    prods.ocaml_decls ++ "\n" ++
-    funs.ocaml_decls;
+    implode(";\n", nts.ocaml_decls ++ globs.ocaml_decls ++
+                   prods.ocaml_decls ++ funs.ocaml_decls);
 
   prods.knownNts = ^nts;
   funs.knownNts  = ^nts;

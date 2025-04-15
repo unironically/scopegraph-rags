@@ -127,7 +127,7 @@ top::AG_Decl ::=
   syns::[(String, AG_Type)]
 {
   local attrs::[String] = map(str, map(fst, inhs++syns));
-  top.ocaml_decl = "(" ++ name ++ ", [" ++ implode("; ", attrs) ++ "])";
+  top.ocaml_decl = "(" ++ str(name) ++ ", [" ++ implode("; ", attrs) ++ "])";
 }
 
 aspect production globalDecl
@@ -190,18 +190,18 @@ function getContribAttrs
 inherited attribute knownNts::AG_Decls occurs on AG_Decls;
 propagate knownNts on AG_Decls;
 
-synthesized attribute ocaml_decls::String occurs on AG_Decls;
+synthesized attribute ocaml_decls::[String] occurs on AG_Decls;
 
 aspect production agDeclsCons
 top::AG_Decls ::= h::AG_Decl t::AG_Decls
 {
-  top.ocaml_decls = h.ocaml_decl ++ "\n" ++ t.ocaml_decls;
+  top.ocaml_decls = h.ocaml_decl :: t.ocaml_decls;
 }
 
 aspect production agDeclsNil
 top::AG_Decls ::= 
 {
-  top.ocaml_decls = "";
+  top.ocaml_decls = [];
 }
 
 --------------------------------------------------
@@ -221,8 +221,9 @@ String ::= contribs::[AG_Expr]
 {
   return
     case contribs of
-    | [] ->   "ListLit([])"
-    | h::t -> "Cons(" ++ h.ocaml_expr ++ ", " ++ combineEdgeContribs(t) ++ ")"
+    | []    -> "Nil"
+    | h::[] -> h.ocaml_expr
+    | h::t  -> "Append(" ++ h.ocaml_expr ++ ", " ++ combineEdgeContribs(t) ++ ")"
     end;
 }
 

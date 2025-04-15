@@ -7,7 +7,7 @@ attribute ag_expr occurs on Regex;
 aspect production regexLabel
 top::Regex ::= lab::Label
 {
-  top.ag_expr = termExpr ("regexName", [stringExpr(lab.name)]);
+  top.ag_expr = termExpr ("regexLabel", [termExpr(labTermName(lab.name), [])]);
 }
 
 aspect production regexSeq
@@ -43,13 +43,19 @@ top::Regex ::=
 aspect production regexPlus
 top::Regex ::= r::Regex
 {
-  top.ag_expr = termExpr ("regexPlus", [r.ag_expr]);
+  top.ag_expr = termExpr("regexSeq", [
+    r.ag_expr,
+    termExpr ("regexStar", [r.ag_expr])
+  ]);
 }
 
 aspect production regexOptional
 top::Regex ::= r::Regex
 {
-  top.ag_expr = termExpr ("regexOpt", [r.ag_expr]);
+  top.ag_expr = termExpr("regexAlt", [
+    r.ag_expr,
+    termExpr ("regexEps", [])
+  ]);
 }
 
 aspect production regexNeg

@@ -1,4 +1,4 @@
-let debug = false
+let debug = true
 let print_interesting_eqs = false
 
 type node_id = string
@@ -27,7 +27,7 @@ type expr = Int      of int
           | VarE     of string
           | Left     of expr
           | Right    of expr
-          | Abort
+          | Abort    of string
           | Fun      of string * expr
           | App      of expr * expr
           | If       of expr * expr * expr
@@ -51,9 +51,6 @@ type attr_status = Complete of expr
 
 type node_status = Visited
                  | Unvisited
-
-(* AttrEq(AttrRef(VarE("top"), "ok"), 
-          And(TupleSec(AttrRef(VarE("top"), "pair_6"), 1), Bool(true)));  *)
 
 type equation = AttrEq of expr * expr
               | NtaEq  of node_id * expr
@@ -80,20 +77,28 @@ let nt_env: nt list = [
   ("ParBind", ["s"; "VAR_s"; "LEX_s"; "VAR_s_def"; "LEX_s_def"; "ok"; "ty"]);
   ("Expr", ["s"; "VAR_s"; "LEX_s"; "ok"; "ty"; "datumOfResult"; "okDatumOf"; "datumPair"; "okDatumPair"; "d"]); (* todo, handle locals being only local *)
   ("VarRef", ["s"; "VAR_s"; "LEX_s"; "ok"; "p"; "vars"; "order"; "xvars"; "xvars_"; "dwf"; "onlyResult"]);
-
   ("SeqBinds", ["s"; "s_def"; "s_def_syn"; "VAR_s"; "LEX_s"; "VAR_s_def"; "LEX_s_def"; "ok"]);
   ("SeqBind", ["s"; "s_def"; "s_def_syn"; "VAR_s"; "LEX_s"; "VAR_s_def"; "LEX_s_def"; "ok"]);
-
   ("Type", []);
-
   ("Scope", ["LEX"; "VAR"; "IMP"; "MOD"; "datum"]);
   ("Datum", []);
   ("Edges", ["dfa"; "nwce"; "edgeLabel"]);
-
   ("DFA", ["paths"; "start"]);
   ("DFAState", ["paths"; "varT"; "lexT"]);
+  ("FunResult", ["ret"]);
 
-  ("FunResult", ["ret"])
+  ("main", ["ok"]);
+  ("decls", ["s"; "ok"; "s_VAR"; "s_IMP"; "s_MOD"; "s_LEX"]);
+  ("decl", ["s"; "ok"; "s_VAR"; "s_IMP"; "s_MOD"; "s_LEX"]);
+  ("expr", ["s"; "ok"; "ty"; "s_VAR"; "s_IMP"; "s_MOD"; "s_LEX"]);
+  ("seq-binds", ["s"; "s_def"; "ok"; "s_VAR"; "s_IMP"; "s_MOD"; "s_LEX"; "s_def_VAR"; "s_def_IMP"; "s_def_MOD"; "s_def_LEX"]);
+  ("seq-bind", ["s"; "s_def"; "ok"; "s_VAR"; "s_IMP"; "s_MOD"; "s_LEX"; "s_def_VAR"; "s_def_IMP"; "s_def_MOD"; "s_def_LEX"]);
+  ("par-binds", ["s"; "s_def"; "ok"; "s_VAR"; "s_IMP"; "s_MOD"; "s_LEX"; "s_def_VAR"; "s_def_IMP"; "s_def_MOD"; "s_def_LEX"]);
+  ("par-bind", ["s"; "s_def"; "ok"; "s_VAR"; "s_IMP"; "s_MOD"; "s_LEX"; "s_def_VAR"; "s_def_IMP"; "s_def_MOD"; "s_def_LEX"]);
+  ("arg-decl", ["s"; "ok"; "ty"; "s_VAR"; "s_IMP"; "s_MOD"; "s_LEX"]);
+  ("type", ["s"; "ok"; "ty"; "s_VAR"; "s_IMP"; "s_MOD"; "s_LEX"]);
+  ("mod-ref", ["s"; "ok"; "p"; "s_VAR"; "s_IMP"; "s_MOD"; "s_LEX"]);
+  ("var-ref", ["s"; "ok"; "p"; "s_VAR"; "s_IMP"; "s_MOD"; "s_LEX"]);
 ]
 
 let globalLabelList: expr = 
@@ -101,429 +106,111 @@ let globalLabelList: expr =
     TermE(TermT("labelLEX", [])),
     Cons (
       TermE(TermT("labelVAR", [])),
-      Nil
+      Cons (
+        TermE(TermT("labelIMP", [])),
+        Cons (
+          TermE(TermT("labelMOD", [])),
+          Nil
+        )
+      )
     )
   )
 
 let prod_env: prod list = [
 
-  (
-    "mkScope", "Scope",
-    [], [],
-    []
-  );
+  ("mkScope", "Scope", [], [], []);
+  ("mkScopeDatum", "Scope", ["d"], [], [ AttrEq(AttrRef(VarE("top"), "datum"), VarE("d")) ]);
+  ("DatumVar", "FunResult", ["name"; "ty"], [], []);
+  ("DatumMod", "FunResult", ["name"; "scope"], [], []);
 
-  (
-    "mkScopeDatum", "Scope",
-    ["d"], [],
-    [ AttrEq(AttrRef(VarE("top"), "datum"), VarE("d")) ]
-  );
+  (* REMOVE BELOW *)
 
-  (
-    "datumVar", "FunResult", (* TODO: better way to not make a tree out of ty here, when mk_tree called on datumVar *)
-    ["name"; "ty"], [],
-    []
-  );
 
-  (
-    "INT", "Type",
-    [], [],
-    []
-  );
+("Program", "main", ["ds"], ["s_VAR"; "s_IMP"; "s_MOD"; "s_LEX"; "s"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("ds"), "ok"), Bool(true))); AttrEq(AttrRef(VarE("top"), "s_VAR"), AttrRef(VarE("ds"), "s_VAR")); AttrEq(AttrRef(VarE("top"), "s_IMP"), AttrRef(VarE("ds"), "s_IMP")); AttrEq(AttrRef(VarE("top"), "s_MOD"), AttrRef(VarE("ds"), "s_MOD")); AttrEq(AttrRef(VarE("top"), "s_LEX"), AttrRef(VarE("ds"), "s_LEX")); AttrEq(AttrRef(VarE("s"), "VAR"), AttrRef(VarE("top"), "s_VAR")); AttrEq(AttrRef(VarE("s"), "IMP"), AttrRef(VarE("top"), "s_IMP")); AttrEq(AttrRef(VarE("s"), "MOD"), AttrRef(VarE("top"), "s_MOD")); AttrEq(AttrRef(VarE("s"), "LEX"), AttrRef(VarE("top"), "s_LEX")); AttrEq(AttrRef(VarE("top"), "s"), VarE("s")); NtaEq("s", TermE(TermT("mkScope", []))); AttrEq(AttrRef(VarE("ds"), "s"), AttrRef(VarE("top"), "s"))]);
+("DeclsNil", "decls", [], [], [AttrEq(AttrRef(VarE("top"), "ok"), And(Bool(true), Bool(true))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil)]);
+("DeclsCons", "decls", ["d"; "ds"], [], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("d"), "ok"), And(AttrRef(VarE("ds"), "ok"), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Append(AttrRef(VarE("d"), "s_VAR"), AttrRef(VarE("ds"), "s_VAR"))); AttrEq(AttrRef(VarE("top"), "s_IMP"), Append(AttrRef(VarE("d"), "s_IMP"), AttrRef(VarE("ds"), "s_IMP"))); AttrEq(AttrRef(VarE("top"), "s_MOD"), Append(AttrRef(VarE("d"), "s_MOD"), AttrRef(VarE("ds"), "s_MOD"))); AttrEq(AttrRef(VarE("top"), "s_LEX"), Append(AttrRef(VarE("d"), "s_LEX"), AttrRef(VarE("ds"), "s_LEX"))); AttrEq(AttrRef(VarE("d"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("ds"), "s"), AttrRef(VarE("top"), "s"))]);
+("DeclModule", "decl", ["x"; "ds"], ["s_mod_VAR"; "s_mod_IMP"; "s_mod_MOD"; "s_mod_LEX"; "s_mod"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("ds"), "ok"), Bool(true))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_MOD"), Cons(AttrRef(VarE("top"), "s_mod"), Nil)); AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "s_mod_VAR"), AttrRef(VarE("ds"), "s_VAR")); AttrEq(AttrRef(VarE("top"), "s_mod_IMP"), AttrRef(VarE("ds"), "s_IMP")); AttrEq(AttrRef(VarE("top"), "s_mod_MOD"), AttrRef(VarE("ds"), "s_MOD")); AttrEq(AttrRef(VarE("top"), "s_mod_LEX"), Append(Cons(AttrRef(VarE("top"), "s"), Nil), AttrRef(VarE("ds"), "s_LEX"))); AttrEq(AttrRef(VarE("s_mod"), "VAR"), AttrRef(VarE("top"), "s_mod_VAR")); AttrEq(AttrRef(VarE("s_mod"), "IMP"), AttrRef(VarE("top"), "s_mod_IMP")); AttrEq(AttrRef(VarE("s_mod"), "MOD"), AttrRef(VarE("top"), "s_mod_MOD")); AttrEq(AttrRef(VarE("s_mod"), "LEX"), AttrRef(VarE("top"), "s_mod_LEX")); AttrEq(AttrRef(VarE("top"), "s_mod"), VarE("s_mod")); NtaEq("s_mod", TermE(TermT("mkScopeDatum", [TermE(TermT("DatumMod", [AttrRef(VarE("top"), "x"); AttrRef(VarE("top"), "s_mod")]))]))); AttrEq(AttrRef(VarE("ds"), "s"), AttrRef(VarE("top"), "s_mod"))]);
+("DeclImport", "decl", ["r"], ["p"; "d"; "s_mod"; "pair_0"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("r"), "ok"), And(TupleSec(AttrRef(VarE("top"), "pair_0"), 1), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), AttrRef(VarE("r"), "s_VAR")); AttrEq(AttrRef(VarE("top"), "s_IMP"), Append(AttrRef(VarE("r"), "s_IMP"), Cons(AttrRef(VarE("top"), "s_mod"), Nil))); AttrEq(AttrRef(VarE("top"), "s_MOD"), AttrRef(VarE("r"), "s_MOD")); AttrEq(AttrRef(VarE("top"), "s_LEX"), AttrRef(VarE("r"), "s_LEX")); AttrEq(AttrRef(VarE("r"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "p"), AttrRef(VarE("r"), "p")); AttrEq(AttrRef(VarE("top"), "pair_0"), AttrRef(TermE(TermT("datumOf", [AttrRef(VarE("top"), "p")])), "ret")); AttrEq(AttrRef(VarE("top"), "d"), TupleSec(AttrRef(VarE("top"), "pair_0"), 2)); AttrEq(AttrRef(VarE("top"), "s_mod"), Case(AttrRef(VarE("top"), "d"), [(TermP("DatumMod", [UnderscoreP; VarP("dscope")]), VarE("dscope")); (UnderscoreP, Abort("Match failure!"))]))]);
+("DeclDef", "decl", ["b"], [], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("b"), "ok"), Bool(true))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Append(AttrRef(VarE("b"), "s_VAR"), AttrRef(VarE("b"), "s_def_VAR"))); AttrEq(AttrRef(VarE("top"), "s_IMP"), Append(AttrRef(VarE("b"), "s_IMP"), AttrRef(VarE("b"), "s_def_IMP"))); AttrEq(AttrRef(VarE("top"), "s_MOD"), Append(AttrRef(VarE("b"), "s_MOD"), AttrRef(VarE("b"), "s_def_MOD"))); AttrEq(AttrRef(VarE("top"), "s_LEX"), Append(AttrRef(VarE("b"), "s_LEX"), AttrRef(VarE("b"), "s_def_LEX"))); AttrEq(AttrRef(VarE("b"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("b"), "s_def"), AttrRef(VarE("top"), "s"))]);
+("ExprInt", "expr", ["i"], [], [AttrEq(AttrRef(VarE("top"), "ok"), Bool(true)); AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("TInt", [])))]);
+("ExprTrue", "expr", [], [], [AttrEq(AttrRef(VarE("top"), "ok"), Bool(true)); AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("TBool", [])))]);
+("ExprFalse", "expr", [], [], [AttrEq(AttrRef(VarE("top"), "ok"), Bool(true)); AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("TBool", [])))]);
+("ExprVar", "expr", ["r"], ["p"; "d"; "pair_1"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("r"), "ok"), And(TupleSec(AttrRef(VarE("top"), "pair_1"), 1), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), AttrRef(VarE("r"), "s_VAR")); AttrEq(AttrRef(VarE("top"), "s_IMP"), AttrRef(VarE("r"), "s_IMP")); AttrEq(AttrRef(VarE("top"), "s_MOD"), AttrRef(VarE("r"), "s_MOD")); AttrEq(AttrRef(VarE("top"), "s_LEX"), AttrRef(VarE("r"), "s_LEX")); AttrEq(AttrRef(VarE("r"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "p"), AttrRef(VarE("r"), "p")); AttrEq(AttrRef(VarE("top"), "pair_1"), AttrRef(TermE(TermT("datumOf", [AttrRef(VarE("top"), "p")])), "ret")); AttrEq(AttrRef(VarE("top"), "d"), TupleSec(AttrRef(VarE("top"), "pair_1"), 2)); AttrEq(AttrRef(VarE("top"), "ty"), Case(AttrRef(VarE("top"), "d"), [(TermP("DatumVar", [UnderscoreP; VarP("dty")]), VarE("dty")); (UnderscoreP, Abort("Match failure!"))]))]);
+("ExprAdd", "expr", ["e1"; "e2"], ["ty1"; "ty2"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("e1"), "ok"), And(AttrRef(VarE("e2"), "ok"), And(Equal(AttrRef(VarE("top"), "ty1"), TermE(TermT("TInt", []))), And(Equal(AttrRef(VarE("top"), "ty2"), TermE(TermT("TInt", []))), Bool(true)))))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Append(AttrRef(VarE("e1"), "s_VAR"), AttrRef(VarE("e2"), "s_VAR"))); AttrEq(AttrRef(VarE("top"), "s_IMP"), Append(AttrRef(VarE("e1"), "s_IMP"), AttrRef(VarE("e2"), "s_IMP"))); AttrEq(AttrRef(VarE("top"), "s_MOD"), Append(AttrRef(VarE("e1"), "s_MOD"), AttrRef(VarE("e2"), "s_MOD"))); AttrEq(AttrRef(VarE("top"), "s_LEX"), Append(AttrRef(VarE("e1"), "s_LEX"), AttrRef(VarE("e2"), "s_LEX"))); AttrEq(AttrRef(VarE("e1"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty1"), AttrRef(VarE("e1"), "ty")); AttrEq(AttrRef(VarE("e2"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty2"), AttrRef(VarE("e2"), "ty")); AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("TInt", [])))]);
+("ExprAnd", "expr", ["e1"; "e2"], ["ty1"; "ty2"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("e1"), "ok"), And(AttrRef(VarE("e2"), "ok"), And(Equal(AttrRef(VarE("top"), "ty1"), TermE(TermT("TBool", []))), And(Equal(AttrRef(VarE("top"), "ty2"), TermE(TermT("TBool", []))), Bool(true)))))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Append(AttrRef(VarE("e1"), "s_VAR"), AttrRef(VarE("e2"), "s_VAR"))); AttrEq(AttrRef(VarE("top"), "s_IMP"), Append(AttrRef(VarE("e1"), "s_IMP"), AttrRef(VarE("e2"), "s_IMP"))); AttrEq(AttrRef(VarE("top"), "s_MOD"), Append(AttrRef(VarE("e1"), "s_MOD"), AttrRef(VarE("e2"), "s_MOD"))); AttrEq(AttrRef(VarE("top"), "s_LEX"), Append(AttrRef(VarE("e1"), "s_LEX"), AttrRef(VarE("e2"), "s_LEX"))); AttrEq(AttrRef(VarE("e1"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty1"), AttrRef(VarE("e1"), "ty")); AttrEq(AttrRef(VarE("e2"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty2"), AttrRef(VarE("e2"), "ty")); AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("TBool", [])))]);
+("ExprEq", "expr", ["e1"; "e2"], ["ty1"; "ty2"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("e1"), "ok"), And(AttrRef(VarE("e2"), "ok"), And(Equal(AttrRef(VarE("top"), "ty1"), AttrRef(VarE("top"), "ty2")), Bool(true))))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Append(AttrRef(VarE("e1"), "s_VAR"), AttrRef(VarE("e2"), "s_VAR"))); AttrEq(AttrRef(VarE("top"), "s_IMP"), Append(AttrRef(VarE("e1"), "s_IMP"), AttrRef(VarE("e2"), "s_IMP"))); AttrEq(AttrRef(VarE("top"), "s_MOD"), Append(AttrRef(VarE("e1"), "s_MOD"), AttrRef(VarE("e2"), "s_MOD"))); AttrEq(AttrRef(VarE("top"), "s_LEX"), Append(AttrRef(VarE("e1"), "s_LEX"), AttrRef(VarE("e2"), "s_LEX"))); AttrEq(AttrRef(VarE("e1"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty1"), AttrRef(VarE("e1"), "ty")); AttrEq(AttrRef(VarE("e2"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty2"), AttrRef(VarE("e2"), "ty")); AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("TBool", [])))]);
+("ExprApp", "expr", ["e1"; "e2"], ["ty1"; "ty2"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("e1"), "ok"), And(AttrRef(VarE("e2"), "ok"), And(Case(AttrRef(VarE("top"), "ty1"), [(TermP("TFun", [VarP("l"); VarP("r")]), Equal(AttrRef(VarE("top"), "ty2"), VarE("l"))); (UnderscoreP, Abort("Match failure!"))]), Bool(true))))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Append(AttrRef(VarE("e1"), "s_VAR"), AttrRef(VarE("e2"), "s_VAR"))); AttrEq(AttrRef(VarE("top"), "s_IMP"), Append(AttrRef(VarE("e1"), "s_IMP"), AttrRef(VarE("e2"), "s_IMP"))); AttrEq(AttrRef(VarE("top"), "s_MOD"), Append(AttrRef(VarE("e1"), "s_MOD"), AttrRef(VarE("e2"), "s_MOD"))); AttrEq(AttrRef(VarE("top"), "s_LEX"), Append(AttrRef(VarE("e1"), "s_LEX"), AttrRef(VarE("e2"), "s_LEX"))); AttrEq(AttrRef(VarE("e1"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty1"), AttrRef(VarE("e1"), "ty")); AttrEq(AttrRef(VarE("e2"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty2"), AttrRef(VarE("e2"), "ty")); AttrEq(AttrRef(VarE("top"), "ty"), Case(AttrRef(VarE("top"), "ty1"), [(TermP("TFun", [VarP("l"); VarP("r")]), VarE("r")); (UnderscoreP, Abort("Match failure!"))]))]);
+("ExprIf", "expr", ["e1"; "e2"; "e3"], ["ty1"; "ty2"; "ty3"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("e1"), "ok"), And(AttrRef(VarE("e2"), "ok"), And(AttrRef(VarE("e3"), "ok"), And(Equal(AttrRef(VarE("top"), "ty1"), TermE(TermT("TBool", []))), And(Equal(AttrRef(VarE("top"), "ty2"), AttrRef(VarE("top"), "ty3")), Bool(true))))))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Append(AttrRef(VarE("e1"), "s_VAR"), Append(AttrRef(VarE("e2"), "s_VAR"), AttrRef(VarE("e3"), "s_VAR")))); AttrEq(AttrRef(VarE("top"), "s_IMP"), Append(AttrRef(VarE("e1"), "s_IMP"), Append(AttrRef(VarE("e2"), "s_IMP"), AttrRef(VarE("e3"), "s_IMP")))); AttrEq(AttrRef(VarE("top"), "s_MOD"), Append(AttrRef(VarE("e1"), "s_MOD"), Append(AttrRef(VarE("e2"), "s_MOD"), AttrRef(VarE("e3"), "s_MOD")))); AttrEq(AttrRef(VarE("top"), "s_LEX"), Append(AttrRef(VarE("e1"), "s_LEX"), Append(AttrRef(VarE("e2"), "s_LEX"), AttrRef(VarE("e3"), "s_LEX")))); AttrEq(AttrRef(VarE("e1"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty1"), AttrRef(VarE("e1"), "ty")); AttrEq(AttrRef(VarE("e2"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty2"), AttrRef(VarE("e2"), "ty")); AttrEq(AttrRef(VarE("e3"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty3"), AttrRef(VarE("e3"), "ty")); AttrEq(AttrRef(VarE("top"), "ty"), AttrRef(VarE("top"), "ty2"))]);
+("ExprFun", "expr", ["d"; "e"], ["s_fun_VAR"; "s_fun_IMP"; "s_fun_MOD"; "s_fun_LEX"; "s_fun"; "ty1"; "ty2"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("d"), "ok"), And(AttrRef(VarE("e"), "ok"), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "s_fun_VAR"), Append(AttrRef(VarE("d"), "s_VAR"), AttrRef(VarE("e"), "s_VAR"))); AttrEq(AttrRef(VarE("top"), "s_fun_IMP"), Append(AttrRef(VarE("d"), "s_IMP"), AttrRef(VarE("e"), "s_IMP"))); AttrEq(AttrRef(VarE("top"), "s_fun_MOD"), Append(AttrRef(VarE("d"), "s_MOD"), AttrRef(VarE("e"), "s_MOD"))); AttrEq(AttrRef(VarE("top"), "s_fun_LEX"), Append(Cons(AttrRef(VarE("top"), "s"), Nil), Append(AttrRef(VarE("d"), "s_LEX"), AttrRef(VarE("e"), "s_LEX")))); AttrEq(AttrRef(VarE("s_fun"), "VAR"), AttrRef(VarE("top"), "s_fun_VAR")); AttrEq(AttrRef(VarE("s_fun"), "IMP"), AttrRef(VarE("top"), "s_fun_IMP")); AttrEq(AttrRef(VarE("s_fun"), "MOD"), AttrRef(VarE("top"), "s_fun_MOD")); AttrEq(AttrRef(VarE("s_fun"), "LEX"), AttrRef(VarE("top"), "s_fun_LEX")); AttrEq(AttrRef(VarE("top"), "s_fun"), VarE("s_fun")); NtaEq("s_fun", TermE(TermT("mkScope", []))); AttrEq(AttrRef(VarE("d"), "s"), AttrRef(VarE("top"), "s_fun")); AttrEq(AttrRef(VarE("top"), "ty1"), AttrRef(VarE("d"), "ty")); AttrEq(AttrRef(VarE("e"), "s"), AttrRef(VarE("top"), "s_fun")); AttrEq(AttrRef(VarE("top"), "ty2"), AttrRef(VarE("e"), "ty")); AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("TFun", [AttrRef(VarE("top"), "ty1"); AttrRef(VarE("top"), "ty2")])))]);
+("ExprLet", "expr", ["bs"; "e"], ["s_let_VAR"; "s_let_IMP"; "s_let_MOD"; "s_let_LEX"; "s_let"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("bs"), "ok"), And(AttrRef(VarE("e"), "ok"), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), AttrRef(VarE("bs"), "s_VAR")); AttrEq(AttrRef(VarE("top"), "s_IMP"), AttrRef(VarE("bs"), "s_IMP")); AttrEq(AttrRef(VarE("top"), "s_MOD"), AttrRef(VarE("bs"), "s_MOD")); AttrEq(AttrRef(VarE("top"), "s_LEX"), AttrRef(VarE("bs"), "s_LEX")); AttrEq(AttrRef(VarE("top"), "s_let_VAR"), Append(AttrRef(VarE("bs"), "s_def_VAR"), AttrRef(VarE("e"), "s_VAR"))); AttrEq(AttrRef(VarE("top"), "s_let_IMP"), Append(AttrRef(VarE("bs"), "s_def_IMP"), AttrRef(VarE("e"), "s_IMP"))); AttrEq(AttrRef(VarE("top"), "s_let_MOD"), Append(AttrRef(VarE("bs"), "s_def_MOD"), AttrRef(VarE("e"), "s_MOD"))); AttrEq(AttrRef(VarE("top"), "s_let_LEX"), Append(AttrRef(VarE("bs"), "s_def_LEX"), AttrRef(VarE("e"), "s_LEX"))); AttrEq(AttrRef(VarE("s_let"), "VAR"), AttrRef(VarE("top"), "s_let_VAR")); AttrEq(AttrRef(VarE("s_let"), "IMP"), AttrRef(VarE("top"), "s_let_IMP")); AttrEq(AttrRef(VarE("s_let"), "MOD"), AttrRef(VarE("top"), "s_let_MOD")); AttrEq(AttrRef(VarE("s_let"), "LEX"), AttrRef(VarE("top"), "s_let_LEX")); AttrEq(AttrRef(VarE("top"), "s_let"), VarE("s_let")); NtaEq("s_let", TermE(TermT("mkScope", []))); AttrEq(AttrRef(VarE("bs"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("bs"), "s_def"), AttrRef(VarE("top"), "s_let")); AttrEq(AttrRef(VarE("e"), "s"), AttrRef(VarE("top"), "s_let")); AttrEq(AttrRef(VarE("top"), "ty"), AttrRef(VarE("e"), "ty"))]);
+("ExprLetRec", "expr", ["bs"; "e"], ["s_let_VAR"; "s_let_IMP"; "s_let_MOD"; "s_let_LEX"; "s_let"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("bs"), "ok"), And(AttrRef(VarE("e"), "ok"), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "s_let_VAR"), Append(AttrRef(VarE("bs"), "s_VAR"), Append(AttrRef(VarE("bs"), "s_def_VAR"), AttrRef(VarE("e"), "s_VAR")))); AttrEq(AttrRef(VarE("top"), "s_let_IMP"), Append(AttrRef(VarE("bs"), "s_IMP"), Append(AttrRef(VarE("bs"), "s_def_IMP"), AttrRef(VarE("e"), "s_IMP")))); AttrEq(AttrRef(VarE("top"), "s_let_MOD"), Append(AttrRef(VarE("bs"), "s_MOD"), Append(AttrRef(VarE("bs"), "s_def_MOD"), AttrRef(VarE("e"), "s_MOD")))); AttrEq(AttrRef(VarE("top"), "s_let_LEX"), Append(Cons(AttrRef(VarE("top"), "s"), Nil), Append(AttrRef(VarE("bs"), "s_LEX"), Append(AttrRef(VarE("bs"), "s_def_LEX"), AttrRef(VarE("e"), "s_LEX"))))); AttrEq(AttrRef(VarE("s_let"), "VAR"), AttrRef(VarE("top"), "s_let_VAR")); AttrEq(AttrRef(VarE("s_let"), "IMP"), AttrRef(VarE("top"), "s_let_IMP")); AttrEq(AttrRef(VarE("s_let"), "MOD"), AttrRef(VarE("top"), "s_let_MOD")); AttrEq(AttrRef(VarE("s_let"), "LEX"), AttrRef(VarE("top"), "s_let_LEX")); AttrEq(AttrRef(VarE("top"), "s_let"), VarE("s_let")); NtaEq("s_let", TermE(TermT("mkScope", []))); AttrEq(AttrRef(VarE("bs"), "s"), AttrRef(VarE("top"), "s_let")); AttrEq(AttrRef(VarE("bs"), "s_def"), AttrRef(VarE("top"), "s_let")); AttrEq(AttrRef(VarE("e"), "s"), AttrRef(VarE("top"), "s_let")); AttrEq(AttrRef(VarE("top"), "ty"), AttrRef(VarE("e"), "ty"))]);
+("ExprLetPar", "expr", ["bs"; "e"], ["s_let_VAR"; "s_let_IMP"; "s_let_MOD"; "s_let_LEX"; "s_let"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("bs"), "ok"), And(AttrRef(VarE("e"), "ok"), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), AttrRef(VarE("bs"), "s_VAR")); AttrEq(AttrRef(VarE("top"), "s_IMP"), AttrRef(VarE("bs"), "s_IMP")); AttrEq(AttrRef(VarE("top"), "s_MOD"), AttrRef(VarE("bs"), "s_MOD")); AttrEq(AttrRef(VarE("top"), "s_LEX"), AttrRef(VarE("bs"), "s_LEX")); AttrEq(AttrRef(VarE("top"), "s_let_VAR"), Append(AttrRef(VarE("bs"), "s_def_VAR"), AttrRef(VarE("e"), "s_VAR"))); AttrEq(AttrRef(VarE("top"), "s_let_IMP"), Append(AttrRef(VarE("bs"), "s_def_IMP"), AttrRef(VarE("e"), "s_IMP"))); AttrEq(AttrRef(VarE("top"), "s_let_MOD"), Append(AttrRef(VarE("bs"), "s_def_MOD"), AttrRef(VarE("e"), "s_MOD"))); AttrEq(AttrRef(VarE("top"), "s_let_LEX"), Append(Cons(AttrRef(VarE("top"), "s"), Nil), Append(AttrRef(VarE("bs"), "s_def_LEX"), AttrRef(VarE("e"), "s_LEX")))); AttrEq(AttrRef(VarE("s_let"), "VAR"), AttrRef(VarE("top"), "s_let_VAR")); AttrEq(AttrRef(VarE("s_let"), "IMP"), AttrRef(VarE("top"), "s_let_IMP")); AttrEq(AttrRef(VarE("s_let"), "MOD"), AttrRef(VarE("top"), "s_let_MOD")); AttrEq(AttrRef(VarE("s_let"), "LEX"), AttrRef(VarE("top"), "s_let_LEX")); AttrEq(AttrRef(VarE("top"), "s_let"), VarE("s_let")); NtaEq("s_let", TermE(TermT("mkScope", []))); AttrEq(AttrRef(VarE("bs"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("bs"), "s_def"), AttrRef(VarE("top"), "s_let")); AttrEq(AttrRef(VarE("e"), "s"), AttrRef(VarE("top"), "s_let")); AttrEq(AttrRef(VarE("top"), "ty"), AttrRef(VarE("e"), "ty"))]);
+("SeqBindsNil", "seq-binds", [], [], [AttrEq(AttrRef(VarE("top"), "ok"), Bool(true)); AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_LEX"), Cons(AttrRef(VarE("top"), "s"), Nil))]);
+("SeqBindsOne", "seq-binds", ["b"], [], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("b"), "ok"), Bool(true))); AttrEq(AttrRef(VarE("top"), "s_VAR"), AttrRef(VarE("b"), "s_VAR")); AttrEq(AttrRef(VarE("top"), "s_IMP"), AttrRef(VarE("b"), "s_IMP")); AttrEq(AttrRef(VarE("top"), "s_MOD"), AttrRef(VarE("b"), "s_MOD")); AttrEq(AttrRef(VarE("top"), "s_LEX"), AttrRef(VarE("b"), "s_LEX")); AttrEq(AttrRef(VarE("top"), "s_def_VAR"), AttrRef(VarE("b"), "s_def_VAR")); AttrEq(AttrRef(VarE("top"), "s_def_IMP"), AttrRef(VarE("b"), "s_def_IMP")); AttrEq(AttrRef(VarE("top"), "s_def_MOD"), AttrRef(VarE("b"), "s_def_MOD")); AttrEq(AttrRef(VarE("top"), "s_def_LEX"), Append(Cons(AttrRef(VarE("top"), "s"), Nil), AttrRef(VarE("b"), "s_def_LEX"))); AttrEq(AttrRef(VarE("b"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("b"), "s_def"), AttrRef(VarE("top"), "s_def"))]);
+("SeqBindsCons", "seq-binds", ["b"; "bs"], ["s_def'_VAR"; "s_def'_IMP"; "s_def'_MOD"; "s_def'_LEX"; "s_def'"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("b"), "ok"), And(AttrRef(VarE("bs"), "ok"), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), AttrRef(VarE("b"), "s_VAR")); AttrEq(AttrRef(VarE("top"), "s_IMP"), AttrRef(VarE("b"), "s_IMP")); AttrEq(AttrRef(VarE("top"), "s_MOD"), AttrRef(VarE("b"), "s_MOD")); AttrEq(AttrRef(VarE("top"), "s_LEX"), AttrRef(VarE("b"), "s_LEX")); AttrEq(AttrRef(VarE("top"), "s_def_VAR"), AttrRef(VarE("bs"), "s_def_VAR")); AttrEq(AttrRef(VarE("top"), "s_def_IMP"), AttrRef(VarE("bs"), "s_def_IMP")); AttrEq(AttrRef(VarE("top"), "s_def_MOD"), AttrRef(VarE("bs"), "s_def_MOD")); AttrEq(AttrRef(VarE("top"), "s_def_LEX"), AttrRef(VarE("bs"), "s_def_LEX")); AttrEq(AttrRef(VarE("top"), "s_def'_VAR"), Append(AttrRef(VarE("b"), "s_def_VAR"), AttrRef(VarE("bs"), "s_VAR"))); AttrEq(AttrRef(VarE("top"), "s_def'_IMP"), Append(AttrRef(VarE("b"), "s_def_IMP"), AttrRef(VarE("bs"), "s_IMP"))); AttrEq(AttrRef(VarE("top"), "s_def'_MOD"), Append(AttrRef(VarE("b"), "s_def_MOD"), AttrRef(VarE("bs"), "s_MOD"))); AttrEq(AttrRef(VarE("top"), "s_def'_LEX"), Append(Cons(AttrRef(VarE("top"), "s"), Nil), Append(AttrRef(VarE("b"), "s_def_LEX"), AttrRef(VarE("bs"), "s_LEX")))); AttrEq(AttrRef(VarE("s_def'"), "VAR"), AttrRef(VarE("top"), "s_def'_VAR")); AttrEq(AttrRef(VarE("s_def'"), "IMP"), AttrRef(VarE("top"), "s_def'_IMP")); AttrEq(AttrRef(VarE("s_def'"), "MOD"), AttrRef(VarE("top"), "s_def'_MOD")); AttrEq(AttrRef(VarE("s_def'"), "LEX"), AttrRef(VarE("top"), "s_def'_LEX")); AttrEq(AttrRef(VarE("top"), "s_def'"), VarE("s_def'")); NtaEq("s_def'", TermE(TermT("mkScope", []))); AttrEq(AttrRef(VarE("b"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("b"), "s_def"), AttrRef(VarE("top"), "s_def'")); AttrEq(AttrRef(VarE("bs"), "s"), AttrRef(VarE("top"), "s_def'")); AttrEq(AttrRef(VarE("bs"), "s_def"), AttrRef(VarE("top"), "s_def"))]);
+("DefBindSeq", "seq-bind", ["x"; "e"], ["s_var_VAR"; "s_var_IMP"; "s_var_MOD"; "s_var_LEX"; "s_var"; "ty"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("e"), "ok"), Bool(true))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Append(Cons(AttrRef(VarE("top"), "s_var"), Nil), AttrRef(VarE("e"), "s_VAR"))); AttrEq(AttrRef(VarE("top"), "s_IMP"), AttrRef(VarE("e"), "s_IMP")); AttrEq(AttrRef(VarE("top"), "s_MOD"), AttrRef(VarE("e"), "s_MOD")); AttrEq(AttrRef(VarE("top"), "s_LEX"), AttrRef(VarE("e"), "s_LEX")); AttrEq(AttrRef(VarE("top"), "s_def_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_LEX"), Nil); AttrEq(AttrRef(VarE("s_var"), "VAR"), AttrRef(VarE("top"), "s_var_VAR")); AttrEq(AttrRef(VarE("s_var"), "IMP"), AttrRef(VarE("top"), "s_var_IMP")); AttrEq(AttrRef(VarE("s_var"), "MOD"), AttrRef(VarE("top"), "s_var_MOD")); AttrEq(AttrRef(VarE("s_var"), "LEX"), AttrRef(VarE("top"), "s_var_LEX")); AttrEq(AttrRef(VarE("top"), "s_var"), VarE("s_var")); NtaEq("s_var", TermE(TermT("mkScopeDatum", [TermE(TermT("DatumVar", [AttrRef(VarE("top"), "x"); AttrRef(VarE("top"), "ty")]))]))); AttrEq(AttrRef(VarE("e"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty"), AttrRef(VarE("e"), "ty"))]);
+("DefBindTypedSeq", "seq-bind", ["x"; "tyann"; "e"], ["s_var_VAR"; "s_var_IMP"; "s_var_MOD"; "s_var_LEX"; "s_var"; "ty"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("tyann"), "ok"), And(AttrRef(VarE("e"), "ok"), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Append(Cons(AttrRef(VarE("top"), "s_var"), Nil), Append(AttrRef(VarE("tyann"), "s_VAR"), AttrRef(VarE("e"), "s_VAR")))); AttrEq(AttrRef(VarE("top"), "s_IMP"), Append(AttrRef(VarE("tyann"), "s_IMP"), AttrRef(VarE("e"), "s_IMP"))); AttrEq(AttrRef(VarE("top"), "s_MOD"), Append(AttrRef(VarE("tyann"), "s_MOD"), AttrRef(VarE("e"), "s_MOD"))); AttrEq(AttrRef(VarE("top"), "s_LEX"), Append(AttrRef(VarE("tyann"), "s_LEX"), AttrRef(VarE("e"), "s_LEX"))); AttrEq(AttrRef(VarE("top"), "s_def_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_LEX"), Nil); AttrEq(AttrRef(VarE("s_var"), "VAR"), AttrRef(VarE("top"), "s_var_VAR")); AttrEq(AttrRef(VarE("s_var"), "IMP"), AttrRef(VarE("top"), "s_var_IMP")); AttrEq(AttrRef(VarE("s_var"), "MOD"), AttrRef(VarE("top"), "s_var_MOD")); AttrEq(AttrRef(VarE("s_var"), "LEX"), AttrRef(VarE("top"), "s_var_LEX")); AttrEq(AttrRef(VarE("top"), "s_var"), VarE("s_var")); NtaEq("s_var", TermE(TermT("mkScopeDatum", [TermE(TermT("DatumVar", [AttrRef(VarE("top"), "x"); AttrRef(VarE("top"), "ty")]))]))); AttrEq(AttrRef(VarE("tyann"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty"), AttrRef(VarE("tyann"), "ty")); AttrEq(AttrRef(VarE("e"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty"), AttrRef(VarE("e"), "ty"))]);
+("ParBindsNil", "par-binds", [], [], [AttrEq(AttrRef(VarE("top"), "ok"), And(Bool(true), Bool(true))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_LEX"), Nil)]);
+("ParBindsCons", "par-binds", ["b"; "ds"], [], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("b"), "ok"), And(AttrRef(VarE("bs"), "ok"), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Append(AttrRef(VarE("b"), "s_VAR"), AttrRef(VarE("bs"), "s_VAR"))); AttrEq(AttrRef(VarE("top"), "s_IMP"), Append(AttrRef(VarE("b"), "s_IMP"), AttrRef(VarE("bs"), "s_IMP"))); AttrEq(AttrRef(VarE("top"), "s_MOD"), Append(AttrRef(VarE("b"), "s_MOD"), AttrRef(VarE("bs"), "s_MOD"))); AttrEq(AttrRef(VarE("top"), "s_LEX"), Append(AttrRef(VarE("b"), "s_LEX"), AttrRef(VarE("bs"), "s_LEX"))); AttrEq(AttrRef(VarE("top"), "s_def_VAR"), Append(AttrRef(VarE("b"), "s_def_VAR"), AttrRef(VarE("bs"), "s_def_VAR"))); AttrEq(AttrRef(VarE("top"), "s_def_IMP"), Append(AttrRef(VarE("b"), "s_def_IMP"), AttrRef(VarE("bs"), "s_def_IMP"))); AttrEq(AttrRef(VarE("top"), "s_def_MOD"), Append(AttrRef(VarE("b"), "s_def_MOD"), AttrRef(VarE("bs"), "s_def_MOD"))); AttrEq(AttrRef(VarE("top"), "s_def_LEX"), Append(AttrRef(VarE("b"), "s_def_LEX"), AttrRef(VarE("bs"), "s_def_LEX"))); AttrEq(AttrRef(VarE("b"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("b"), "s_def"), AttrRef(VarE("top"), "s_def")); AttrEq(AttrRef(VarE("bs"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("bs"), "s_def"), AttrRef(VarE("top"), "s_def"))]);
+("DefBindPar", "par-bind", ["x"; "e"], ["s_var_VAR"; "s_var_IMP"; "s_var_MOD"; "s_var_LEX"; "s_var"; "ty"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("e"), "ok"), Bool(true))); AttrEq(AttrRef(VarE("top"), "s_VAR"), AttrRef(VarE("e"), "s_VAR")); AttrEq(AttrRef(VarE("top"), "s_IMP"), AttrRef(VarE("e"), "s_IMP")); AttrEq(AttrRef(VarE("top"), "s_MOD"), AttrRef(VarE("e"), "s_MOD")); AttrEq(AttrRef(VarE("top"), "s_LEX"), AttrRef(VarE("e"), "s_LEX")); AttrEq(AttrRef(VarE("top"), "s_def_VAR"), Cons(AttrRef(VarE("top"), "s_var"), Nil)); AttrEq(AttrRef(VarE("top"), "s_def_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_LEX"), Nil); AttrEq(AttrRef(VarE("s_var"), "VAR"), AttrRef(VarE("top"), "s_var_VAR")); AttrEq(AttrRef(VarE("s_var"), "IMP"), AttrRef(VarE("top"), "s_var_IMP")); AttrEq(AttrRef(VarE("s_var"), "MOD"), AttrRef(VarE("top"), "s_var_MOD")); AttrEq(AttrRef(VarE("s_var"), "LEX"), AttrRef(VarE("top"), "s_var_LEX")); AttrEq(AttrRef(VarE("top"), "s_var"), VarE("s_var")); NtaEq("s_var", TermE(TermT("mkScopeDatum", [TermE(TermT("DatumVar", [AttrRef(VarE("top"), "x"); AttrRef(VarE("top"), "ty")]))]))); AttrEq(AttrRef(VarE("e"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty"), AttrRef(VarE("e"), "ty"))]);
+("DefBindTypedPar", "par-bind", ["x"; "tyann"; "e"], ["s_var_VAR"; "s_var_IMP"; "s_var_MOD"; "s_var_LEX"; "s_var"; "ty"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("tyann"), "ok"), And(AttrRef(VarE("e"), "ok"), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Append(AttrRef(VarE("tyann"), "s_VAR"), AttrRef(VarE("e"), "s_VAR"))); AttrEq(AttrRef(VarE("top"), "s_IMP"), Append(AttrRef(VarE("tyann"), "s_IMP"), AttrRef(VarE("e"), "s_IMP"))); AttrEq(AttrRef(VarE("top"), "s_MOD"), Append(AttrRef(VarE("tyann"), "s_MOD"), AttrRef(VarE("e"), "s_MOD"))); AttrEq(AttrRef(VarE("top"), "s_LEX"), Append(AttrRef(VarE("tyann"), "s_LEX"), AttrRef(VarE("e"), "s_LEX"))); AttrEq(AttrRef(VarE("top"), "s_def_VAR"), Cons(AttrRef(VarE("top"), "s_var"), Nil)); AttrEq(AttrRef(VarE("top"), "s_def_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_def_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_LEX"), Nil); AttrEq(AttrRef(VarE("s_var"), "VAR"), AttrRef(VarE("top"), "s_var_VAR")); AttrEq(AttrRef(VarE("s_var"), "IMP"), AttrRef(VarE("top"), "s_var_IMP")); AttrEq(AttrRef(VarE("s_var"), "MOD"), AttrRef(VarE("top"), "s_var_MOD")); AttrEq(AttrRef(VarE("s_var"), "LEX"), AttrRef(VarE("top"), "s_var_LEX")); AttrEq(AttrRef(VarE("top"), "s_var"), VarE("s_var")); NtaEq("s_var", TermE(TermT("mkScopeDatum", [TermE(TermT("DatumVar", [AttrRef(VarE("top"), "x"); AttrRef(VarE("top"), "ty")]))]))); AttrEq(AttrRef(VarE("tyann"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty"), AttrRef(VarE("tyann"), "ty")); AttrEq(AttrRef(VarE("e"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty"), AttrRef(VarE("e"), "ty"))]);
+("ArgDecl", "arg-decl", ["x"; "tyann"], ["s_var_VAR"; "s_var_IMP"; "s_var_MOD"; "s_var_LEX"; "s_var"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("tyann"), "ok"), Bool(true))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Append(AttrRef(VarE("tyann"), "s_VAR"), Cons(AttrRef(VarE("top"), "s_var"), Nil))); AttrEq(AttrRef(VarE("top"), "s_IMP"), AttrRef(VarE("tyann"), "s_IMP")); AttrEq(AttrRef(VarE("top"), "s_MOD"), AttrRef(VarE("tyann"), "s_MOD")); AttrEq(AttrRef(VarE("top"), "s_LEX"), AttrRef(VarE("tyann"), "s_LEX")); AttrEq(AttrRef(VarE("top"), "s_var_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_var_LEX"), Nil); AttrEq(AttrRef(VarE("tyann"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty"), AttrRef(VarE("tyann"), "ty")); AttrEq(AttrRef(VarE("s_var"), "VAR"), AttrRef(VarE("top"), "s_var_VAR")); AttrEq(AttrRef(VarE("s_var"), "IMP"), AttrRef(VarE("top"), "s_var_IMP")); AttrEq(AttrRef(VarE("s_var"), "MOD"), AttrRef(VarE("top"), "s_var_MOD")); AttrEq(AttrRef(VarE("s_var"), "LEX"), AttrRef(VarE("top"), "s_var_LEX")); AttrEq(AttrRef(VarE("top"), "s_var"), VarE("s_var")); NtaEq("s_var", TermE(TermT("mkScopeDatum", [TermE(TermT("DatumVar", [AttrRef(VarE("top"), "x"); AttrRef(VarE("top"), "ty")]))])))]);
+("TInt", "type", [], [], [AttrEq(AttrRef(VarE("top"), "ok"), Bool(true)); AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("TInt", [])))]);
+("TBool", "type", [], [], [AttrEq(AttrRef(VarE("top"), "ok"), Bool(true)); AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("TBool", [])))]);
+("TFun", "type", ["tyann1"; "tyann2"], ["ty1"; "ty2"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("tyann1"), "ok"), And(AttrRef(VarE("tyann2"), "ok"), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Append(AttrRef(VarE("tyann1"), "s_VAR"), AttrRef(VarE("tyann2"), "s_VAR"))); AttrEq(AttrRef(VarE("top"), "s_IMP"), Append(AttrRef(VarE("tyann1"), "s_IMP"), AttrRef(VarE("tyann2"), "s_IMP"))); AttrEq(AttrRef(VarE("top"), "s_MOD"), Append(AttrRef(VarE("tyann1"), "s_MOD"), AttrRef(VarE("tyann2"), "s_MOD"))); AttrEq(AttrRef(VarE("top"), "s_LEX"), Append(AttrRef(VarE("tyann1"), "s_LEX"), AttrRef(VarE("tyann2"), "s_LEX"))); AttrEq(AttrRef(VarE("tyann1"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty1"), AttrRef(VarE("tyann1"), "ty")); AttrEq(AttrRef(VarE("tyann2"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "ty2"), AttrRef(VarE("tyann2"), "ty")); AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("TFun", [AttrRef(VarE("top"), "ty1"); AttrRef(VarE("top"), "ty2")])))]);
+("ModRef", "mod-ref", ["x"], ["mods"; "xmods"; "xmods'"; "pair_2"], [AttrEq(AttrRef(VarE("top"), "ok"), And(TupleSec(AttrRef(VarE("top"), "pair_2"), 1), Bool(true))); AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "mods"), AttrRef(TermE(TermT("query", [AttrRef(VarE("top"), "s"); TermE(TermT("regexSeq", [TermE(TermT("regexStar", [TermE(TermT("regexLabel", [TermE(TermT("labelLEX", []))]))])); TermE(TermT("regexSeq", [TermE(TermT("regexAlt", [TermE(TermT("regexLabel", [TermE(TermT("labelIMP", []))])); TermE(TermT("regexEps", []))])); TermE(TermT("regexLabel", [TermE(TermT("labelMOD", []))]))]))]))])), "ret")); AttrEq(AttrRef(VarE("top"), "xmods"), AttrRef(TermE(TermT("path_filter", [Fun("lambda_3_arg", Case(VarE("lambda_3_arg"), [(TermP("DatumMod", [VarP("x'"); UnderscoreP]), Bool(true)); (UnderscoreP, Bool(false))])); AttrRef(VarE("top"), "mods")])), "ret")); AttrEq(AttrRef(VarE("top"), "pair_2"), AttrRef(TermE(TermT("min-refs", [AttrRef(VarE("top"), "xmods")])), "ret")); AttrEq(AttrRef(VarE("top"), "xmods'"), TupleSec(AttrRef(VarE("top"), "pair_2"), 2)); AttrEq(AttrRef(VarE("top"), "p"), AttrRef(TermE(TermT("one", [AttrRef(VarE("top"), "xmods'")])), "ret"))]);
+("ModQRef", "mod-ref", ["r"; "x"], ["p_mod"; "s_mod"; "mods"; "xmods"; "pair_4"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("r"), "ok"), And(TupleSec(AttrRef(VarE("top"), "pair_4"), 1), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), AttrRef(VarE("r"), "s_VAR")); AttrEq(AttrRef(VarE("top"), "s_IMP"), AttrRef(VarE("r"), "s_IMP")); AttrEq(AttrRef(VarE("top"), "s_MOD"), AttrRef(VarE("r"), "s_MOD")); AttrEq(AttrRef(VarE("top"), "s_LEX"), AttrRef(VarE("r"), "s_LEX")); AttrEq(AttrRef(VarE("r"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "p_mod"), AttrRef(VarE("r"), "p")); AttrEq(AttrRef(VarE("top"), "pair_4"), AttrRef(TermE(TermT("tgt", [AttrRef(VarE("top"), "p_mod")])), "ret")); AttrEq(AttrRef(VarE("top"), "s_mod"), TupleSec(AttrRef(VarE("top"), "pair_4"), 2)); AttrEq(AttrRef(VarE("top"), "mods"), AttrRef(TermE(TermT("query", [AttrRef(VarE("top"), "s_mod"); TermE(TermT("regexLabel", [TermE(TermT("labelMOD", []))]))])), "ret")); AttrEq(AttrRef(VarE("top"), "xmods"), AttrRef(TermE(TermT("path_filter", [Fun("lambda_5_arg", Case(VarE("lambda_5_arg"), [(TermP("DatumMod", [VarP("x'"); UnderscoreP]), Bool(true)); (UnderscoreP, Bool(false))])); AttrRef(VarE("top"), "mods")])), "ret")); AttrEq(AttrRef(VarE("top"), "p"), AttrRef(TermE(TermT("one", [AttrRef(VarE("top"), "xmods")])), "ret"))]);
 
-  (
-    "program", "Main",
-    ["ds"], [],
-    [ NtaEq("s", TermE(TermT("mkScope", [])));
-      AttrEq(AttrRef(VarE("s"), "LEX"), AttrRef(VarE("ds"), "LEX_s"));
-      AttrEq(AttrRef(VarE("s"), "VAR"), AttrRef(VarE("ds"), "VAR_s"));
-      AttrEq(AttrRef(VarE("ds"), "s"), VarE("s"));
-      AttrEq(AttrRef(VarE("top"), "ok"), AttrRef(VarE("ds"), "ok"))
-    ]
-  );
 
-  (
-    "declsCons", "Decls",
-    ["d"; "ds"], [],
-    [ AttrEq(AttrRef(VarE("d"), "s"), AttrRef(VarE("top"), "s"));
-      AttrEq(AttrRef(VarE("ds"), "s"), AttrRef(VarE("top"), "s"));
-      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("d"), "VAR_s"); AttrRef(VarE("ds"), "VAR_s")])), "ret"));
-      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("d"), "LEX_s"); AttrRef(VarE("ds"), "LEX_s")])), "ret"));
-      AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("d"), "ok"), AttrRef(VarE("ds"), "ok"))) ]
-  );
+("VarRef", "var-ref", 
+ ["x"], ["vars"; "xvars"; "xvars'"; "pair_6"], 
+ [
+  AttrEq(AttrRef(VarE("top"), "ok"), And(TupleSec(AttrRef(VarE("top"), "pair_6"), 1), Bool(true))); 
+  AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); 
+  AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); 
+  AttrEq(AttrRef(VarE("top"), "s_MOD"), Nil); 
+  AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil); 
+  AttrEq(AttrRef(VarE("top"), "vars"), AttrRef(TermE(TermT("query", [AttrRef(VarE("top"), "s"); TermE(TermT("regexSeq", [TermE(TermT("regexStar", [TermE(TermT("regexLabel", [TermE(TermT("labelLEX", []))]))])); TermE(TermT("regexSeq", [TermE(TermT("regexAlt", [TermE(TermT("regexLabel", [TermE(TermT("labelIMP", []))])); TermE(TermT("regexEps", []))])); TermE(TermT("regexLabel", [TermE(TermT("labelVAR", []))]))]))]))])), "ret")); 
+  
+  
+  AttrEq(AttrRef(VarE("top"), "xvars"), 
+    AttrRef(TermE(TermT("path_filter", [
+      Fun("lambda_7_arg", Case(VarE("lambda_7_arg"), [
+        (TermP("DatumVar", [VarP("x'"); UnderscoreP]), Equal(VarE("x'"), AttrRef(VarE("top"), "x"))); 
+        (UnderscoreP, Bool(false))])); AttrRef(VarE("top"), "vars")
+    ])), "ret")); AttrEq(AttrRef(VarE("top"), "pair_6"), AttrRef(TermE(TermT("min-refs", [AttrRef(VarE("top"), "xvars")])), "ret")); 
+  
 
-  (
-    "declsNil", "Decls",
-    [], [],
-    [ AttrEq(AttrRef(VarE("top"), "VAR_s"), Nil);
-      AttrEq(AttrRef(VarE("top"), "LEX_s"), Nil);
-      AttrEq(AttrRef(VarE("top"), "ok"), Bool(true)) ]
-  );
-
-  (
-    "declDef", "Decl",
-    ["pb"], [],
-    [ AttrEq(AttrRef(VarE("pb"), "s"), AttrRef(VarE("top"), "s"));
-      AttrEq(AttrRef(VarE("top"), "ok"), AttrRef(VarE("pb"), "ok"));
-      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("pb"), "VAR_s"); AttrRef(VarE("pb"), "VAR_s_def")])), "ret"));
-      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("pb"), "LEX_s"); AttrRef(VarE("pb"), "LEX_s_def")])), "ret")) ]
-  );
-
-  (
-    "parBindUntyped", "ParBind",
-    ["id"; "e"], [],
-    [ 
-      NtaEq("s_var", TermE(TermT("mkScopeDatum", [TermE(TermT("datumVar", [VarE("id"); AttrRef(VarE("e"), "ty")]))])));
-      AttrEq(AttrRef(VarE("s_var"), "LEX"), Nil);
-      AttrEq(AttrRef(VarE("s_var"), "VAR"), Nil);
-
-      AttrEq(AttrRef(VarE("e"), "s"), AttrRef(VarE("top"), "s"));
-      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(VarE("e"), "VAR_s"));
-      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(VarE("e"), "LEX_s"));
-      AttrEq(AttrRef(VarE("top"), "VAR_s_def"), Cons(VarE("s_var"), Nil));
-      AttrEq(AttrRef(VarE("top"), "LEX_s_def"), Nil);
-      AttrEq(AttrRef(VarE("top"), "ok"), AttrRef(VarE("e"), "ok")) ]
-  );
-
-  (
-    "exprAdd", "Expr",
-    ["e1"; "e2"], [],
-    [ AttrEq(AttrRef(VarE("e1"), "s"), AttrRef(VarE("top"), "s"));
-      AttrEq(AttrRef(VarE("e2"), "s"), AttrRef(VarE("top"), "s"));
-      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("e1"), "VAR_s"); AttrRef(VarE("e2"), "VAR_s")])), "ret"));
-      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("e1"), "LEX_s"); AttrRef(VarE("e2"), "LEX_s")])), "ret"));
-      AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("e1"), "ok"), 
-                            And(AttrRef(VarE("e2"), "ok"),
-                              And(Case(AttrRef(VarE("e1"), "ty"), [(TermP("INT", []), Bool(true)); (UnderscoreP, Bool(false))]),
-                                  App(Fun("x", Equal(VarE("x"), TermE(TermT("INT", [])))), AttrRef(VarE("e2"), "ty"))))));
-      AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("INT", []))) ]
-  );
-
-  (
-    "exprLetSeq", "Expr",
-    ["sbs"; "e"], [],
-    [ NtaEq("s_let", AttrRef(VarE("sbs"), "s_def_syn"));
-
-      AttrEq(AttrRef(VarE("s_let"), "VAR"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("sbs"), "VAR_s_def"); AttrRef(VarE("e"), "VAR_s")])), "ret"));
-      AttrEq(AttrRef(VarE("s_let"), "LEX"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("sbs"), "LEX_s_def"); AttrRef(VarE("e"), "LEX_s")])), "ret"));
-
-      AttrEq(AttrRef(VarE("sbs"), "s"), AttrRef(VarE("top"), "s"));
-      AttrEq(AttrRef(VarE("sbs"), "s_def"), VarE("s_let"));
-
-      AttrEq(AttrRef(VarE("e"), "s"), VarE("s_let"));
-
-      AttrEq(AttrRef(VarE("top"), "ty"), AttrRef(VarE("e"), "ty"));
-      AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("sbs"), "ok"), AttrRef(VarE("e"), "ok")));
-      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(VarE("sbs"), "VAR_s"));
-      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(VarE("sbs"), "LEX_s"));
-    ]
-  );
-
-  (* SeqBinds *)
-
-  (
-    "seqBindsOne", "SeqBinds",
-    ["sb"], [],
-    [ AttrEq(AttrRef(VarE("sb"), "s"), AttrRef(VarE("top"), "s"));
-      AttrEq(AttrRef(VarE("sb"), "s_def"), AttrRef(VarE("top"), "s_def"));
-
-      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(VarE("sb"), "VAR_s"));
-      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(VarE("sb"), "LEX_s"));
-
-      AttrEq(AttrRef(VarE("top"), "VAR_s_def"), AttrRef(VarE("sb"), "VAR_s_def"));
-      AttrEq(AttrRef(VarE("top"), "LEX_s_def"), Cons(AttrRef(VarE("top"), "s"), AttrRef(VarE("sb"), "LEX_s_def")));
-      
-      AttrEq(AttrRef(VarE("top"), "s_def_syn"), TermE(TermT("mkScope", [])));
-
-      AttrEq(AttrRef(VarE("top"), "ok"), AttrRef(VarE("sb"), "ok")) ]
-  );
-
-  (
-    "seqBindsCons", "SeqBinds",
-    ["sb"; "sbs"], [],
-    [ NtaEq("s_def_", TermE(TermT("mkScope", [])));
-      
-      AttrEq(AttrRef(VarE("s_def_"), "LEX"), Cons(AttrRef(VarE("top"), "s"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("sb"), "LEX_s_def"); AttrRef(VarE("sbs"), "LEX_s")])), "ret")));
-
-      AttrEq(AttrRef(VarE("s_def_"), "VAR"), AttrRef(TermE(TermT("list_append", [AttrRef(VarE("sb"), "VAR_s_def"); AttrRef(VarE("sbs"), "VAR_s")])), "ret"));
-      
-      AttrEq(AttrRef(VarE("sb"), "s"), AttrRef(VarE("top"), "s"));
-      AttrEq(AttrRef(VarE("sb"), "s_def"), AttrRef(VarE("top"), "s_def"));
-      
-      AttrEq(AttrRef(VarE("sbs"), "s"), VarE("s_def_"));
-      AttrEq(AttrRef(VarE("sbs"), "s_def"), AttrRef(VarE("top"), "s_def"));
-      
-      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(VarE("sb"), "VAR_s"));
-      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(VarE("sb"), "LEX_s"));
-
-      AttrEq(AttrRef(VarE("top"), "VAR_s_def_"), AttrRef(VarE("sbs"), "VAR_s_def"));
-      AttrEq(AttrRef(VarE("top"), "LEX_s_def_"), AttrRef(VarE("sbs"), "LEX_s_def"));
-
-      AttrEq(AttrRef(VarE("top"), "s_def_syn"), AttrRef(VarE("sbs"), "s_def_syn"));
-
-      AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("sb"), "ok"), AttrRef(VarE("sbs"), "ok")))
-    ]
-  );
-
-  (
-    "seqBindUntyped", "SeqBind",
-    ["id"; "e"], [],
-    [
-      NtaEq("s_var", TermE(TermT("mkScopeDatum", [TermE(TermT("datumVar", [VarE("id"); AttrRef(VarE("e"), "ty")]))])));
-      AttrEq(AttrRef(VarE("s_var"), "LEX"), Nil);
-      AttrEq(AttrRef(VarE("s_var"), "VAR"),  Nil);
-
-      AttrEq(AttrRef(VarE("e"), "s"), AttrRef(VarE("top"), "s"));
-
-      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(VarE("e"), "VAR_s"));
-      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(VarE("e"), "LEX_s"));
-
-      AttrEq(AttrRef(VarE("top"), "VAR_s_def"), Cons(VarE("s_var"), Nil));
-
-      AttrEq(AttrRef(VarE("top"), "LEX_s_def"), Nil);
-
-      AttrEq(AttrRef(VarE("top"), "ok"), AttrRef(VarE("e"), "ok")); ]
-  );
+  
+  AttrEq(AttrRef(VarE("top"), "xvars'"), TupleSec(AttrRef(VarE("top"), "pair_6"), 2)); 
+  AttrEq(AttrRef(VarE("top"), "p"), AttrRef(TermE(TermT("one", [AttrRef(VarE("top"), "xvars'")])), "ret"))
+]);
 
 
 
-  (
-    "exprInt", "Expr",
-    ["i"], [],
-    [ AttrEq(AttrRef(VarE("top"), "ok"), Bool(true));
-      AttrEq(AttrRef(VarE("top"), "ty"), TermE(TermT("INT", [])));
-      AttrEq(AttrRef(VarE("top"), "VAR_s"), Nil);
-      AttrEq(AttrRef(VarE("top"), "LEX_s"), Nil) ]
-  );
+("VarQRef", "var-ref", ["r"; "x"], ["p_mod"; "s_mod"; "vars"; "xvars"; "pair_8"], [AttrEq(AttrRef(VarE("top"), "ok"), And(AttrRef(VarE("r"), "ok"), And(TupleSec(AttrRef(VarE("top"), "pair_8"), 1), Bool(true)))); AttrEq(AttrRef(VarE("top"), "s_VAR"), AttrRef(VarE("r"), "s_VAR")); AttrEq(AttrRef(VarE("top"), "s_IMP"), AttrRef(VarE("r"), "s_IMP")); AttrEq(AttrRef(VarE("top"), "s_MOD"), AttrRef(VarE("r"), "s_MOD")); AttrEq(AttrRef(VarE("top"), "s_LEX"), AttrRef(VarE("r"), "s_LEX")); AttrEq(AttrRef(VarE("r"), "s"), AttrRef(VarE("top"), "s")); AttrEq(AttrRef(VarE("top"), "p_mod"), AttrRef(VarE("r"), "p")); AttrEq(AttrRef(VarE("top"), "pair_8"), AttrRef(TermE(TermT("tgt", [AttrRef(VarE("top"), "p_mod")])), "ret")); AttrEq(AttrRef(VarE("top"), "s_mod"), TupleSec(AttrRef(VarE("top"), "pair_8"), 2)); AttrEq(AttrRef(VarE("top"), "vars"), AttrRef(TermE(TermT("query", [AttrRef(VarE("top"), "s_mod"); TermE(TermT("regexLabel", [TermE(TermT("labelVAR", []))]))])), "ret")); AttrEq(AttrRef(VarE("top"), "xvars"), AttrRef(TermE(TermT("path_filter", [Fun("lambda_9_arg", Case(VarE("lambda_9_arg"), [(TermP("DatumVar", [VarP("x'"); UnderscoreP]), Bool(true)); (UnderscoreP, Bool(false))])); AttrRef(VarE("top"), "vars")])), "ret")); AttrEq(AttrRef(VarE("top"), "p"), AttrRef(TermE(TermT("one", [AttrRef(VarE("top"), "xvars")])), "ret"))]);
+("tgt", "FunResult", ["p"], ["ok"; "s"], [AttrEq(AttrRef(VarE("top"), "ok"), Bool(true)); AttrEq(AttrRef(VarE("top"), "s"), Case(AttrRef(VarE("top"), "p"), [(TermP("End", [VarP("x")]), VarE("x")); (TermP("Edge", [VarP("x"); VarP("l"); VarP("xs")]), AttrRef(TermE(TermT("tgt", [VarE("xs")])), "ret")); (UnderscoreP, Abort("Match failure!"))])); AttrEq(AttrRef(VarE("top"), "ret"), Tuple([AttrRef(VarE("top"), "ok"); AttrRef(VarE("top"), "s")]))]);
+("src", "FunResult", ["p"], ["ok"; "s"], [AttrEq(AttrRef(VarE("top"), "ok"), Bool(true)); AttrEq(AttrRef(VarE("top"), "s"), Case(AttrRef(VarE("top"), "p"), [(TermP("End", [VarP("x")]), VarE("x")); (TermP("Edge", [VarP("x"); VarP("l"); VarP("xs")]), VarE("x")); (UnderscoreP, Abort("Match failure!"))])); AttrEq(AttrRef(VarE("top"), "ret"), Tuple([AttrRef(VarE("top"), "ok"); AttrRef(VarE("top"), "s")]))]);
+("datumOf", "FunResult", ["p"], ["ok"; "d"; "s"; "pair_10"], [AttrEq(AttrRef(VarE("top"), "ok"), And(TupleSec(AttrRef(VarE("top"), "pair_10"), 1), Bool(true))); AttrEq(AttrRef(VarE("top"), "pair_10"), AttrRef(TermE(TermT("tgt", [AttrRef(VarE("top"), "p")])), "ret")); AttrEq(AttrRef(VarE("top"), "s"), TupleSec(AttrRef(VarE("top"), "pair_10"), 2)); AttrEq(AttrRef(VarE("top"), "d"), AttrRef(AttrRef(VarE("top"), "s"), "datum")); AttrEq(AttrRef(VarE("top"), "ret"), Tuple([AttrRef(VarE("top"), "ok"); AttrRef(VarE("top"), "d")]))]);
+("min-refs", "FunResult", ["z"], ["ok"; "z'"], [AttrEq(AttrRef(VarE("top"), "ok"), Bool(true)); AttrEq(AttrRef(VarE("top"), "z'"), AttrRef(TermE(TermT("path_min", [Fun("l", Fun("r", Case(Tuple([VarE("l"); VarE("r")]), [(TupleP([TermP("labelMOD", []); TermP("labelLEX", [])]), Int(-1)); (TupleP([TermP("labelLEX", []); TermP("labelMOD", [])]), Int(1)); (TupleP([TermP("labelMOD", []); TermP("labelIMP", [])]), Int(-1)); (TupleP([TermP("labelIMP", []); TermP("labelMOD", [])]), Int(1)); (TupleP([TermP("labelVAR", []); TermP("labelLEX", [])]), Int(-1)); (TupleP([TermP("labelLEX", []); TermP("labelVAR", [])]), Int(1)); (TupleP([TermP("labelVAR", []); TermP("labelIMP", [])]), Int(-1)); (TupleP([TermP("labelIMP", []); TermP("labelVAR", [])]), Int(1)); (TupleP([TermP("labelIMP", []); TermP("labelLEX", [])]), Int(-1)); (TupleP([TermP("labelLEX", []); TermP("labelIMP", [])]), Int(1)); (TupleP([UnderscoreP; UnderscoreP]), Int(0))]))); AttrRef(VarE("top"), "z")])), "ret")); AttrEq(AttrRef(VarE("top"), "ret"), Tuple([AttrRef(VarE("top"), "ok"); AttrRef(VarE("top"), "z'")]))]);
+("foo", "FunResult", ["s"; "p"], ["ok"; "s_VAR"; "s_IMP"; "s_MOD"; "s_LEX"; "s_ret"; "p1"; "p2"; "s'"], [AttrEq(AttrRef(VarE("top"), "ok"), Bool(true)); AttrEq(AttrRef(VarE("top"), "s_VAR"), Nil); AttrEq(AttrRef(VarE("top"), "s_IMP"), Nil); AttrEq(AttrRef(VarE("top"), "s_MOD"), Nil); AttrEq(AttrRef(VarE("top"), "s_LEX"), Nil); AttrEq(AttrRef(VarE("top"), "p2"), TermE(TermT("End", [AttrRef(VarE("top"), "s'")]))); AttrEq(AttrRef(VarE("top"), "p1"), AttrRef(VarE("top"), "p2")); AttrEq(AttrRef(VarE("top"), "s_ret"), Case(AttrRef(VarE("top"), "p"), [(TermP("End", [UnderscoreP]), AttrRef(VarE("top"), "s'")); (TermP("Edge", [UnderscoreP; UnderscoreP; UnderscoreP]), AttrRef(VarE("top"), "s'")); (UnderscoreP, Abort("Match failure!"))])); AttrEq(AttrRef(VarE("top"), "ret"), Tuple([AttrRef(VarE("top"), "ok"); AttrRef(VarE("top"), "s_VAR"); AttrRef(VarE("top"), "s_IMP"); AttrRef(VarE("top"), "s_MOD"); AttrRef(VarE("top"), "s_LEX"); AttrRef(VarE("top"), "s_ret")]))]);
 
-  (
-    "exprVar", "Expr",
-    ["r"], [],
-    [ AttrEq(AttrRef(VarE("r"), "s"), AttrRef(VarE("top"), "s"));
-      AttrEq(AttrRef(VarE("top"), "VAR_s"), AttrRef(VarE("r"), "VAR_s"));
-      AttrEq(AttrRef(VarE("top"), "LEX_s"), AttrRef(VarE("r"), "LEX_s"));
 
-      AttrEq(AttrRef(VarE("top"), "datumOfResult"),
-        AttrRef(
-          TermE(TermT("datumOf", [AttrRef(VarE("r"), "p")])),
-          "ret"
-        )
-      );
-
-      AttrEq(AttrRef(VarE("top"), "okDatumOf"), 
-        Case (
-          AttrRef(VarE("top"), "datumOfResult"),
-          [
-            (TupleP([VarP("ok'"); UnderscoreP]), VarE("ok'"))
-          ]
-        )
-      );
-
-      AttrEq(AttrRef(VarE("top"), "d"), 
-        Case (
-          AttrRef(VarE("top"), "datumOfResult"),
-          [
-            (TupleP([UnderscoreP; VarP("d'")]), VarE("d'"))
-          ]
-        )
-      );
-
-      AttrEq(AttrRef(VarE("top"), "datumPair"),
-        Case (
-          AttrRef(VarE("top"), "d"),
-          [
-            (TermP("datumVar", [VarP("x"); VarP("ty'")]), Tuple([Bool(true); VarE("x"); VarE("ty'")]));
-            (UnderscoreP, Tuple([Bool(false); String(""); Abort]))
-          ]
-        )
-      );
-
-      AttrEq(AttrRef(VarE("top"), "okDatumPair"),
-        Case (
-          AttrRef(VarE("top"), "datumPair"),
-            [ (TupleP([VarP("ok'"); UnderscoreP; UnderscoreP]), VarE("ok'")) ]
-          )
-      );
-
-      AttrEq(AttrRef(VarE("top"), "ty"),
-        Case (
-          AttrRef(VarE("top"), "datumPair"),
-          [ (TupleP([UnderscoreP; UnderscoreP; VarP("ty'")]), VarE("ty'")) ]
-        )
-      );
-
-      AttrEq(AttrRef(VarE("top"), "ok"), 
-        And (
-          AttrRef(VarE("r"), "ok"),
-          And (
-            AttrRef(VarE("top"), "okDatumOf"),
-            AttrRef(VarE("top"), "okDatumPair")
-          )
-        )
-        
-      );
-
-    ]
-  );
-
-  (
-    "varRef", "VarRef",
-    ["x"], ["rx"],
-    [ 
-      (*
-      NtaEq("dfa", TermE(TermT("varRefDFA", [])));
-      NtaEq("nwceNode", TermE(TermT("nwce", [AttrRef(VarE("top"), "s"); VarE("dfa")])));
-      *)
-
-      AttrEq(AttrRef(VarE("top"), "rx"),
-        TermE(TermT("regexSeq", [
-          TermE(TermT("regexStar", [TermE(TermT("regexLabel", [TermE(TermT("labelLEX", []))]))]));
-          TermE(TermT("regexLabel", [TermE(TermT("labelVAR", []))]))
-        ]))
-      );
-
-      (* LEX* VAR *)
-      NtaEq("nwceNode",
-        TermE(TermT("dwce", [
-          AttrRef(VarE("top"), "rx");
-          AttrRef(VarE("top"), "s")
-        ]))
-      );
-
-      AttrEq(AttrRef(VarE("top"), "dwf"),
-        Fun ("s",
-          Case (
-            AttrRef(VarE("s"), "datum"),
-            [ (TermP("datumVar", [VarP("x'"); UnderscoreP]), Equal(VarE("x"), VarE("x'")));
-              (UnderscoreP, Bool(false))
-            ]
-          )
-        )
-      );
-
-      NtaEq("queryNode", TermE(TermT("query2", [
-        AttrRef(VarE("top"), "s"); 
-        AttrRef(VarE("top"), "rx")
-      ])));
-
-      (* needs cleaning, perhaps allow multiple patterns: case l, r of ...*)
-      AttrEq(AttrRef(VarE("top"), "order"),
-        Fun("l",
-          Fun("r",
-            Case (
-              VarE("l"),
-              [
-                (TermP("pEdge", [VarP("src"); StringP("VAR"); VarP("rest")]),
-                  Case (
-                    VarE("r"),
-                    [ (TermP("pEdge", [UnderscoreP; StringP("LEX"); UnderscoreP]), Int(-1));
-                      (TermP("pEdge", [UnderscoreP; StringP("VAR"); UnderscoreP]), Int(0));
-                      (TermP("pEnd", [UnderscoreP]), Int(1)) ]
-                  )
-                );
-                (TermP("pEdge", [VarP("src"); StringP("LEX"); VarP("rest")]),
-                  Case (
-                    VarE("r"),
-                    [ (TermP("pEdge", [UnderscoreP; StringP("LEX"); UnderscoreP]), Int(0));
-                      (TermP("pEdge", [UnderscoreP; StringP("VAR"); UnderscoreP]), Int(1));
-                      (TermP("pEnd", [UnderscoreP]), Int(1)) ]
-                  )
-                );
-                (TermP("pEnd", [UnderscoreP]),
-                  Case (
-                    VarE("r"),
-                    [
-                      (TermP("pEnd", [UnderscoreP]), Int(0));
-                      (UnderscoreP, Int(-1))
-                    ]
-                  )
-                )
-              ]
-            )
-          )
-        )
-      );
-
-      AttrEq(AttrRef(VarE("top"), "vars"),
-        If (
-          AttrRef(VarE("nwceNode"), "ret"),
-          AttrRef(VarE("queryNode"), "ret"),
-          Abort
-        )
-      );
-
-      AttrEq(AttrRef(VarE("top"), "xvars"),
-        AttrRef(
-          TermE(TermT("path_filter", [
-            AttrRef(VarE("top"), "dwf");
-            AttrRef(VarE("top"), "vars")
-          ])), "ret"
-        )
-      );
-
-      AttrEq(AttrRef(VarE("top"), "xvars_"),
-        AttrRef(
-          TermE(TermT("min-refs", [AttrRef(VarE("top"), "order"); AttrRef(VarE("top"), "xvars")])),
-          "ret"
-        )
-      );
-
-      AttrEq(AttrRef(VarE("top"), "onlyResult"),
-        AttrRef(
-          TermE(TermT("only", [AttrRef(VarE("top"), "xvars_")])),
-          "ret"
-        )
-      );
-
-      AttrEq(AttrRef(VarE("top"), "p"),
-        Case (
-          AttrRef(VarE("top"), "onlyResult"), [ 
-            (TupleP([UnderscoreP; VarP("p'")]), VarE("p'"))
-          ]
-        )
-      );
-
-      AttrEq(AttrRef(VarE("top"), "ok"),
-        Case (
-          AttrRef(VarE("top"), "onlyResult"),
-          [ (TupleP([VarP("ok'"); UnderscoreP]), VarE("ok'")) ]
-        )
-      );
-
-      AttrEq(AttrRef(VarE("top"), "VAR_s"), Nil);
-      AttrEq(AttrRef(VarE("top"), "LEX_s"), Nil) ]
-  );
+  (* REMOVE ABOVE *)
 
   (* QUERY *)
   (
     "resolve", "FunResult",
-    ["rx"; "s"], ["wasEmptySetRx"; "wasEpsilonRx"],
+    ["rx"; "s"], [],
     [
-      (* remove *)
-      AttrEq(AttrRef(VarE("top"), "wasEmptySetRx"),
-        AttrRef(TermE(TermT("isEmptySet", [AttrRef(VarE("top"), "rx")])), "ret")
-      );
-
-      (* remove *)
-      AttrEq(AttrRef(VarE("top"), "wasEpsilonRx"),
-        AttrRef(TermE(TermT("isEpsilon", [AttrRef(VarE("top"), "rx")])), "ret")
-      );
-
       AttrEq(AttrRef(VarE("top"), "ret"), 
-
-        (* remove the case that encloses the if.. just for testing *)
-        Case(AttrRef(VarE("top"), "wasEpsilonRx"), [(UnderscoreP, Case(AttrRef(VarE("top"), "wasEmptySetRx"), [(UnderscoreP, 
         If(AttrRef(TermE(TermT("isEmptySet", [AttrRef(VarE("top"), "rx")])), "ret"),
-
           Nil,
-
           If(AttrRef(TermE(TermT("isEpsilon", [AttrRef(VarE("top"), "rx")])), "ret"),
-            
             Cons(
-              TermE(TermT("pEnd", [AttrRef(VarE("top"), "s")])),
+              TermE(TermT("End", [AttrRef(VarE("top"), "s")])),
               Nil
             ),
-
             AttrRef(TermE(TermT("list_concat", [
               AttrRef(TermE(TermT("list_map", [ (* for every label *)
                 Fun("l",
@@ -545,9 +232,8 @@ let prod_env: prod list = [
                 globalLabelList (* todo - generic *)
               ])), "ret")
             ])), "ret")
-
           )
-        ))]))])
+        )
       )
     ]
   );
@@ -557,22 +243,97 @@ let prod_env: prod list = [
     ["s"; "rx"], [],
     [
       AttrEq(AttrRef(VarE("top"), "ret"),
-        App(App(AttrRef(VarE("dfa"), "paths"), VarE("s")), VarE("dwf"))
+
+        If (AttrRef(TermE(TermT("dwce", [AttrRef(VarE("top"), "rx"); AttrRef(VarE("top"), "s")])), "ret"),
+          AttrRef(
+            TermE(TermT("resolve", [AttrRef(VarE("top"), "rx"); AttrRef(VarE("top"), "s")])),
+          "ret"),
+          Nil
+        )
       )
     ]
   );
 
+  (* path comp pair *)
   (
-    "query2", "FunResult",
-    ["s"; "rx"], [],
+    "path_comp", "FunResult",
+    ["f"; "p1"; "p2"], [],
     [
       AttrEq(AttrRef(VarE("top"), "ret"),
-        AttrRef(
-          TermE(TermT("resolve", [
-            AttrRef(VarE("top"), "rx"); AttrRef(VarE("top"), "s")
-          ])),
-          "ret"
-        )
+        Case(Tuple([AttrRef(VarE("top"), "p1"); AttrRef(VarE("top"), "p2")]), [
+          (TupleP([
+            TermP("Edge", [VarP("x1"); VarP("l1"); VarP("xs1")]);
+            TermP("Edge", [VarP("x2"); VarP("l2"); VarP("xs2")]);
+          ]),
+            Let("headRes", App(App(AttrRef(VarE("top"), "f"), VarE("l1")), VarE("l2")), 
+              If(
+                Equal(VarE("headRes"), Int(0)),
+                AttrRef(TermE(TermT("path_comp", [
+                  AttrRef(VarE("top"), "f");
+                  VarE("t1");
+                  VarE("t2")
+                ])), "ret"),
+                VarE("headRes")
+              )
+            )
+          );
+          (TupleP([TermP("End", [UnderscoreP]); TermP("End", [UnderscoreP])]), Int(0));
+          (TupleP([TermP("End", [UnderscoreP]); UnderscoreP]), Int(-1));
+          (TupleP([UnderscoreP; TermP("End", [UnderscoreP])]), Int(1));
+        ])
+      )
+    ]
+  );
+
+  (* MIN *)
+  (
+    "path_min", "FunResult",
+    ["f"; "ps"], [],
+    [
+      AttrEq(AttrRef(VarE("top"), "ret"),
+        Case(AttrRef(VarE("top"), "ps"), [
+          (NilP, Nil);
+          (ConsP(VarP("hp"), VarP("t")),
+            AttrRef(
+
+              TermE(TermT("list_fold_right", [
+                Fun("item", Fun("acc", 
+                  Let("hd", Case(VarE("acc"), [(ConsP(VarP("h"), UnderscoreP), VarE("h"))]),
+                    Let("minRes", AttrRef(TermE(TermT("path_comp", [AttrRef(VarE("top"), "f"); VarE("item"); VarE("hd")])), "ret"), 
+                      If (Equal(VarE("minRes"), Int(-1)),
+                        Cons(VarE("item"), Nil),          (* current is less than hd *)
+                        If(Equal(VarE("minRes"), Int(1)),
+                          VarE("acc"),                    (* item is greater than hd*)
+                          Cons(VarE("item"), VarE("acc")) (* item is equal to hd *)
+                        )
+                      )
+                    )
+                  )
+                ));
+                VarE("t");
+                Cons(VarE("hp"), Nil)
+              ])),
+              
+              "ret"
+            )
+          )
+        ])
+      )
+    ]
+  );
+
+  (* ONE *)
+  (
+    "one", "FunResult",
+    ["lst"], [],
+    [
+      AttrEq(AttrRef(VarE("top"), "ret"),
+        Case(AttrRef(VarE("top"), "lst"), [
+          (ConsP(VarP("h"), NilP), 
+            (* -> *) VarE("h"));
+          (UnderscoreP,  
+            (* -> *) Abort("one arg was not singleton"))
+        ])
       )
     ]
   );
@@ -590,7 +351,7 @@ let prod_env: prod list = [
               Let ("pTgt", AttrRef(TermE(TermT("tgt", [VarE("p")])), "ret"),
                 Case(VarE("pTgt"), [
                   (TupleP([VarP("ok_"); VarP("s_")]),
-                    If (App(AttrRef(VarE("top"), "f"), VarE("s_")),
+                    If (App(AttrRef(VarE("top"), "f"), AttrRef(VarE("s_"), "datum")),
                       Cons(VarE("p"), VarE("acc")),
                       VarE("acc")
                     )
@@ -703,54 +464,12 @@ let prod_env: prod list = [
           [ (ConsP(VarP("h"), NilP), 
               (* -> *)Tuple([Bool(true); VarE("h")]));
             (UnderscoreP, 
-              (* -> *) Tuple([Bool(false); Abort])) ]
+              (* -> *) Tuple([Bool(false); Abort("only arg was not a singleton")])) ]
         )
       )
     ]
   );
-
-  (* TGT *)
-
-  (
-    "tgt", "FunResult",
-    ["path"], [],
-    [
-      AttrEq(AttrRef(VarE("top"), "ret"),
-        Case (
-          VarE("path"),
-          [
-            (TermP("pEnd", [VarP("x")]), Tuple([Bool(true); VarE("x")]));
-            (TermP("pEdge", [UnderscoreP; UnderscoreP; VarP("rest")]), AttrRef(TermE(TermT("tgt", [VarE("rest")])), "ret"))
-          ]
-        )
-      )
-    ]
-  );
-
-  (* DATUMOF *)
-
-  (
-    "datumOf", "FunResult",
-    ["path"], [],
-    [
-      NtaEq("tgtNode", TermE(TermT("tgt", [VarE("path")])));
-      
-      AttrEq(AttrRef(VarE("top"), "ret"),
-        Let (
-          "tgtNodeRes", AttrRef(VarE("tgtNode"), "ret"),
-          Case (
-            VarE("tgtNodeRes"),
-            [
-              (TupleP([VarP("ok'"); VarP("s'")]),
-                (* -> *) Tuple([VarE("ok'"); AttrRef(VarE("s'"), "datum")])
-              )
-            ]
-          )
-        )
-      );
-    ]
-  );
-
+  
   (* DWCE *)
 
   (
@@ -760,10 +479,7 @@ let prod_env: prod list = [
       AttrEq(AttrRef(VarE("top"), "ret"),
         Let("r1res", AttrRef(TermE(TermT("nullable", [VarE("r1")])), "ret"),
           Let("r2res", AttrRef(TermE(TermT("nullable", [VarE("r2")])), "ret"),
-            And(
-              Equal(VarE("r1res"), TermE(TermT("regexEps", []))),
-              Equal(VarE("r2res"), TermE(TermT("regexEps", [])))
-            )
+            And(VarE("r1res"), VarE("r2res"))
           )
         )
       )
@@ -777,10 +493,7 @@ let prod_env: prod list = [
       AttrEq(AttrRef(VarE("top"), "ret"),
         Let("r1res",   AttrRef(TermE(TermT("nullable", [VarE("r1")])), "ret"),
           Let("r2res", AttrRef(TermE(TermT("nullable", [VarE("r2")])), "ret"),
-            Or(
-              Equal(VarE("r1res"), TermE(TermT("regexEps", []))),
-              Equal(VarE("r2res"), TermE(TermT("regexEps", [])))
-            )
+            Or(VarE("r1res"), VarE("r2res"))
           )
         )
       )
@@ -854,7 +567,7 @@ let prod_env: prod list = [
           ( (* star *)
             TermP("regexStar", [VarP("sub")]),
             (* -> *) TermE(TermT("regexSeq", [
-                      AttrRef(TermE(TermT("match", [VarE("a"); VarE("sub")])), "ret"); 
+                      AttrRef(TermE(TermT("match", [VarE("a"); VarE("sub")])), "ret");
                       TermE(TermT("regexStar", [VarE("sub")]))
                      ]))
           );
@@ -1029,8 +742,11 @@ let prod_env: prod list = [
     [
       AttrEq(AttrRef(VarE("top"), "ret"),
         If(AttrRef(TermE(TermT("isEmptySet", [AttrRef(VarE("top"), "r")])), "ret"),
-          Bool(true),
+
+          Abort("moooo empty set!"),
+
           If(AttrRef(TermE(TermT("isEpsilon", [AttrRef(VarE("top"), "r")])), "ret"),
+
             Case(AttrRef(VarE("s"), "datum"), [(UnderscoreP, Bool(true))]),
 
             AttrRef(TermE(TermT("list_fold_right", [  (* for every label *)
@@ -1167,22 +883,6 @@ let prod_env: prod list = [
   );
 
   ( (* good *)
-    "list_append", "FunResult",
-    ["l1"; "l2"], [],
-    [
-      AttrEq(AttrRef(VarE("top"), "ret"),
-        Case (VarE("l1"),
-          [
-            (NilP, VarE("l2"));
-            (ConsP(VarP("h"), VarP("t")), 
-              (* -> *) Cons(VarE("h"), AttrRef(TermE(TermT("list_append", [VarE("t"); VarE("l2")])), "ret")))
-          ]
-        )
-      )
-    ]
-  );
-
-  ( (* good *)
     "list_map", "FunResult",
     ["f"; "lst"], [],
     [ AttrEq(AttrRef(VarE("top"), "ret"),
@@ -1209,7 +909,7 @@ let prod_env: prod list = [
                 VarE("acc"),
                 If(Equal(VarE("acc"), Nil),
                   VarE("item"),
-                  AttrRef(TermE(TermT("list_append", [VarE("item"); VarE("acc")])), "ret")
+                  Append(VarE("item"), VarE("acc"))
                 )
               )
             
@@ -1282,7 +982,7 @@ let rec str_expr (e: expr): string =
   | VarE x -> x
   | Left e -> (str_expr e) ^ ".l"
   | Right e -> (str_expr e) ^ ".r"
-  | Abort         -> "ERROR"
+  | Abort(s) -> "ERROR(" ^ s ^ ")"
   | Fun (x, e) -> "\\" ^ x ^ " -> " ^ str_expr e
   | App (e1, e2) -> (str_expr e1) ^ "(" ^ (str_expr e2) ^ ")"
   | If (e1, e2, e3) -> "if " ^ (str_expr e1) ^ " then " ^ (str_expr e2) ^ " else " ^ (str_expr e3)
@@ -1447,7 +1147,7 @@ let instantiate_eqs_set (name: string) (node: node_id) (eqs: set): set =
     | VarE x -> if x = name then NodeRef node else e
     | Left e -> Left (instantiate_expr e)
     | Right e -> Right(instantiate_expr e)
-    | Abort -> e
+    | Abort(_) -> e
     | Fun (x, e) -> if x = name then Fun(x, e) else Fun(x, instantiate_expr e)
     | App(e1, e2) -> App(instantiate_expr e1, instantiate_expr e2)
     | If(e1, e2, e3) -> If(instantiate_expr e1, instantiate_expr e2, instantiate_expr e3)
@@ -1518,7 +1218,7 @@ let rec substitute_expr (s: string) (e': expr) (e: expr): expr =
   | VarE x -> if x = s then e' else e
   | Left e -> Left (substitute_expr s e' e)
   | Right e -> Right(substitute_expr s e' e)
-  | Abort -> e
+  | Abort(_) -> e
   | Fun (x, e) -> if x = s then Fun (x, e) else Fun (x, substitute_expr s e' e)
   | App(e1, e2) -> App(substitute_expr s e' e1, substitute_expr s e' e2)
   | If(e1, e2, e3) -> If(substitute_expr s e' e1, substitute_expr s e' e2, substitute_expr s e' e3)
@@ -1537,11 +1237,14 @@ let substitute_eqs (s: string) (e': expr) (eqs: set): set =
   List.map substitute_eq eqs
 
 
+let counter: int ref = ref 0
+
 (* mk_node_id :: string -> string 
  * generate a new node identifier
  *)
-  let mk_node_id (s: string): string =
-    s ^ "_" ^ (string_of_int (Random.int 100000))
+let mk_node_id (s: string): string =
+  counter := (!counter) + 1;
+  s ^ "_'_" ^ (string_of_int !counter)
 
 
 (* mk_tree :: node_id -> term -> tree
@@ -1560,6 +1263,8 @@ let substitute_eqs (s: string) (e': expr) (eqs: set): set =
 let rec mk_tree (n: node_id) (TermT(p, es): term): tree =
 
   (* 1. find the correct production *)
+  let lookupRes = lookup_prod p prod_env in
+  let _ = if Option.is_none lookupRes then print_endline("Couldn't find production for " ^ p ^ "!") else () in
   let Some (_, nt_name, children, locals, eqs) = lookup_prod p prod_env in
   
   (* 2. make new node IDs for children of `t` that are terms *)
@@ -1819,7 +1524,7 @@ let rec unify_lst (ps: (pattern * expr) list) (e: expr) (t: tree): (((string * e
  *)
 let rec value_expr (e: expr): bool =
   match e with
-  | Abort -> true
+  | Abort(_) -> false
   | Int(_) -> true
   | Bool(_) -> true
   | String(_) -> true
@@ -1849,6 +1554,27 @@ and value_term (TermT(s, es): term): bool = all value_expr es
 (*******************************)
 (***** EXPRESSION STEPPING *****)
 
+(* MOVE BELOW BACK TO EQUATION STEPPING *)
+
+(* and expr step is the relation: <t | stack; set> -> <t | stack'; set'> *)
+type eq_step_state = tree * stack * set
+
+
+(* printing a state for debugging purposes *)
+let print_state ((t, s, eqs): eq_step_state): unit =
+  if debug
+    then
+      (print_endline "_____ TREE ______";
+       print_endline (str_tree t);
+       print_endline "_____ STACK _____";
+       print_endline (str_stack s);
+       print_endline "______ SET ______";
+       print_endline (str_set eqs);
+       print_endline "_________________")
+    else
+      ()
+
+(* MOVE ABOVE BACK TO EQUATION STEPPING *)
 
 (* and expr step is the relation: <e; stack; set> -> <e'; stack'; set'> *)
 type expr_step_state = expr * tree * stack * set
@@ -1872,6 +1598,25 @@ let rec expr_step (e, t, s, eqs: expr_step_state): expr_step_state =
   match e with
 
   | e when value_expr e -> (e, t, s, eqs)
+
+    (* expr-append - TODO *)
+  | Append(Nil, e2) when value_expr e2 ->
+      (e2, t, s, eqs)
+    (* expr-append - TODO *)
+  | Append(e1, Nil) when value_expr e1 ->
+      (e1, t, s, eqs)
+    (* expr-append - TODO *)
+  | Append(Cons(h1, t1), e2) when value_expr e2->
+      (Cons(h1, Append(t1, e2)), t, s, eqs)
+
+    (* expr-binop-right *)
+  | Append(e1, e2) when value_expr e1 -> 
+      let (e2', t', s', eqs') = expr_step (e2, t, s, eqs) in
+      (Append(e1, e2'), t', s', eqs')
+    (* expr-binop-left *)
+  | Append(e1, e2) -> 
+      let (e1', t', s', eqs') = expr_step (e1, t, s, eqs) in
+      (Append(e1', e2), t', s', eqs')
 
     (* expr-binop-right *)
   | Cons(e1, e2) when value_expr e1 -> 
@@ -1954,17 +1699,17 @@ let rec expr_step (e, t, s, eqs: expr_step_state): expr_step_state =
       let (es', (e', t', s', eqs')) = step_first_nonvalue es in
       (Tuple es', t', s', eqs')
 
-  | TupleSec(Nil, i) -> (Abort, t, s, eqs)
+  | TupleSec(Nil, i) -> (Abort("Tuple was nil in TupleSec eval"), t, s, eqs)
 
     (* expr-tuple-sec - TODO *)
   | TupleSec(es, i) when value_expr es ->
       let Tuple(lst) = es in
-      (List.nth lst i, t, s, eqs)
+      (List.nth lst (i-1), t, s, eqs)
 
     (* expr-tuple-sec-step - TODO *)
   | TupleSec(es, i) ->
-      let (e', t', s', eqs') = expr_step (e, t, s, eqs) in
-      (TupleSec(e', i), t', s', eqs') 
+      let (es', t', s', eqs') = expr_step (es, t, s, eqs) in
+      (TupleSec(es', i), t', s', eqs') 
 
     (* expr-term-step *)
   | TermE (TermT(s, es)) -> 
@@ -2062,30 +1807,13 @@ let rec expr_step (e, t, s, eqs: expr_step_state): expr_step_state =
   | Left e -> raise (Failure "TODO: expr_step: Left")
   | Right e -> raise (Failure "TODO: expr_step: Right")
 
-  | Abort -> raise (Failure "Found an error, aborting...")
+  | Abort(msg) -> 
+      (print_state (t, s, eqs));
+      raise (Failure ("Found an error, aborting... Message: " ^ msg))
 
 
 (*****************************)
 (***** EQUATION STEPPING *****)
-
-
-(* and expr step is the relation: <t | stack; set> -> <t | stack'; set'> *)
-type eq_step_state = tree * stack * set
-
-
-(* printing a state for debugging purposes *)
-let print_state ((t, s, eqs): eq_step_state): unit =
-  if debug
-    then
-      (print_endline "_____ TREE ______";
-       print_endline (str_tree t);
-       print_endline "_____ STACK _____";
-       print_endline (str_stack s);
-       print_endline "______ SET ______";
-       print_endline (str_set eqs);
-       print_endline "_________________")
-    else
-      ()
 
 
 (* eq_step :: eq_step_state -> eq_step_state
@@ -2109,20 +1837,20 @@ let rec eq_step (t, s, eqs: eq_step_state): eq_step_state =
           -> print_interesting ("" ^ n ^ "." ^ a ^ " = " ^ (str_expr e) ^ ".")
       | _ -> ());
       
-      print_state (t, s, eqs);
+      (*print_state (t, s, eqs);*)
       (make_complete (n, a) e t, rest, eqs)
 
 
     (* step-on-expr-normal *)
   | AttrEq(AttrRef(VarE(n), a), e)::rest when not(value_expr e) ->
-      print_state (t, s, eqs);
+      (*print_state (t, s, eqs);*)
       let (e', t', s', eqs') = expr_step (e, t, s, eqs) in
       (t', replace_first (n, a) e' s', eqs')
 
       
     (* step-attr-eq-lhs *)
   | AttrEq(e, _)::rest when not(value_expr e) ->
-      print_state (t, s, eqs);
+      (*print_state (t, s, eqs);*)
       let (e', t', s', eqs') = expr_step (e, t, s, eqs) in
       (t', s', eqs')
 
@@ -2137,7 +1865,7 @@ let rec eq_step (t, s, eqs: eq_step_state): eq_step_state =
           -> print_interesting (n ^ " = " ^ (str_expr e) ^ ".")
       | _ -> ());
     
-      print_state (t, s, eqs);
+      (*print_state (t, s, eqs);*)
       let t' = mk_tree n (TermT(id, es)) in
       let (eqs', t''): set * tree = instantiate_eqs "top" n t' in
       (t @ t'', rest, eqs @ eqs')
@@ -2145,74 +1873,146 @@ let rec eq_step (t, s, eqs: eq_step_state): eq_step_state =
 
     (* step-on-expr-nta *)
   | NtaEq(n, e)::rest when not(value_expr e) ->
-    print_state (t, s, eqs);
+    (*print_state (t, s, eqs);*)
     let (e', t', s', eqs') = expr_step (e, t, s, eqs) in
     (t', replace_first_nta n e' s', eqs')
 
 
   | _ -> print_endline "didn't know what to do!"; (t, s, eqs) (* TODO *)
           
-  
+(* continued stepping *)
 
-let rec keep_stepping (state: eq_step_state): unit =
+let rec keep_stepping (state: eq_step_state): eq_step_state =
     match state with
     | (t, AttrEq(AttrRef(VarE("outer"), attr), e)::rest, eqs) when value_expr e ->
       print_endline ("DONE with outer." ^ attr ^ " = " ^ (str_expr e));
         let s: stack = AttrEq(AttrRef(VarE("outer"), attr), e)::rest in
-        print_state (t, s, eqs);
+        (*print_state (t, s, eqs);*) state
     | s -> keep_stepping (eq_step s)
 
+
+(* initial state *)
+
+let init_state (prog: term): eq_step_state =
+  let init_node: node_id = "prog_000" in
+  let t: tree = mk_tree init_node prog in
+  (
+    t, (* initial tree *)
+    AttrEq(AttrRef(VarE("outer"), "ret"), 
+           AttrRef(NodeRef(init_node), "ok")) :: [], (* initial stack *)
+    [] (* initial set *)
+  )
 
 (*********************)
 (**** TEST CASES *****)
 
+(* empty program *)
+let trivial_term: term =
+  TermT("Program", [
+    TermE(TermT("DeclsNil", []))
+  ])
+
+(* def a = 1 + true *)
+let bad_ty_add: term =
+  TermT("Program", [
+    TermE(TermT("DeclsCons", [
+      TermE(TermT("DeclDef", [
+        TermE(TermT("DefBindPar", [
+          String("a");
+          TermE(TermT("ExprAdd", [
+            TermE(TermT("ExprInt", [
+              Int(1)
+            ]));
+            TermE(TermT("ExprTrue", []))
+          ]))
+        ]))
+      ]));
+      TermE(TermT("DeclsNil", []))
+    ]))
+  ])
+
+(* def a = 1 + 2 *)
+let simple_add_term: term =
+  TermT("Program", [
+    TermE(TermT("DeclsCons", [
+      TermE(TermT("DeclDef", [
+        TermE(TermT("DefBindPar", [
+          String("a");
+          TermE(TermT("ExprAdd", [
+            TermE(TermT("ExprInt", [
+              Int(1)
+            ]));
+            TermE(TermT("ExprInt", [Int(2)]))
+          ]))
+        ]))
+      ]));
+      TermE(TermT("DeclsNil", []))
+    ]))
+  ])
+
+(* def a = 1 + true *)
+let bad_simple_add_term: term =
+  TermT("Program", [
+    TermE(TermT("DeclsCons", [
+      TermE(TermT("DeclDef", [
+        TermE(TermT("DefBindPar", [
+          String("a");
+          TermE(TermT("ExprAdd", [
+            TermE(TermT("ExprInt", [
+              Int(1)
+            ]));
+            TermE(TermT("ExprTrue", []))
+          ]))
+        ]))
+      ]));
+      TermE(TermT("DeclsNil", []))
+    ]))
+  ])
 
 (* def a = 1 + a *)
 let add_term: term = 
-  TermT("program", [
-    TermE(TermT("declsCons", [
-      TermE(TermT("declDef", [
-        TermE(TermT("parBindUntyped", [
+  TermT("Program", [
+    TermE(TermT("DeclsCons", [
+      TermE(TermT("DeclDef", [
+        TermE(TermT("DefBindPar", [
           String("a");
-          TermE(TermT("exprAdd", [
-            TermE(TermT("exprInt", [
-              Int(1)
-            ]));
-            TermE(TermT("exprVar", [
-              TermE(TermT("varRef", [
+          TermE(TermT("ExprAdd", [
+            TermE(TermT("ExprInt", [Int(1)]));
+            TermE(TermT("ExprVar", [
+              TermE(TermT("VarRef", [
                 String("a")
               ]))
             ]))
           ]))
         ]))
       ]));
-      TermE(TermT("declsNil", []))
+      TermE(TermT("DeclsNil", []))
     ]))
   ])
 
 
 (* def a = let x = 1 in 1 + x *)
 let let_term: term =
-  TermT("program", [
-    TermE(TermT("declsCons", [
-      TermE(TermT("declDef", [
-        TermE(TermT("parBindUntyped", [
+  TermT("Program", [
+    TermE(TermT("DeclsCons", [
+      TermE(TermT("DeclDef", [
+        TermE(TermT("DefBindPar", [
           String("a");
-          TermE(TermT("exprLetSeq", [
-            TermE(TermT("seqBindsOne", [
-              TermE(TermT("seqBindUntyped", [
+          TermE(TermT("ExprLet", [
+            TermE(TermT("SeqBindsOne", [
+              TermE(TermT("DefBindSeq", [
                 String("x");
-                TermE(TermT("exprInt", [
+                TermE(TermT("ExprInt", [
                   Int(1)
                 ]))
               ]))
             ]));
-            TermE(TermT("exprAdd", [ 
-              TermE(TermT("exprInt", [
+            TermE(TermT("ExprAdd", [ 
+              TermE(TermT("ExprInt", [
                 Int(1)
               ]));
-              TermE(TermT("exprVar", [
-                TermE(TermT("varRef",[
+              TermE(TermT("ExprVar", [
+                TermE(TermT("VarRef", [
                   String("x")
                 ]))
               ]))
@@ -2220,26 +2020,30 @@ let let_term: term =
           ]))
         ]))
       ]));
-      TermE(TermT("declsNil", []))
+      TermE(TermT("DeclsNil", []))
     ]))
   ])
 
+(* go *)
 
-let add_term_state: eq_step_state =
-  let init_node: node_id = "prog_000" in
-  let t: tree = mk_tree init_node add_term in
-  (
-    t, (* initial tree *)
-    AttrEq(AttrRef(VarE("outer"), "ok"), AttrRef(NodeRef(init_node), "ok")) :: [], (* initial stack *)
-    [] (* initial set *)
-  )
+let rec go (t: term): unit = 
+  let _ = keep_stepping (init_state t) in ()
 
+(* Asserts *)
 
-let let_term_state: eq_step_state =
-  let init_node: node_id = "prog_000" in
-  let t: tree = mk_tree init_node let_term in
-  (
-    t, (* initial tree *)
-    AttrEq(AttrRef(VarE("outer"), "ret"), AttrRef(NodeRef(init_node), "ok")) :: [], (* initial stack *)
-    [] (* initial set *)
-  )
+let okTrueState (t: term): bool =
+  let st  = init_state t in
+  let st' = keep_stepping st in
+  (match st' with
+  | (_, AttrEq(AttrRef(VarE("outer"), "ret"), Bool(true))::_, _) -> true
+  | _ -> false)
+
+let okFalseState (t: term): bool =
+  not(okTrueState t)
+
+(*let () = assert(okTrueState trivial_term)
+let () = assert(okFalseState bad_simple_add_term)
+let () = assert(okTrueState simple_add_term)
+let () = assert(okTrueState add_term)
+let () = assert(okTrueState let_term)
+let () = assert(okFalseState bad_ty_add)*)

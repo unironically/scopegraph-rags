@@ -65,9 +65,8 @@ top::Constraint ::= t1::Term t2::Term
 aspect production newConstraintDatum
 top::Constraint ::= name::String t::Term
 {
-  local ref::AG_LHS = if contains(name, top.nonAttrs) then nameLHS(name)
-                                                      else topDotLHS(name);
-  local mkScopeApp::AG_Expr = appExpr("mkScope", [t.ag_expr]);
+  local ref::AG_LHS = nameLHS(name);
+  local mkScopeApp::AG_Expr = termExpr("mkScopeDatum", [t.ag_expr]);
 
   local labelLocals::[AG_Eq] = map (
     \l::Label -> 
@@ -81,16 +80,18 @@ top::Constraint ::= name::String t::Term
     top.knownLabels
   );
 
-  top.equations = labelLocals ++ edgeInhs ++ [ ntaEq (^ref, ^mkScopeApp) ];
+  local localDef::AG_Eq = defineEq (topDotLHS(name), nameExpr(name));
+
+  top.equations = labelLocals ++ edgeInhs ++ 
+                  [ ^localDef, ntaEq (^ref, ^mkScopeApp) ];
   top.ag_expr = ^mkScopeApp;
 }
 
 aspect production newConstraint
 top::Constraint ::= name::String
 {
-  local ref::AG_LHS = if contains(name, top.nonAttrs) then nameLHS(name)
-                                                      else topDotLHS(name);
-  local mkScopeApp::AG_Expr = appExpr("mkScope", []);
+  local ref::AG_LHS = nameLHS(name);
+  local mkScopeApp::AG_Expr = termExpr("mkScope", []);
   
   local labelLocals::[AG_Eq] = map (
     \l::Label -> 
@@ -104,7 +105,10 @@ top::Constraint ::= name::String
     top.knownLabels
   );
 
-  top.equations = labelLocals ++ edgeInhs ++ [ ntaEq (^ref, ^mkScopeApp) ];
+  local localDef::AG_Eq = defineEq (topDotLHS(name), nameExpr(name));
+
+  top.equations = labelLocals ++ edgeInhs ++ 
+                  [ ^localDef, ntaEq (^ref, ^mkScopeApp) ];
   top.ag_expr = ^mkScopeApp;
 }
 
@@ -174,7 +178,7 @@ top::Constraint ::= set::String pc::PathComp res::String
   local resLHS::AG_LHS = if contains(res, top.nonAttrs) then nameLHS(res)
                                                         else topDotLHS(res);
 
-  local minApp::AG_Expr = appExpr ("min", [pc.ag_expr, ^setExpr]);
+  local minApp::AG_Expr = appExpr ("path_min", [pc.ag_expr, ^setExpr]);
   top.equations = [ defineEq (^resLHS, ^minApp) ];
   top.ag_expr = ^minApp;
 }
@@ -197,7 +201,7 @@ top::Constraint ::= set::String m::Matcher res::String
   local resLHS::AG_LHS = if contains(res, top.nonAttrs) then nameLHS(res)
                                                         else topDotLHS(res);
 
-  local filterApp::AG_Expr = appExpr ("filter", [m.ag_expr, ^setExpr]);
+  local filterApp::AG_Expr = appExpr ("path_filter", [m.ag_expr, ^setExpr]);
   top.equations = [ defineEq (^resLHS, ^filterApp) ];
   top.ag_expr = ^filterApp;
 }
@@ -251,12 +255,14 @@ top::Constraint ::= name::String vs::RefNameList
   local predInfo::PredInfo = lookupPred(name, top.predsInh).fromJust;
   vs.idx = 0;
 
-  local apply::StxApplication = 
+  local apply::Decorated StxApplication with {nonAttrs} = 
     case predInfo of
     | synPredInfo(_, _, _, _, _, _, _) -> 
-        appConstraintSyn(name, predInfo, vs, top.knownLabels)
+        decorate appConstraintSyn(name, predInfo, vs, top.knownLabels) 
+        with {nonAttrs = top.nonAttrs;}
     | funPredInfo(_, _, _, _, _, _)    -> 
-        appConstraintFun(name, predInfo, vs, top.knownLabels)
+        decorate appConstraintFun(name, predInfo, vs, top.knownLabels) 
+        with {nonAttrs = top.nonAttrs;}
     end;
 
   top.equations = apply.equations;
@@ -273,6 +279,13 @@ attribute ag_expr occurs on StxApplication;
 
 attribute nonAttrs occurs on StxApplication;
 propagate nonAttrs on StxApplication;
+
+function argRefExpr
+AG_Expr ::= nonAttrs::[String] name::String
+{
+  return if contains(name, nonAttrs) then nameExpr(name) 
+                                     else topDotExpr(name);
+}
 
 abstract production appConstraintFun
 top::StxApplication ::=
@@ -299,7 +312,7 @@ top::StxApplication ::=
     let retEqs::(Integer, [AG_Eq]) =
       foldr(tupleSectionDef(uniquePairName, true, knownLabels, _, _), (argEqs.1, []), retNamesTys)
     in
-    let apply::AG_Expr = appExpr(name, map((topDotExpr(_)), argNamesOnly)) in
+    let apply::AG_Expr = appExpr(name, map(argRefExpr(top.nonAttrs, _), argNamesOnly)) in
     (
       [
         localDeclEq (
@@ -351,7 +364,7 @@ top::StxApplication ::=
   local inhEqs::[AG_Eq] =
     map(
       \arg::(String, String, Type) -> 
-        defineEq(qualLHS(^termRef, arg.2), topDotExpr(arg.1)), argNamesTys);
+        defineEq(qualLHS(^termRef, arg.2), argRefExpr(top.nonAttrs, arg.1)), argNamesTys);
 
   -- synthesized attribute equations
   local retNamesTys::[(String, String, Type)] =

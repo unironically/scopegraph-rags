@@ -46,7 +46,7 @@ top::BranchList ::= b::Branch
       agCasesOne(agCase(
         agPatternUnderscore(),
         nilWhereClauseAG(),
-        abortExpr()
+        abortExpr("Match failure!")
       ))
     );
 }

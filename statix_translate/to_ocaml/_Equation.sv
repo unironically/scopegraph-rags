@@ -32,8 +32,9 @@ top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
 aspect production ntaEq
 top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
 {
+  local ntaName::String = case lhs of nameLHS(n) -> n | _ -> error("ntaEq.ntaName") end;
   local eq::String = "NtaEq(" ++
-    lhs.ocaml_lhs ++ ", " ++
+    str(ntaName) ++ ", " ++
     expr.ocaml_expr ++
   ")";
 
