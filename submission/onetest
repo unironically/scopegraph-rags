@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# expects first argument to be a path to a directory containing an ocaml test case program called `ag_test.ml`
+# e.g. ./ocamltest testcases/module_simple
+
+
+if [[ $# -ne 1 ]] ; then
+    echo "Expected one argument, the path of a directory containing a test case 'mstx.aterm'."
+    exit 0
+fi
+
+echo "Running test case in $1..."
+
+bash ministatixtest $1
+bash ocamltest $1

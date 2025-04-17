@@ -1,0 +1,14 @@
+Program (
+  DeclsCons(
+    DeclDef(
+      DefBindPar(
+        "a", 
+        ExprAdd(
+          ExprInt("1"), 
+          ExprInt("1")
+        )
+      )
+    ),
+    DeclsNil()
+  )
+)

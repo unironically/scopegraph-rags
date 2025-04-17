@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# run all test cases, based on dirs in testcases/
+
+for testcase in testcases/*/ ; do
+    bash onetest $testcase
+done

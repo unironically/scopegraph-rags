@@ -1,0 +1,16 @@
+#!/bin/bash
+
+ocamlbuild $1/ag_test.byte -I . &> /dev/null
+
+OUT=$(ocamlrun ag_test.byte 2>&1)
+
+if [[ $OUT == *"outer.ok = true"* ]]; then
+  echo "- Satisfiable by OCaml AG"
+elif [[ $OUT == *"outer.ok = false"* ]]; then
+  echo "- Unsatisfiable by OCaml AG"
+elif [[ $OUT == *"Cycle detected"* ]]; then
+  echo "- Cycle detected OCaml AG"
+fi
+
+rm ag_test.byte
+rm -r _build

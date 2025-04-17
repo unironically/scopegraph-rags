@@ -1,0 +1,13 @@
+#!/bin/bash
+
+OUT=$(ministatix.hs/statix check -I ministatix.hs/src lm $1/mstx.aterm)
+
+if [[ $OUT == *"Satisfiable"* ]]; then
+  echo "- Satisfiable by Ministatix"
+elif [[ $OUT == *"Unsatisfiable"* ]]; then
+  echo "- Unsatisfiable by Ministatix"
+elif [[ $OUT == *"Stuck"* ]]; then
+  echo "- Stuck in Ministatix"
+fi
+
+rm .statix
