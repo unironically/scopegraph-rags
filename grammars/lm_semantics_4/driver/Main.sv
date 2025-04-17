@@ -40,8 +40,12 @@ IO<Integer> ::= largs::[String]
                 --writeJastEquations(filePath, file, ast.jastEquations);
                 writeStatixAterm(fileName, ast.statix);
                 --printBinds(ast.binds);
-                --programOk(ast.ok);
+                
                 writeJava(fileName, ast.java);
+                
+                programOk(ast.ok);
+                printBinds(ast.binds);
+
                 return 0;
               }
               else do {

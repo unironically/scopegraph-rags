@@ -30,7 +30,7 @@ top::SGDatum ::= name::String mod::Decorated SGScope
 --------------------------------------------------
 
 function printDecl
-String ::= s::Decorated SGScope
+String ::= s::SGScope
 {
   return 
     case s.datum of

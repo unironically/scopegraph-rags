@@ -124,6 +124,18 @@ top::AG_Expr ::= msg::String
   top.ocaml_expr = "Abort(" ++ str(msg) ++ ")";
 }
 
+aspect production letExpr
+top::AG_Expr ::= name::String bind::AG_Expr body::AG_Expr
+{
+  top.ocaml_expr = "Let(" ++ str(name) ++ ", " ++ bind.ocaml_expr ++ ", " ++ body.ocaml_expr ++ ")";
+}
+
+aspect production ifExpr
+top::AG_Expr ::= c::AG_Expr e1::AG_Expr e2::AG_Expr
+{
+  top.ocaml_expr = "If(" ++ c.ocaml_expr ++ ", " ++ e1.ocaml_expr ++ ", " ++ e2.ocaml_expr ++ ")";
+}
+
 --------------------------------------------------
 
 synthesized attribute ocaml_exprs::[String] occurs on AG_Exprs;

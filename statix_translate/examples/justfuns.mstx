@@ -1,0 +1,9 @@
+tgt(p:path, @ret s:scope) :- p match {
+    End(x:scope):path                    -> s := x
+  | Edge(x:scope, l:label, xs:path):path -> tgt(xs,s)
+  }.
+
+src(p:path, @ret s:scope) :- p match { 
+    End(x:scope):path                     -> s := x
+  | Edge(x:scope, l:label, xs:path):path  -> s := x
+  }.

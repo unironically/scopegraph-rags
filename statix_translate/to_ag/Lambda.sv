@@ -20,7 +20,7 @@ top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
         caseExpr(
           nameExpr(arg),
           agCasesCons(
-            agCase (agPatternUnderscore(), wc.ag_whereClause, c.ag_expr),     -- match
+            agCase (agPatternUnderscore(), nilWhereClauseAG(), andExpr(wc.ag_expr, c.ag_expr)),     -- match
             agCasesCons(
               agCase(agPatternUnderscore(), nilWhereClauseAG(), falseExpr()), -- no match
               agCasesNil()
@@ -40,21 +40,22 @@ top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint
 
 --------------------------------------------------
 
-synthesized attribute ag_whereClause::AG_WhereClause occurs on WhereClause;
+attribute ag_expr occurs on WhereClause;
 
 attribute nonAttrs occurs on WhereClause;
 propagate nonAttrs on WhereClause;
 
+
 aspect production nilWhereClause
 top::WhereClause ::=
 {
-  top.ag_whereClause = nilWhereClauseAG();
+  top.ag_expr = trueExpr();
 }
 
 aspect production withWhereClause
 top::WhereClause ::= gl::GuardList
 {
-  top.ag_whereClause = withWhereClauseAG(gl.ag_expr);
+  top.ag_expr = gl.ag_expr;
 }
 
 --------------------------------------------------

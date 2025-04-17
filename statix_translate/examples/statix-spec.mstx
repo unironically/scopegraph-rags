@@ -32,9 +32,11 @@ decl(@inh s:scope, d:decl) :- d match {
         decls(s_mod, ds)
 
   | DeclImport(r:mod-ref) ->
-      {p:path, d:datum, s_mod:scope}
+
+      {p:path, d:datum, s_mod:scope, tgt_s:scope}
         mod-ref(s, r, p),
-        datumOf(p, d),
+        tgt(p, tgt_s), 
+        tgt_s -> d,
         d match { DatumMod(_:string, dscope:scope):datum -> s_mod := dscope },
         s -[ `IMP ]-> s_mod
 
@@ -57,9 +59,10 @@ expr(@inh s:scope, e:expr, @syn ty:type) :- e match {
       ty := TBool()
 
   | ExprVar(r:var-ref) ->
-      {p:path, d:datum}
+      {p:path, d:datum, tgt_s:scope}
         var-ref(s, r, p),
-        datumOf(p, d),
+        tgt(p, tgt_s), 
+        tgt_s -> d,
         d match { DatumVar(_:string, dty:type):datum -> ty := dty }
 
   | ExprAdd(e1:expr, e2:expr) ->
@@ -238,16 +241,8 @@ mod-ref(@inh s:scope, r:mod-ref, @syn p:path) :- r match {
       {mods:{path}, xmods:{path}, xmods':{path}}
         query s `LEX*`IMP? `MOD as mods,
         filter mods (DatumMod(x':string, _:scope):datum where x' == x) xmods,
-        min-refs(xmods, xmods'),
+        min xmods lexico( `MOD < `LEX, `MOD < `IMP, `VAR < `LEX, `VAR < `IMP, `IMP < `LEX ) xmods',
         only(xmods', p)
-
-  | ModQRef(r:mod-ref, x:string) -> 
-      {p_mod:path, s_mod:{path}, mods:{path}, xmods:{path}}
-        mod-ref(s, r, p_mod),
-        tgt(p_mod, s_mod),
-        query s_mod `MOD as mods,
-        filter mods (DatumMod(x':string, _:scope):datum where x' == x) xmods,
-        only(xmods, p)
 
   }.
 
@@ -259,16 +254,8 @@ var-ref(@inh s:scope, r:var-ref, @syn p:path) :- r match {
       {vars:{path}, xvars:{path}, xvars':{path}}
         query s `LEX* `IMP? `VAR as vars,
         filter vars (DatumVar(x':string, _:type):datum where x' == x) xvars,
-        min-refs(xvars, xvars'),
+        min xvars lexico( `MOD < `LEX, `MOD < `IMP, `VAR < `LEX, `VAR < `IMP, `IMP < `LEX ) xvars',
         only(xvars', p)
-
-  | VarQRef(r:mod-ref, x:string) -> 
-      {p_mod:path, s_mod:{path}, vars:{path}, xvars:{path}}
-        mod-ref(s, r, p_mod),
-        tgt(p_mod, s_mod),
-        query s_mod `VAR as vars,
-        filter vars (DatumVar(x':string, _:type):datum where x' == x) xvars,
-        only(xvars, p)
 
   }.
 
@@ -284,16 +271,6 @@ src(p:path, @ret s:scope) :- p match {
     End(x:scope):path                     -> s := x
   | Edge(x:scope, l:label, xs:path):path  -> s := x
   }.
-
-datumOf(p:path, @ret d:datum) :- 
-  {s:scope} 
-    tgt(p, s), 
-    s -> d.
-
-min-refs(z:{path}, @ret z':{path}) :-
-  min z lexico( `MOD < `LEX, `MOD < `IMP,
-                `VAR < `LEX, `VAR < `IMP,
-                `IMP < `LEX ) z'.
 
 foo(s:scope, p:path, @ret s_ret:scope) :-
   {p1:path, p2:path, s':scope}

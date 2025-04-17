@@ -30,7 +30,6 @@ aspect production program
 top::Main ::= ds::Decls
 {
   local glob::SGScope = mkScope(location=top.location);
-  glob.datum = datumNone(location=top.location);
   glob.lex = ds.lex_s;
   glob.imp = ds.imp_s;
   glob.mod = ds.mod_s;
@@ -75,8 +74,7 @@ occurs on Decl;
 aspect production declModule
 top::Decl ::= id::String ds::Decls
 {
-  local s_mod::SGScope = mkScope(location=top.location);
-  s_mod.datum = datumMod(id, s_mod, location=top.location);
+  local s_mod::SGScope = mkScopeDatum(datumMod(id, s_mod, location=top.location), location=top.location);
   s_mod.lex = top.s :: ds.lex_s;
   s_mod.imp = ds.imp_s;
   s_mod.var = ds.var_s;
@@ -179,7 +177,7 @@ top::Expr ::= r::VarRef
 
   local pair2::(Boolean, String, Type) =
     case d1 of
-    | datumVar(x, ty) -> (true, x, ^ty) -- QUESTION: why need ^ here?
+    | datumVar(x, ty) -> (true, x, ^ty)
     | _ -> (false, error("sadness"), error("sadness"))
     end;
   local ok2::Boolean = pair1.1;
@@ -380,7 +378,6 @@ aspect production exprFun
 top::Expr ::= d::ArgDecl e::Expr
 {
   local s_fun::SGScope = mkScope(location=top.location);
-  s_fun.datum = datumNone(location=top.location);
 
   s_fun.lex = top.s::e.lex_s;
   s_fun.imp = e.imp_s;
@@ -405,7 +402,6 @@ aspect production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
   local s_let::SGScope = mkScope(location=top.location);
-  s_let.datum = datumNone(location=top.location);
   s_let.lex = bs.lex_s_def ++ e.lex_s;
   s_let.imp = bs.imp_s_def ++ e.imp_s;
   s_let.var = bs.var_s_def ++ e.var_s;
@@ -427,7 +423,6 @@ aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
   local s_let::SGScope = mkScope(location=top.location);
-  s_let.datum = datumNone(location=top.location);
   s_let.lex = top.s :: (bs.lex_s ++ e.lex_s);
   s_let.imp = bs.imp_s ++ e.imp_s;
   s_let.var = bs.var_s ++ e.var_s;
@@ -447,7 +442,6 @@ aspect production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
   local s_let::SGScope = mkScope(location=top.location);
-  s_let.datum = datumNone(location=top.location);
   s_let.lex = top.s :: (bs.lex_s ++ e.lex_s);
   s_let.imp = bs.imp_s ++ e.imp_s;
   s_let.var = bs.var_s ++ e.var_s;
@@ -513,7 +507,6 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
   ss.s_def = top.s_def;
 
   local s_def2::SGScope = mkScope(location=top.location);
-  s_def2.datum = datumNone(location=top.location);
   s_def2.lex = top.s :: (s.lex_s_def ++ ss.lex_s);
   s_def2.imp = s.imp_s_def ++ ss.imp_s;
   s_def2.var = s.var_s_def ++ ss.var_s;
@@ -542,8 +535,7 @@ occurs on SeqBind;
 aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
 {
-  local s_var::SGScope = mkScope(location=top.location);
-  s_var.datum = datumVar(id, e.ty, location=top.location);
+  local s_var::SGScope = mkScopeDatum(datumVar(id, e.ty, location=top.location), location=top.location);
   s_var.lex = [];
   s_var.imp = [];
   s_var.mod = [];
@@ -565,8 +557,7 @@ top::SeqBind ::= id::String e::Expr
 aspect production seqBindTyped
 top::SeqBind ::= tyann::Type id::String e::Expr
 {
-  local s_var::SGScope = mkScope(location=top.location);
-  s_var.datum = datumVar(id, ^ty1, location=top.location); -- QUESTION: why need ^ here?
+  local s_var::SGScope = mkScopeDatum(datumVar(id, ^ty1, location=top.location), location=top.location);
   s_var.lex = [];
   s_var.imp = [];
   s_var.mod = [];
@@ -646,8 +637,9 @@ occurs on ParBind;
 aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
 {
-  local s_var::SGScope = mkScope(location=top.location);
-  s_var.datum = datumVar(id, e.ty, location=top.location);
+  local s_var::SGScope =
+    mkScopeDatum(datumVar(id, e.ty, location=top.location) , location=top.location);
+
   s_var.lex = [];
   s_var.imp = [];
   s_var.mod = [];
@@ -669,8 +661,7 @@ top::ParBind ::= id::String e::Expr
 aspect production parBindTyped
 top::ParBind ::= tyann::Type id::String e::Expr
 {
-  local s_var::SGScope = mkScope(location=top.location);
-  s_var.datum = datumVar(id, ^ty1, location=top.location); -- QUESTION: why need ^ here?
+  local s_var::SGScope = mkScopeDatum(datumVar(id, ^ty1, location=top.location), location=top.location);
   s_var.lex = [];
   s_var.imp = [];
   s_var.mod = [];
@@ -706,8 +697,7 @@ occurs on ArgDecl;
 aspect production argDecl
 top::ArgDecl ::= id::String tyann::Type
 {
-  local s_var::SGScope = mkScope(location=top.location);
-  s_var.datum = datumVar(id, ^ty1, location=top.location); -- QUESTION: why need ^ here?
+  local s_var::SGScope = mkScopeDatum(datumVar(id, ^ty1, location=top.location), location=top.location);
   s_var.lex = [];
   s_var.imp = [];
   s_var.mod = [];
@@ -784,6 +774,8 @@ attribute
   p
 occurs on ModRef;
 
+attribute resolution occurs on ModRef;
+
 aspect production modRef
 top::ModRef ::= name::String
 {
@@ -805,6 +797,8 @@ top::ModRef ::= name::String
   top.imp_s = [];
   top.var_s = [];
   top.mod_s = [];
+
+  top.resolution = [^(tgt(^p).2)];
 }
 
 --------------------------------------------------
@@ -815,25 +809,100 @@ attribute
   p
 occurs on VarRef;
 
+attribute resolution occurs on VarRef;
+
 aspect production varRef
 top::VarRef ::= name::String
 {
+
   local vars::[Path] = query(top.s, varRefDFA());  -- `LEX* IMP? VAR`
-  local xvars::[Path] = pathFilter((\d::SGDatum -> case d of datumVar(x, _) -> x == name | _ -> false end), vars);
-  local xvars_::[Path] = xvars; --minRefs(xvars); 
+
+  local xvars::[Path] = 
+    pathFilter((\d::SGDatum -> case d of datumVar(x, t) -> x == name && ^t == tInt() | _ -> false end), vars); -- not stuck!
+    -- pathFilter((\d::SGDatum -> case d of datumVar(x, t) -> ^t == tInt() && x == name | _ -> false end), vars); -- stuck!
+
+  local xvars_::(Boolean, [Path]) = minRefs(xvars);
 
   local pair1::(Boolean, Path) = 
-    if length(xvars_) == 1
-    then (true, head(xvars_))
+    if length(xvars_.2) == 1
+    then (true, head(xvars_.2))
     else (false, error("sadness"));
 
   local ok::Boolean = pair1.1;
   local p::Path = pair1.2;
 
-  top.ok <- ok;
+  top.ok <- xvars_.1 && ok;
   top.p = ^p; -- QUESTION: why need ^ here?
   top.lex_s = [];
   top.imp_s = [];
   top.var_s = [];
   top.mod_s = [];
+
+  top.resolution = [^(tgt(^p).2)];
+}
+
+--------------------------------------------------
+
+function compareTwoPaths
+Integer ::= p1::Path p2::Path
+{
+  return
+    case (p1, p2) of
+    | (pEnd(_), pEnd(_)) -> 0
+    | (pEnd(_), _)       -> -1
+    | (_, pEnd(_))       -> 1
+    | (pEdge(_, l1, xs1), pEdge(_, l2, xs2)) ->
+        let hComp::Integer =
+          case (l1, l2) of
+          | ("VAR", "VAR") -> 0
+          | ("VAR", "MOD") -> 0
+          | ("VAR", "IMP") -> -1
+          | ("VAR", "LEX") -> -1
+
+          | ("MOD", "MOD") -> 0
+          | ("MOD", "VAR") -> 0
+          | ("MOD", "IMP") -> -1
+          | ("MOD", "LEX") -> -1
+
+          | ("IMP", "IMP") -> 0
+          | ("IMP", "LEX") -> -1
+          | ("IMP", "VAR") -> 1
+          | ("IMP", "MOD") -> 1
+
+          | ("LEX", "LEX") -> 0
+          | ("LEX", "IMP") -> 1
+          | ("LEX", "VAR") -> 1
+          | ("LEX", "MOD") -> 1
+          end
+        in
+          if hComp == 0 then compareTwoPaths(^xs1, ^xs2)
+                        else hComp
+        end
+    end;
+}
+
+function minRefs
+(Boolean, [Path]) ::= ps::[Path]
+{
+  return
+    (
+      true,
+      if length(ps) == 0
+      then error("minRefs no paths")
+      else if length(ps) == 1
+      then ps
+      else
+        foldr (
+          (
+            \p::Path acc::[Path] ->
+              if compareTwoPaths(p, head(acc)) == -1
+              then [p]
+              else if compareTwoPaths(p, head(acc)) == 1
+              then acc
+              else p::acc
+          ),
+          [head(ps)], -- acc
+          tail(ps)    -- lst
+        )
+    );
 }

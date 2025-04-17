@@ -22,6 +22,7 @@ top::SGScope ::=
 abstract production mkScopeDatum
 top::SGScope ::= datum::SGDatum
 {
+  top.id = genInt();
   top.datum = ^datum;
 }
 
@@ -38,67 +39,6 @@ top::SGDatum ::= name::String
 abstract production datumNone
 top::SGDatum ::= 
 { top.name = ""; }
-
---------------------------------------------------
-
--- nwce
-
-
-production nwce
-FunResult<Boolean> ::= 
-  rx::Regex
-  s::Decorated SGScope 
-{
-  top.ret =
-    case rx of
-    | emptySet() -> true
-    | epsilon()  -> case s.datum of _ -> true end
-    | _          -> all(map(nwce(rx.deriv("LEX"), _), s.lex).ret).ret &&
-                    all(map(nwce(rx.deriv("IMP"), _), s.imp).ret).ret &&
-                    all(map(nwce(rx.deriv("VAR"), _), s.var).ret).ret &&
-                    all(map(nwce(rx.deriv("MOD"), _), s.mod).ret).ret
-    end;
-  top.ok = top.ret;
-}
-
-
-{-
-nwce :: Regex -> Scope -> Bool
-
-nwce \emptyset _ = true
-nwce \epsilon  s = case s.datum of _ -> true end
-nwce rx        s = all . map (nwce (deriv "LEX" rx)) s.lex &&
-                   all . map (nwce (deriv "VAR" rx)) s.var &&
-                   all . map (nwce (deriv "IMP" rx)) s.imp &&
-                   all . map (nwce (deriv "MOD" rx)) s.mod
--}
-
-
-{-
-nwce :: Regex -> Scope -> Bool
-
-nwce \emptyset _ = true
-nwce \epsilon s  = demand s.datum; true
-nwce rx s        = \forall l \in \mathcal{L} .
-                     \forall s' in s.l .
-                       nwce(s', deriv l rx)
-
-                 -- or --
-
-                 = \forall s' in s.lex . nwce(s', deriv LEX rx) &&
-                   \forall s' in s.imp . nwce(s', deriv IMP rx) &&
-                   \forall s' in s.var . nwce(s', deriv VAR rx) &&
-                   \forall s' in s.mod . nwce(s', deriv MOD rx)
--}
-
-
-{-
-nwce(_, \emptyset).
-nwce(s, \epsilon) :- demand s.datum
-nwce(s, rx) :- ?
--}
-
-
 
 --------------------------------------------------
 

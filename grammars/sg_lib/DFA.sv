@@ -16,7 +16,7 @@ top::Path ::= s::Decorated SGScope lab::String rest::Path
 
 --------------------------------------------------
 
-synthesized attribute paths::([Path] ::= Decorated SGScope (Boolean ::= SGDatum));
+synthesized attribute paths::([Path] ::= Decorated SGScope);
 synthesized attribute start::Decorated DFAState;
 
 nonterminal DFA with paths, start;
@@ -97,23 +97,22 @@ nonterminal DFAState with varT, modT, impT, lexT, paths;
 abstract production stateVar
 top::DFAState ::=
 {
-  top.paths = \cur::Decorated SGScope
-               D::(Boolean ::= SGDatum) ->
+  top.paths = \cur::Decorated SGScope ->
 
     let varRes::[Path] = 
-      let varPaths::[Path] = concat(map(top.varT.paths(_, D), cur.var)) in
+      let varPaths::[Path] = concat(map(top.varT.paths(_), cur.var)) in
         map ((\p::Path -> pEdge(cur, "VAR", p)), varPaths)
       end
     in
 
     let impRes::[Path] = 
-      let impPaths::[Path] = concat(map(top.impT.paths(_, D), cur.imp)) in
+      let impPaths::[Path] = concat(map(top.impT.paths(_), cur.imp)) in
         map ((\p::Path -> pEdge(cur, "IMP", p)), impPaths)
       end 
     in
 
     let lexRes::[Path] = 
-      let lexPaths::[Path] = concat(map(top.lexT.paths(_, D), cur.lex)) in
+      let lexPaths::[Path] = concat(map(top.lexT.paths(_), cur.lex)) in
         map ((\p::Path -> pEdge(cur, "LEX", p)), lexPaths)
       end
     in
@@ -128,23 +127,22 @@ top::DFAState ::=
 abstract production stateMod
 top::DFAState ::= 
 {
-  top.paths = \cur::Decorated SGScope
-               D::(Boolean ::= SGDatum) ->
+  top.paths = \cur::Decorated SGScope ->
 
     let modRes::[Path] = 
-      let modPaths::[Path] = concat(map(top.modT.paths(_, D), cur.mod)) in
+      let modPaths::[Path] = concat(map(top.modT.paths(_), cur.mod)) in
         map ((\p::Path -> pEdge(cur, "MOD", p)), modPaths)
       end
     in
 
     let impRes::[Path] = 
-      let impPaths::[Path] = concat(map(top.impT.paths(_, D), cur.imp)) in
+      let impPaths::[Path] = concat(map(top.impT.paths(_), cur.imp)) in
         map ((\p::Path -> pEdge(cur, "IMP", p)), impPaths)
       end 
     in
 
     let lexRes::[Path] = 
-      let lexPaths::[Path] = concat(map(top.lexT.paths(_, D), cur.lex)) in
+      let lexPaths::[Path] = concat(map(top.lexT.paths(_), cur.lex)) in
         map ((\p::Path -> pEdge(cur, "LEX", p)), lexPaths)
       end
     in
@@ -159,16 +157,12 @@ top::DFAState ::=
 abstract production stateFinal
 top::DFAState ::=
 {
-  top.paths = \cur::Decorated SGScope
-               D::(Boolean ::= SGDatum) -> 
-                if D(cur.datum) 
-                then [pEnd(cur)] 
-                else [];
+  top.paths = \cur::Decorated SGScope -> [pEnd(cur)];
 }
 
 abstract production stateSink
 top::DFAState ::=
-{ top.paths = \_ _ -> []; }
+{ top.paths = \_ -> []; }
 
 
 -----------------------------------------------------
@@ -179,8 +173,7 @@ function query
 [Path] ::= 
   start::Decorated SGScope 
   dfa::DFA 
-  D::(Boolean ::= SGDatum)
-{ return dfa.paths(start, D); }
+{ return dfa.paths(start); }
 
 function pathFilter
 [Path] ::= f::(Boolean ::= SGDatum) ps::[Path]

@@ -27,10 +27,10 @@ attribute ocaml_cases occurs on AG_Case;
 aspect production agCase
 top::AG_Case ::= pat::AG_Pattern wc::AG_WhereClause body::AG_Expr
 {
-  -- wc todo
   top.ocaml_cases := [
     "(" ++ 
       pat.ocaml_pattern ++ ", " ++
+      wc.ocaml_expr ++ ", " ++
       body.ocaml_expr ++
     ")"
   ];

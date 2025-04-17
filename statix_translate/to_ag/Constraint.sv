@@ -66,11 +66,10 @@ aspect production newConstraintDatum
 top::Constraint ::= name::String t::Term
 {
   local ref::AG_LHS = nameLHS(name);
-  local mkScopeApp::AG_Expr = termExpr("mkScopeDatum", [t.ag_expr]);
+  local mkScopeApp::AG_Expr = termExpr("mkScope", []);
 
   local labelLocals::[AG_Eq] = map (
-    \l::Label -> 
-      localDeclEq(name ++ "_" ++ l.name, listTypeAG(nameTypeAG("scope"))),
+    \l::Label -> localDeclEq(name ++ "_" ++ l.name, listTypeAG(nameTypeAG("scope"))),
     top.knownLabels
   );
 
@@ -80,10 +79,30 @@ top::Constraint ::= name::String t::Term
     top.knownLabels
   );
 
+  local datumRef::AG_Expr = nameExpr(name ++ "_datum");
+  local datumDef::AG_Eq = ntaEq (nameLHS(name ++ "_datum"), datumAndDataApp.1);
+  local dataDef::AG_Eq = datumAndDataApp.2;
+  local datumAndDataApp::(AG_Expr, AG_Eq) =
+    case t of
+    | constructorTerm(dname, termListCons(idt, t)) ->
+        (
+          termExpr(dname, [idt.ag_expr]),
+          defineEq(qualLHS(nameLHS(name ++ "_datum"), "data"), 
+            termExpr("ActualData" ++ dname, t.ag_exprs))
+        )
+    | _ -> error("newConstraintDatum.datumAndDataApp")
+    end; 
+
+  -- creating the scope and edge eqs
   local localDef::AG_Eq = defineEq (topDotLHS(name), nameExpr(name));
+  local scopeEq::AG_Eq = ntaEq (^ref, ^mkScopeApp);
+  local inhEq::AG_Eq = defineEq(qualLHS(^ref, "datum"), ^datumRef);
 
   top.equations = labelLocals ++ edgeInhs ++ 
-                  [ ^localDef, ntaEq (^ref, ^mkScopeApp) ];
+                  [ ^datumDef, ^dataDef,        -- data
+                    ^localDef, ^scopeEq, ^inhEq -- scope
+                  ];
+
   top.ag_expr = ^mkScopeApp;
 }
 
@@ -201,9 +220,24 @@ top::Constraint ::= set::String m::Matcher res::String
   local resLHS::AG_LHS = if contains(res, top.nonAttrs) then nameLHS(res)
                                                         else topDotLHS(res);
 
-  local filterApp::AG_Expr = appExpr ("path_filter", [m.ag_expr, ^setExpr]);
   top.equations = [ defineEq (^resLHS, ^filterApp) ];
   top.ag_expr = ^filterApp;
+
+  local filterApp::AG_Expr = appExpr ("path_filter", [^filterfun, ^setExpr]);
+
+  local filterfun::AG_Expr = 
+    lambdaExpr([("d_lam_arg", nameTypeAG("datum"))],
+      caseExpr(
+        nameExpr("d_lam_arg"),
+        agCasesCons(
+          agCase(m.ag_pattern_and_where.1, nilWhereClauseAG(), m.ag_pattern_and_where.2),
+          agCasesOne (
+            agCase(agPatternUnderscore(), nilWhereClauseAG(), falseExpr())
+          )
+        )
+      )
+    );
+
 }
 
 aspect production defConstraint
@@ -245,6 +279,7 @@ top::Constraint ::= t::Term bs::BranchList
 
   top.ag_expr = ^ag_match;
 
+  bs.matchExpr = t.ag_expr;
 }
 
 --------------------------------------------------
