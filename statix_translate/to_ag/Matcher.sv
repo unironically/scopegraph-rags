@@ -46,10 +46,7 @@ top::Matcher ::= p::Pattern wc::WhereClause
     case p.datumInhArgs of
     | just((lst, len)) -> foldr (
         \arg::(String, String, Integer, AG_Type) acc::AG_Expr ->
-          unsafeTracePrint(
-            acc.renameDatumArg(arg.1, arg.2, arg.3, len),
-            "hmmmmm... " ++ acc.pp ++ "\n"
-          ),
+          acc.renameDatumArg(arg.1, arg.2, arg.3, len),
         wc.ag_expr,
         lst
       )

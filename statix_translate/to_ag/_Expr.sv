@@ -65,7 +65,7 @@ top::AG_Expr ::= name::String
 {
   top.pp = "nameExpr(" ++ name ++ ")";
   top.renameDatumArg = \dt::String arg::String pos::Integer len::Integer -> 
-    if unsafeTracePrint(arg != name, "- found a name '" ++ name ++ "'\n") 
+    if arg != name
     then ^top
     else letExpr(arg ++ "__", caseExpr(demandExpr(nameExpr("d_lam_arg"), "data"),
           agCasesCons(

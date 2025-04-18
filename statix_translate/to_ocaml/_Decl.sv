@@ -71,7 +71,7 @@ top::AG_Decl ::=
   local nt::AG_Decl = ntM.fromJust;
   local syns::[(String, AG_Type)] = case nt of nonterminalDecl(_, _, syns) -> syns 
                                              | _ -> error("productionDecl.syns") end;
-  local synContribAttrs::[(String, AG_Type)] = unsafeTracePrint(getContribAttrs(syns), "syns for " ++ name ++ ": [" ++ implode(", ", map(fst, syns)) ++ "]\n");
+  local synContribAttrs::[(String, AG_Type)] = getContribAttrs(syns);
 
   -- all locally defined names
   local locals::([(String, AG_Type)], [String]) = getLocals(body);

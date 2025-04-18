@@ -10,6 +10,8 @@ imports statix_translate:to_ag;
 
 imports statix_translate:to_ocaml;
 
+imports statix_translate:to_silver;
+
 parser parse :: Module_c { statix_translate:lang:concretesyntax; }
 
 function main
@@ -40,6 +42,11 @@ IO<Integer> ::= largs::[String]
               writeFile(
                 "ocaml.txt",
                 ast.ag.ocaml_ag ++ "\n"
+              );
+
+              writeFile(
+                "silver.txt",
+                ast.ag.silver_ag ++ "\n"
               );
 
               return 0;
