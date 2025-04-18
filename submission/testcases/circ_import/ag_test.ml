@@ -1,4 +1,5 @@
-open Ag_eval
+open Ag_syntax
+open Ag_lm_spec
 
 let circ_import: term =
   TermT("Program", [
@@ -39,4 +40,4 @@ let circ_import: term =
     ]))
   ])
 
-let () = assert(okTrueState circ_import)
+let () = assert(AG_Full.okTrueState circ_import)

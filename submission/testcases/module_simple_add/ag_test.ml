@@ -1,4 +1,5 @@
-open Ag_eval
+open Ag_syntax
+open Ag_lm_spec
 
 let mod_local_term: term =
   TermT("Program", [
@@ -25,4 +26,4 @@ let mod_local_term: term =
     ]))
   ])
 
-let () = assert(okTrueState mod_local_term)
+let () = assert(AG_Full.okTrueState mod_local_term)

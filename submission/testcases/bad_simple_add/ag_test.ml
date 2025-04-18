@@ -1,4 +1,5 @@
-open Ag_eval
+open Ag_syntax
+open Ag_lm_spec
 
 let bad_simple_add: term =
   TermT("Program", [
@@ -16,4 +17,4 @@ let bad_simple_add: term =
     ]))
   ])
 
-let () = assert(okFalseState bad_simple_add)
+let () = assert(AG_Full.okFalseState bad_simple_add)
