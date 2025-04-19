@@ -19,7 +19,7 @@ top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
 }
 
 abstract production ntaEq
-top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
+top::AG_Eq ::= lhs::AG_LHS ty::AG_Type expr::AG_Expr
 {
   top.pp = "ntaEq(" ++ lhs.pp ++ ", " ++ expr.pp ++ ")";
 }

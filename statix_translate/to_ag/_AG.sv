@@ -15,6 +15,8 @@ top::AG ::=
   globs::AG_Decls
   prods::AG_Decls
   funs::AG_Decls
+  inhs::[(String, AG_Type)]
+  syns::[(String, AG_Type)]
 {
   top.nts   = ^nts;
   top.globs = ^globs;

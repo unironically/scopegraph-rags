@@ -71,7 +71,7 @@ aspect production labelPattern
 top::Pattern ::= lab::Label
 {
   top.ag_pattern = agPatternApp(lab.name, []);
-  top.ag_type = nameTypeAG("Label");
+  top.ag_type = labelTypeAG();
   top.datumInhArgs = nothing();
 }
 
@@ -79,7 +79,7 @@ aspect production labelArgsPattern
 top::Pattern ::= lab::Label p::Pattern
 {
   top.ag_pattern = agPatternApp(lab.name, [p.ag_pattern]);
-  top.ag_type = nameTypeAG("Label");
+  top.ag_type = labelTypeAG();
   top.datumInhArgs = nothing();
 }
 

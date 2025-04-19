@@ -27,14 +27,14 @@ Maybe<ConstructorInfo> ::= name::String decls::[ConstructorInfo]
 }
 
 global edgeConstructor::ConstructorInfo = constructor (
-  "Edge", nameType("path"), 
-  [nameType("scope"), nameType("label"), nameType("path")],
+  "Edge", pathType(), 
+  [scopeType(), labelType(), pathType()],
   bogusLoc()
 );
 
 global endConstructor::ConstructorInfo = constructor (
-  "End", nameType("path"), 
-  [nameType("scope")],
+  "End", pathType(), 
+  [scopeType()],
   bogusLoc()
 );
 
@@ -234,19 +234,19 @@ attribute termTy occurs on TypeAnn;
 aspect production nameTypeAnn
 top::TypeAnn ::= name::String
 {
-  top.termTy = just(nameType(name));
+  top.termTy = just(toType(^top));
 }
 
 aspect production listTypeAnn
 top::TypeAnn ::= ty::TypeAnn
 {
-  top.termTy = just(listType(ty.termTy.fromJust));
+  top.termTy = just(toType(^top));
 }
 
 aspect production setTypeAnn
 top::TypeAnn ::= ty::TypeAnn
 {
-  top.termTy = just(setType(ty.termTy.fromJust));
+  top.termTy = just(toType(^top));
 }
 
 --------------------------------------------------
@@ -262,13 +262,13 @@ attribute termTy occurs on Term;
 aspect production labelTerm
 top::Term ::= lab::Label
 {
-  top.termTy = just(nameType("label"));
+  top.termTy = just(labelType());
 }
 
 aspect production labelArgTerm
 top::Term ::= lab::Label t::Term
 {
-  top.termTy = just(nameType("label"));
+  top.termTy = just(labelType());
 }
 
 aspect production constructorTerm
@@ -346,7 +346,7 @@ top::Term ::= ts::TermList
 aspect production stringTerm
 top::Term ::= s::String
 {
-  top.termTy = just(nameType("string"));
+  top.termTy = just(stringType());
 }
 
 --------------------------------------------------
@@ -500,13 +500,13 @@ attribute termTy occurs on Pattern;
 aspect production labelPattern
 top::Pattern ::= lab::Label
 {
-  top.termTy = just(nameType("label"));
+  top.termTy = just(labelType());
 }
 
 aspect production labelArgsPattern
 top::Pattern ::= lab::Label p::Pattern
 {
-  top.termTy = just(nameType("label"));
+  top.termTy = just(labelType());
 }
 
 aspect production namePattern

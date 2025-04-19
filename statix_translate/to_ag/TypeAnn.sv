@@ -10,6 +10,42 @@ top::TypeAnn ::= name::String
   top.ag_type = nameTypeAG(name);
 }
 
+aspect production stringType
+top::Type ::=
+{
+  top.ag_type = stringTypeAG();
+}
+
+aspect production boolType
+top::Type ::=
+{
+  top.ag_type = boolTypeAG();
+}
+
+aspect production scopeType
+top::Type ::=
+{
+  top.ag_type = scopeTypeAG();
+}
+
+aspect production datumType
+top::Type ::=
+{
+  top.ag_type = datumTypeAG();
+}
+
+aspect production labelType
+top::Type ::=
+{
+  top.ag_type = labelTypeAG();
+}
+
+aspect production pathType
+top::Type ::=
+{
+  top.ag_type = pathTypeAG();
+}
+
 aspect production listTypeAnn
 top::TypeAnn ::= ty::TypeAnn
 {

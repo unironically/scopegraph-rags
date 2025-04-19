@@ -30,7 +30,7 @@ top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
 }
 
 aspect production ntaEq
-top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
+top::AG_Eq ::= lhs::AG_LHS ty::AG_Type expr::AG_Expr
 {
   local ntaName::String = case lhs of nameLHS(n) -> n | _ -> error("ntaEq.ntaName") end;
   local eq::String = "NtaEq(" ++

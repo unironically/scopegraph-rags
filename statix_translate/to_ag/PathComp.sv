@@ -9,7 +9,7 @@ top::PathComp ::= lts::LabelLTs
 {
   top.ag_expr = 
     lambdaExpr (
-      [("l", nameTypeAG("Label")), ("r", nameTypeAG("Label"))],
+      [("l", labelTypeAG()), ("r", labelTypeAG())],
       caseExpr (
         tupleExpr([nameExpr("l"), nameExpr("r")]),
         lts.ag_cases

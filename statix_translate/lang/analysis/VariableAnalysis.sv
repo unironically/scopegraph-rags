@@ -2,9 +2,21 @@ grammar statix_translate:lang:analysis;
 
 --------------------------------------------------
 
-global builtinTypeNames::[String] = [
-  "scope", "datum", "string", "path"
+global builtinTypeNames::[(String, Type)] = [
+  ("scope", scopeType()), 
+  ("datum", datumType()),
+  ("path", pathType()),
+  ("string", stringType()), 
+  ("boolean", boolType())
 ];
+
+fun findBuiltinTy Maybe<(String, Type)> ::= name::String tys::[(String, Type)] =
+  case tys of
+  | [] -> nothing()
+  | (id, ty)::_ when id == name -> just((id, ty))
+  | _::t -> findBuiltinTy(name, t)
+  end;
+
 
 --------------------------------------------------
 
@@ -60,11 +72,13 @@ function lookupType
 Maybe<Type> ::= name::String preds::[PredInfo]
 {
   return
-    if contains(name, builtinTypeNames)
-    then just(nameType(name))
-    else if lookupSyntaxPred(name, preds).isJust
-         then just(nameType(name))
-         else nothing();
+    let findTy::Maybe<(String, Type)> = findBuiltinTy(name, builtinTypeNames) in
+      if findTy.isJust
+      then just(findTy.fromJust.2)
+      else if lookupSyntaxPred(name, preds).isJust
+          then just(nameType(name))
+          else nothing()
+    end;
 }
 
 --------------------------------------------------
@@ -543,7 +557,7 @@ top::Constraint ::= name::String t::Term
 {
   local nameMaybe::Maybe<(String, Type)> = lookupVar(name, top.nameTyDecls);
 
-  top.freeVarsDefined <- [(name, nameType("scope"))];
+  top.freeVarsDefined <- [(name, scopeType())];
 
   top.errs <- if !nameMaybe.isJust
               then [ noSuchNameError(name, top.location) ]
@@ -555,7 +569,7 @@ top::Constraint ::= name::String
 {
   local nameMaybe::Maybe<(String, Type)> = lookupVar(name, top.nameTyDecls);
 
-  top.freeVarsDefined <- [(name, nameType("scope"))];
+  top.freeVarsDefined <- [(name, scopeType())];
 
   top.errs <- if !nameMaybe.isJust
               then [ noSuchNameError(name, top.location) ]

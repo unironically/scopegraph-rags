@@ -25,12 +25,12 @@ top::AG_Decl ::=
     map (
       \p::(String, AG_Type, [AG_Expr]) ->
         case p.2 of
-        | listTypeAG(nameTypeAG("scope")) -> 
+        | listTypeAG(scopeTypeAG()) -> 
             "AttrEq(" ++
               qualLHS(nameLHS("top"), p.1).ocaml_lhs ++ ", " ++
               combineEdgeContribs(p.3) ++
             ")"
-        | nameTypeAG("Boolean") ->
+        | boolTypeAG() ->
             "AttrEq(" ++
               qualLHS(nameLHS("top"), p.1).ocaml_lhs ++ ", " ++
               combineBoolContribs(p.3) ++
@@ -87,12 +87,12 @@ top::AG_Decl ::=
     map (
       \p::(String, AG_Type, [AG_Expr]) ->
         case p.2 of
-        | listTypeAG(nameTypeAG("scope")) -> 
+        | listTypeAG(scopeTypeAG()) -> 
             "AttrEq(" ++
               qualLHS(nameLHS("top"), p.1).ocaml_lhs ++ ", " ++
               combineEdgeContribs(p.3) ++ 
             ")"
-        | nameTypeAG("Boolean") ->
+        | boolTypeAG() ->
             "AttrEq(" ++
               qualLHS(nameLHS("top"), p.1).ocaml_lhs ++ ", " ++
               combineBoolContribs(p.3) ++ 
@@ -163,8 +163,8 @@ function getLocals
     | localDeclEq(l, ty)::t ->
         let rec::([(String, AG_Type)], [String]) = getLocals(t) in
           case ty of
-          | listTypeAG(nameTypeAG("scope")) -> ((l, ^ty)::rec.1, rec.2)
-          | nameTypeAG("Boolean")           -> ((l, ^ty)::rec.1, rec.2)
+          | listTypeAG(scopeTypeAG()) -> ((l, ^ty)::rec.1, rec.2)
+          | boolTypeAG()           -> ((l, ^ty)::rec.1, rec.2)
           | _ -> (rec.1, l::rec.2)
           end
         end
@@ -178,8 +178,8 @@ function getContribAttrs
   return 
     case attrs of
     | [] -> []
-    | (n, ty)::t -> case ty of listTypeAG(nameTypeAG("scope")) -> (n, ty)::getContribAttrs(t)
-                             | nameTypeAG("Boolean") -> (n, ty)::getContribAttrs(t)
+    | (n, ty)::t -> case ty of listTypeAG(scopeTypeAG()) -> (n, ty)::getContribAttrs(t)
+                             | boolTypeAG() -> (n, ty)::getContribAttrs(t)
                              | _ -> getContribAttrs(t)
                     end
     end;

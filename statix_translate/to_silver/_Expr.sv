@@ -62,8 +62,8 @@ aspect production caseExpr
 top::AG_Expr ::= e::AG_Expr cases::AG_Cases
 {
   top.silver_expr = "case " ++ e.silver_expr ++ " of " ++ 
-                      implode("|", cases.silver_cases) ++
-                    "end";
+                      implode(" | ", cases.silver_cases) ++
+                    " end";
 }
 
 aspect production demandExpr

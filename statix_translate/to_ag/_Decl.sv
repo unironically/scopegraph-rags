@@ -89,3 +89,14 @@ AG_Decls ::= l::AG_Decls r::AG_Decls
     | agDeclsNil()      -> ^r
     end;
 }
+
+function agAttrsUnion
+[(String, AG_Type)] ::= l::[(String, AG_Type)] r::[(String, AG_Type)]
+{
+  return 
+    unionBy(
+      \lAttr::(String, AG_Type) rAttr::(String, AG_Type) -> lAttr.1 == rAttr.1,
+      l, 
+      r
+    );
+}

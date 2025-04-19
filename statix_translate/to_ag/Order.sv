@@ -9,7 +9,7 @@ top::Order ::= name::String pathComp::PathComp
 {
   top.ag_globals := agDeclsOne(globalDecl (
     name,
-    funTypeAG(nameTypeAG("Label"), funTypeAG(nameTypeAG("Label"), nameTypeAG("Integer"))),
+    funTypeAG(labelTypeAG(), funTypeAG(labelTypeAG(), intTypeAG())),
     pathComp.ag_expr
   ));
 }

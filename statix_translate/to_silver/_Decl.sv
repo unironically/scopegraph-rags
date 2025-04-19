@@ -11,7 +11,7 @@ top::AG_Decl ::=
   args::[(String, AG_Type)] 
   body::[AG_Eq]
 {
-  top.silver_decl = "function " ++ name ++ " " ++ 
+  top.silver_decl = "function " ++ name ++ "\n" ++ 
     retTy.silver_type ++ " ::= " ++ 
     implode(" ", map(\arg::(String, AG_Type) -> arg.1 ++ "::" ++ 
                                                 arg.2.silver_type, args)) ++ 
@@ -27,7 +27,7 @@ top::AG_Decl ::=
   args::[(String, AG_Type)]
   body::[AG_Eq]
 {
-  top.silver_decl = "production " ++ name ++ " " ++ 
+  top.silver_decl = "abstract production " ++ name ++ "\n" ++ 
     "top::" ++ ty.silver_type ++ " ::= " ++ 
     implode(" ", map(\arg::(String, AG_Type) -> arg.1 ++ "::" ++ 
                                                 arg.2.silver_type, args)) ++ 

@@ -10,6 +10,48 @@ top::AG_Type ::= name::String
   top.ocaml_type = name;
 }
 
+aspect production stringTypeAG
+top::AG_Type ::=
+{
+  top.ocaml_type = "string";
+}
+
+aspect production boolTypeAG
+top::AG_Type ::=
+{
+  top.ocaml_type = "bool";
+}
+
+aspect production intTypeAG
+top::AG_Type ::=
+{
+  top.ocaml_type = "integer";
+}
+
+aspect production scopeTypeAG
+top::AG_Type ::=
+{
+  top.ocaml_type = "scope";
+}
+
+aspect production datumTypeAG
+top::AG_Type ::=
+{
+  top.ocaml_type = "datum";
+}
+
+aspect production pathTypeAG
+top::AG_Type ::=
+{
+  top.ocaml_type = "path";
+}
+
+aspect production labelTypeAG
+top::AG_Type ::=
+{
+  top.ocaml_type = "label";
+}
+
 aspect production listTypeAG
 top::AG_Type ::= ty::AG_Type
 {

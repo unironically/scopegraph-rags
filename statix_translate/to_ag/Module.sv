@@ -6,8 +6,10 @@ monoid attribute ag_nts::AG_Decls with agDeclsNil(), agDeclsCat occurs on Module
 monoid attribute ag_globals::AG_Decls with agDeclsNil(), agDeclsCat occurs on Module;
 monoid attribute ag_prods::AG_Decls with agDeclsNil(), agDeclsCat occurs on Module;
 monoid attribute ag_funs::AG_Decls with agDeclsNil(), agDeclsCat occurs on Module;
+monoid attribute ag_inh_attrs::[(String, AG_Type)] with [], agAttrsUnion occurs on Module;
+monoid attribute ag_syn_attrs::[(String, AG_Type)] with [], agAttrsUnion occurs on Module;
 
-propagate ag_nts, ag_globals, ag_prods, ag_funs on Module;
+propagate ag_nts, ag_globals, ag_prods, ag_funs, ag_inh_attrs, ag_syn_attrs on Module;
 
 synthesized attribute ag::AG occurs on Module;
 
@@ -15,7 +17,8 @@ aspect production module
 top::Module ::= ds::Imports ords::Orders preds::Predicates
 { 
   preds.globalNames = ords.orderNames;
-  top.ag = ag(top.ag_nts, top.ag_globals, top.ag_prods, top.ag_funs);
+  top.ag = ag(top.ag_nts, top.ag_globals, top.ag_prods, top.ag_funs, 
+              top.ag_inh_attrs, top.ag_syn_attrs);
 }
  
 --------------------------------------------------
@@ -68,6 +71,12 @@ propagate ag_prods on Predicates;
 attribute ag_funs occurs on Predicates;
 propagate ag_funs on Predicates;
 
+attribute ag_inh_attrs occurs on Predicates;
+propagate ag_inh_attrs on Predicates;
+
+attribute ag_syn_attrs occurs on Predicates;
+propagate ag_syn_attrs on Predicates;
+
 inherited attribute globalNames::[String] occurs on Predicates;
 propagate globalNames on Predicates;
 
@@ -93,35 +102,47 @@ propagate ag_funs on Predicate;
 attribute globalNames occurs on Predicate;
 propagate globalNames on Predicate;
 
+attribute ag_inh_attrs occurs on Predicate;
+propagate ag_inh_attrs on Predicate;
+
+attribute ag_syn_attrs occurs on Predicate;
+propagate ag_syn_attrs on Predicate;
+
 synthesized attribute ag_decl::AG_Decl occurs on Predicate;
 
 aspect production syntaxPredicate 
 top::Predicate ::= name::String nameLst::NameList t::String bs::ProdBranchList
 {
-  top.ag_decl = 
-    let toAGNameType::((String, AG_Type) ::= (String, Type, Integer)) =
-      \p::(String, Type, Integer) -> (p.1, p.2.ag_type)
-    in
-    let inhsAG::[(String, AG_Type)] = map(toAGNameType, nameLst.inhs) in
-      nonterminalDecl (
-         name,
-         inhsAG,
-         ("ok", nameTypeAG("Boolean")) :: (map(toAGNameType, nameLst.syns) ++ edgeAttrsForInhScopes(inhsAG, top.knownLabels))
-      )
-    end end;
+  -- inherited attributes
+  local inhs::[(String, AG_Type)] = map (
+    \p::(String, Type, Integer) -> (p.1, p.2.ag_type),
+    nameLst.inhs
+  );
+
+  -- synthesized attributes
+  local syns::[(String, AG_Type)] = ("ok", boolTypeAG()) :: 
+    (map(\p::(String, Type, Integer) -> (p.1, p.2.ag_type), nameLst.syns) ++ 
+    edgeAttrsForInhScopes(inhs, top.knownLabels));
+
+  top.ag_decl = nonterminalDecl (name, inhs, syns);
 
   top.ag_nts <- agDeclsOne(top.ag_decl);
 
+  top.ag_inh_attrs <- inhs;
+
+  top.ag_syn_attrs <- syns;
+
   bs.nonAttrs = top.globalNames;
 }
+
 
 function edgeAttrsForInhScopes
 [(String, AG_Type)] ::= inhs::[(String, AG_Type)] labs::[Label]
 {
   return
     case inhs of
-    | (s, nameTypeAG("scope"))::t -> 
-        map((\l::Label -> (s ++ "_" ++ l.name, listTypeAG(nameTypeAG("scope")))), labs) ++ 
+    | (s, scopeTypeAG())::t -> 
+        map((\l::Label -> (s ++ "_" ++ l.name, listTypeAG(scopeTypeAG()))), labs) ++ 
         edgeAttrsForInhScopes(t, labs)
     | _::t -> edgeAttrsForInhScopes(t, labs)
     | [] -> []
@@ -138,25 +159,25 @@ top::Predicate ::= name::String params::NameList c::Constraint
     let rets::[(String, Type, Integer)] = params.syns in
     let retTys::[Type] = map(\p::(String, Type, Integer) -> fst(snd(p)), rets) in
     
-    let labAGTysTemplate::[AG_Type] = map(\l::Label -> nameTypeAG("scope"), top.knownLabels) in
+    let labAGTysTemplate::[AG_Type] = map(\l::Label -> scopeTypeAG(), top.knownLabels) in
     let labAGTys::[AG_Type] = labTysForScopeArgs(args, labAGTysTemplate) in
     let retAGTys::[AG_Type] = map((.ag_type), retTys) in
 
     if null(labAGTys ++ retAGTys)
     then (
-      nameTypeAG("Boolean"),
+      boolTypeAG(),
       topDotExpr("ok"),
-      [localDeclEq("ok", nameTypeAG("Boolean"))]
+      [localDeclEq("ok", boolTypeAG())]
     )
     else (
-      tupleTypeAG (nameTypeAG("Boolean") :: (labAGTys ++ retAGTys)),
+      tupleTypeAG (boolTypeAG() :: (labAGTys ++ retAGTys)),
       tupleExpr(
         topDotExpr("ok") :: (
           labRetsForScopeArgs(args, top.knownLabels) ++
           map(topDotExpr(_), map(fst, params.syns))
         )
       ),
-      localDeclEq("ok", nameTypeAG("Boolean"))::(
+      localDeclEq("ok", boolTypeAG())::(
         localDeclsForScopeArgs(args, top.knownLabels) ++
         map(\p::(String, Type, Integer) -> localDeclEq(p.1, p.2.ag_type), params.syns)
       )
@@ -187,7 +208,7 @@ function labTysForScopeArgs
   return
     case args of
     | [] -> []
-    | (_, nameType("scope"), _)::t ->
+    | (_, scopeType(), _)::t ->
         map(listTypeAG(_), labTys) ++
         labTysForScopeArgs(t, labTys)
     | _::t -> labTysForScopeArgs(t, labTys)
@@ -200,7 +221,7 @@ function labRetsForScopeArgs
   return
     case args of
     | [] -> []
-    | (s, nameType("scope"), _)::t ->
+    | (s, scopeType(), _)::t ->
         map(\l::Label -> topDotExpr(s ++ "_" ++ l.name), labTys) ++
         labRetsForScopeArgs(t, labTys)
     | _::t -> labRetsForScopeArgs(t, labTys)
@@ -213,8 +234,8 @@ function localDeclsForScopeArgs
   return
     case args of
     | [] -> []
-    | (s, nameType("scope"), _)::t ->
-        map(\l::Label -> localDeclEq(s ++ "_" ++ l.name, listTypeAG(nameTypeAG("scope"))), labTys) ++
+    | (s, scopeType(), _)::t ->
+        map(\l::Label -> localDeclEq(s ++ "_" ++ l.name, listTypeAG(scopeTypeAG())), labTys) ++
         localDeclsForScopeArgs(t, labTys)
     | _::t -> localDeclsForScopeArgs(t, labTys)
     end;

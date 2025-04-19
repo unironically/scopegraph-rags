@@ -12,6 +12,48 @@ top::AG_Type ::= name::String
   top.pp = "nameTypeAG(" ++ name ++ ")";
 }
 
+abstract production stringTypeAG
+top::AG_Type ::=
+{
+  top.pp = "stringTypeAG()";
+}
+
+abstract production intTypeAG
+top::AG_Type ::=
+{
+  top.pp = "intTypeAG()";
+}
+
+abstract production boolTypeAG
+top::AG_Type ::=
+{
+  top.pp = "boolTypeAG()";
+}
+
+abstract production scopeTypeAG
+top::AG_Type ::=
+{
+  top.pp = "scopeTypeAG()";
+}
+
+abstract production datumTypeAG
+top::AG_Type ::=
+{
+  top.pp = "datumTypeAG()";
+}
+
+abstract production pathTypeAG
+top::AG_Type ::=
+{
+  top.pp = "pathTypeAG()";
+}
+
+abstract production labelTypeAG
+top::AG_Type ::=
+{
+  top.pp = "labelTypeAG()";
+}
+
 abstract production listTypeAG
 top::AG_Type ::= ty::AG_Type
 {

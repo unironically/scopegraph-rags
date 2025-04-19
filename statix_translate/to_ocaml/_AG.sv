@@ -10,6 +10,8 @@ top::AG ::=
   globs::AG_Decls
   prods::AG_Decls
   funs::AG_Decls
+  inhs::[(String, AG_Type)]
+  syns::[(String, AG_Type)]
 {
   top.ocaml_ag = 
     implode(";\n", nts.ocaml_decls ++ globs.ocaml_decls ++

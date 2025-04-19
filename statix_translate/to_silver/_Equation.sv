@@ -23,9 +23,10 @@ top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
 }
 
 aspect production ntaEq
-top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
+top::AG_Eq ::= lhs::AG_LHS ty::AG_Type expr::AG_Expr
 {
-  top.silver_eq = lhs.silver_lhs ++ " = " ++ expr.silver_expr ++ ";";
+  top.silver_eq = "local " ++ lhs.silver_lhs ++ "::" ++ ty.nta_type ++ 
+                  " = " ++ expr.silver_expr ++ ";";
 }
 
 aspect production returnEq

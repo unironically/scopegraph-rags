@@ -65,22 +65,23 @@ top::Constraint ::= t1::Term t2::Term
 aspect production newConstraintDatum
 top::Constraint ::= name::String t::Term
 {
-  local ref::AG_LHS = nameLHS(name);
+  local ntaName::String = "_" ++ name ++ "_";
+  local ref::AG_LHS = nameLHS(ntaName);
   local mkScopeApp::AG_Expr = termExpr("mkScope", []);
 
   local labelLocals::[AG_Eq] = map (
-    \l::Label -> localDeclEq(name ++ "_" ++ l.name, listTypeAG(nameTypeAG("scope"))),
+    \l::Label -> localDeclEq(name ++ "_" ++ l.name, listTypeAG(scopeTypeAG())),
     top.knownLabels
   );
 
   local edgeInhs::[AG_Eq] = map (
     \l::Label -> 
-      defineEq(qualLHS(nameLHS(name), l.name), topDotExpr(name ++ "_" ++ l.name)),
+      defineEq(qualLHS(nameLHS(ntaName), l.name), topDotExpr(name ++ "_" ++ l.name)),
     top.knownLabels
   );
 
   local datumRef::AG_Expr = nameExpr(name ++ "_datum");
-  local datumDef::AG_Eq = ntaEq (nameLHS(name ++ "_datum"), datumAndDataApp.1);
+  local datumDef::AG_Eq = ntaEq (nameLHS(name ++ "_datum"), datumTypeAG(), datumAndDataApp.1);
   local dataDef::AG_Eq = datumAndDataApp.2;
   local datumAndDataApp::(AG_Expr, AG_Eq) =
     case t of
@@ -94,8 +95,8 @@ top::Constraint ::= name::String t::Term
     end; 
 
   -- creating the scope and edge eqs
-  local localDef::AG_Eq = defineEq (topDotLHS(name), nameExpr(name));
-  local scopeEq::AG_Eq = ntaEq (^ref, ^mkScopeApp);
+  local localDef::AG_Eq = defineEq (topDotLHS(name), nameExpr(ntaName));
+  local scopeEq::AG_Eq = ntaEq (^ref, scopeTypeAG(), ^mkScopeApp);
   local inhEq::AG_Eq = defineEq(qualLHS(^ref, "datum"), ^datumRef);
 
   top.equations = labelLocals ++ edgeInhs ++ 
@@ -114,7 +115,7 @@ top::Constraint ::= name::String
   
   local labelLocals::[AG_Eq] = map (
     \l::Label -> 
-      localDeclEq(name ++ "_" ++ l.name, listTypeAG(nameTypeAG("scope"))),
+      localDeclEq(name ++ "_" ++ l.name, listTypeAG(scopeTypeAG())),
     top.knownLabels
   );
 
@@ -127,7 +128,7 @@ top::Constraint ::= name::String
   local localDef::AG_Eq = defineEq (topDotLHS(name), nameExpr(name));
 
   top.equations = labelLocals ++ edgeInhs ++ 
-                  [ ^localDef, ntaEq (^ref, ^mkScopeApp) ];
+                  [ ^localDef, ntaEq (^ref, scopeTypeAG(), ^mkScopeApp) ];
   top.ag_expr = ^mkScopeApp;
 }
 
@@ -226,7 +227,7 @@ top::Constraint ::= set::String m::Matcher res::String
   local filterApp::AG_Expr = appExpr ("path_filter", [^filterfun, ^setExpr]);
 
   local filterfun::AG_Expr = 
-    lambdaExpr([("d_lam_arg", nameTypeAG("datum"))],
+    lambdaExpr([("d_lam_arg", datumTypeAG())],
       caseExpr(
         nameExpr("d_lam_arg"),
         agCasesCons(
@@ -265,7 +266,7 @@ top::Constraint ::= t::Term bs::BranchList
              in
                (n, nameFromEnv.fromJust.2.ag_type)
              end
-    | []  -> ("ok", nameTypeAG("Boolean"))
+    | []  -> ("ok", boolTypeAG())
     | _   -> error("matchConstraint.nameTyRet")
     end;
   
@@ -353,8 +354,8 @@ top::StxApplication ::=
         localDeclEq (
           uniquePairName,
           if null(retNamesTys) 
-            then nameTypeAG("Boolean")
-            else tupleTypeAG (nameTypeAG("Boolean")::
+            then boolTypeAG()
+            else tupleTypeAG (boolTypeAG()::
                               map((.ag_type), map(\p::(String, String, Type) -> p.3, retNamesTys)))
         ),
         defineEq (
@@ -417,7 +418,7 @@ top::StxApplication ::=
     let scopeArgs::[(String, String, Type)] = -- info for all args that are scopes
       filter (
         \p::(String, String, Type) -> 
-          case p.3 of | nameType("scope") -> true | _ -> false end,
+          case p.3 of | scopeType() -> true | _ -> false end,
         argNamesTys)
     in
       concat (map (
@@ -464,7 +465,7 @@ function tupleSectionDef
 {
   local offset::Integer = 
     if isRet then 1
-    else case item.3 of nameType("scope") -> length(tmpLabelSet) | _ -> 0 end;
+    else case item.3 of scopeType() -> length(tmpLabelSet) | _ -> 0 end;
 
   local nextIdx::Integer = acc.1 + offset;
 
@@ -472,7 +473,7 @@ function tupleSectionDef
 
   local labelEqs::[AG_Eq] = 
     case item.3 of
-      nameType("scope") when !isRet -> 
+      scopeType() when !isRet -> 
         foldr (
           (\lab::Label acc::(Integer, [AG_Eq]) ->
               (acc.1 - 1,

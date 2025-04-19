@@ -67,14 +67,6 @@ and value_term (TermT(s, es): term): bool = all value_expr es
 
 (******************)
 
-let nt_env: nt list = Spec.nt_set @ [
-
-  (* builtin *)
-  ("FunResult", ["ok"; "ret"]);
-  ("Datum", ["datum_id"; "data"]);
-  ("Scope", "datum"::Spec.label_set);
-]
-
 (* todo - generic *)
 let globalLabelList: expr = 
   Cons(
@@ -91,19 +83,22 @@ let globalLabelList: expr =
     )
   )
 
+let nt_env: nt list = Spec.nt_set @ [
+
+  (* builtin *)
+  ("FunResult", ["ok"; "ret"]);
+  ("Datum", ["datum_id"; "data"]);
+  ("Scope", "datum"::Spec.label_set);
+
+]
+
 let prod_env: prod list = Spec.prod_set @ [
 
-  (* bultin *)
   ("mkScope", "Scope", [], [], []);
-  
-  (* todo - generic *)
-  ("DatumVar", "Datum", ["datum_id"], [], []);
-  ("DatumMod", "Datum", ["datum_id"], [], []);
 
   (***********)
   (* STD LIB *)
 
-  (* QUERY *)
   (
     "resolve", "FunResult",
     ["rx"; "s"], [],
@@ -134,7 +129,7 @@ let prod_env: prod list = Spec.prod_set @ [
                   ])), "ret")
 
                 );
-                globalLabelList (* todo - generic *)
+                globalLabelList
               ])), "ret")
             ])), "ret")
           )
@@ -569,7 +564,7 @@ let prod_env: prod list = Spec.prod_set @ [
                   ])), "ret")
                 )
               ));
-              globalLabelList; (* todo - make the global label list generic *)
+              globalLabelList;
               Bool(true);
             ])), "ret")
           )
