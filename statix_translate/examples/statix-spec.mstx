@@ -31,17 +31,17 @@ decl(@inh s:scope, d:decl) :- d match {
         s_mod -[ `LEX ]-> s,
         decls(s_mod, ds)
 
-  | DeclImport(r:mod-ref) ->
+  | DeclImport(r:mod_ref) ->
 
       {p:path, d:datum, s_mod:scope, tgt_s:scope}
-        mod-ref(s, r, p),
+        mod_ref(s, r, p),
         tgt(p, tgt_s), 
         tgt_s -> d,
         d match { DatumMod(_:string, dscope:scope):datum -> s_mod := dscope },
         s -[ `IMP ]-> s_mod
 
-  | DeclDef(b:par-bind) ->
-      par-bind(s, b, s)
+  | DeclDef(b:par_bind) ->
+      par_bind(s, b, s)
 
   }.
 
@@ -58,9 +58,9 @@ expr(@inh s:scope, e:expr, @syn ty:type) :- e match {
   | ExprFalse() ->
       ty := TBool()
 
-  | ExprVar(r:var-ref) ->
+  | ExprVar(r:var_ref) ->
       {p:path, d:datum, tgt_s:scope}
-        var-ref(s, r, p),
+        var_ref(s, r, p),
         tgt(p, tgt_s), 
         tgt_s -> d,
         d match { DatumVar(_:string, dty:type):datum -> ty := dty }
@@ -104,58 +104,58 @@ expr(@inh s:scope, e:expr, @syn ty:type) :- e match {
         ty2 == ty3,
         ty := ty2
 
-  | ExprFun(d:arg-decl, e:expr) ->
+  | ExprFun(d:arg_decl, e:expr) ->
       {s_fun:scope, ty1:type, ty2:type}
         new s_fun,
         s_fun -[ `LEX ]-> s,
-        arg-decl(s_fun, d, ty1),
+        arg_decl(s_fun, d, ty1),
         expr(s_fun, e, ty2),
         ty := TFun(ty1, ty2)
 
-  | ExprLet(bs:seq-binds, e:expr) ->
+  | ExprLet(bs:seq_binds, e:expr) ->
       {s_let:scope}
         new s_let,
-        seq-binds(s, bs, s_let),
+        seq_binds(s, bs, s_let),
         expr(s_let, e, ty)
 
-  | ExprLetRec(bs:par-binds, e:expr) -> 
+  | ExprLetRec(bs:par_binds, e:expr) -> 
       {s_let:scope}
         new s_let,
         s_let -[ `LEX ]-> s,
-        par-binds(s_let, bs, s_let),
+        par_binds(s_let, bs, s_let),
         expr(s_let, e, ty)
 
-  | ExprLetPar(bs:par-binds, e:expr) -> 
+  | ExprLetPar(bs:par_binds, e:expr) -> 
       {s_let:scope}
         new s_let,
         s_let -[ `LEX ]-> s,
-        par-binds(s, bs, s_let),
+        par_binds(s, bs, s_let),
         expr(s_let, e, ty)
   }.
 
 
 @syntax
-seq-binds(@inh s:scope, bs:seq-binds, @inh s_def:scope) :- bs match {
+seq_binds(@inh s:scope, bs:seq_binds, @inh s_def:scope) :- bs match {
   
     SeqBindsNil() ->
       s_def -[ `LEX ]-> s
 
-  | SeqBindsOne(b:seq-bind) ->
+  | SeqBindsOne(b:seq_bind) ->
       s_def -[ `LEX ]-> s,
-      seq-bind(s, b, s_def)
+      seq_bind(s, b, s_def)
 
-  | SeqBindsCons(b:seq-bind, bs:seq-binds) -> 
-      {s_def':scope}
-        new s_def',
-        s_def' -[ `LEX ]-> s,
-        seq-bind(s, b, s_def'),
-        seq-binds(s_def', bs, s_def)
+  | SeqBindsCons(b:seq_bind, bs:seq_binds) -> 
+      {s_def_:scope}
+        new s_def_,
+        s_def_ -[ `LEX ]-> s,
+        seq_bind(s, b, s_def_),
+        seq_binds(s_def_, bs, s_def)
 
   }.
 
 
 @syntax
-seq-bind(@inh s:scope, b:seq-bind, @inh s_def:scope) :- b match { 
+seq_bind(@inh s:scope, b:seq_bind, @inh s_def:scope) :- b match { 
   
     DefBindSeq(x:string, e:expr) -> 
       {s_var:scope, ty:type}
@@ -174,20 +174,20 @@ seq-bind(@inh s:scope, b:seq-bind, @inh s_def:scope) :- b match {
 
 
 @syntax
-par-binds(@inh s:scope, bs:par-binds, @inh s_def:scope) :- bs match {
+par_binds(@inh s:scope, bs:par_binds, @inh s_def:scope) :- bs match {
 
     ParBindsNil()   -> 
       true
 
-  | ParBindsCons(b:par-bind, ds:par-binds) -> 
-      par-bind(s, b, s_def),
-      par-binds(s, bs, s_def)
+  | ParBindsCons(b:par_bind, ds:par_binds) -> 
+      par_bind(s, b, s_def),
+      par_binds(s, bs, s_def)
 
   }.
 
 
 @syntax
-par-bind(@inh s:scope, b:par-bind, @inh s_def:scope) :- b match {
+par_bind(@inh s:scope, b:par_bind, @inh s_def:scope) :- b match {
     
     DefBindPar(x:string, e:expr) ->
       {s_var:scope, ty:type}
@@ -206,7 +206,7 @@ par-bind(@inh s:scope, b:par-bind, @inh s_def:scope) :- b match {
 
 
 @syntax
-arg-decl(@inh s:scope, d:arg-decl, @syn ty:type) :- d match {
+arg_decl(@inh s:scope, d:arg_decl, @syn ty:type) :- d match {
     
     ArgDecl(x:string, tyann:type) ->
       {s_var:scope}
@@ -235,27 +235,27 @@ type(@inh s:scope, tyann:type, @syn ty:type) :- tyann match {
 
 
 @syntax
-mod-ref(@inh s:scope, r:mod-ref, @syn p:path) :- r match { 
+mod_ref(@inh s:scope, r:mod_ref, @syn p:path) :- r match { 
 
     ModRef(x:string) -> 
-      {mods:{path}, xmods:{path}, xmods':{path}}
+      {mods:{path}, xmods:{path}, xmods_:{path}}
         query s `LEX*`IMP? `MOD as mods,
-        filter mods (DatumMod(x':string, _:scope):datum where x' == x) xmods,
-        min xmods lexico( `MOD < `LEX, `MOD < `IMP, `VAR < `LEX, `VAR < `IMP, `IMP < `LEX ) xmods',
-        only(xmods', p)
+        filter mods (DatumMod(x_:string, _:scope):datum where x_ == x) xmods,
+        min xmods lexico( `MOD < `LEX, `MOD < `IMP, `VAR < `LEX, `VAR < `IMP, `IMP < `LEX ) xmods_,
+        only(xmods_, p)
 
   }.
 
 
 @syntax
-var-ref(@inh s:scope, r:var-ref, @syn p:path) :- r match { 
+var_ref(@inh s:scope, r:var_ref, @syn p:path) :- r match { 
   
     VarRef(x:string) -> 
-      {vars:{path}, xvars:{path}, xvars':{path}}
+      {vars:{path}, xvars:{path}, xvars_:{path}}
         query s `LEX* `IMP? `VAR as vars,
-        filter vars (DatumVar(x':string, _:type):datum where x' == x) xvars,
-        min xvars lexico( `MOD < `LEX, `MOD < `IMP, `VAR < `LEX, `VAR < `IMP, `IMP < `LEX ) xvars',
-        only(xvars', p)
+        filter vars (DatumVar(x_:string, _:type):datum where x_ == x) xvars,
+        min xvars lexico( `MOD < `LEX, `MOD < `IMP, `VAR < `LEX, `VAR < `IMP, `IMP < `LEX ) xvars_,
+        only(xvars_, p)
 
   }.
 
@@ -266,16 +266,3 @@ tgt(p:path, @ret s:scope) :- p match {
     End(x:scope):path                    -> s := x
   | Edge(x:scope, l:label, xs:path):path -> tgt(xs,s)
   }.
-
-src(p:path, @ret s:scope) :- p match { 
-    End(x:scope):path                     -> s := x
-  | Edge(x:scope, l:label, xs:path):path  -> s := x
-  }.
-
-foo(s:scope, p:path, @ret s_ret:scope) :-
-  {p1:path, p2:path, s':scope}
-    p2 := End(s'),
-    p1 := p2,
-    p match { End(_:scope):path                    -> s_ret := s'
-            | Edge(_:scope, _:label, _:path):path  -> s_ret := s' }
-.

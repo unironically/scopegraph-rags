@@ -2,6 +2,11 @@ grammar statix_translate:to_silver;
 
 --------------------------------------------------
 
+global preNt::String = "Nt_";
+global preProd::String = "pf_";
+
+--------------------------------------------------
+
 synthesized attribute silver_decl::String occurs on AG_Decl;
 
 aspect production functionDecl
@@ -11,11 +16,11 @@ top::AG_Decl ::=
   args::[(String, AG_Type)] 
   body::[AG_Eq]
 {
-  top.silver_decl = "function " ++ name ++ "\n" ++ 
+  top.silver_decl = "function " ++ preProd ++ name ++ "\n" ++ 
     retTy.silver_type ++ " ::= " ++ 
     implode(" ", map(\arg::(String, AG_Type) -> arg.1 ++ "::" ++ 
                                                 arg.2.silver_type, args)) ++ 
-  "{\n\t" ++
+  " {\n\t" ++
     implode("\n\t", map((.silver_eq), body)) ++
   "}";
 }
@@ -27,11 +32,11 @@ top::AG_Decl ::=
   args::[(String, AG_Type)]
   body::[AG_Eq]
 {
-  top.silver_decl = "abstract production " ++ name ++ "\n" ++ 
+  top.silver_decl = "abstract production " ++ preProd ++ name ++ "\n" ++ 
     "top::" ++ ty.silver_type ++ " ::= " ++ 
     implode(" ", map(\arg::(String, AG_Type) -> arg.1 ++ "::" ++ 
                                                 arg.2.silver_type, args)) ++ 
-  "{\n\t" ++
+  " {\n\t" ++
     implode("\n\t", map((.silver_eq), body)) ++ "\n" ++
   "}";
 }
@@ -43,7 +48,7 @@ top::AG_Decl ::=
   inhs::[(String, AG_Type)]
   syns::[(String, AG_Type)]
 {
-  top.silver_decl = "nonterminal " ++ name ++ " with " ++
+  top.silver_decl = "nonterminal " ++ preNt ++ name ++ " with " ++
     implode(", ", 
       map(\attr::(String, AG_Type) -> attr.1, inhs++syns)) ++
   ";";

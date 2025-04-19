@@ -125,7 +125,7 @@ top::AG_Expr ::= msg::String
 }
 
 aspect production letExpr
-top::AG_Expr ::= name::String bind::AG_Expr body::AG_Expr
+top::AG_Expr ::= name::String ty::AG_Type bind::AG_Expr body::AG_Expr
 {
   top.ocaml_expr = "Let(" ++ str(name) ++ ", " ++ bind.ocaml_expr ++ ", " ++ body.ocaml_expr ++ ")";
 }

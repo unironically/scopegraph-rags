@@ -43,7 +43,7 @@ top::AG_Expr ::= l::AG_Expr r::AG_Expr
 aspect production appExpr
 top::AG_Expr ::= name::String args::[AG_Expr]
 {
-  top.silver_expr = name ++ "(" ++ implode(", ", map((.silver_expr), args)) ++ ")";
+  top.silver_expr = "prodOrFun_" ++ name ++ "(" ++ implode(", ", map((.silver_expr), args)) ++ ")";
 }
 
 aspect production nameExpr
@@ -109,7 +109,7 @@ top::AG_Expr ::= tup::AG_Expr i::Integer
 aspect production termExpr
 top::AG_Expr ::= name::String args::[AG_Expr]
 {
-  top.silver_expr = name ++ "(" ++ implode(", ", map((.silver_expr), args)) ++ ")";
+  top.silver_expr = preProd ++ name ++ "(" ++ implode(", ", map((.silver_expr), args)) ++ ")";
 }
 
 aspect production abortExpr
@@ -119,10 +119,10 @@ top::AG_Expr ::= msg::String
 }
 
 aspect production letExpr
-top::AG_Expr ::= name::String bind::AG_Expr body::AG_Expr
+top::AG_Expr ::= name::String ty::AG_Type bind::AG_Expr body::AG_Expr
 {
-  -- todo, type
-  top.silver_expr = "let " ++ name ++ " = " ++ bind.silver_expr ++ 
+  top.silver_expr = "let " ++ name ++ "::" ++ ty.silver_type ++ 
+                                      " = " ++ bind.silver_expr ++ 
                                       " in " ++ body.silver_expr ++ " end";
 }
 

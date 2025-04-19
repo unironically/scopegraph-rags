@@ -25,7 +25,7 @@ top::Branch ::= m::Matcher c::Constraint
   local bodyRenamed::AG_Expr = 
     case m.ag_pattern_and_where of
     | (_, _, just((lst, len))) -> 
-        letExpr("d_lam_arg", top.matchExpr,
+        letExpr("d_lam_arg", datumTypeAG(), top.matchExpr,
           foldr (
             \arg::(String, String, Integer, AG_Type) acc::AG_Expr ->
               acc.renameDatumArg(arg.1, arg.2, arg.3, len),

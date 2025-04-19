@@ -67,7 +67,8 @@ top::AG_Expr ::= name::String
   top.renameDatumArg = \dt::String arg::String pos::Integer len::Integer -> 
     if arg != name
     then ^top
-    else letExpr(arg ++ "__", caseExpr(demandExpr(nameExpr("d_lam_arg"), "data"),
+    else letExpr(arg ++ "__", nameTypeAG("ActualData"), 
+                 caseExpr(demandExpr(nameExpr("d_lam_arg"), "data"),
           agCasesCons(
             agCase(
               agPatternApp(
@@ -171,14 +172,14 @@ top::AG_Expr ::= msg::String
 }
 
 abstract production letExpr
-top::AG_Expr ::= name::String bind::AG_Expr body::AG_Expr
+top::AG_Expr ::= name::String ty::AG_Type bind::AG_Expr body::AG_Expr
 {
   top.pp = "letExpr(" ++ name ++ ", " ++ bind.pp ++ ", " ++ body.pp ++ ")";
   top.renameDatumArg = \dt::String arg::String pos::Integer len::Integer -> 
     if name == arg
     then ^top
-    else letExpr(name, bind.renameDatumArg(dt, arg, pos, len), 
-                       body.renameDatumArg(dt, arg, pos, len));
+    else letExpr(name, ^ty, bind.renameDatumArg(dt, arg, pos, len), 
+                            body.renameDatumArg(dt, arg, pos, len));
 }
 
 abstract production ifExpr

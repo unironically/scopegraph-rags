@@ -7,7 +7,7 @@ attribute ag_type occurs on TypeAnn;
 aspect production nameTypeAnn
 top::TypeAnn ::= name::String
 {
-  top.ag_type = nameTypeAG(name);
+  top.ag_type = toType(^top).ag_type;
 }
 
 aspect production stringType

@@ -72,6 +72,6 @@ ignore terminal LineComment_t   /\/\/.*/;
 --ignore terminal Comment_t       /\/\*(\/\*([^\*]|\*+[^\/\*])*\*+\/|[^\*]|\*+[^\/\*])*\*+\//;
 
 terminal String_t      /[\"]([^\r\n\"\\]|[\\][\"]|[\\][\\]|[\\]b|[\\]n|[\\]r|[\\]f|[\\]t)*[\"]/;
-terminal Name_t        /[a-z][a-zA-Z_0-9_\-\']*/ submits to {KWD};
-terminal Constructor_t /[A-Z][a-zA-Z_0-9_\-]*/ submits to {KWD};
+terminal Name_t        /[a-z][a-zA-Z_0-9_]*/ submits to {KWD};
+terminal Constructor_t /[A-Z][a-zA-Z_0-9_]*/ submits to {KWD};
 terminal Quote_t       /\'/;

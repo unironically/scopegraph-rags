@@ -19,7 +19,7 @@ top::AG_Pattern ::= name::String
 aspect production agPatternApp
 top::AG_Pattern ::= name::String ps::[AG_Pattern]
 {
-  top.silver_pattern = name ++ "(" ++ 
+  top.silver_pattern = preProd ++ name ++ "(" ++ 
                          implode(", ", map((.silver_pattern), ps)) ++ 
                        ")";
 }

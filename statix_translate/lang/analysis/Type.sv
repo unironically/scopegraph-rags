@@ -57,7 +57,7 @@ Type ::= tyAnn::TypeAnn
 {
   return
     case tyAnn of
-    | nameTypeAnn(n)         ->
+    | nameTypeAnn(n) ->
         if n == "string" then stringType()
         else if n == "boolean" then boolType()
         else if n == "scope" then scopeType()

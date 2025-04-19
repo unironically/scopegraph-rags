@@ -8,7 +8,7 @@ synthesized attribute nta_type::String occurs on AG_Type;
 aspect production nameTypeAG
 top::AG_Type ::= name::String
 {
-  top.silver_type = name;
+  top.silver_type = preNt ++ name;
   top.nta_type = top.silver_type;
 }
 
