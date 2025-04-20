@@ -306,7 +306,7 @@ top::Constraint ::= name::String t::Term
                                                       else topDotLHS(name);
   top.equations = [ defineEq (^lhs, t.ag_expr) ];
   top.ag_expr = t.ag_expr;
-  top.ag_expr_with_ok = unsafeTracePrint(tupleExpr([trueExpr(), t.ag_expr]), "blood toot 2\n");
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), t.ag_expr]);
 }
 
 --------------------------------------------------
@@ -332,7 +332,7 @@ top::Constraint ::= t::Term bs::BranchList
   local uniquePairName::String = "pair_" ++ toString(genInt());
 
   local ag_match::AG_Expr = if bs.hasAppConstraintBody
-                            then unsafeTracePrint(caseExpr (t.ag_expr, bs.ag_cases_with_ok), "blood toot 1\n")
+                            then caseExpr (t.ag_expr, bs.ag_cases_with_ok)
                             else caseExpr (t.ag_expr, bs.ag_cases);
 
   top.equations = 

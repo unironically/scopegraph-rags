@@ -24,7 +24,7 @@ top::AG_Decl ::=
     implode(" ", map(\arg::(String, AG_Type) -> arg.1 ++ "::" ++ 
                                                 arg.2.silver_type, args)) ++ 
   " {\n\t" ++
-    implode("\n\t", map((.silver_eq), body) ++ contribsTrans) ++
+    implode("\n\t", filterMap((.silver_eq), body) ++ contribsTrans) ++
   "}";
 
   -- contribs for monoid locals
@@ -65,7 +65,7 @@ top::AG_Decl ::=
     implode(" ", map(\arg::(String, AG_Type) -> arg.1 ++ "::" ++ 
                                                 arg.2.silver_type, args)) ++ 
   " {\n\t" ++
-    implode("\n\t", map((.silver_eq), body) ++ contribsTrans) ++ "\n" ++
+    implode("\n\t", filterMap((.silver_eq), body) ++ contribsTrans) ++ "\n" ++
   "}";
 
   -- contribs for monoid locals

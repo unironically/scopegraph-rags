@@ -42,12 +42,7 @@ top::Nt_main ::= ds::Nt_decls {
 	_s_.LEX = top.s_LEX;
 	top.s = _s_;
 	local _s_::Scope = pf_mkScope();
-	
 	ds.s = top.s;
-	
-	
-	
-	
 	top.ok = ds.ok;
 	top.s_VAR = (ds.s_VAR);
 	top.s_IMP = (ds.s_IMP);
@@ -56,7 +51,6 @@ top::Nt_main ::= ds::Nt_decls {
 }
 abstract production pf_DeclsNil
 top::Nt_decls ::=  {
-	
 	top.ok = true;
 	top.s_VAR = [];
 	top.s_IMP = [];
@@ -65,18 +59,8 @@ top::Nt_decls ::=  {
 }
 abstract production pf_DeclsCons
 top::Nt_decls ::= d::Nt_decl ds::Nt_decls {
-	
 	d.s = top.s;
-	
-	
-	
-	
-	
 	ds.s = top.s;
-	
-	
-	
-	
 	top.ok = d.ok && ds.ok;
 	top.s_VAR = (d.s_VAR) ++ (ds.s_VAR);
 	top.s_IMP = (d.s_IMP) ++ (ds.s_IMP);
@@ -107,14 +91,7 @@ top::Nt_decl ::= x::String ds::Nt_decls {
 	top.s_mod = _s_mod_;
 	local _s_mod_::Scope = pf_mkScope();
 	_s_mod_.datum = s_mod_datum;
-	
-	
-	
 	ds.s = top.s_mod;
-	
-	
-	
-	
 	top.ok = ds.ok;
 	top.s_VAR = [];
 	top.s_IMP = [];
@@ -131,20 +108,13 @@ top::Nt_decl ::= r::Nt_mod_ref {
 	local d::Decorated Datum;
 	local s_mod::Decorated Scope;
 	local tgt_s::Decorated Scope;
-	
 	r.s = top.s;
 	top.p = r.p;
-	
-	
-	
-	
 	local pair_6::(Boolean, Decorated Scope);
 	top.pair_6 = pf_tgt(top.p);
-	
 	top.tgt_s = top.pair_6.2;
 	top.d = top.tgt_s.datum;
 	top.s_mod = case top.d of pf_DatumMod(_) -> if true then let d_lam_arg::Decorated Datum = top.d in let dscope__::Nt_ActualData = case d_lam_arg.data of pf_ActualDataDatumMod(dscope) -> dscope | _ -> error("data match abort") end in dscope__ end end else error("branch case else TODO") | _ -> error("Match failure!") end;
-	
 	top.ok = r.ok && top.pair_6.1;
 	top.s_VAR = (r.s_VAR);
 	top.s_IMP = (r.s_IMP) ++ (top.s_mod::[]);
@@ -153,17 +123,8 @@ top::Nt_decl ::= r::Nt_mod_ref {
 }
 abstract production pf_DeclDef
 top::Nt_decl ::= b::Nt_par_bind {
-	
 	b.s = top.s;
 	b.s_def = top.s;
-	
-	
-	
-	
-	
-	
-	
-	
 	top.ok = b.ok;
 	top.s_VAR = (b.s_VAR) ++ (b.s_def_VAR);
 	top.s_IMP = (b.s_IMP) ++ (b.s_def_IMP);
@@ -202,16 +163,10 @@ top::Nt_expr ::= r::Nt_var_ref {
 	local p::Path;
 	local d::Decorated Datum;
 	local tgt_s::Decorated Scope;
-	
 	r.s = top.s;
 	top.p = r.p;
-	
-	
-	
-	
 	local pair_7::(Boolean, Decorated Scope);
 	top.pair_7 = pf_tgt(top.p);
-	
 	top.tgt_s = top.pair_7.2;
 	top.d = top.tgt_s.datum;
 	top.ty = case top.d of pf_DatumVar(_) -> if true then let d_lam_arg::Decorated Datum = top.d in let dty__::Nt_ActualData = case d_lam_arg.data of pf_ActualDataDatumVar(dty) -> dty | _ -> error("data match abort") end in dty__ end end else error("branch case else TODO") | _ -> error("Match failure!") end;
@@ -225,22 +180,10 @@ abstract production pf_ExprAdd
 top::Nt_expr ::= e1::Nt_expr e2::Nt_expr {
 	local ty1::Nt_type;
 	local ty2::Nt_type;
-	
 	e1.s = top.s;
 	top.ty1 = e1.ty;
-	
-	
-	
-	
-	
 	e2.s = top.s;
 	top.ty2 = e2.ty;
-	
-	
-	
-	
-	
-	
 	top.ty = pf_TInt();
 	top.ok = e1.ok && e2.ok && top.ty1 == pf_TInt() && top.ty2 == pf_TInt();
 	top.s_VAR = (e1.s_VAR) ++ (e2.s_VAR);
@@ -252,22 +195,10 @@ abstract production pf_ExprAnd
 top::Nt_expr ::= e1::Nt_expr e2::Nt_expr {
 	local ty1::Nt_type;
 	local ty2::Nt_type;
-	
 	e1.s = top.s;
 	top.ty1 = e1.ty;
-	
-	
-	
-	
-	
 	e2.s = top.s;
 	top.ty2 = e2.ty;
-	
-	
-	
-	
-	
-	
 	top.ty = pf_TBool();
 	top.ok = e1.ok && e2.ok && top.ty1 == pf_TBool() && top.ty2 == pf_TBool();
 	top.s_VAR = (e1.s_VAR) ++ (e2.s_VAR);
@@ -279,21 +210,10 @@ abstract production pf_ExprEq
 top::Nt_expr ::= e1::Nt_expr e2::Nt_expr {
 	local ty1::Nt_type;
 	local ty2::Nt_type;
-	
 	e1.s = top.s;
 	top.ty1 = e1.ty;
-	
-	
-	
-	
-	
 	e2.s = top.s;
 	top.ty2 = e2.ty;
-	
-	
-	
-	
-	
 	top.ty = pf_TBool();
 	top.ok = e1.ok && e2.ok && top.ty1 == top.ty2;
 	top.s_VAR = (e1.s_VAR) ++ (e2.s_VAR);
@@ -305,22 +225,11 @@ abstract production pf_ExprApp
 top::Nt_expr ::= e1::Nt_expr e2::Nt_expr {
 	local ty1::Nt_type;
 	local ty2::Nt_type;
-	
 	e1.s = top.s;
 	top.ty1 = e1.ty;
-	
-	
-	
-	
-	
 	e2.s = top.s;
 	top.ty2 = e2.ty;
-	
-	
-	
-	
 	top.ty = case top.ty1 of pf_TFun(l, r) -> if true then r else error("branch case else TODO") | _ -> error("Match failure!") end;
-	
 	top.ok = e1.ok && e2.ok && case top.ty1 of pf_TFun(l, r) -> if true then top.ty2 == l else error("branch case else TODO") | _ -> error("Match failure!") end;
 	top.s_VAR = (e1.s_VAR) ++ (e2.s_VAR);
 	top.s_IMP = (e1.s_IMP) ++ (e2.s_IMP);
@@ -332,29 +241,12 @@ top::Nt_expr ::= e1::Nt_expr e2::Nt_expr e3::Nt_expr {
 	local ty1::Nt_type;
 	local ty2::Nt_type;
 	local ty3::Nt_type;
-	
 	e1.s = top.s;
 	top.ty1 = e1.ty;
-	
-	
-	
-	
-	
 	e2.s = top.s;
 	top.ty2 = e2.ty;
-	
-	
-	
-	
-	
 	e3.s = top.s;
 	top.ty3 = e3.ty;
-	
-	
-	
-	
-	
-	
 	top.ty = top.ty2;
 	top.ok = e1.ok && e2.ok && e3.ok && top.ty1 == pf_TBool() && top.ty2 == top.ty3;
 	top.s_VAR = (e1.s_VAR) ++ (e2.s_VAR) ++ (e3.s_VAR);
@@ -377,21 +269,10 @@ top::Nt_expr ::= d::Nt_arg_decl e::Nt_expr {
 	_s_fun_.LEX = top.s_fun_LEX;
 	top.s_fun = _s_fun_;
 	local _s_fun_::Scope = pf_mkScope();
-	
-	
 	d.s = top.s_fun;
 	top.ty1 = d.ty;
-	
-	
-	
-	
-	
 	e.s = top.s_fun;
 	top.ty2 = e.ty;
-	
-	
-	
-	
 	top.ty = pf_TFun(top.ty1, top.ty2);
 	top.ok = d.ok && e.ok;
 	top.s_VAR = [];
@@ -416,24 +297,10 @@ top::Nt_expr ::= bs::Nt_seq_binds e::Nt_expr {
 	_s_let_.LEX = top.s_let_LEX;
 	top.s_let = _s_let_;
 	local _s_let_::Scope = pf_mkScope();
-	
 	bs.s = top.s;
 	bs.s_def = top.s_let;
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	e.s = top.s_let;
 	top.ty = e.ty;
-	
-	
-	
-	
 	top.ok = bs.ok && e.ok;
 	top.s_VAR = (bs.s_VAR);
 	top.s_IMP = (bs.s_IMP);
@@ -457,25 +324,10 @@ top::Nt_expr ::= bs::Nt_par_binds e::Nt_expr {
 	_s_let_.LEX = top.s_let_LEX;
 	top.s_let = _s_let_;
 	local _s_let_::Scope = pf_mkScope();
-	
-	
 	bs.s = top.s_let;
 	bs.s_def = top.s_let;
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	e.s = top.s_let;
 	top.ty = e.ty;
-	
-	
-	
-	
 	top.ok = bs.ok && e.ok;
 	top.s_VAR = [];
 	top.s_IMP = [];
@@ -499,25 +351,10 @@ top::Nt_expr ::= bs::Nt_par_binds e::Nt_expr {
 	_s_let_.LEX = top.s_let_LEX;
 	top.s_let = _s_let_;
 	local _s_let_::Scope = pf_mkScope();
-	
-	
 	bs.s = top.s;
 	bs.s_def = top.s_let;
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	e.s = top.s_let;
 	top.ty = e.ty;
-	
-	
-	
-	
 	top.ok = bs.ok && e.ok;
 	top.s_VAR = (bs.s_VAR);
 	top.s_IMP = (bs.s_IMP);
@@ -530,7 +367,6 @@ top::Nt_expr ::= bs::Nt_par_binds e::Nt_expr {
 }
 abstract production pf_SeqBindsNil
 top::Nt_seq_binds ::=  {
-	
 	top.ok = true;
 	top.s_VAR = [];
 	top.s_IMP = [];
@@ -543,18 +379,8 @@ top::Nt_seq_binds ::=  {
 }
 abstract production pf_SeqBindsOne
 top::Nt_seq_binds ::= b::Nt_seq_bind {
-	
-	
 	b.s = top.s;
 	b.s_def = top.s_def;
-	
-	
-	
-	
-	
-	
-	
-	
 	top.ok = b.ok;
 	top.s_VAR = (b.s_VAR);
 	top.s_IMP = (b.s_IMP);
@@ -578,29 +404,10 @@ top::Nt_seq_binds ::= b::Nt_seq_bind bs::Nt_seq_binds {
 	_s_def__.LEX = top.s_def__LEX;
 	top.s_def_ = _s_def__;
 	local _s_def__::Scope = pf_mkScope();
-	
-	
 	b.s = top.s;
 	b.s_def = top.s_def_;
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	bs.s = top.s_def_;
 	bs.s_def = top.s_def;
-	
-	
-	
-	
-	
-	
-	
-	
 	top.ok = b.ok && bs.ok;
 	top.s_VAR = (b.s_VAR);
 	top.s_IMP = (b.s_IMP);
@@ -632,14 +439,8 @@ top::Nt_seq_bind ::= x::String e::Nt_expr {
 	top.s_var = _s_var_;
 	local _s_var_::Scope = pf_mkScope();
 	_s_var_.datum = s_var_datum;
-	
-	
 	e.s = top.s;
 	top.ty = e.ty;
-	
-	
-	
-	
 	top.ok = e.ok;
 	top.s_VAR = (top.s_var::[]) ++ (e.s_VAR);
 	top.s_IMP = (e.s_IMP);
@@ -671,21 +472,10 @@ top::Nt_seq_bind ::= x::String tyann::Nt_type e::Nt_expr {
 	top.s_var = _s_var_;
 	local _s_var_::Scope = pf_mkScope();
 	_s_var_.datum = s_var_datum;
-	
-	
 	tyann.s = top.s;
 	top.ty = tyann.ty;
-	
-	
-	
-	
-	
 	e.s = top.s;
 	top.ty = e.ty;
-	
-	
-	
-	
 	top.ok = tyann.ok && e.ok;
 	top.s_VAR = (top.s_var::[]) ++ (tyann.s_VAR) ++ (e.s_VAR);
 	top.s_IMP = (tyann.s_IMP) ++ (e.s_IMP);
@@ -702,7 +492,6 @@ top::Nt_seq_bind ::= x::String tyann::Nt_type e::Nt_expr {
 }
 abstract production pf_ParBindsNil
 top::Nt_par_binds ::=  {
-	
 	top.ok = true;
 	top.s_VAR = [];
 	top.s_IMP = [];
@@ -715,28 +504,10 @@ top::Nt_par_binds ::=  {
 }
 abstract production pf_ParBindsCons
 top::Nt_par_binds ::= b::Nt_par_bind ds::Nt_par_binds {
-	
 	b.s = top.s;
 	b.s_def = top.s_def;
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	bs.s = top.s;
 	bs.s_def = top.s_def;
-	
-	
-	
-	
-	
-	
-	
-	
 	top.ok = b.ok && bs.ok;
 	top.s_VAR = (b.s_VAR) ++ (bs.s_VAR);
 	top.s_IMP = (b.s_IMP) ++ (bs.s_IMP);
@@ -764,14 +535,8 @@ top::Nt_par_bind ::= x::String e::Nt_expr {
 	top.s_var = _s_var_;
 	local _s_var_::Scope = pf_mkScope();
 	_s_var_.datum = s_var_datum;
-	
-	
 	e.s = top.s;
 	top.ty = e.ty;
-	
-	
-	
-	
 	top.ok = e.ok;
 	top.s_VAR = (e.s_VAR);
 	top.s_IMP = (e.s_IMP);
@@ -803,21 +568,10 @@ top::Nt_par_bind ::= x::String tyann::Nt_type e::Nt_expr {
 	top.s_var = _s_var_;
 	local _s_var_::Scope = pf_mkScope();
 	_s_var_.datum = s_var_datum;
-	
-	
 	tyann.s = top.s;
 	top.ty = tyann.ty;
-	
-	
-	
-	
-	
 	e.s = top.s;
 	top.ty = e.ty;
-	
-	
-	
-	
 	top.ok = tyann.ok && e.ok;
 	top.s_VAR = (tyann.s_VAR) ++ (e.s_VAR);
 	top.s_IMP = (tyann.s_IMP) ++ (e.s_IMP);
@@ -843,13 +597,8 @@ top::Nt_actualData ::= arg_8::Nt_type {
 abstract production pf_ArgDecl
 top::Nt_arg_decl ::= x::String tyann::Nt_type {
 	local s_var::Decorated Scope;
-	
 	tyann.s = top.s;
 	top.ty = tyann.ty;
-	
-	
-	
-	
 	local s_var_VAR::[Decorated Scope];
 	local s_var_IMP::[Decorated Scope];
 	local s_var_MOD::[Decorated Scope];
@@ -863,7 +612,6 @@ top::Nt_arg_decl ::= x::String tyann::Nt_type {
 	top.s_var = _s_var_;
 	local _s_var_::Scope = pf_mkScope();
 	_s_var_.datum = s_var_datum;
-	
 	top.ok = tyann.ok;
 	top.s_VAR = (tyann.s_VAR) ++ (top.s_var::[]);
 	top.s_IMP = (tyann.s_IMP);
@@ -896,20 +644,10 @@ abstract production pf_TFun
 top::Nt_type ::= tyann1::Nt_type tyann2::Nt_type {
 	local ty1::Nt_type;
 	local ty2::Nt_type;
-	
 	tyann1.s = top.s;
 	top.ty1 = tyann1.ty;
-	
-	
-	
-	
-	
 	tyann2.s = top.s;
 	top.ty2 = tyann2.ty;
-	
-	
-	
-	
 	top.ty = pf_TFun(top.ty1, top.ty2);
 	top.ok = tyann1.ok && tyann2.ok;
 	top.s_VAR = (tyann1.s_VAR) ++ (tyann2.s_VAR);
@@ -955,7 +693,6 @@ function pf_tgt
 	local s::Decorated Scope;
 	local pair_9::(Boolean, Decorated Scope);
 	top.pair_9 = case top.p of pf_End(x) -> if true then (true, x) else error("branch case else TODO") | pf_Edge(x, l, xs) -> if true then pf_tgt(xs) else error("branch case else TODO") | _ -> error("Match failure!") end;
-	
 	top.s = top.pair_9.2;
 	return (top.ok, top.s);
 	top.ok = top.pair_9.1;}
