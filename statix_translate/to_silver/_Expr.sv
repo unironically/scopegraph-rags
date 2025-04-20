@@ -43,7 +43,7 @@ top::AG_Expr ::= l::AG_Expr r::AG_Expr
 aspect production appExpr
 top::AG_Expr ::= name::String args::[AG_Expr]
 {
-  top.silver_expr = "prodOrFun_" ++ name ++ "(" ++ implode(", ", map((.silver_expr), args)) ++ ")";
+  top.silver_expr = preProd ++ name ++ "(" ++ implode(", ", map((.silver_expr), args)) ++ ")";
 }
 
 aspect production nameExpr
@@ -148,7 +148,3 @@ top::AG_Exprs ::=
 {
   top.silver_exprs = [];
 }
-
---------------------------------------------------
-
-fun str String ::= s::String = "\"" ++ s ++ "\"";

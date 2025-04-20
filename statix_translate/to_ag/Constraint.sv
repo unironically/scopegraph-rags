@@ -13,6 +13,9 @@ attribute ag_expr occurs on Constraint;
 inherited attribute nonAttrs::[String] occurs on Constraint;
 propagate nonAttrs on Constraint;
 
+attribute ag_prods occurs on Constraint;
+propagate ag_prods on Constraint;
+
 --------------------------------------------------
 
 attribute ag_funs occurs on Constraint;
@@ -105,12 +108,49 @@ top::Constraint ::= name::String t::Term
                   ];
 
   top.ag_expr = ^mkScopeApp;
+
+  top.ag_prods <- 
+    case t of 
+    | constructorTerm(dname, termListCons(idt, t)) ->
+        let constrMaybe::Maybe<ConstructorInfo> = 
+          lookupConstructor(dname, top.knownConstructors)
+        in
+          case constrMaybe of
+          | just(constructor(n, ty, argTys, _)) ->
+              agDeclsCons (
+                productionDecl (
+                  dname, datumTypeAG(),
+                  [("datum_id", head(argTys).ag_type)], 
+                  []
+                ),
+                agDeclsOne (
+                  productionDecl (
+                    "ActualData" ++ dname, nameTypeAG("actualData"),
+                    map(\t::Type -> ("arg_" ++ toString(genInt()), t.ag_type), 
+                        tail(argTys)),
+                    []  -- locs
+                  )
+                )
+              )
+          | _ -> error("newConstraintDatum.ag_prods")
+          end
+        end
+    | _ -> error("newConstraintDatum.ag_prods")
+    end;
 }
+
+{-
+  name::String
+  ty::Type
+  argTys::[Type]
+  loc::Location
+-}
 
 aspect production newConstraint
 top::Constraint ::= name::String
 {
-  local ref::AG_LHS = nameLHS(name);
+  local ntaName::String = "_" ++ name ++ "_";
+  local ref::AG_LHS = nameLHS(ntaName);
   local mkScopeApp::AG_Expr = termExpr("mkScope", []);
   
   local labelLocals::[AG_Eq] = map (
@@ -121,11 +161,11 @@ top::Constraint ::= name::String
 
   local edgeInhs::[AG_Eq] = map (
     \l::Label -> 
-      defineEq(qualLHS(nameLHS(name), l.name), topDotExpr(name ++ "_" ++ l.name)),
+      defineEq(qualLHS(nameLHS(ntaName), l.name), topDotExpr(name ++ "_" ++ l.name)),
     top.knownLabels
   );
 
-  local localDef::AG_Eq = defineEq (topDotLHS(name), nameExpr(name));
+  local localDef::AG_Eq = defineEq (topDotLHS(name), nameExpr(ntaName));
 
   top.equations = labelLocals ++ edgeInhs ++ 
                   [ ^localDef, ntaEq (^ref, scopeTypeAG(), ^mkScopeApp) ];

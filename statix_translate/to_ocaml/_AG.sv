@@ -17,10 +17,18 @@ top::AG ::=
     implode(";\n", nts.ocaml_decls ++ globs.ocaml_decls ++
                    prods.ocaml_decls ++ funs.ocaml_decls);
 
-  prods.knownNts = ^nts;
-  funs.knownNts  = ^nts;
-  globs.knownNts = ^nts;
-  nts.knownNts   = ^nts;
+  local builtinPlusFoundNts::AG_Decls = agDeclsCons (
+    nonterminalDecl("datum", [("data", nameTypeAG("actualData"))], []),
+    agDeclsCons(
+      nonterminalDecl("actualData", [], []),
+      ^nts
+    )
+  );
+
+  prods.knownNts = ^builtinPlusFoundNts;
+  funs.knownNts  = ^builtinPlusFoundNts;
+  globs.knownNts = ^builtinPlusFoundNts;
+  nts.knownNts   = ^builtinPlusFoundNts;
 }
 
 --------------------------------------------------

@@ -11,14 +11,12 @@ attribute nonAttrs occurs on Branch;
 
 attribute matchExpr occurs on Branch;
 
+attribute ag_prods occurs on Branch;
+propagate ag_prods on Branch;
+
 aspect production branch
 top::Branch ::= m::Matcher c::Constraint
 {
-  {-top.ag_case = agCase(
-    m.ag_pattern, 
-    m.ag_whereClause,
-    c.ag_expr
-  );-}
   c.nonAttrs = top.nonAttrs ++ m.nonAttrsSyn;
   m.nonAttrs = top.nonAttrs;
 
@@ -55,6 +53,10 @@ propagate nonAttrs on BranchList;
 
 inherited attribute matchExpr::AG_Expr occurs on BranchList;
 propagate matchExpr on BranchList;
+
+attribute ag_prods occurs on BranchList;
+propagate ag_prods on BranchList;
+
 
 aspect production branchListCons
 top::BranchList ::= b::Branch bs::BranchList

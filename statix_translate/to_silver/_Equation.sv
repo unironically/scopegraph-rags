@@ -7,7 +7,7 @@ synthesized attribute silver_eq::String occurs on AG_Eq;
 aspect production contributionEq
 top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
 {
-  top.silver_eq = lhs.silver_lhs ++ " <- " ++ expr.silver_expr ++ ";";
+  top.silver_eq = ""; --lhs.silver_lhs ++ " <- " ++ expr.silver_expr ++ ";";
 }
 
 aspect production localDeclEq

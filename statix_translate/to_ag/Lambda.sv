@@ -9,6 +9,9 @@ propagate ag_funs on Lambda;
 
 attribute nonAttrs occurs on Lambda;
 
+attribute ag_prods occurs on Lambda;
+propagate ag_prods on Lambda;
+
 -- todo: allow pattern as lambda arg? steps to false if no match
 aspect production lambda
 top::Lambda ::= arg::String ty::TypeAnn wc::WhereClause c::Constraint

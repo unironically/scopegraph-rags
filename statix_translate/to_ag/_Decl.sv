@@ -6,6 +6,8 @@ nonterminal AG_Decl;
 
 attribute pp occurs on AG_Decl;
 
+attribute name occurs on AG_Decl;
+
 abstract production functionDecl
 top::AG_Decl ::= 
   name::String 
@@ -13,6 +15,7 @@ top::AG_Decl ::=
   args::[(String, AG_Type)] 
   body::[AG_Eq]
 {
+  top.name = name;
   top.pp = "functionDecl(" ++
     name ++ ", " ++
     retTy.pp ++ ", " ++
@@ -27,6 +30,7 @@ top::AG_Decl ::=
   ty::AG_Type
   e::AG_Expr
 {
+  top.name = name;
   top.pp = "globalDecl(" ++
     name ++ ", " ++
     ty.pp ++ ", " ++
@@ -41,6 +45,7 @@ top::AG_Decl ::=
   args::[(String, AG_Type)]
   body::[AG_Eq]
 {
+  top.name = name;
   top.pp = "productionDecl(" ++
     name ++ ", " ++
     ty.pp ++ ", " ++
@@ -55,6 +60,7 @@ top::AG_Decl ::=
   inhs::[(String, AG_Type)]
   syns::[(String, AG_Type)]
 {
+  top.name = name;
   top.pp = "nonterminalDecl(" ++
     name ++ ", " ++
     "[" ++ implode(", ", map(\p::(String, AG_Type) -> "(" ++ p.1 ++ "," ++ p.2.pp ++ ")", inhs)) ++ "], " ++
@@ -85,8 +91,21 @@ AG_Decls ::= l::AG_Decls r::AG_Decls
 {
   return
     case l of
-    | agDeclsCons(h, t) -> agDeclsCons(^h, agDeclsCat(^t, ^r))
-    | agDeclsNil()      -> ^r
+    | agDeclsCons(h, t) -> if agDeclsContains(h.name, ^r)
+                           then agDeclsCat(^t, ^r)
+                           else agDeclsCons(^h, agDeclsCat(^t, ^r))
+    | agDeclsNil() -> ^r
+    end;
+}
+
+function agDeclsContains
+Boolean ::= name::String l::AG_Decls
+{
+  return
+    case l of
+    | agDeclsNil() -> false
+    | agDeclsOne(d) -> d.name == name
+    | agDeclsCons(h, t) -> h.name == name || agDeclsContains(name, ^t)
     end;
 }
 

@@ -75,3 +75,9 @@ top::AG_Type ::= l::AG_Type r::AG_Type
 {
   top.ocaml_type = error("funTypeAG.ocaml_type");
 }
+
+aspect production funResultTypeAG
+top::AG_Type ::= retTy::AG_Type
+{
+  top.ocaml_type = error("funResultTypeAG.ocaml_type");
+}

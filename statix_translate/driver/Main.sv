@@ -40,12 +40,12 @@ IO<Integer> ::= largs::[String]
               writeFile("out/" ++ fileName ++ ".mstx", ast.mstxPP);
 
               writeFile(
-                "ocaml.txt",
+                "ocaml_ag.ml",
                 ast.ag.ocaml_ag ++ "\n"
               );
 
               writeFile(
-                "silver.txt",
+                "silver_ag.sv",
                 ast.ag.silver_ag ++ "\n"
               );
 

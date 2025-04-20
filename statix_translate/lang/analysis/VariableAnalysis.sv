@@ -17,7 +17,6 @@ fun findBuiltinTy Maybe<(String, Type)> ::= name::String tys::[(String, Type)] =
   | _::t -> findBuiltinTy(name, t)
   end;
 
-
 --------------------------------------------------
 
 monoid attribute freeVarsDefined::[(String, Type)] with [], 

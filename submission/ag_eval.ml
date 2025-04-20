@@ -87,7 +87,8 @@ let nt_env: nt list = Spec.nt_set @ [
 
   (* builtin *)
   ("FunResult", ["ok"; "ret"]);
-  ("Datum", ["datum_id"; "data"]);
+  ("datum", ["datum_id"; "data"]);
+  ("ActualData", []);
   ("Scope", "datum"::Spec.label_set);
 
 ]

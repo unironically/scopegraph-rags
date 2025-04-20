@@ -77,3 +77,9 @@ top::AG_Type ::= l::AG_Type r::AG_Type
 {
   top.pp = "funTypeAG(" ++ l.pp ++ ", " ++ r.pp ++ ")";
 }
+
+abstract production funResultTypeAG
+top::AG_Type ::= retTy::AG_Type
+{
+  top.pp = "funResultTypeAG(" ++ retTy.pp ++ ")";
+}

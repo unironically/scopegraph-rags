@@ -75,6 +75,13 @@ top::AG_Type ::= tys::[AG_Type]
   top.nta_type = top.silver_type;
 }
 
+aspect production funResultTypeAG
+top::AG_Type ::= retTy::AG_Type
+{
+  top.silver_type = "FunResult<" ++ retTy.silver_type ++ ">";
+  top.nta_type = top.silver_type;
+}
+
 aspect production varTypeAG
 top::AG_Type ::=
 {

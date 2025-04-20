@@ -68,7 +68,7 @@ top::AG_Decl ::=
   -- todo, merge this and functiondecl
 
   local ntM::Maybe<AG_Decl> = lookupNt(ty.ocaml_type, top.knownNts);
-  local nt::AG_Decl = ntM.fromJust;
+  local nt::AG_Decl = if ntM.isJust then ntM.fromJust else error("Did not find NT " ++ ty.ocaml_type ++ " in ocaml!");
   local syns::[(String, AG_Type)] = case nt of nonterminalDecl(_, _, syns) -> syns 
                                              | _ -> error("productionDecl.syns") end;
   local synContribAttrs::[(String, AG_Type)] = getContribAttrs(syns);
@@ -97,7 +97,7 @@ top::AG_Decl ::=
               qualLHS(nameLHS("top"), p.1).ocaml_lhs ++ ", " ++
               combineBoolContribs(p.3) ++ 
             ")"
-        | _ -> error("functionDecl.contribsTrans")
+        | _ -> error("productionDecl.contribsTrans")
         end,
       contribsAll);
 
