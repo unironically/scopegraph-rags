@@ -120,10 +120,18 @@ let prod_env: prod list = Spec.prod_set @ [
 
                   AttrRef(TermE(TermT("list_map", [
                     Fun("s'",
-                      AttrRef(TermE(TermT("resolve", [
-                        AttrRef(TermE(TermT("match", [VarE("l"); AttrRef(VarE("top"), "rx")])), "ret");
-                        VarE("s'");
-                      ])), "ret"));
+
+                      AttrRef(TermE(TermT("list_map", [
+                        Fun("p",
+                          TermE(TermT("Edge", [AttrRef(VarE("top"), "s"); VarE("l"); VarE("p")]))
+                        );
+                        AttrRef(TermE(TermT("resolve", [
+                          AttrRef(TermE(TermT("match", [VarE("l"); AttrRef(VarE("top"), "rx")])), "ret");
+                          VarE("s'");
+                        ])), "ret")
+
+                        ])), "ret")
+                    );
                     AttrRef(TermE(TermT("demandEdgesForLabel", [AttrRef(VarE("top"), "s"); VarE("l")])), "ret")
                   ])), "ret")
 

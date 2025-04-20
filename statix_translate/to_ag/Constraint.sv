@@ -7,8 +7,9 @@ fun topDotExpr AG_Expr ::= s::String = demandExpr(nameExpr("top"), s);
 
 synthesized attribute equations::[AG_Eq] occurs on Constraint;
 synthesized attribute ag_expr::AG_Expr;
+synthesized attribute ag_expr_with_ok::AG_Expr;
 
-attribute ag_expr occurs on Constraint;
+attribute ag_expr, ag_expr_with_ok occurs on Constraint;
 
 inherited attribute nonAttrs::[String] occurs on Constraint;
 propagate nonAttrs on Constraint;
@@ -26,6 +27,7 @@ top::Constraint ::=
 {
   top.equations = [ contributionEq(topDotLHS("ok"), trueExpr()) ];
   top.ag_expr = trueExpr();
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), trueExpr()]);
 }
 
 aspect production falseConstraint
@@ -33,6 +35,7 @@ top::Constraint ::=
 {
   top.equations = [ contributionEq(topDotLHS("ok"), falseExpr()) ];
   top.ag_expr = falseExpr();
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), falseExpr()]);
 }
 
 aspect production conjConstraint
@@ -40,6 +43,7 @@ top::Constraint ::= c1::Constraint c2::Constraint
 {
   top.equations = c1.equations ++ c2.equations;
   top.ag_expr = error("conjConstraint.ag_expr");
+  top.ag_expr_with_ok = error("conjConstraint.ag_expr_with_ok");
 }
 
 aspect production existsConstraint
@@ -47,6 +51,7 @@ top::Constraint ::= names::NameList c::Constraint
 {
   top.equations = names.localDeclEqs ++ c.equations;
   top.ag_expr = error("existsConstraint.ag_expr");
+  top.ag_expr_with_ok = error("existsConstraint.ag_expr_with_ok");
 }
 
 aspect production eqConstraint
@@ -55,6 +60,7 @@ top::Constraint ::= t1::Term t2::Term
   local eq::AG_Expr = eqExpr(t1.ag_expr, t2.ag_expr);
   top.equations = [ contributionEq(topDotLHS("ok"), ^eq) ];
   top.ag_expr = ^eq;
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), ^eq]);
 }
 
 aspect production neqConstraint
@@ -63,6 +69,7 @@ top::Constraint ::= t1::Term t2::Term
   local neq::AG_Expr = neqExpr(t1.ag_expr, t2.ag_expr);
   top.equations = [ contributionEq(topDotLHS("ok"), ^neq) ];
   top.ag_expr = ^neq;
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), ^neq]);
 }
 
 aspect production newConstraintDatum
@@ -108,6 +115,7 @@ top::Constraint ::= name::String t::Term
                   ];
 
   top.ag_expr = ^mkScopeApp;
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), ^mkScopeApp]);
 
   top.ag_prods <- 
     case t of 
@@ -170,6 +178,8 @@ top::Constraint ::= name::String
   top.equations = labelLocals ++ edgeInhs ++ 
                   [ ^localDef, ntaEq (^ref, scopeTypeAG(), ^mkScopeApp) ];
   top.ag_expr = ^mkScopeApp;
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), ^mkScopeApp]);
+  
 }
 
 aspect production dataConstraint
@@ -182,6 +192,7 @@ top::Constraint ::= name::String d::String
   local dmdExpr::AG_Expr = demandExpr(^ref, "datum");
   top.equations = [ defineEq (^lhs, ^dmdExpr) ];
   top.ag_expr = ^dmdExpr;
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), ^dmdExpr]);
 }
 
 aspect production edgeConstraint
@@ -194,6 +205,7 @@ top::Constraint ::= src::String lab::Term tgt::String
                    consExpr(^ref, nilExpr()))
   ];
   top.ag_expr = error("edgeConstraint.ag_expr");
+  top.ag_expr_with_ok = error("edgeConstraint.ag_expr_with_ok");
 }
 
 aspect production queryConstraint
@@ -206,6 +218,7 @@ top::Constraint ::= src::String r::Regex res::String
   local queryApp::AG_Expr = appExpr("query", [^ref, r.ag_expr]);
   top.equations = [ defineEq (^lhs, ^queryApp) ];
   top.ag_expr = ^queryApp;
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), ^queryApp]);
 }
 
 aspect production oneConstraint
@@ -218,6 +231,7 @@ top::Constraint ::= name::String out::String
   local oneApp::AG_Expr = appExpr("one", [^nameRef]);
   top.equations = [ defineEq (^outLHS, ^oneApp) ];
   top.ag_expr = ^oneApp;
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), ^oneApp]);
 }
 
 aspect production nonEmptyConstraint
@@ -228,6 +242,7 @@ top::Constraint ::= name::String
   local inhabitedExpr::AG_Expr = appExpr("inhabited", [^nameRef]);
   top.equations = [ contributionEq (topDotLHS("ok"), ^inhabitedExpr) ];
   top.ag_expr = ^inhabitedExpr;
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), ^inhabitedExpr]);
 }
 
 aspect production minConstraint
@@ -241,6 +256,7 @@ top::Constraint ::= set::String pc::PathComp res::String
   local minApp::AG_Expr = appExpr ("path_min", [pc.ag_expr, ^setExpr]);
   top.equations = [ defineEq (^resLHS, ^minApp) ];
   top.ag_expr = ^minApp;
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), ^minApp]);
 }
 
 aspect production everyConstraint
@@ -251,6 +267,7 @@ top::Constraint ::= name::String lam::Lambda
   local everyApp::AG_Expr = appExpr ("every", [lam.ag_expr, ^nameRef]);
   top.equations = [ contributionEq (topDotLHS("ok"), ^everyApp) ];
   top.ag_expr = ^everyApp;
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), ^everyApp]);
 }
 
 aspect production filterConstraint
@@ -263,6 +280,7 @@ top::Constraint ::= set::String m::Matcher res::String
 
   top.equations = [ defineEq (^resLHS, ^filterApp) ];
   top.ag_expr = ^filterApp;
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), ^filterApp]);
 
   local filterApp::AG_Expr = appExpr ("path_filter", [^filterfun, ^setExpr]);
 
@@ -288,6 +306,7 @@ top::Constraint ::= name::String t::Term
                                                       else topDotLHS(name);
   top.equations = [ defineEq (^lhs, t.ag_expr) ];
   top.ag_expr = t.ag_expr;
+  top.ag_expr_with_ok = unsafeTracePrint(tupleExpr([trueExpr(), t.ag_expr]), "blood toot 2\n");
 }
 
 --------------------------------------------------
@@ -310,15 +329,28 @@ top::Constraint ::= t::Term bs::BranchList
     | _   -> error("matchConstraint.nameTyRet")
     end;
   
-  local ag_match::AG_Expr = caseExpr (t.ag_expr, bs.ag_cases);
+  local uniquePairName::String = "pair_" ++ toString(genInt());
 
-  top.equations = [
-    if nameTyRet.1 == "ok"
-    then contributionEq (topDotLHS(nameTyRet.1), ^ag_match)
-    else defineEq (topDotLHS(nameTyRet.1), ^ag_match)
-  ];
+  local ag_match::AG_Expr = if bs.hasAppConstraintBody
+                            then unsafeTracePrint(caseExpr (t.ag_expr, bs.ag_cases_with_ok), "blood toot 1\n")
+                            else caseExpr (t.ag_expr, bs.ag_cases);
+
+  top.equations = 
+    if bs.hasAppConstraintBody
+    then [
+      localDeclEq(uniquePairName, tupleTypeAG([boolTypeAG(), nameTyRet.2])),
+      defineEq(topDotLHS(uniquePairName), ^ag_match),
+      contributionEq(topDotLHS("ok"), tupleSectionExpr(topDotExpr(uniquePairName), 1)),
+      defineEq(topDotLHS(nameTyRet.1), tupleSectionExpr(topDotExpr(uniquePairName), 2))
+    ]
+    else [
+      if nameTyRet.1 == "ok"
+      then contributionEq (topDotLHS(nameTyRet.1), ^ag_match)
+      else defineEq (topDotLHS(nameTyRet.1), ^ag_match)
+    ];
 
   top.ag_expr = ^ag_match;
+  top.ag_expr_with_ok = tupleExpr([trueExpr(), ^ag_match]);
 
   bs.matchExpr = t.ag_expr;
 }
@@ -344,6 +376,7 @@ top::Constraint ::= name::String vs::RefNameList
   top.equations = apply.equations;
 
   top.ag_expr = apply.ag_expr;
+  top.ag_expr_with_ok = apply.ag_expr_with_ok;
 }
 
 --------------------------------------------------
@@ -351,7 +384,10 @@ top::Constraint ::= name::String vs::RefNameList
 nonterminal StxApplication;
 
 attribute equations occurs on StxApplication;
+
 attribute ag_expr occurs on StxApplication;
+
+attribute ag_expr_with_ok occurs on StxApplication;
 
 attribute nonAttrs occurs on StxApplication;
 propagate nonAttrs on StxApplication;
@@ -413,6 +449,7 @@ top::StxApplication ::=
 
   top.equations = eqsAndExpr.1; 
   top.ag_expr   = eqsAndExpr.2;
+  top.ag_expr_with_ok = top.ag_expr;
 
 }
 
@@ -424,6 +461,7 @@ top::StxApplication ::=
   knownLabels::[Label]
 {
   top.ag_expr = error("appConstraintSyn.ag_expr");
+  top.ag_expr_with_ok = error("appConstraintSyn.ag_expr_with_ok");
 
   -- term
   local synTermName::String =
