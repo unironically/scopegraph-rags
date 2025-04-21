@@ -139,6 +139,14 @@ top::AG_Decl ::=
   top.ocaml_decl = name ++ " todo";
 }
 
+aspect production eqInstanceDecl
+top::AG_Decl ::=
+  ty::AG_Type
+  e::AG_Expr
+{
+  top.ocaml_decl = "";
+}
+
 --------------------------------------------------
 
 function allContributionsForAttr

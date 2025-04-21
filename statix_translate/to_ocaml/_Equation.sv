@@ -18,6 +18,16 @@ top::AG_Eq ::= name::String ty::AG_Type
 
 --------------------------------------------------
 
+aspect production localDefineEq
+top::AG_Eq ::= name::String ty::AG_Type expr::AG_Expr
+{
+  local eq::String = "AttrEq(" ++
+    topDotLHS(name).ocaml_lhs ++ ", " ++
+    expr.ocaml_expr ++
+  ")";
+  top.ocaml_eq = just(eq);
+}
+
 aspect production defineEq
 top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
 {

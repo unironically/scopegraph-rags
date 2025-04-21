@@ -68,6 +68,17 @@ top::AG_Decl ::=
   ")";
 }
 
+abstract production eqInstanceDecl
+top::AG_Decl ::=
+  ty::AG_Type
+  e::AG_Expr
+{
+  top.name = "";
+  top.pp = "eqInstanceDecl(" ++
+    ty.pp ++ ", " ++ e.pp ++ 
+  ")";
+}
+
 --------------------------------------------------
 
 nonterminal AG_Decls;

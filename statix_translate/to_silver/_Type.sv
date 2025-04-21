@@ -50,8 +50,8 @@ top::AG_Type ::=
 aspect production pathTypeAG
 top::AG_Type ::=
 {
-  top.silver_type = "Path";
-  top.nta_type = top.silver_type;
+  top.silver_type = "Decorated Path";
+  top.nta_type = "Path";
 }
 
 aspect production labelTypeAG

@@ -67,8 +67,8 @@ top::AG_Expr ::= name::String
   top.renameDatumArg = \dt::String arg::String pos::Integer len::Integer -> 
     if arg != name
     then ^top
-    else letExpr(arg ++ "__", nameTypeAG("ActualData"), 
-                 caseExpr(demandExpr(nameExpr("d_lam_arg"), "data"),
+    else --letExpr(arg ++ "__", nameTypeAG("actualData"), 
+         caseExpr(demandExpr(nameExpr("d_lam_arg"), "data"),
           agCasesCons(
             agCase(
               agPatternApp(
@@ -87,8 +87,8 @@ top::AG_Expr ::= name::String
               agCase(agPatternUnderscore(), nilWhereClauseAG(), abortExpr("data match abort"))
             )
           )
-         ),
-         nameExpr(arg ++ "__"));
+         );--,
+         --nameExpr(arg ++ "__"));
 }
 
 abstract production andExpr

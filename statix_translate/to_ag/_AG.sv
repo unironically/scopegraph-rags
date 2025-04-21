@@ -17,6 +17,7 @@ top::AG ::=
   funs::AG_Decls
   inhs::[(String, AG_Type)]
   syns::[(String, AG_Type)]
+  labs::[Label]
 {
   top.nts   = ^nts;
   top.globs = ^globs;

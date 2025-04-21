@@ -18,7 +18,7 @@ top::Module ::= ds::Imports ords::Orders preds::Predicates
 { 
   preds.globalNames = ords.orderNames;
   top.ag = ag(top.ag_nts, top.ag_globals, top.ag_prods, top.ag_funs, 
-              top.ag_inh_attrs, top.ag_syn_attrs);
+              top.ag_inh_attrs, top.ag_syn_attrs, top.labelsSyn);
 }
  
 --------------------------------------------------

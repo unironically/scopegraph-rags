@@ -278,26 +278,6 @@ let prod_env: prod list = Spec.prod_set @ [
     ]
   );
 
-  (* ONLY *)
-
-  (
-    "only", "FunResult",
-    ["lst"], [],
-    [
-      AttrEq(AttrRef(VarE("top"), "ret"),
-        Case (VarE("lst"), [ 
-          
-        (ConsP(VarP("h"), NilP),
-         Tuple([Bool(true); VarE("h")]) );
-
-        (UnderscoreP, Tuple([Bool(false); 
-         Abort("only arg was not a singleton")]))
-
-        ])
-      )
-    ]
-  );
-  
   (* DWCE *)
 
   (

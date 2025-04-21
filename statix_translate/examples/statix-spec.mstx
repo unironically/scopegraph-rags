@@ -179,7 +179,7 @@ par_binds(@inh s:scope, bs:par_binds, @inh s_def:scope) :- bs match {
     ParBindsNil()   -> 
       true
 
-  | ParBindsCons(b:par_bind, ds:par_binds) -> 
+  | ParBindsCons(b:par_bind, bs:par_binds) -> 
       par_bind(s, b, s_def),
       par_binds(s, bs, s_def)
 

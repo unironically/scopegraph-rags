@@ -10,6 +10,9 @@ global preProd::String = "pf_";
 attribute knownNts occurs on AG_Decl;
 propagate knownNts on AG_Decl;
 
+attribute knownProds occurs on AG_Decl;
+propagate knownProds on AG_Decl;
+
 synthesized attribute silver_decl::String occurs on AG_Decl;
 
 aspect production functionDecl
@@ -19,12 +22,21 @@ top::AG_Decl ::=
   args::[(String, AG_Type)] 
   body::[AG_Eq]
 {
+  local allLocals::[(String, AG_Type)] = 
+    localEdgeLsts ++ 
+    args ++
+    regularLocals;
+  
+  local bodyDec::[Decorated AG_Eq with {knownLocals, knownProds}] = 
+    map (\eq::AG_Eq -> decorate eq with {knownLocals = allLocals; knownProds = top.knownProds;},
+         body);
+
   top.silver_decl = "function " ++ preProd ++ name ++ "\n" ++ 
     retTy.silver_type ++ " ::= " ++ 
     implode(" ", map(\arg::(String, AG_Type) -> arg.1 ++ "::" ++ 
                                                 arg.2.silver_type, args)) ++ 
   " {\n\t" ++
-    implode("\n\t", filterMap((.silver_eq), body) ++ contribsTrans) ++
+    implode("\n\t", filterMap((.silver_eq), bodyDec) ++ contribsTrans) ++ "\n" ++
   "}";
 
   -- contribs for monoid locals
@@ -32,24 +44,26 @@ top::AG_Decl ::=
     map ((\attr::(String, AG_Type) -> 
           (attr.1, attr.2, allContributionsForAttr(attr.1, body))),
          localEdgeLsts);
-  local locals::([(String, AG_Type)], [String]) = getLocals(body);
+  local locals::([(String, AG_Type)], [(String, AG_Type)]) = getLocals(body);
   local localEdgeLsts::[(String, AG_Type)] = locals.1;
-  local regularLocals::[String] = locals.2;
+  local regularLocals::[(String, AG_Type)] = locals.2;
   local contribsTrans::[String] = 
     map (
       \p::(String, AG_Type, [AG_Expr]) ->
-        case p.2 of
-        | listTypeAG(scopeTypeAG()) -> 
-            qualLHS(nameLHS("top"), p.1).silver_lhs ++ " = " ++
-            combineEdgeContribs(p.3) ++ ";"
-        | boolTypeAG() ->
-            qualLHS(nameLHS("top"), p.1).silver_lhs ++ " = " ++
-            combineBoolContribs(p.3) ++ ";"
-        | _ -> error("productionDecl.contribsTrans")
+        let lhsDec::Decorated AG_LHS with {knownLocals, knownProds} = 
+          decorate qualLHS(nameLHS("top"), p.1) with {knownLocals = allLocals; knownProds = top.knownProds;}
+        in
+          case p.2 of
+          | listTypeAG(scopeTypeAG()) -> 
+              lhsDec.silver_lhs ++ " = " ++
+              combineEdgeContribs(p.3, allLocals, top.knownProds) ++ ";"
+          | boolTypeAG() ->
+              lhsDec.silver_lhs ++ " = " ++
+              combineBoolContribs(p.3, allLocals, top.knownProds) ++ ";"
+          | _ -> error("productionDecl.contribsTrans")
+          end
         end,
       contribsAll);
-
-
 
 }
 
@@ -60,12 +74,21 @@ top::AG_Decl ::=
   args::[(String, AG_Type)]
   body::[AG_Eq]
 {
+  local allLocals::[(String, AG_Type)] = 
+    localEdgeLsts ++ 
+    args ++
+    regularLocals;
+
+  local bodyDec::[Decorated AG_Eq with {knownLocals, knownProds}] = 
+    map (\eq::AG_Eq -> decorate eq with {knownLocals = allLocals; knownProds = top.knownProds;},
+         body);
+
   top.silver_decl = "abstract production " ++ preProd ++ name ++ "\n" ++ 
     "top::" ++ ty.nta_type ++ " ::= " ++ 
     implode(" ", map(\arg::(String, AG_Type) -> arg.1 ++ "::" ++ 
                                                 arg.2.silver_type, args)) ++ 
   " {\n\t" ++
-    implode("\n\t", filterMap((.silver_eq), body) ++ contribsTrans) ++ "\n" ++
+    implode("\n\t", filterMap((.silver_eq), bodyDec) ++ contribsTrans) ++ "\n" ++
   "}";
 
   -- contribs for monoid locals
@@ -77,20 +100,24 @@ top::AG_Decl ::=
     map ((\attr::(String, AG_Type) -> (attr.1, attr.2, allContributionsForAttr(attr.1, body))),
          synContribAttrs ++ localEdgeLsts);
   local synContribAttrs::[(String, AG_Type)] = getContribAttrs(syns);
-  local locals::([(String, AG_Type)], [String]) = getLocals(body);
+  local locals::([(String, AG_Type)], [(String, AG_Type)]) = getLocals(body);
   local localEdgeLsts::[(String, AG_Type)] = locals.1;
-  local regularLocals::[String] = locals.2;
+  local regularLocals::[(String, AG_Type)] = locals.2;
   local contribsTrans::[String] = 
     map (
       \p::(String, AG_Type, [AG_Expr]) ->
-        case p.2 of
-        | listTypeAG(scopeTypeAG()) -> 
-            qualLHS(nameLHS("top"), p.1).silver_lhs ++ " = " ++
-            combineEdgeContribs(p.3) ++ ";"
-        | boolTypeAG() ->
-            qualLHS(nameLHS("top"), p.1).silver_lhs ++ " = " ++
-            combineBoolContribs(p.3) ++ ";"
-        | _ -> error("productionDecl.contribsTrans")
+        let lhsDec::Decorated AG_LHS with {knownLocals, knownProds} = 
+          decorate qualLHS(nameLHS("top"), p.1) with {knownLocals = allLocals; knownProds = top.knownProds;}
+        in
+          case p.2 of
+          | listTypeAG(scopeTypeAG()) -> 
+              lhsDec.silver_lhs ++ " = " ++
+              combineEdgeContribs(p.3, allLocals, top.knownProds) ++ ";"
+          | boolTypeAG() ->
+              lhsDec.silver_lhs ++ " = " ++
+              combineBoolContribs(p.3, allLocals, top.knownProds) ++ ";"
+          | _ -> error("productionDecl.contribsTrans")
+          end
         end,
       contribsAll);
 
@@ -116,9 +143,22 @@ top::AG_Decl ::=
   ty::AG_Type
   e::AG_Expr
 {
+  e.knownLocals = [];
   top.silver_decl = "global " ++ name ++ "::" ++ ty.silver_type ++ 
     e.silver_expr ++
   ";";
+}
+
+aspect production eqInstanceDecl
+top::AG_Decl ::=
+  ty::AG_Type
+  e::AG_Expr
+{
+  e.knownLocals = [];
+  top.silver_decl = "instance Eq " ++ ty.silver_type ++ " {" ++
+    "eq = " ++ e.silver_expr ++ "; " ++
+  "}";
+
 }
 
 --------------------------------------------------
@@ -127,6 +167,9 @@ inherited attribute knownNts::AG_Decls occurs on AG_Decls;
 propagate knownNts on AG_Decls;
 
 synthesized attribute silver_decls::String occurs on AG_Decls;
+
+attribute knownProds occurs on AG_Decls;
+propagate knownProds on AG_Decls;
 
 aspect production agDeclsCons
 top::AG_Decls ::= h::AG_Decl t::AG_Decls
@@ -168,24 +211,24 @@ function getContribAttrs
 }
 
 function combineBoolContribs
-String ::= contribs::[AG_Expr]
+String ::= contribs::[AG_Expr] locals::[(String, AG_Type)] prods::AG_Decls
 {
   return
     case contribs of
     | []    ->   "true"
-    | h::[] -> h.silver_expr
-    | h::t  -> h.silver_expr ++ " && " ++ combineBoolContribs(t)
+    | h::t  -> decorate h with {knownLocals = locals; knownProds = ^prods;}.silver_expr ++ " && " ++ 
+               combineBoolContribs(t, locals, ^prods)
     end;
 }
 
 function combineEdgeContribs
-String ::= contribs::[AG_Expr]
+String ::= contribs::[AG_Expr] locals::[(String, AG_Type)] prods::AG_Decls
 {
   return
     case contribs of
     | []    -> "[]"
-    | h::[] -> "(" ++ h.silver_expr ++ ")"
-    | h::t  -> "(" ++ h.silver_expr ++ ")" ++ " ++ " ++ combineEdgeContribs(t)
+    | h::t  -> "(" ++ decorate h with {knownLocals = locals; knownProds = ^prods;}.silver_expr ++ ")" ++ 
+               " ++ " ++ combineEdgeContribs(t, locals, ^prods)
     end;
 }
 
@@ -193,17 +236,21 @@ fun str String ::= s::String = "\"" ++ s ++ "\"";
 
 -- monoids on left, others on right
 function getLocals
-([(String, AG_Type)], [String]) ::= eqs::[AG_Eq]
+([(String, AG_Type)], [(String, AG_Type)]) ::= eqs::[AG_Eq]
 {
   return
     case eqs of
     | [] -> ([], [])
+    | ntaEq(nameLHS(name), ty, e)::t ->
+        let rec::([(String, AG_Type)], [(String, AG_Type)]) = getLocals(t) in
+          (rec.1, (name, ^ty)::rec.2)
+        end
     | localDeclEq(l, ty)::t ->
-        let rec::([(String, AG_Type)], [String]) = getLocals(t) in
+        let rec::([(String, AG_Type)], [(String, AG_Type)]) = getLocals(t) in
           case ty of
           | listTypeAG(scopeTypeAG()) -> ((l, ^ty)::rec.1, rec.2)
           | boolTypeAG()           -> ((l, ^ty)::rec.1, rec.2)
-          | _ -> (rec.1, l::rec.2)
+          | _ -> (rec.1, (l, ^ty)::rec.2)
           end
         end
     | _::t -> getLocals(t)

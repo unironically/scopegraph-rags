@@ -12,6 +12,12 @@ top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
   top.pp = "contributionEq(" ++ lhs.pp ++ ", " ++ expr.pp ++ ")";
 }
 
+abstract production localDefineEq
+top::AG_Eq ::= name::String ty::AG_Type expr::AG_Expr
+{
+  top.pp = "localDefineEq(" ++ name ++ ", " ++ ty.pp ++ ", " ++ expr.pp ++ ")";
+}
+
 abstract production defineEq
 top::AG_Eq ::= lhs::AG_LHS expr::AG_Expr
 {

@@ -75,7 +75,7 @@ top::Constraint ::= t1::Term t2::Term
 aspect production newConstraintDatum
 top::Constraint ::= name::String t::Term
 {
-  local ntaName::String = "_" ++ name ++ "_";
+  local ntaName::String = "scope_" ++ name ++ "_";
   local ref::AG_LHS = nameLHS(ntaName);
   local mkScopeApp::AG_Expr = termExpr("mkScope", []);
 
@@ -147,17 +147,10 @@ top::Constraint ::= name::String t::Term
     end;
 }
 
-{-
-  name::String
-  ty::Type
-  argTys::[Type]
-  loc::Location
--}
-
 aspect production newConstraint
 top::Constraint ::= name::String
 {
-  local ntaName::String = "_" ++ name ++ "_";
+  local ntaName::String = "scope_" ++ name ++ "_";
   local ref::AG_LHS = nameLHS(ntaName);
   local mkScopeApp::AG_Expr = termExpr("mkScope", []);
   

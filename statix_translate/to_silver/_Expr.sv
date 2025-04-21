@@ -2,7 +2,26 @@ grammar statix_translate:to_silver;
 
 --------------------------------------------------
 
+function lookupLocal
+AG_Type ::= name::String locals::[(String, AG_Type)]
+{
+  return
+    case locals of
+    | [] -> error("Could not find local " ++ name ++ " in to_silver.lookupLocal")
+    | (s, t)::_ when s == name -> t
+    | _::t -> lookupLocal(name, t)
+    end;
+}
+
+--------------------------------------------------
+
+attribute knownLocals occurs on AG_Expr;
+propagate knownLocals on AG_Expr excluding lambdaExpr, letExpr;
+
 synthesized attribute silver_expr::String occurs on AG_Expr;
+
+attribute knownProds occurs on AG_Expr;
+propagate knownProds on AG_Expr;
 
 aspect production trueExpr
 top::AG_Expr ::=
@@ -43,13 +62,31 @@ top::AG_Expr ::= l::AG_Expr r::AG_Expr
 aspect production appExpr
 top::AG_Expr ::= name::String args::[AG_Expr]
 {
-  top.silver_expr = preProd ++ name ++ "(" ++ implode(", ", map((.silver_expr), args)) ++ ")";
+  local argsDec::[Decorated AG_Expr with {knownLocals, knownProds}] =
+    map(\e::AG_Expr -> decorate e with {knownLocals = top.knownLocals; knownProds = top.knownProds;}, args);
+
+  top.silver_expr = preProd ++ name ++ "(" ++ implode(", ", map((.silver_expr), argsDec)) ++ ")";
 }
 
 aspect production nameExpr
 top::AG_Expr ::= name::String
 {
+  top.silver_expr =
+    if name == "top"
+    then 
+      name
+    else
+      case lookupLocal(name, top.knownLocals) of
+      | nameTypeAG(_) -> unsafeTracePrint("^" ++ name, name ++ " was a local of nameTypeAG!\n")
+      | _ -> unsafeTracePrint(name, name ++ " was not a local of nameTypeAG....\n")
+      end;
+}
+
+abstract production nameExprUndec
+top::AG_Expr ::= name::String
+{
   top.silver_expr = name;
+  forwards to nameExpr(name);
 }
 
 aspect production andExpr
@@ -69,7 +106,18 @@ top::AG_Expr ::= e::AG_Expr cases::AG_Cases
 aspect production demandExpr
 top::AG_Expr ::= lhs::AG_Expr attr::String
 {
-  top.silver_expr = lhs.silver_expr ++ "." ++ attr;
+  top.silver_expr = 
+    case lhs of
+    | nameExpr(n) ->
+      if n == "top" && containsBy((\l::(String, AG_Type) r::(String, AG_Type) -> l.1 == r.1), 
+                                  (attr, varTypeAG()), top.knownLocals)
+      then case lookupLocal(attr, top.knownLocals) of
+           | nameTypeAG(_) -> unsafeTracePrint("^" ++ attr, attr ++ " was a local of nameTypeAG!\n")
+           | _ -> unsafeTracePrint(attr, attr ++ " was not a local of nameTypeAG....\n")
+           end
+      else n ++ "." ++ attr
+    | _ -> lhs.silver_expr ++ "." ++ attr
+    end;
 }
 
 aspect production lambdaExpr
@@ -80,12 +128,16 @@ top::AG_Expr ::= args::[(String, AG_Type)] body::AG_Expr
                    map(\arg::(String, AG_Type) -> arg.1 ++ "::" ++ 
                                                   arg.2.silver_type, args)) ++
     " -> " ++ body.silver_expr;
+
+  body.knownLocals = args ++ top.knownLocals;
 }
 
 aspect production tupleExpr
 top::AG_Expr ::= es::[AG_Expr]
 {
-  top.silver_expr = "(" ++ implode(", ", map((.silver_expr), es)) ++ ")";
+  local argEs::[Decorated AG_Expr with {knownLocals, knownProds}] =
+    map(\e::AG_Expr -> decorate e with {knownLocals = top.knownLocals; knownProds = top.knownProds;}, es);
+  top.silver_expr = "(" ++ implode(", ", map((.silver_expr), argEs)) ++ ")";
 }
 
 aspect production consExpr
@@ -109,7 +161,9 @@ top::AG_Expr ::= tup::AG_Expr i::Integer
 aspect production termExpr
 top::AG_Expr ::= name::String args::[AG_Expr]
 {
-  top.silver_expr = preProd ++ name ++ "(" ++ implode(", ", map((.silver_expr), args)) ++ ")";
+  local decArgs::[Decorated AG_Expr with {knownLocals, knownProds}] =
+    map(\e::AG_Expr -> decorate e with {knownLocals = top.knownLocals; knownProds = top.knownProds;}, args);
+  top.silver_expr = preProd ++ name ++ "(" ++ implode(", ", map((.silver_expr), decArgs)) ++ ")";
 }
 
 aspect production abortExpr
@@ -124,6 +178,8 @@ top::AG_Expr ::= name::String ty::AG_Type bind::AG_Expr body::AG_Expr
   top.silver_expr = "let " ++ name ++ "::" ++ ty.silver_type ++ 
                                       " = " ++ bind.silver_expr ++ 
                                       " in " ++ body.silver_expr ++ " end";
+  bind.knownLocals = top.knownLocals;
+  body.knownLocals = (name, ^ty)::top.knownLocals;
 }
 
 aspect production ifExpr
@@ -136,6 +192,12 @@ top::AG_Expr ::= c::AG_Expr e1::AG_Expr e2::AG_Expr
 --------------------------------------------------
 
 synthesized attribute silver_exprs::[String] occurs on AG_Exprs;
+
+attribute knownLocals occurs on AG_Exprs;
+propagate knownLocals on AG_Exprs;
+
+attribute knownProds occurs on AG_Exprs;
+propagate knownProds on AG_Exprs;
 
 aspect production consExprs
 top::AG_Exprs ::= hd::AG_Expr tl::AG_Exprs

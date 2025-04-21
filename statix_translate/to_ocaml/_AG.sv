@@ -12,6 +12,7 @@ top::AG ::=
   funs::AG_Decls
   inhs::[(String, AG_Type)]
   syns::[(String, AG_Type)]
+  labs::[Label]
 {
   top.ocaml_ag = 
     implode(";\n", nts.ocaml_decls ++ globs.ocaml_decls ++
