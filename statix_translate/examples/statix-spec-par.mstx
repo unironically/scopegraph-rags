@@ -1,0 +1,272 @@
+@syntax
+main(p:main) :- p match {
+  
+  Program(ds:decls) -> 
+      {s:scope}
+        new s,
+        decls(s, s, ds)
+  }.
+
+// s        : the scope to resolve and declare mods/vars
+// s_par    : the scope to resolve imports in
+
+@syntax
+decls(@inh s:scope, @inh s_par:scope, ds:decls) :- ds match {
+    
+    DeclsNil() ->
+      true
+
+  | DeclsCons(d:decl, ds:decls) -> 
+      decl(s, s_par, d),
+      decls(s, s_par, ds)
+
+  }.
+
+// s        : the scope to resolve and declare mods/vars
+// s_par    : the scope to resolve imports in
+
+@syntax
+decl(@inh s:scope, @inh s_par:scope, d:decl) :- d match {
+  
+    DeclModule(x:string, ds:decls) -> 
+      {s_mod:scope}
+        new s_mod -> DatumMod(x, s_mod),
+        s -[ `MOD ]-> s_mod,
+        s_mod  -[ `LEX ]-> s,
+        decls(s_mod, s, ds)
+
+  | DeclImport(r:mod_ref) ->
+
+      {p:path, d:datum, s_mod:scope, tgt_s:scope}
+        mod_ref(s_par, r, p),
+        tgt(p, tgt_s),
+        tgt_s -> d,
+        d match { DatumMod(_:string, dscope:scope):datum -> s_mod := dscope },
+        s -[ `IMP ]-> s_mod
+
+  | DeclDef(b:par_bind) ->
+      par_bind(s, b, s)
+
+  }.
+
+
+@syntax
+expr(@inh s:scope, e:expr, @syn ty:type) :- e match {
+
+    ExprInt(i:string) ->
+      ty := TInt()
+
+  | ExprTrue() ->
+      ty := TBool()
+
+  | ExprFalse() ->
+      ty := TBool()
+
+  | ExprVar(r:var_ref) ->
+      {p:path, d:datum, tgt_s:scope}
+        var_ref(s, r, p),
+        tgt(p, tgt_s), 
+        tgt_s -> d,
+        d match { DatumVar(_:string, dty:type):datum -> ty := dty }
+
+  | ExprAdd(e1:expr, e2:expr) ->
+      {ty1:type, ty2:type}
+        expr(s, e1, ty1),
+        expr(s, e2, ty2),
+        ty1 == TInt(),
+        ty2 == TInt(),
+        ty := TInt()
+
+  | ExprAnd(e1:expr, e2:expr) ->
+      {ty1:type, ty2:type}
+        expr(s, e1, ty1),
+        expr(s, e2, ty2),
+        ty1 == TBool(),
+        ty2 == TBool(),
+        ty := TBool()
+
+  | ExprEq(e1:expr, e2:expr) ->
+      {ty1:type, ty2:type}
+        expr(s, e1, ty1),
+        expr(s, e2, ty2),
+        ty1 == ty2,
+        ty := TBool()
+
+  | ExprApp(e1:expr, e2:expr) ->
+      {ty1:type, ty2:type}
+        expr(s, e1, ty1),
+        expr(s, e2, ty2),
+        ty1 match { TFun(l:type, r:type):type -> ty := r },
+        ty1 match { TFun(l:type, r:type):type -> ty2 == l }
+
+  | ExprIf(e1:expr, e2:expr, e3:expr) ->
+      {ty1:type, ty2:type, ty3:type}
+        expr(s, e1, ty1),
+        expr(s, e2, ty2),
+        expr(s, e3, ty3),
+        ty1 == TBool(),
+        ty2 == ty3,
+        ty := ty2
+
+  | ExprFun(d:arg_decl, e:expr) ->
+      {s_fun:scope, ty1:type, ty2:type}
+        new s_fun,
+        s_fun -[ `LEX ]-> s,
+        arg_decl(s_fun, d, ty1),
+        expr(s_fun, e, ty2),
+        ty := TFun(ty1, ty2)
+
+  | ExprLet(bs:seq_binds, e:expr) ->
+      {s_let:scope}
+        new s_let,
+        seq_binds(s, bs, s_let),
+        expr(s_let, e, ty)
+
+  | ExprLetRec(bs:par_binds, e:expr) -> 
+      {s_let:scope}
+        new s_let,
+        s_let -[ `LEX ]-> s,
+        par_binds(s_let, bs, s_let),
+        expr(s_let, e, ty)
+
+  | ExprLetPar(bs:par_binds, e:expr) -> 
+      {s_let:scope}
+        new s_let,
+        s_let -[ `LEX ]-> s,
+        par_binds(s, bs, s_let),
+        expr(s_let, e, ty)
+  }.
+
+
+@syntax
+seq_binds(@inh s:scope, bs:seq_binds, @inh s_def:scope) :- bs match {
+  
+    SeqBindsNil() ->
+      s_def -[ `LEX ]-> s
+
+  | SeqBindsOne(b:seq_bind) ->
+      s_def -[ `LEX ]-> s,
+      seq_bind(s, b, s_def)
+
+  | SeqBindsCons(b:seq_bind, bs:seq_binds) -> 
+      {s_def_:scope}
+        new s_def_,
+        s_def_ -[ `LEX ]-> s,
+        seq_bind(s, b, s_def_),
+        seq_binds(s_def_, bs, s_def)
+
+  }.
+
+
+@syntax
+seq_bind(@inh s:scope, b:seq_bind, @inh s_def:scope) :- b match { 
+  
+    DefBindSeq(x:string, e:expr) -> 
+      {s_var:scope, ty:type}
+        new s_var -> DatumVar(x, ty),
+        s -[ `VAR ]-> s_var,
+        expr(s, e, ty)
+
+  | DefBindTypedSeq(x:string, tyann:type, e:expr) -> 
+      {s_var:scope, ty:type}
+        new s_var -> DatumVar(x, ty),
+        s -[ `VAR ]-> s_var,
+        type(s, tyann, ty),
+        expr(s, e, ty)
+
+  }.
+
+
+@syntax
+par_binds(@inh s:scope, bs:par_binds, @inh s_def:scope) :- bs match {
+
+    ParBindsNil()   -> 
+      true
+
+  | ParBindsCons(b:par_bind, bs:par_binds) -> 
+      par_bind(s, b, s_def),
+      par_binds(s, bs, s_def)
+
+  }.
+
+
+@syntax
+par_bind(@inh s:scope, b:par_bind, @inh s_def:scope) :- b match {
+    
+    DefBindPar(x:string, e:expr) ->
+      {s_var:scope, ty:type}
+        new s_var -> DatumVar(x, ty),
+        s_def -[ `VAR ]-> s_var,
+        expr(s, e, ty)
+
+  | DefBindTypedPar(x:string, tyann:type, e:expr) -> 
+      {s_var:scope, ty:type}
+        new s_var -> DatumVar(x, ty),
+        s_def -[ `VAR ]-> s_var,
+        type(s, tyann, ty),
+        expr(s, e, ty)
+
+  }.
+
+
+@syntax
+arg_decl(@inh s:scope, d:arg_decl, @syn ty:type) :- d match {
+    
+    ArgDecl(x:string, tyann:type) ->
+      {s_var:scope}
+        type(s, tyann, ty),
+        new s_var -> DatumVar(x, ty),
+        s -[ `VAR ]-> s_var
+
+  }.
+
+
+@syntax
+type(@inh s:scope, tyann:type, @syn ty:type) :- tyann match { 
+  
+    TInt() ->
+      ty := TInt()
+
+  | TBool() ->
+      ty := TBool()
+
+  | TFun(tyann1:type, tyann2:type) ->
+      {ty1:type, ty2:type}
+        type(s, tyann1, ty1),
+        type(s, tyann2, ty2),
+        ty := TFun(ty1, ty2)
+  }.
+
+
+@syntax
+mod_ref(@inh s:scope, r:mod_ref, @syn p:path) :- r match { 
+
+    ModRef(x:string) -> 
+      {mods:{path}, xmods:{path}, xmods_:{path}}
+        query s `LEX*`IMP? `MOD as mods,
+        filter mods (DatumMod(x_:string, _:scope):datum where x_ == x) xmods,
+        min xmods lexico( `MOD < `LEX, `MOD < `IMP, `VAR < `LEX, `VAR < `IMP, `IMP < `LEX ) xmods_,
+        only(xmods_, p)
+
+  }.
+
+
+@syntax
+var_ref(@inh s:scope, r:var_ref, @syn p:path) :- r match { 
+  
+    VarRef(x:string) -> 
+      {vars:{path}, xvars:{path}, xvars_:{path}}
+        query s `LEX* `IMP? `VAR as vars,
+        filter vars (DatumVar(x_:string, _:type):datum where x_ == x) xvars,
+        min xvars lexico( `MOD < `LEX, `MOD < `IMP, `VAR < `LEX, `VAR < `IMP, `IMP < `LEX ) xvars_,
+        only(xvars_, p)
+
+  }.
+
+
+// some function predicates //
+
+tgt(p:path, @ret s:scope) :- p match {
+    End(x:scope):path                    -> s := x
+  | Edge(x:scope, l:label, xs:path):path -> tgt(xs,s)
+  }.

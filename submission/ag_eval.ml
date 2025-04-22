@@ -6,7 +6,7 @@ module AG (Spec : AG_Spec) = struct
 (* switch on for printing tree/stack/state at every step. 
  * drastically slows down evaluation for large programs!
  *)
-let debug = false
+let debug = true
 
 (* print_state :: eq_step_state -> unit 
  * print the current AG evaluation state
@@ -163,6 +163,23 @@ let prod_env: prod list = Spec.prod_set @ [
     ]
   );
 
+(*
+\l -> \r -> 
+  case (l,r) of 
+    (labelMOD(), labelLEX()) -> -1 
+  | (labelLEX(), labelMOD()) -> 1 
+  | (labelMOD(), labelIMP()) -> -1 
+  | (labelIMP(), labelMOD()) -> 1 
+  | (labelVAR(), labelLEX()) -> -1 
+  | (labelLEX(), labelVAR()) -> 1 
+  | (labelVAR(), labelIMP()) -> -1 
+  | (labelIMP(), labelVAR()) -> 1 
+  | (labelIMP(), labelLEX()) -> -1 
+  | (labelLEX(), labelIMP()) -> 1 
+  | (_, _) -> 0
+
+*)
+
   (* path comp pair *)
   (
     "path_comp", "FunResult",
@@ -179,8 +196,8 @@ let prod_env: prod list = Spec.prod_set @ [
                 Equal(VarE("headRes"), Int(0)),
                 AttrRef(TermE(TermT("path_comp", [
                   AttrRef(VarE("top"), "f");
-                  VarE("t1");
-                  VarE("t2")
+                  VarE("xs1");
+                  VarE("xs2")
                 ])), "ret"),
                 VarE("headRes")
               )
@@ -203,23 +220,23 @@ let prod_env: prod list = Spec.prod_set @ [
 
           (NilP, Nil);
 
-          (ConsP(VarP("hp"), VarP("t")),
+          (ConsP(VarP("hp"), VarP("tp")),
             AttrRef(
               TermE(TermT("list_fold_right", [
-                Fun("item", Fun("acc", 
+                Fun("item", Fun("acc",
                   Let("hd", Case(VarE("acc"), [(ConsP(VarP("h"), UnderscoreP), VarE("h"))]),
                     Let("minRes", AttrRef(TermE(TermT("path_comp", [AttrRef(VarE("top"), "f"); VarE("item"); VarE("hd")])), "ret"), 
                       If (Equal(VarE("minRes"), Int(-1)),
                         Cons(VarE("item"), Nil),          (* current is less than hd *)
                         If(Equal(VarE("minRes"), Int(1)),
                           VarE("acc"),                    (* item is greater than hd*)
-                          Cons(VarE("item"), VarE("acc")) (* item is equal to hd *)
+                          VarE("minRes") (* item is equal to hd *)
                         )
                       )
                     )
                   )
                 ));
-                VarE("t");
+                VarE("tp");
                 Cons(VarE("hp"), Nil)
               ])), "ret") )
 
@@ -575,7 +592,8 @@ let prod_env: prod list = Spec.prod_set @ [
               App(
                 App(VarE("f"), VarE("h")), 
                 AttrRef(TermE(TermT("list_fold_right", [
-                  VarE("f"); VarE("t"); 
+                  VarE("f");
+                  VarE("t");
                   VarE("initial")])), 
                 "ret")) ) 
         ])
@@ -1301,7 +1319,8 @@ and expr_step (e, t, s, eqs: expr_step_state): expr_step_state =
       (print_state (t, s, eqs));
       raise (Failure ("Found an error, aborting... Message: " ^ msg))
 
-  | VarE x -> raise (Failure ("TODO: expr_step: VarE, had '" ^ x ^ "'"))
+  | VarE x -> (print_state (t, s, eqs));
+              raise (Failure ("TODO: expr_step: VarE, had '" ^ x ^ "'"))
 
   | _ -> (print_state (t, s, eqs));
          raise (Failure ("Match failure in expr_step for expr: " ^ (str_expr e)))
@@ -1320,24 +1339,20 @@ let rec eq_step (t, s, eqs: eq_step_state): eq_step_state =
 
     (* step-simple-value *)
   | AttrEq(AttrRef(VarE(n), a), e)::rest when value_expr e ->
-      print_state (t, s, eqs);
       (make_complete (n, a) e t, rest, eqs)
 
     (* step-attr-eq *)
   | AttrEq(AttrRef(VarE(n), a), e)::rest when not(value_expr e) ->
-      print_state (t, s, eqs);
       let (e', t', s', eqs') = expr_step (e, t, s, eqs) in
       (t', replace_first (n, a) e' s', eqs')
       
     (* step-attr-eq-lhs *)
   | AttrEq(e, _)::rest when not(value_expr e) ->
-      print_state (t, s, eqs);
       let (e', t', s', eqs') = expr_step (e, t, s, eqs) in
       (t', s', eqs')
 
     (* step-build-nta *)
   | NtaEq(n, e)::rest when value_expr e ->
-      print_state (t, s, eqs);  
       let TermE(TermT(id, es)) = e in
       let t' = mk_tree n (TermT(id, es)) in
       let (eqs', t''): set * tree = instantiate_eqs "top" n t' in
@@ -1345,7 +1360,6 @@ let rec eq_step (t, s, eqs: eq_step_state): eq_step_state =
 
     (* step-expr-nta *)
   | NtaEq(n, e)::rest when not(value_expr e) ->
-    print_state (t, s, eqs);
     let (e', t', s', eqs') = expr_step (e, t, s, eqs) in
     (t', replace_first_nta n e' s', eqs')
 
@@ -1361,7 +1375,7 @@ let rec eq_steps (state: eq_step_state): eq_step_state =
     | (t, AttrEq(AttrRef(VarE("outer"), attr), e)::rest, eqs) when value_expr e ->
       print_endline ("DONE with outer." ^ attr ^ " = " ^ (str_expr e));
         let s: stack = AttrEq(AttrRef(VarE("outer"), attr), e)::rest in
-        print_state (t, s, eqs); state
+        state
     | s -> eq_steps (eq_step s)
 
 (* initial_state :: term -> eq_step_state

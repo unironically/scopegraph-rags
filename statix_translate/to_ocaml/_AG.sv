@@ -15,8 +15,8 @@ top::AG ::=
   labs::[Label]
 {
   top.ocaml_ag = 
-    implode(";\n", nts.ocaml_decls ++ globs.ocaml_decls ++
-                   prods.ocaml_decls ++ funs.ocaml_decls);
+    labelsOCamlList ++ "\n" ++ implode(";\n", (nts.ocaml_decls ++ globs.ocaml_decls ++
+                   prods.ocaml_decls ++ funs.ocaml_decls));
 
   local builtinPlusFoundNts::AG_Decls = agDeclsCons (
     nonterminalDecl("datum", [("data", nameTypeAG("actualData"))], []),
@@ -30,9 +30,18 @@ top::AG ::=
   funs.knownNts  = ^builtinPlusFoundNts;
   globs.knownNts = ^builtinPlusFoundNts;
   nts.knownNts   = ^builtinPlusFoundNts;
+
+  local labelsStr::[String] = map(\l::Label -> case l of label(n) -> n end, labs);
+  local labelsOCamlList::String = "let label_set = " ++ ocamlLabels(labelsStr);
 }
 
 --------------------------------------------------
+
+function ocamlLabels
+String ::= labs::[String]
+{
+  return "[" ++ implode("; ", map(str(_), labs)) ++ "]";
+}
 
 function lookupNt
 Maybe<AG_Decl> ::= name::String lst::AG_Decls
