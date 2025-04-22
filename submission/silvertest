@@ -9,13 +9,13 @@ cp $1/Main.sv silverstuff/statix_trans
 
 cd silverstuff
 
-./clean
-
 ./compile > /dev/null 2>&1
 
 OUT=$(java -jar statix_trans.jar 2>&1)
 
 rm statix_trans.jar
+
+./clean
 
 cd ..
 

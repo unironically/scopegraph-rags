@@ -46,7 +46,7 @@ IO<Integer> ::= largs::[String]
               );
 
               writeFile(
-                fileName ++ ".sv",
+                "Spec_" ++ fileName ++ ".sv",
                 ast.ag.silver_ag ++ "\n"
               );
 

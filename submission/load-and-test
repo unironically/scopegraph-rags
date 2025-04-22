@@ -1,7 +1,8 @@
 #!/bin/bash
 
-if [[ $# -ne 1 ]] ; then
-    echo "Expected one argument, a Statix specification in our language."
+if [[ $# -ne 2 ]] ; then
+    echo "load-and-test: Expected two argument, a Statix specification in our 
+          language, and a directory to look for test case programs."
     exit 0
 fi
 
@@ -18,11 +19,13 @@ java -jar statix_translate.driver.jar $1
 
 mv statix-spec.mstx ministatix.hs/src
 mv ocaml_ag_lm_spec.ml ocaml_lib
-mv statix-spec-*.sv silverstuff/statix_trans
+mv *.sv silverstuff/statix_trans
 
-./alltests
+./alltests $2
 
 # cleanup
 
 rm -f *.jar *.mstx *.sv *.ml
-rm silverstuff/statix_trans/statix-spec*.sv
+rm ministatix.hs/src/statix-spec.mstx
+rm ocaml_lib/ocaml_ag_lm_spec.ml
+rm silverstuff/statix_trans/Spec_*.sv

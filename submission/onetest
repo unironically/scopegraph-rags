@@ -5,7 +5,8 @@
 
 
 if [[ $# -ne 1 ]] ; then
-    echo "Expected one argument, the path of a directory containing a test case 'mstx.aterm'."
+    echo "onetest: Expected one argument, the path of a directory containing a 
+          test case 'mstx.aterm'."
     exit 0
 fi
 

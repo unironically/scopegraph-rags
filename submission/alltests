@@ -2,6 +2,12 @@
 
 # run all test cases, based on dirs in testcases/
 
-for testcase in testcases/*/ ; do
+if [[ $# -ne 1 ]] ; then
+    echo "alltests: Expected one argument, a directory to look for test case 
+          programs."
+    exit 0
+fi
+
+for testcase in $1/*/ ; do
     bash onetest $testcase
 done
