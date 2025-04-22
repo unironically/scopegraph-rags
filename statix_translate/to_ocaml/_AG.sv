@@ -17,7 +17,7 @@ top::AG ::=
   top.ocaml_ag = 
     --labelsOCamlList ++ "\n" ++ implode(";\n", (nts.ocaml_decls ++ globs.ocaml_decls ++
     --               prods.ocaml_decls ++ funs.ocaml_decls));
-    genAgFile(labelsOCamlList, nts.ocaml_decls, prods.ocaml_decls ++ funs.ocaml_decls);
+    genAgFile(labelsOCamlList, nts.ocaml_decls, demandEdgesForLabFun(labelsStr) :: (prods.ocaml_decls ++ funs.ocaml_decls));
 
   local builtinPlusFoundNts::AG_Decls = agDeclsCons (
     nonterminalDecl("datum", [("data", nameTypeAG("actualData"))], []),
@@ -37,6 +37,41 @@ top::AG ::=
 }
 
 --------------------------------------------------
+
+function demandEdgesForLabFun
+String ::= labs::[String]
+{
+  return "(" ++ str("demandEdgesForLabel") ++ ", " ++ str("FunResult") ++ ", " ++
+  "[" ++ str("s") ++ "; " ++ str("l") ++ "], [], [" ++
+    "AttrEq(AttrRef(VarE(\"top\"), \"ret\"), Case(AttrRef(VarE(\"top\"), \"l\"), [" ++
+      implode("; ",
+        map (
+          \l::String -> "(TermP(" ++ str("label" ++ l) ++ ", []), AttrRef(VarE(\"s\"), " ++ str(l) ++ "))",
+          labs
+        )
+      ) ++
+    "]))" ++
+  "])";
+}
+
+{-
+
+( (* todo - below should be generic *)
+    "demandEdgesForLabel", "FunResult",
+    ["s"; "l"], [],
+    [
+      AttrEq(AttrRef(VarE("top"), "ret"),
+        Case(AttrRef(VarE("top"), "l"), [
+          (TermP("labelLEX", []), AttrRef(VarE("s"), "LEX"));
+          (TermP("labelVAR", []), AttrRef(VarE("s"), "VAR"));
+          (TermP("labelIMP", []), AttrRef(VarE("s"), "IMP"));
+          (TermP("labelMOD", []), AttrRef(VarE("s"), "MOD"))
+        ])
+      )
+    ]
+  );
+
+-}
 
 function ocamlLabels
 String ::= labs::[String]

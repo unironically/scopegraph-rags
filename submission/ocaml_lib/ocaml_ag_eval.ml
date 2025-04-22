@@ -67,21 +67,8 @@ and value_term (TermT(s, es): term): bool = all value_expr es
 
 (******************)
 
-(* todo - generic *)
 let globalLabelList: expr = 
-  Cons(
-    TermE(TermT("labelLEX", [])),
-    Cons (
-      TermE(TermT("labelVAR", [])),
-      Cons (
-        TermE(TermT("labelIMP", [])),
-        Cons (
-          TermE(TermT("labelMOD", [])),
-          Nil
-        )
-      )
-    )
-  )
+  List.fold_right (fun l acc -> Cons(TermE(TermT("label" ^ l, [])), acc)) Spec.label_set Nil
 
 let nt_env: nt list = Spec.nt_set @ [
 
@@ -162,23 +149,6 @@ let prod_env: prod list = Spec.prod_set @ [
       )
     ]
   );
-
-(*
-\l -> \r -> 
-  case (l,r) of 
-    (labelMOD(), labelLEX()) -> -1 
-  | (labelLEX(), labelMOD()) -> 1 
-  | (labelMOD(), labelIMP()) -> -1 
-  | (labelIMP(), labelMOD()) -> 1 
-  | (labelVAR(), labelLEX()) -> -1 
-  | (labelLEX(), labelVAR()) -> 1 
-  | (labelVAR(), labelIMP()) -> -1 
-  | (labelIMP(), labelVAR()) -> 1 
-  | (labelIMP(), labelLEX()) -> -1 
-  | (labelLEX(), labelIMP()) -> 1 
-  | (_, _) -> 0
-
-*)
 
   (* path comp pair *)
   (
@@ -432,21 +402,6 @@ let prod_env: prod list = Spec.prod_set @ [
             ]))
           )
 
-        ])
-      )
-    ]
-  );
-
-  ( (* builtin for LM here, but should be generated from Statix spec *)
-    "demandEdgesForLabel", "FunResult",
-    ["s"; "l"], [],
-    [
-      AttrEq(AttrRef(VarE("top"), "ret"),
-        Case(AttrRef(VarE("top"), "l"), [
-          (TermP("labelLEX", []), AttrRef(VarE("s"), "LEX"));
-          (TermP("labelVAR", []), AttrRef(VarE("s"), "VAR"));
-          (TermP("labelIMP", []), AttrRef(VarE("s"), "IMP"));
-          (TermP("labelMOD", []), AttrRef(VarE("s"), "MOD"))
         ])
       )
     ]
