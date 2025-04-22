@@ -168,8 +168,7 @@ function matchingProd
 Boolean ::= nt::AG_Type prod::AG_Decl
 {
   return case (nt, prod) of
-         | (nameTypeAG(n), productionDecl(_, nameTypeAG(n_), _, _)) when n == n_ -> 
-              unsafeTracePrint(true, "tyname: " ++ n ++ ", prodname: " ++ n_ ++ "\n")
+         | (nameTypeAG(n), productionDecl(_, nameTypeAG(n_), _, _)) -> n == n_
          | (_, _) -> false
          end;
 }

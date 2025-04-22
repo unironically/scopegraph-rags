@@ -34,18 +34,19 @@ IO<Integer> ::= largs::[String]
           then 
             if null(ast.errs)
             then do {
-              print("Known labels: " ++
-                    implode(", ", map((.name), ast.labelsSyn)) ++ "\n");
-              mkdir("out");
-              writeFile("out/" ++ fileName ++ ".mstx", ast.mstxPP);
+              
+              writeFile(
+                "statix-spec.mstx", 
+                ast.mstxPP
+              );
 
               writeFile(
-                "ocaml_ag.ml",
+                "ocaml_ag_lm_spec.ml",
                 ast.ag.ocaml_ag ++ "\n"
               );
 
               writeFile(
-                "silver_ag.sv",
+                fileName ++ ".sv",
                 ast.ag.silver_ag ++ "\n"
               );
 

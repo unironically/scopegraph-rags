@@ -15,8 +15,9 @@ top::AG ::=
   labs::[Label]
 {
   top.ocaml_ag = 
-    labelsOCamlList ++ "\n" ++ implode(";\n", (nts.ocaml_decls ++ globs.ocaml_decls ++
-                   prods.ocaml_decls ++ funs.ocaml_decls));
+    --labelsOCamlList ++ "\n" ++ implode(";\n", (nts.ocaml_decls ++ globs.ocaml_decls ++
+    --               prods.ocaml_decls ++ funs.ocaml_decls));
+    genAgFile(labelsOCamlList, nts.ocaml_decls, prods.ocaml_decls ++ funs.ocaml_decls);
 
   local builtinPlusFoundNts::AG_Decls = agDeclsCons (
     nonterminalDecl("datum", [("data", nameTypeAG("actualData"))], []),
@@ -56,4 +57,24 @@ Maybe<AG_Decl> ::= name::String lst::AG_Decls
         end
     | agDeclsNil() -> nothing()
     end;
+}
+
+function genAgFile
+String ::= labs::String nts::[String] prods::[String]
+{
+  return
+    "open Ocaml_ag_syntax\nopen Ocaml_ag_spec\nopen Ocaml_ag_eval\n\n" ++
+    "module Spec : AG_Spec = struct\n\n" ++
+
+    "\t(* label set *)\n\t" ++ labs ++ "\n" ++
+
+    "\t(* nonterminal set *)\n\tlet nt_set = [\n\t" ++
+
+      implode(";\n\t", nts) ++
+
+    "\t]\n\n\t(* production/function set *)\n\tlet prod_set = [\n\t" ++
+
+      implode(";\n\t", prods) ++
+
+    "\t]\n\nend\n\nmodule AG_Full = AG(Spec)";
 }

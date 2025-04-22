@@ -5,7 +5,7 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-ocamlbuild $1/ag_test.byte -I . &> /dev/null
+ocamlbuild $1/ag_test.byte -I ocaml_lib &> /dev/null
 
 OUT=$(ocamlrun ag_test.byte 2>&1)
 

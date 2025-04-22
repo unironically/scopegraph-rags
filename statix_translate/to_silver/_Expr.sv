@@ -77,8 +77,8 @@ top::AG_Expr ::= name::String
       name
     else
       case lookupLocal(name, top.knownLocals) of
-      | nameTypeAG(_) -> unsafeTracePrint("^" ++ name, name ++ " was a local of nameTypeAG!\n")
-      | _ -> unsafeTracePrint(name, name ++ " was not a local of nameTypeAG....\n")
+      | nameTypeAG(_) -> "^" ++ name
+      | _ -> name
       end;
 }
 
@@ -112,8 +112,8 @@ top::AG_Expr ::= lhs::AG_Expr attr::String
       if n == "top" && containsBy((\l::(String, AG_Type) r::(String, AG_Type) -> l.1 == r.1), 
                                   (attr, varTypeAG()), top.knownLocals)
       then case lookupLocal(attr, top.knownLocals) of
-           | nameTypeAG(_) -> unsafeTracePrint("^" ++ attr, attr ++ " was a local of nameTypeAG!\n")
-           | _ -> unsafeTracePrint(attr, attr ++ " was not a local of nameTypeAG....\n")
+           | nameTypeAG(_) -> "^" ++ attr
+           | _ -> attr
            end
       else n ++ "." ++ attr
     | _ -> lhs.silver_expr ++ "." ++ attr

@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [[ $# -ne 1 ]] ; then
+    echo "Expected one argument, a Statix specification in our language."
+    exit 0
+fi
+
+# build the translator if not present
+
+if [ ! -f statix_translate.driver.jar ]; then
+    echo "Building translator..."
+    ./../statix_translate/compile  &> /dev/null 2>&1
+fi
+
+# translate the spec
+
+java -jar statix_translate.driver.jar $1
+
+mv statix-spec.mstx ministatix.hs/src
+mv ocaml_ag_lm_spec.ml ocaml_lib
+
+./alltests
+
+# cleanup
+
+rm -f *.jar *.mstx *.sv *.ml

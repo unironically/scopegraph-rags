@@ -1,5 +1,5 @@
-open Ag_syntax
-open Ag_lm_spec
+open Ocaml_ag_syntax
+open Ocaml_ag_lm_spec
 
 let program: term =
   TermT("Program", [
