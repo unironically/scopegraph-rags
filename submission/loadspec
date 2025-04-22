@@ -18,9 +18,11 @@ java -jar statix_translate.driver.jar $1
 
 mv statix-spec.mstx ministatix.hs/src
 mv ocaml_ag_lm_spec.ml ocaml_lib
+mv statix-spec-*.sv silverstuff/statix_trans
 
 ./alltests
 
 # cleanup
 
 rm -f *.jar *.mstx *.sv *.ml
+rm silverstuff/statix_trans/statix-spec*.sv

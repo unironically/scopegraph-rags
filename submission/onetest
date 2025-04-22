@@ -12,4 +12,7 @@ fi
 echo "Running test case in $1..."
 
 bash ministatixtest $1
+
 bash ocamltest $1
+
+bash silvertest $1
