@@ -90,6 +90,8 @@ giving the specification and a directory containing the test cases as arguments.
 
 ### Artifact structure overview
 
+The interesting artifact structure is outlined below.
+
 - `test-all-specs`: Top-level script for running all input test cases in 
   `specifications/testcases/lm` through all translations for the three Statix 
   specifications we provide in `specifications/`, for each of; Ministatix, our 
@@ -226,67 +228,12 @@ test-one-spec: Building translator...
 Compiling statix_translate:driver
 	[statix_translate/../statix_translate/driver/]
 	[Main.sv]
-Compiling statix_translate:lang:concretesyntax
-	[statix_translate/../statix_translate/lang/concretesyntax/]
-	[ConcreteSyntax.sv Terminals.sv]
-Compiling statix_translate:lang:abstractsyntax
-	[statix_translate/../statix_translate/lang/abstractsyntax/]
-	[AbstractSyntax.sv TreePrint.sv]
-Compiling statix_translate:lang:analysis
-	[statix_translate/../statix_translate/lang/analysis/]
-	[Composed.sv ErrorMessage.sv Errors.sv Labels.sv Permissions.sv Terms.sv Type.sv 
-	 VariableAnalysis.sv]
-Compiling statix_translate:to_ministatix
-	[statix_translate/../statix_translate/to_ministatix/]
-	[Generate.sv]
-Compiling statix_translate:to_ag
-	[statix_translate/../statix_translate/to_ag/]
-	[BranchList.sv Composed.sv Constraint.sv Label.sv Lambda.sv Matcher.sv Module.sv 
-	 NameList.sv Order.sv PathComp.sv Regex.sv Term.sv TypeAnn.sv _AG.sv 
-	 _Cases.sv _Decl.sv _Equation.sv _Expr.sv _LHS.sv _Pattern.sv _Type.sv 
-	 _WhereClause.sv]
-Compiling statix_translate:to_ocaml
-	[statix_translate/../statix_translate/to_ocaml/]
-	[Composed.sv _AG.sv _Cases.sv _Decl.sv _Equation.sv _Expr.sv _LHS.sv 
-	 _Pattern.sv _Type.sv _WhereClause.sv]
-Compiling statix_translate:to_silver
-	[statix_translate/../statix_translate/to_silver/]
-	[Composed.sv _AG.sv _Cases.sv _Decl.sv _Equation.sv _Expr.sv _LHS.sv 
-	 _Pattern.sv _Type.sv _WhereClause.sv]
 ...
 ```
 
 And ending with output of the form:
 
 ```
--------------
-Final report:
--------------
-Parser and scanner specification
-   has 63 terminals, 31 nonterminals, 102 productions,
-   and 0 disambiguation functions declared,
-   producing 262 unique parse states
-   and 157 unique scanner states.
-0 useless nonterminals.
-0 malformed regexes.
-0 unresolved parse table conflicts:
-   28 shift/reduce conflicts, 0 reduce/reduce, 28 resolved.
-0 unresolved lexical ambiguities:
-   3 resolved by context, 0 by disambiguation function/group.
-Parser code output to statix_translate/gen/src/statix_translate/driver/Parser_statix_translate_driver_parse.java.
-Buildfile: /home/luke/Academia/personal/scopegraph-rags/docker_testing/load/build.xml
-
-init:
-    [mkdir] Created dir: /home/luke/Academia/personal/scopegraph-rags/docker_testing/load/statix_translate/gen/bin
-
-grammars:
-    [javac] Compiling 550 source files to /home/luke/Academia/personal/scopegraph-rags/docker_testing/load/statix_translate/gen/bin
-
-jars:
-      [jar] Building jar: /home/luke/Academia/personal/scopegraph-rags/docker_testing/load/statix_translate.driver.jar
-
-dist:
-
 BUILD SUCCESSFUL
 ```
 
@@ -391,51 +338,108 @@ No known issues.
 
 
 ## Full Evaluation
-For all experimental claims made in the paper, please provide the following:
 
-1. **Reference to the Experimental Claim:** Quote or reference the claim from the paper.
+1. **Reference to the Experimental Claim:**
 
-Theorem 2
+The claim we wish to validate with this artifact is a version of Theorem 2 of 
+the paper which discounts the check that the scope graph is the same between
+Statix and attribute grammar evaluation. We wish to show the following, for
+a given Statix specification and input test case:
 
-3 specs - what are tjey
+- If the input program is satisfiable by Ministatix, then it is satisfiable by
+  both AG systems (case 1 of Theorem 2).
+- If the input program is unsatisfiable by Ministatix, then it is unsatisfiable
+  by both AG systems (cases 2/3 of Theorem 2).
+- If Ministatix becomes stuck during execution, then both AG systems abort with
+  a cycle detected (case 4 of Theorem 2).
 
-we use ministatix instead of our version of statix
+We do this for three Statix specifications, each implementing a different
+import semantics, these are:
 
+- `specifications/lm-par.mstx`: 
+   Specification of LM with parallel import semantics.
 
+- `specifications/lm-rec.mstx`: 
+   Specification of LM with recursive import semantics.
 
-2. **Reproduction Steps:** Explain how this claim can be reproduced using the artifact.
-   - Example: *“The results presented in Figure 3 can be reproduced by executing `run_experiment.sh` with the configuration file `config_figure3.json`.”*
+- `specifications/lm-seq.mstx`: 
+   Specification of LM with sequential import semantics.
 
+In evaluating a test case under Statix we use the Ministatix tool provided as
+an artifact to Knowing When to Ask (Rouvoet et al.), as opposed to our an
+implementation of our own based on the step rules given in the paper.
 
-Explain what the scripts do and how to call some directly for a single
-spec or single spec and test
+2. **Reproduction Steps:**
 
-Also say that one need not look at all these to run tests but looking
-at them may verify that we are testing things appropriately.
+The reviewer need only run the following script to validate this theorem:
 
+- `test-all-specs`
 
+Which will, for each Statix specification we provide, translate that specification
+to Ministatix, an OCaml AG representation, and a Silver AG. Then run all of our
+input test cases through each system and check that the results are consistent
+between each system. This script takes no arguments, thus all the reviewer need
+do is execute this script: `./test-all-specs`.
+
+There are a number of other scripts for running individual specifications or
+test cases, which we describe below. The reviewer need only read the following
+if they would like to write their own Statix specification for testing.
+
+- `test-one-spec`:
+   Takes two arguments, a Statix specification, and a directory to look for test
+   cases. This script validates Theorem 2 for a particular LM specification that
+   we provide, running all input test cases for that specification in Ministatix,
+   OCaml, and Silver.
+   E.g. `./test-one-spec specifications/lm-rec.mstx specifications/testcases/lm`.
+
+The following scripts all depend on one having translated a specification,
+thus are not recommended to run in isolation. If the reviewer wishes to
+run these scripts manually, first execute the first 40 lines of `test-one-spec`.
+
+- `try-all-inputs`:
+   Takes one argument, a directory to look for test cases. Assumes that the
+   translation has already happened for some specification, and all necessary
+   files are in place.
+   Not recommended to run without first having executed the commands in
+   `test-one-spec` up to line 40.
+   E.g. `./try-all-inputs specifications/testcases/lm`.
+
+- `try-one-input`:
+   Takes one argument the directory containing one test case. Assumes that the
+   translation has already happened for some specification, and all necessary
+   files are in place.
+   Not recommended to run without first having executed the commands in
+   `test-one-spec` up to line 41.
+   E.g. `try-one-input specifications/testcases/lm/simple_add`.
+
+The following three scripts simply test the evaluation of Ministatix, the OCaml
+AG, and the Silver AG for a particular test case that has already been loaded
+into the correct location.
+
+- `./test-mstx`
+- `./test-ocaml`
+- `./test-silver`
 
 3. **Expected Output:** Clearly describe what the expected output should be.
 
-see above ...
-
+In executing `test-all-specs`, the output should match that given above, under
+the "Kick-the-tyres" section.
 
 4. **Estimated Runtime (Optional):** Provide an estimate of how long the full evaluation will take.
 
-940 secs (15 min 40 sec)
+An execution of `./test-all-specs` on the sytem whose information is provided
+earlier in this document completed in 940 seconds. Most of the time taken here
+is due to us executing a build of the generated Silver-based attribute grammar
+for each test case.
 
-explain that Silver gets rebuilt each time
+The OCaml AG evaluation is based on the small-step semantics we describe in the
+paper which may also take a few seconds to complete for a few of the test cases,
+due to our implementation of attribute grammar trees as lists.
 
-OCaml is small step semantics that traverse the program once for every
-step so it isn't very efficient and thus take a bit time.
-
-
-- Note that this is not related the performance claims in the
-  paper. In fact we are moving that claim, based on reviewer comments
-  to future work until we can gther actual data.
+Note that this is not related the performance claims in the paper. In fact we 
+are moving that claim, based on reviewer comments to future work until we can 
+gather real data.
   
-  
-5. **Potential Issues:** List any known challenges in reproducing the
-   results and how to mitigate them.
+5. **Potential Issues:**
    
-   
+No known issues.
