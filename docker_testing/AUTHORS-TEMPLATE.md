@@ -115,14 +115,15 @@ This section should provide a simple and quick way for the reviewer to check whe
 
 2. **Run a Sample Command:** Provide a single command or a few minimal commands that verify the artifact is working.
 
-   1. `./test-all-specs`: Top-level test script for our artifact.
+   1. `./test-all-specs`: Top-level test script for our artifact. This runs
+      all test cases we have, for all Statix specifications we provide.
 
 3. **Expected Output:** Describe what the expected output should be.
 
-For each of the 3 Statix specification in `specifications`, for each input program test
-case in `specifications/testcases/lm`, a consistent result for each of the three
-evaluation systems we provide (Ministatix/OCaml AG/Silver AG). The results
-should reproduce the following:
+For each of the three Statix specification in `specifications`, for each input 
+program test case in `specifications/testcases/lm`, a consistent result for 
+each of the three evaluation systems we provide (Ministatix/OCaml AG/Silver AG). 
+The results should reproduce the following:
 
 - Under specification `lm-rec.mstx`
    1. For test case `specifications/testcases/lm/bad_module_simple_add`:

@@ -1,7 +1,0 @@
-#!/bin/sh
-
-#silver -I .. --onejar $@ statix_trans
-
-java -jar -Xmx5000M -Xss20M ../statix_translate/jars/silver.compiler.composed.Default.jar -G ../statix_translate/gen -I . --onejar $@ statix_trans && ant
-
-rm build.xml > /dev/null 2>&1

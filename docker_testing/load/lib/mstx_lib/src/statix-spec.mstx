@@ -1,0 +1,216 @@
+// Generated Ministatix spec
+
+
+
+main (p) :- p match {
+    Program(ds):[] -> 
+        {s}
+            new s,
+            decls(s, s, ds)
+    }.
+
+decls (s, s_par, ds) :- ds match {
+    DeclsNil() -> 
+        true
+    | DeclsCons(d, ds) -> 
+        decl(s, s_par, d),
+        decls(s, s_par, ds)
+    }.
+
+decl (s, s_par, d) :- d match {
+    DeclModule(x, ds) -> 
+        {s_mod}
+            new s_mod -> DatumMod(x, s_mod),
+            s -[ `MOD ]-> s_mod,
+            s_mod -[ `LEX ]-> s,
+            decls(s_mod, s, ds)
+    | DeclImport(r) -> 
+        {p, d, s_mod, tgt_s}
+            mod_ref(s_par, r, p),
+            tgt(p, tgt_s),
+            tgt_s -> d,
+            d match {
+            DatumMod(_, dscope)  -> 
+                s_mod == dscope
+            },
+            s -[ `IMP ]-> s_mod
+    | DeclDef(b) -> 
+        par_bind(s, b, s)
+    }.
+
+expr (s, e, ty) :- e match {
+    ExprInt(i) -> 
+        ty == TInt()
+    | ExprTrue() -> 
+        ty == TBool()
+    | ExprFalse() -> 
+        ty == TBool()
+    | ExprVar(r) -> 
+        {p, d, tgt_s}
+            var_ref(s, r, p),
+            tgt(p, tgt_s),
+            tgt_s -> d,
+            d match {
+            DatumVar(_, dty)  -> 
+                ty == dty
+            }
+    | ExprAdd(e1, e2) -> 
+        {ty1, ty2}
+            expr(s, e1, ty1),
+            expr(s, e2, ty2),
+            ty1 == TInt(),
+            ty2 == TInt(),
+            ty == TInt()
+    | ExprAnd(e1, e2) -> 
+        {ty1, ty2}
+            expr(s, e1, ty1),
+            expr(s, e2, ty2),
+            ty1 == TBool(),
+            ty2 == TBool(),
+            ty == TBool()
+    | ExprEq(e1, e2) -> 
+        {ty1, ty2}
+            expr(s, e1, ty1),
+            expr(s, e2, ty2),
+            ty1 == ty2,
+            ty == TBool()
+    | ExprApp(e1, e2) -> 
+        {ty1, ty2}
+            expr(s, e1, ty1),
+            expr(s, e2, ty2),
+            ty1 match {
+            TFun(l, r)  -> 
+                ty == r
+            },
+            ty1 match {
+            TFun(l, r)  -> 
+                ty2 == l
+            }
+    | ExprIf(e1, e2, e3) -> 
+        {ty1, ty2, ty3}
+            expr(s, e1, ty1),
+            expr(s, e2, ty2),
+            expr(s, e3, ty3),
+            ty1 == TBool(),
+            ty2 == ty3,
+            ty == ty2
+    | ExprFun(d, e) -> 
+        {s_fun, ty1, ty2}
+            new s_fun,
+            s_fun -[ `LEX ]-> s,
+            arg_decl(s_fun, d, ty1),
+            expr(s_fun, e, ty2),
+            ty == TFun(ty1, ty2)
+    | ExprLet(bs, e) -> 
+        {s_let}
+            new s_let,
+            seq_binds(s, bs, s_let),
+            expr(s_let, e, ty)
+    | ExprLetRec(bs, e) -> 
+        {s_let}
+            new s_let,
+            s_let -[ `LEX ]-> s,
+            par_binds(s_let, bs, s_let),
+            expr(s_let, e, ty)
+    | ExprLetPar(bs, e) -> 
+        {s_let}
+            new s_let,
+            s_let -[ `LEX ]-> s,
+            par_binds(s, bs, s_let),
+            expr(s_let, e, ty)
+    }.
+
+seq_binds (s, bs, s_def) :- bs match {
+    SeqBindsNil() -> 
+        s_def -[ `LEX ]-> s
+    | SeqBindsOne(b) -> 
+        s_def -[ `LEX ]-> s,
+        seq_bind(s, b, s_def)
+    | SeqBindsCons(b, bs) -> 
+        {s_def_}
+            new s_def_,
+            s_def_ -[ `LEX ]-> s,
+            seq_bind(s, b, s_def_),
+            seq_binds(s_def_, bs, s_def)
+    }.
+
+seq_bind (s, b, s_def) :- b match {
+    DefBindSeq(x, e) -> 
+        {s_var, ty}
+            new s_var -> DatumVar(x, ty),
+            s -[ `VAR ]-> s_var,
+            expr(s, e, ty)
+    | DefBindTypedSeq(x, tyann, e) -> 
+        {s_var, ty}
+            new s_var -> DatumVar(x, ty),
+            s -[ `VAR ]-> s_var,
+            type(s, tyann, ty),
+            expr(s, e, ty)
+    }.
+
+par_binds (s, bs, s_def) :- bs match {
+    ParBindsNil() -> 
+        true
+    | ParBindsCons(b, bs) -> 
+        par_bind(s, b, s_def),
+        par_binds(s, bs, s_def)
+    }.
+
+par_bind (s, b, s_def) :- b match {
+    DefBindPar(x, e) -> 
+        {s_var, ty}
+            new s_var -> DatumVar(x, ty),
+            s_def -[ `VAR ]-> s_var,
+            expr(s, e, ty)
+    | DefBindTypedPar(x, tyann, e) -> 
+        {s_var, ty}
+            new s_var -> DatumVar(x, ty),
+            s_def -[ `VAR ]-> s_var,
+            type(s, tyann, ty),
+            expr(s, e, ty)
+    }.
+
+arg_decl (s, d, ty) :- d match {
+    ArgDecl(x, tyann) -> 
+        {s_var}
+            type(s, tyann, ty),
+            new s_var -> DatumVar(x, ty),
+            s -[ `VAR ]-> s_var
+    }.
+
+type (s, tyann, ty) :- tyann match {
+    TInt() -> 
+        ty == TInt()
+    | TBool() -> 
+        ty == TBool()
+    | TFun(tyann1, tyann2) -> 
+        {ty1, ty2}
+            type(s, tyann1, ty1),
+            type(s, tyann2, ty2),
+            ty == TFun(ty1, ty2)
+    }.
+
+mod_ref (s, r, p) :- r match {
+    ModRef(x) -> 
+        {mods, xmods, xmods_}
+            query s `LEX*`IMP?`MOD as mods,
+            filter mods (DatumMod(x_, _) where x_ == x) xmods,
+            min xmods lexico(`MOD<`LEX, `MOD<`IMP, `VAR<`LEX, `VAR<`IMP, `IMP<`LEX) xmods_,
+            only(xmods_, p)
+    }.
+
+var_ref (s, r, p) :- r match {
+    VarRef(x) -> 
+        {vars, xvars, xvars_}
+            query s `LEX*`IMP?`VAR as vars,
+            filter vars (DatumVar(x_, _) where x_ == x) xvars,
+            min xvars lexico(`MOD<`LEX, `MOD<`IMP, `VAR<`LEX, `VAR<`IMP, `IMP<`LEX) xvars_,
+            only(xvars_, p)
+    }.
+
+tgt (p, s) :- p match {
+    End(x)  -> 
+        s == x
+    | Edge(x, l, xs)  -> 
+        tgt(xs, s)
+    }.

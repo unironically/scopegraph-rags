@@ -5,24 +5,31 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-cp $1/Main.sv silverstuff/statix_trans
+cp $1/Main.sv lib/silver_lib/statix_trans
 
-cd silverstuff
+cd lib/silver_lib
 
 ./compile > /dev/null 2>&1
 
 OUT=$(java -jar statix_trans.jar 2>&1)
 
 rm statix_trans.jar
+rm statix_trans/Main.sv
 
 ./clean
 
-cd ..
+cd ../..
 
 if [[ $OUT == *"outer.ok = true"* ]]; then
   echo -e "- ${GREEN}Satisfiable${NC} by Silver AG"
+  exit 0
 elif [[ $OUT == *"outer.ok = false"* ]]; then
-  echo -e "- ${RED}Unsatisfiable${NC} by Silver AG"
+  echo -e "- ${RED}Unsatisfiable${NC} by Silver AG (outer.ok == false)"
+  exit 1
+elif [[ $OUT == *"aborting"* ]]; then
+  echo -e "- ${RED}Unsatisfiable${NC} by Silver AG (evaluation aborted)"
+  exit 1
 elif [[ $OUT == *"Cycle detected"* ]]; then
   echo -e "- ${YELLOW}Cycle${NC} detected Silver AG"
+  exit 2
 fi
