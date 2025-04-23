@@ -31,6 +31,8 @@ rm -f gen/*
 
 java -jar statix_translate.driver.jar $1
 
+rm -rf statix_translate/gen/*
+
 # Move generated files into correct directories
 
 cp gen/*.mstx lib/mstx_lib/src
@@ -49,11 +51,8 @@ echo "test-one-spec: Done running tests."
 
 echo "test-one-spec: Cleaning up."
 
-rm -rf _build
-rm -rf gen
-
-rm -f build.xml
-rm -f *.byte
-rm -f lib/silver_lib/statix_trans/Spec_*.sv
+rm -rf _build gen
+rm -f build.xml *.byte lib/silver_lib/statix_trans/Spec_*.sv \
+      lib/mstx_lib/src/* lib/ocaml_lib/ocaml_ag_lm_spec.ml
 
 echo "test-one-spec: Done."

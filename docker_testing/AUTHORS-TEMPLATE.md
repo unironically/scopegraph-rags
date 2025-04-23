@@ -115,13 +115,26 @@ This section should provide a simple and quick way for the reviewer to check whe
 
 2. **Run a Sample Command:** Provide a single command or a few minimal commands that verify the artifact is working.
 
-   1. `./test-all-specs`: Top-level test script for our artifact. This runs
-      all test cases we have, for all Statix specifications we provide.
+Reviewer should run the following script: `./test-all-specs` .
+This is the top-level test script for our artifact. This runs all test inputs 
+we have, for the three Statix specifications we provide. Before doing so, it
+will build the translator if it has not been built already.
 
 3. **Expected Output:** Describe what the expected output should be.
 
-For each of the three Statix specification in `specifications`, for each input 
-program test case in `specifications/testcases/lm`, a consistent result for 
+Firstly, the reviewer will see the `ant` build process for the translator, if 
+it is not built already. Beginning with output of the form:
+
+```
+```
+
+And ending with output of the form:
+
+```
+```
+
+Then, for each of the three Statix specification in `specifications`, for each 
+input program test case in `specifications/testcases/lm`, a consistent result for 
 each of the three evaluation systems we provide (Ministatix/OCaml AG/Silver AG). 
 The results should reproduce the following:
 

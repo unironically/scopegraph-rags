@@ -8,8 +8,8 @@ let bad_simple_add: term =
         TermE(TermT("DefBindPar", [
           String("a");
           TermE(TermT("ExprAdd", [
-            TermE(TermT("ExprTrue", []));
-            TermE(TermT("ExprInt", [Int(1)]))
+            TermE(TermT("ExprInt", [String("1")]));
+            TermE(TermT("ExprTrue", []))
           ]))
         ]))
       ]));
