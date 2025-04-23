@@ -50,10 +50,106 @@ naturally specified in reference attributes grammars.
 
 ## Documentation
 - **Link to the code repository:**
+
+TODO - create the repo, link here.
+
 - Describe the structure of the artifact and provide a brief overview of the contents.
 
 TODO - this will be the same as the "Paper abstract and short artifact
 description" in the SLE HotCRP submission.
+
+### Description
+
+The artifact provided has the primary purpose of validating Theorem 2 of our
+paper. Namely, that the results of running Statix for a given specification and
+input program are consistent with the results we get on the same input progam,
+with the translation of that specification to a demand-driven attribute grammar.
+The artifact will, for a given Statix specification, translate that specification
+to; 1) an equivalent Ministatix specification, 2) an attribute grammar in our
+OCaml representation, 3) a Silver attribute grammar. It will then run a number 
+of input program test cases through each system, record the results of each,
+and check whether those results are consistent. If all are consistent, then all 
+tests pass. Consistent results are defined by:
+
+- If the input program is satisfiable by Ministatix, then it is satisfiable by
+  both AG systems (case 1 of Theorem 2).
+
+- If the input program is unsatisfiable by Ministatix, then it is unsatisfiable
+  by both AG systems (cases 2/3 of Theorem 2).
+
+- If Ministatix becomes stuck during execution, then both AG systems abort with
+  a cycle detected (case 4 of Theorem 2).
+
+The artifact contains a number of scripts for translating Statix specifications
+and running test cases through each of the translations. These are described
+in the artifact structure outline below. For the reviewer, it should suffice to
+execute the `test-all-specs` script, to run all test cases we have for all
+Statix specifications. However, if the reviewer wishes to write their own
+Statix specifications and test cases, they will want to use `test-one-spec`,
+giving the specification and a directory containing the test cases as arguments.
+
+### Artifact structure overview
+
+- `test-all-specs`: Top-level script for running all input test cases in 
+  `specifications/testcases/lm` through all translations for the three Statix 
+  specifications we provide in `specifications/`, for each of; Ministatix, our 
+  OCaml AG implementation, the Silver AG system.
+
+- `test-one-spec`: Takes two arguments; the path to a Statix specification
+  (e.g. `specifications/lm-rec.mstx`), and the path of a directory containing
+  input test cases (e.g. `specifications/testcases/lm`).
+  Translates the Statix specification to; the same specification
+  in Statix syntax satisfying the Knowing When to Ask artifact (Ministatix),
+  an OCaml-based translation of that specification, and a Silver-based 
+  translation. Then run all test cases in the directory given as the second
+  argument for each translation.
+
+- `try-all-inputs`: Takes one argument, a directory to look for test case 
+  programs. Runs each test case found through each of the three systems and
+  outputs the results of each.
+
+- `try-one-input`: Takes one argument, a directory representing one test case. 
+  Runs that test case through each of the three systems and outputs the results
+  of each.
+
+- `test-mstx`: For a particular test case input, run it through Ministatix using
+  the generated Ministatix specification.
+
+- `test-ocaml`: For a particular test case input, run it through the OCaml AG
+  using the generated OCaml AG representation.
+
+- `test-silver`: For a particular test case input, run it through the Silver AG
+  using the generated Silver AG.
+
+- `lib/`:
+   - `mstx_lib/`: Contains the Ministatix binary. 
+   - `ocaml_lib/`: Contains the OCaml AG environment.
+   - `silver_lib/`: Contains the Silver AG environment for our generated AGs,
+     including a scope graphs implementation.
+
+- `specifications/`:
+   - `lm-par.mstx`: Specification of LM with parallel imports.
+   - `lm-rec.mstx`: Specification of LM with recursive imports.
+   - `lm-seq.mstx`: Specification of LM with sequential imports.
+   - `testcases/`: Home for input program test cases.
+      - `lm/`: Directories containing test cases for LM. Each has a Ministatix
+        input term `mstx.aterm`, an OCaml input term `ag_test.ml`, and a Silver
+        input term `Main.sv`. As well as these, a `README.md` describing the
+        test case and expected results, and `concrete-syntax.lm` giving the
+        concrete syntax of that test case.
+
+- `statix_translate/`: The implementation of the translator of Statix 
+  specifications in our syntax, to Ministatix specifications, OCaml attribute
+  grammars, and Silver attribute grammars.
+  - `compile`: Script to compile the translator.
+  - `clean`: cleanup (remove generated `.jar` and build files)
+  - `driver/`: Contains the main file for invoking the translator.
+  - `lang/`: Definition of our version of Statix in concrete and abstract
+    syntax, as well as basic well-formedness analyses.
+  - `to_ministatix/`: Implementation of translation to Ministatix syntax.
+  - `to_ag/`: Implementation of translation to an intermediate AG form.
+  - `to_ocaml/`: Implementation of a translation to OCaml AG form.
+  - `to_silver/`: Implementation of a translation to Silver AG form.
 
 ---
 
@@ -126,11 +222,72 @@ Firstly, the reviewer will see the `ant` build process for the translator, if
 it is not built already. Beginning with output of the form:
 
 ```
+test-one-spec: Building translator...
+Compiling statix_translate:driver
+	[statix_translate/../statix_translate/driver/]
+	[Main.sv]
+Compiling statix_translate:lang:concretesyntax
+	[statix_translate/../statix_translate/lang/concretesyntax/]
+	[ConcreteSyntax.sv Terminals.sv]
+Compiling statix_translate:lang:abstractsyntax
+	[statix_translate/../statix_translate/lang/abstractsyntax/]
+	[AbstractSyntax.sv TreePrint.sv]
+Compiling statix_translate:lang:analysis
+	[statix_translate/../statix_translate/lang/analysis/]
+	[Composed.sv ErrorMessage.sv Errors.sv Labels.sv Permissions.sv Terms.sv Type.sv 
+	 VariableAnalysis.sv]
+Compiling statix_translate:to_ministatix
+	[statix_translate/../statix_translate/to_ministatix/]
+	[Generate.sv]
+Compiling statix_translate:to_ag
+	[statix_translate/../statix_translate/to_ag/]
+	[BranchList.sv Composed.sv Constraint.sv Label.sv Lambda.sv Matcher.sv Module.sv 
+	 NameList.sv Order.sv PathComp.sv Regex.sv Term.sv TypeAnn.sv _AG.sv 
+	 _Cases.sv _Decl.sv _Equation.sv _Expr.sv _LHS.sv _Pattern.sv _Type.sv 
+	 _WhereClause.sv]
+Compiling statix_translate:to_ocaml
+	[statix_translate/../statix_translate/to_ocaml/]
+	[Composed.sv _AG.sv _Cases.sv _Decl.sv _Equation.sv _Expr.sv _LHS.sv 
+	 _Pattern.sv _Type.sv _WhereClause.sv]
+Compiling statix_translate:to_silver
+	[statix_translate/../statix_translate/to_silver/]
+	[Composed.sv _AG.sv _Cases.sv _Decl.sv _Equation.sv _Expr.sv _LHS.sv 
+	 _Pattern.sv _Type.sv _WhereClause.sv]
+...
 ```
 
 And ending with output of the form:
 
 ```
+-------------
+Final report:
+-------------
+Parser and scanner specification
+   has 63 terminals, 31 nonterminals, 102 productions,
+   and 0 disambiguation functions declared,
+   producing 262 unique parse states
+   and 157 unique scanner states.
+0 useless nonterminals.
+0 malformed regexes.
+0 unresolved parse table conflicts:
+   28 shift/reduce conflicts, 0 reduce/reduce, 28 resolved.
+0 unresolved lexical ambiguities:
+   3 resolved by context, 0 by disambiguation function/group.
+Parser code output to statix_translate/gen/src/statix_translate/driver/Parser_statix_translate_driver_parse.java.
+Buildfile: /home/luke/Academia/personal/scopegraph-rags/docker_testing/load/build.xml
+
+init:
+    [mkdir] Created dir: /home/luke/Academia/personal/scopegraph-rags/docker_testing/load/statix_translate/gen/bin
+
+grammars:
+    [javac] Compiling 550 source files to /home/luke/Academia/personal/scopegraph-rags/docker_testing/load/statix_translate/gen/bin
+
+jars:
+      [jar] Building jar: /home/luke/Academia/personal/scopegraph-rags/docker_testing/load/statix_translate.driver.jar
+
+dist:
+
+BUILD SUCCESSFUL
 ```
 
 Then, for each of the three Statix specification in `specifications`, for each 
@@ -264,6 +421,8 @@ see above ...
 
 
 4. **Estimated Runtime (Optional):** Provide an estimate of how long the full evaluation will take.
+
+940 secs (15 min 40 sec)
 
 explain that Silver gets rebuilt each time
 
