@@ -76,7 +76,7 @@ Decorated Path ::= ps::[Decorated Path]
   return
     case ps of
     | [h] -> h
-    | _ -> error("Path list given to pf_one was not a singleton!")
+    | _ -> error("Path list given to pf_one was not a singleton, aborting...")
     end;
 }
 

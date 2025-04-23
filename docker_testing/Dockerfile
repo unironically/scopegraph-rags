@@ -12,7 +12,6 @@ RUN pacman -Syu --noconfirm \
   ocamlbuild;
 
 RUN pacman -Syu --noconfirm gcc glibc ncurses
-
 RUN pacman -Syu --noconfirm vim
 
 RUN pacman -Syu --noconfirm ant

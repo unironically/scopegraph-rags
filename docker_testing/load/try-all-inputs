@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# run all test cases, based on dirs in testcases/
+
+if [[ $# -ne 1 ]] ; then
+    echo "try-all-inputs: Expected one argument, a directory to look for test case 
+          programs."
+    exit -1
+fi
+
+if [ ! -d $1 ]; then
+    echo "try-all-inputs: Could not find directory $1."
+    exit -1
+fi
+
+TESTN=$(ls $1 | wc -l)
+
+echo "try-all-inputs: Found $TESTN tests to run."
+
+CUR=1
+FAILED=0
+
+for testcase in $1/*/ ; do
+    echo "try-all-inputs: [$CUR/$TESTN] Running test case $testcase..."
+    CUR=$((CUR+1))
+    bash try-one-input $testcase
+    RES=$?
+    FAILED=$(($FAILED + $RES))
+done
+
+PASSED=$(($TESTN-$FAILED))
+
+echo "try-all-inputs: [$PASSED/$TESTN] Test cases passed, [$FAILED/$TESTN] failed."
+echo "try-all-inputs: Done."

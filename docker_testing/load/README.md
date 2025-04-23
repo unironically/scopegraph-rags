@@ -2,18 +2,12 @@
 
 ## TODOs
 
-- Place translator Silver project in here. Currently the scripts compile the
-  translator by `./../statix_translate/compile`.
+- About the artifact
+- Issues and future work
+- For each spec, for each test case, what theorem 2 case applies?
+- 
 
-- `ministatixtest`/`ocamltest`/`silvertest` should communicate results with one
-  another - perhaps `ministatixtest` communicates its own result to `ocamltest`
-  and `silvertest` for a given input term. Then the two latter scripts verify
-  that their result is the same.
-
-- Enumerate test cases/results in the scripts - print out something like 
-  `[n/m] of the tests passed, [m-n/m] tests failed`.
-
-## Abstract
+## Paper abstract
 
 Recognizing that name binding, matching name references to
 their declarations, is often done in an ad-hoc manner, Visser
@@ -42,9 +36,17 @@ Statix. This formalizes what has been folklore in the attribute
 grammar community for some time, that scope graphs are
 naturally specified in reference attributes grammars.
 
+## About the artifact
+
+...
+
+## Issues and future work
+
+...
+
 ## Artifact structure
 
-- `load-and-test`:
+- `load-and`:
   Takes as argument a specification in our version of Statix, translates it to
   a Ministatix specification, an OCaml attribute grammar and a Silver attribute
   grammar, and then runs all test cases in `lm-specs/testcases` for each
@@ -87,7 +89,7 @@ naturally specified in reference attributes grammars.
   - `testcases/`: Program test cases encoded in the input format for the three
                   evaluators.
 
-- `silverstuff/`:
+- `silver_lib/`:
   - `compile`: Compile the grammar under `statix_trans/`.
   - `statix_trans/`: Template grammar for translated Statix specifications. This
     is where the `Main.sv` program test case and `Spec_*.sv` Silver generated

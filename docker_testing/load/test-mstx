@@ -5,14 +5,17 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-OUT=$(ministatix/statix check -I ministatix/src statix-spec $1/mstx.aterm)
+OUT=$(lib/mstx_lib/statix check -I lib/mstx_lib/src statix-spec $1/mstx.aterm)
 
 if [[ $OUT == *"Satisfiable"* ]]; then
   echo -e "- ${GREEN}Satisfiable${NC} by Ministatix"
+  exit 0
 elif [[ $OUT == *"Unsatisfiable"* ]]; then
   echo -e "- ${RED}Unsatisfiable${NC} by Ministatix"
+  exit 1
 elif [[ $OUT == *"Stuck"* ]]; then
   echo -e "- ${YELLOW}Stuck${NC} in Ministatix"
+  exit 2
 fi
 
 rm .statix

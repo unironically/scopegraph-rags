@@ -35,18 +35,20 @@ IO<Integer> ::= largs::[String]
             if null(ast.errs)
             then do {
               
+              mkdir("gen");
+
               writeFile(
-                "statix-spec.mstx", 
+                "gen/statix-spec.mstx", 
                 ast.mstxPP
               );
 
               writeFile(
-                "ocaml_ag_lm_spec.ml",
+                "gen/ocaml_ag_lm_spec.ml",
                 ast.ag.ocaml_ag ++ "\n"
               );
 
               writeFile(
-                "Spec_" ++ fileName ++ ".sv",
+                "gen/Spec_" ++ fileName ++ ".sv",
                 ast.ag.silver_ag ++ "\n"
               );
 
