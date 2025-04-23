@@ -52,7 +52,8 @@ naturally specified in reference attributes grammars.
 - **Link to the code repository:**
 - Describe the structure of the artifact and provide a brief overview of the contents.
 
-TODO
+TODO - this will be the same as the "Paper abstract and short artifact
+description" in the SLE HotCRP submission.
 
 ---
 
@@ -118,7 +119,7 @@ This section should provide a simple and quick way for the reviewer to check whe
 
 3. **Expected Output:** Describe what the expected output should be.
 
-For each Statix specification in `specifications`, for each input program test
+For each of the 3 Statix specification in `specifications`, for each input program test
 case in `specifications/testcases/lm`, a consistent result for each of the three
 evaluation systems we provide (Ministatix/OCaml AG/Silver AG). The results
 should reproduce the following:
@@ -222,8 +223,46 @@ No known issues.
 For all experimental claims made in the paper, please provide the following:
 
 1. **Reference to the Experimental Claim:** Quote or reference the claim from the paper.
+
+Theorem 2
+
+3 specs - what are tjey
+
+we use ministatix instead of our version of statix
+
+
+
 2. **Reproduction Steps:** Explain how this claim can be reproduced using the artifact.
    - Example: *“The results presented in Figure 3 can be reproduced by executing `run_experiment.sh` with the configuration file `config_figure3.json`.”*
+
+
+Explain what the scripts do and how to call some directly for a single
+spec or single spec and test
+
+Also say that one need not look at all these to run tests but looking
+at them may verify that we are testing things appropriately.
+
+
+
 3. **Expected Output:** Clearly describe what the expected output should be.
+
+see above ...
+
+
 4. **Estimated Runtime (Optional):** Provide an estimate of how long the full evaluation will take.
-5. **Potential Issues:** List any known challenges in reproducing the results and how to mitigate them.
+
+explain that Silver gets rebuilt each time
+
+OCaml is small step semantics that traverse the program once for every
+step so it isn't very efficient and thus take a bit time.
+
+
+- Note that this is not related the performance claims in the
+  paper. In fact we are moving that claim, based on reviewer comments
+  to future work until we can gther actual data.
+  
+  
+5. **Potential Issues:** List any known challenges in reproducing the
+   results and how to mitigate them.
+   
+   

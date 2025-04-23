@@ -18,6 +18,9 @@ Graphs Using Attribute Grammars
 ## Publication date
 - April 23, 2025
 
+## Description
+- copy from AUTHOR_TEMPLATE file
+
 ## Contributors
 - add me
 - but nothing else needs to be added in this section
