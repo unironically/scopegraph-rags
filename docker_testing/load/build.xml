@@ -1,0 +1,92 @@
+<project name='statix_translate:driver' default='dist' basedir='.'>
+  <description>Generated build script for the grammar statix_translate:driver</description>
+
+  <property environment='env'/>
+  <property name='jg' location='statix_translate/gen/'/>
+  <property name='sh' location='/home/luke/Academia/personal/scopegraph-rags/docker_testing/load/statix_translate/'/>
+  <property name='bin' location='${jg}/bin'/>
+  <property name='src' location='${jg}/src'/>
+
+  <path id='lib.classpath'>
+    <pathelement location='/home/luke/Academia/personal/scopegraph-rags/docker_testing/load/statix_translate/jars/silver.core.jar' />
+    <pathelement location='/home/luke/Academia/personal/scopegraph-rags/docker_testing/load/statix_translate/jars/silver.langutil.jar' />
+    <pathelement location='/home/luke/Academia/personal/scopegraph-rags/docker_testing/load/statix_translate/jars/silver.util.jar' />
+    <pathelement location='${sh}/jars/CopperRuntime.jar' />
+  </path>
+
+  <path id='compile.classpath'>
+    <pathelement location='${src}' />
+    <path refid='lib.classpath'/>
+    <pathelement location='statix_translate/gen/bin/' />
+  </path>
+
+
+
+  <target name='init'>
+    <tstamp>
+      <format property='TIME' pattern='yyyy.MM.dd.HH.mm.ss'/>
+    </tstamp>
+    <mkdir dir='${bin}'/>
+  </target>
+
+  <target name='dist' depends='jars'>
+  </target>
+
+  <target name='jars' depends='grammars'>
+    <pathconvert refid='lib.classpath' pathsep=' ' property='man.classpath'>
+      <filtermapper><replacestring from=' ' to='%20' /></filtermapper>
+    </pathconvert>
+    <jar destfile='statix_translate.driver.jar' zip64Mode='as-needed'>
+      <fileset dir='statix_translate/gen/bin/' includes='statix_translate/driver/*.class' />
+      <fileset dir='statix_translate/gen/bin/' includes='statix_translate/lang/concretesyntax/*.class' />
+      <fileset dir='statix_translate/gen/bin/' includes='statix_translate/lang/abstractsyntax/*.class' />
+      <fileset dir='statix_translate/gen/bin/' includes='statix_translate/lang/analysis/*.class' />
+      <fileset dir='statix_translate/gen/bin/' includes='statix_translate/to_ministatix/*.class' />
+      <fileset dir='statix_translate/gen/bin/' includes='statix_translate/to_ag/*.class' />
+      <fileset dir='statix_translate/gen/bin/' includes='statix_translate/to_ocaml/*.class' />
+      <fileset dir='statix_translate/gen/bin/' includes='statix_translate/to_silver/*.class' />
+      <fileset dir='statix_translate/gen/src/' includes='statix_translate/driver/Silver.svi' />
+      <fileset dir='statix_translate/gen/src/' includes='statix_translate/lang/concretesyntax/Silver.svi' />
+      <fileset dir='statix_translate/gen/src/' includes='statix_translate/lang/abstractsyntax/Silver.svi' />
+      <fileset dir='statix_translate/gen/src/' includes='statix_translate/lang/analysis/Silver.svi' />
+      <fileset dir='statix_translate/gen/src/' includes='statix_translate/to_ministatix/Silver.svi' />
+      <fileset dir='statix_translate/gen/src/' includes='statix_translate/to_ag/Silver.svi' />
+      <fileset dir='statix_translate/gen/src/' includes='statix_translate/to_ocaml/Silver.svi' />
+      <fileset dir='statix_translate/gen/src/' includes='statix_translate/to_silver/Silver.svi' />
+      <manifest>
+        <attribute name='Built-By' value='${user.name}' />
+        <attribute name='Implementation-Version' value='${TIME}' />
+        <attribute name='Main-Class' value='statix_translate.driver.Main' />
+      </manifest>
+      <zipfileset src='/home/luke/Academia/personal/scopegraph-rags/docker_testing/load/statix_translate/jars/silver.core.jar' excludes='META-INF/*' />
+      <zipfileset src='/home/luke/Academia/personal/scopegraph-rags/docker_testing/load/statix_translate/jars/silver.langutil.jar' excludes='META-INF/*' />
+      <zipfileset src='/home/luke/Academia/personal/scopegraph-rags/docker_testing/load/statix_translate/jars/silver.util.jar' excludes='META-INF/*' />
+      <zipfileset src='${sh}/jars/CopperRuntime.jar' excludes='META-INF/*' />
+    </jar>
+  </target>
+
+  <target name='grammars' depends='init'>
+    <javac debug='on' classpathref='compile.classpath' srcdir='${src}' destdir='${bin}' includeantruntime='false' release='11'>
+      <compilerarg value="-Xlint:unchecked" />
+      <include name='silver/util/treemap/*.java' />
+      <include name='silver/langutil/reflect/concretesyntax/*.java' />
+      <include name='silver/langutil/lsp/*.java' />
+      <include name='silver/langutil/unparse/*.java' />
+      <include name='silver/reflect/*.java' />
+      <include name='silver/langutil/reflect/serialize/*.java' />
+      <include name='silver/util/deque/*.java' />
+      <include name='silver/langutil/*.java' />
+      <include name='silver/langutil/reflect/*.java' />
+      <include name='silver/langutil/pp/*.java' />
+      <include name='statix_translate/lang/concretesyntax/*.java' />
+      <include name='statix_translate/lang/abstractsyntax/*.java' />
+      <include name='statix_translate/lang/analysis/*.java' />
+      <include name='statix_translate/to_ministatix/*.java' />
+      <include name='statix_translate/to_ag/*.java' />
+      <include name='statix_translate/to_ocaml/*.java' />
+      <include name='statix_translate/to_silver/*.java' />
+      <include name='silver/core/*.java' />
+      <include name='statix_translate/driver/*.java' />
+    </javac>
+  </target>
+</project>
