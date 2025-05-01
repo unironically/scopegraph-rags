@@ -12,7 +12,7 @@ java -cp .:tools/beaver-rt.jar Compiler examples/modulesnestedsame.lm
 ### Concrete Syntax:
 TODO
 
-### Issues
+### Issues (OLD - SEEM TO BE WORKING?)
 
 ##### ![ModulesNestedSame](examples/ModulesNestedSame.lm)
 - Name resolution hangs here, because the result of the circular attribute resolutions switch between the two `A` modules.

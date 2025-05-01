@@ -126,5 +126,25 @@ aspect PrettyPrint {
 	eq MkModRef.pp() {
 		return "MkModRef(" + getid() + ")_" + Integer.toString(this.getParent().getStartLine()) + "_" + Short.toString(this.getParent().getStartColumn());
 	}
+
+	/* Resolution */
+
+	syn lazy String Resolution.pp();
+
+	eq Resolution.pp() {
+		return getpathNoTransform().pp();
+	}
+
+	/* Path */
+
+	syn lazy String Path.pp();
+
+	eq PathCons.pp() {
+		return geth().gettgtNoTransform().pp() + " <- " + gett().pp();
+	}
+
+	eq PathNil.pp() {
+		return "";
+	}
 	
 }

@@ -147,10 +147,8 @@ aspect Scoping {
     lexEdge.setsrc(this.modScope());
     lexEdge.settgt(this.scope());
     lexEdges.add(lexEdge);
-
     this.scope().setParent(tmpPar);
     this.modScope().setParent(this);
-
     return lexEdges;
   }
   
@@ -159,44 +157,53 @@ aspect Scoping {
 
     //System.out.println("imp for " + modScope().pp());
 
-    ArrayList<Edge> impEdges = new ArrayList<Edge>();
+    ArrayList<Edge> impEdges   = new ArrayList<Edge>();
     ArrayList<Resolution> ress = getDs().impTentatives();
 
+    // Temporarily printing all tentative imp edges
+    String resStr = "";
+    for (int i = 0; i < ress.size(); i++)
+      resStr += ress.get(i).pp() + (i < ress.size() - 1 ? ", " : "");
+    System.out.println("getDs().impTentatives(): [" + resStr + "]");
+
     ArrayList<String> modRefs = new ArrayList<String>();
-    modRefs.add("A");  // todo
+    modRefs.add("A");  // todo, don't hardcode these...
     modRefs.add("B"); 
     modRefs.add("C");
-    //
-    // loop over modrefs
 
+    // THE BELOW CODE IMPLEMENTS RECURSIVE IMPORTS:
+    // 1. loop over all module references:
+    //  1.1. set minimum path found `min` to null
+    //  1.2. loop over all tentative imp edges:
+    //    1.2.1. if that imp edge started from the current module reference
+    //      1.2.1.1. set `min` to the minimum of `min` and current resolution
+    //      1.2.1.1. otherwise do nothing
+    //  1.3. we now have the minimum path for the module reference
+    //  1.4. make the new corresponding real IMP edge from its discovered target
     for (String modRef: modRefs) {
-
       Path min = null;
-
       for (Resolution res: ress) {
         if (res.getrefNoTransform().str().equals(modRef)) {
           Path resPath = res.getpathNoTransform();
-
           if (min != null) min = Path.min(min, resPath);
           else min = resPath;
-          
         }
       }
-
       if (min == null)  continue;
-
       ImpTentEdge impTentativeEdge = new ImpTentEdge();
       ASTNode tmpPar = min.tgt().getParent();
-
       impTentativeEdge.setsrc(this.modScope());
       impTentativeEdge.settgt(min.tgt());
-
       min.tgt().setParent(tmpPar);
       this.modScope().setParent(this);
-
       impEdges.add(impTentativeEdge);
-
     }
+    // THE ABOVE CODE IMPLEMENTS RECURSIVE IMPORTS:
+    
+
+    // THE BELOW CODE IMPLEMENTS UNORDERED IMPORTS:
+    
+    // THE ABOVE CODE IMPLEMENTS UNORDERED IMPORTS:
 
     return impEdges;
   }
@@ -212,10 +219,8 @@ aspect Scoping {
       ASTNode tmpPar = res.getpathNoTransform().tgt().getParent();
       impTentativeEdge.setsrc(this.modScope());
       impTentativeEdge.settgt(res.getpathNoTransform().tgt());
-
       res.getpathNoTransform().tgt().setParent(tmpPar);
       this.modScope().setParent(this);
-
       impTentativeEdges.add(impTentativeEdge);
     }
     return impTentativeEdges;
@@ -230,10 +235,8 @@ aspect Scoping {
                          modEdge.setsrc(this.scope());
                          modEdge.settgt(this.modScope());
                          modEdges.add(modEdge); 
-
-                        this.scope().setParent(tmpPar);
-                        this.modScope().setParent(this);
-
+                         this.scope().setParent(tmpPar);
+                         this.modScope().setParent(this);
                          return modEdges; }
 
   eq ModuleDecl.impTentatives() = new ArrayList<Resolution>();
@@ -350,17 +353,15 @@ aspect Scoping {
     return r;
   }
 
-  // r.lex = [top.scope]
+  // Making a new reference node with LEX edge to enclosing scope
   eq VarRef.r().lex() { ArrayList<Edge> lexEdges = new ArrayList<Edge>();
                         LexEdgeRef lexEdge = new LexEdgeRef();
                         ASTNode tmpPar = this.scope().getParent();
                         lexEdge.setsrc(this.r());
                         lexEdge.settgt(this.scope());
                         lexEdges.add(lexEdge);
-
                         this.scope().setParent(tmpPar);
                         this.r().setParent(this);
-
                         return lexEdges; }
 
   eq VarRef.refs() {
@@ -382,17 +383,15 @@ aspect Scoping {
     return r;
   }
 
-  // r.lex = [top.scope]
+  // Making a new reference node with LEX edge to enclosing scope
   eq ModRef.r().lex() { ArrayList<Edge> lexEdges = new ArrayList<Edge>(); 
                         LexEdgeRef lexEdge = new LexEdgeRef();
                         ASTNode tmpPar = this.scope().getParent();
                         lexEdge.setsrc(this.r());
                         lexEdge.settgt(this.scope());
                         lexEdges.add(lexEdge);
-
                         this.scope().setParent(tmpPar);
                         this.r().setParent(this);
-
                         return lexEdges; }
 
   // top.impTentatives = r.modRes
