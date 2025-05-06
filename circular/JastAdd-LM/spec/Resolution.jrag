@@ -64,7 +64,7 @@ aspect Resolution {
   eq VarDFA.lexState().modT() { return this.sinkState(); }
 
   eq VarDFA.impState().lexT() { return this.sinkState(); }
-  eq VarDFA.impState().impT() { return this.sinkState(); }
+  eq VarDFA.impState().impT() { return this.impState(); }
   eq VarDFA.impState().varT() { return this.finalState(); }
   eq VarDFA.impState().modT() { return this.sinkState(); }
 
@@ -92,7 +92,7 @@ aspect Resolution {
   eq ModDFA.lexState().modT() { return this.finalState(); }
 
   eq ModDFA.impState().lexT() { return this.sinkState(); }
-  eq ModDFA.impState().impT() { return this.sinkState(); }
+  eq ModDFA.impState().impT() { return this.impState(); }
   eq ModDFA.impState().varT() { return this.sinkState(); }
   eq ModDFA.impState().modT() { return this.finalState(); }
   

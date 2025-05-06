@@ -162,7 +162,7 @@ aspect Scoping {
     String resStr = "";
     for (int i = 0; i < ress.size(); i++)
       resStr += ress.get(i).pp() + (i < ress.size() - 1 ? ", " : "");
-    System.out.println("getDs().impTentatives(): [" + resStr + "]");
+    //System.out.println("getDs().impTentatives(): [" + resStr + "]");
 
     ArrayList<String> modRefs = new ArrayList<String>();
     modRefs.add("A");  // todo, don't hardcode these...
