@@ -58,10 +58,8 @@ aspect Scoping {
       impTentativeEdge.setsrc(this.globalScope());
       impTentativeEdge.settgt(res.getpathNoTransform().tgt());
       impTentativeEdges.add(impTentativeEdge);
-
       res.getpathNoTransform().tgt().setParent(tmpPar);
       this.globalScope().setParent(this);
-
     }
     return impTentativeEdges;
   }
@@ -202,7 +200,7 @@ aspect Scoping {
     
 
     // THE BELOW CODE IMPLEMENTS UNORDERED IMPORTS:
-    
+    // todo
     // THE ABOVE CODE IMPLEMENTS UNORDERED IMPORTS:
 
     return impEdges;
