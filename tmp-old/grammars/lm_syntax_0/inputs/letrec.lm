@@ -1,0 +1,6 @@
+def a =
+  letrec
+    x = y,
+    y = x
+  in
+    y

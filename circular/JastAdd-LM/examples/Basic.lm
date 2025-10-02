@@ -1,8 +1,0 @@
-def a:int = 1
-def b:bool = true
-
-def c:int = a
-def d:bool = b
-
-def e:int = c + a
-def f:bool = b && d

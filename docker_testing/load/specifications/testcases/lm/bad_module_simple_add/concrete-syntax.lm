@@ -1,3 +1,0 @@
-module A {
-  def y = true + 1;
-}

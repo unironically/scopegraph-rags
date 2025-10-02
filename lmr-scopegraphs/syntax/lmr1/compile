@@ -1,0 +1,5 @@
+#!/bin/sh
+
+silver -I ../.. --mwda --onejar $@ syntax:lmr1:lmr:driver
+
+rm build.xml > /dev/null 2>&1

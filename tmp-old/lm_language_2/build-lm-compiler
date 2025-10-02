@@ -1,0 +1,15 @@
+#!/bin/bash
+
+lang=$(basename $PWD)
+
+cd silver-grammar
+if ./compile; then
+  echo "[✔] LM compiler successfully built"
+  cd ..
+  cp silver-grammar/*.jar .
+  mv *.driver.jar $lang.jar
+else
+  echo "[✗] Something went wrong when building the LM compiler"
+  cd ..
+  exit -1
+fi

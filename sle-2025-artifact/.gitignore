@@ -1,0 +1,3 @@
+*.tar
+load/statix_translate.driver.jar
+load/statix_translate/gen/*

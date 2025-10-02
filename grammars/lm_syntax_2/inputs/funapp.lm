@@ -1,3 +1,0 @@
-def addOne = fun( x : int ) {x + 1}
-
-def addOneToTwo = addOne $ 2

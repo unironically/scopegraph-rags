@@ -1,0 +1,248 @@
+// Generated Ministatix spec
+
+import statixlib.paths
+import statixlib.sets
+
+
+main (p) :- p match {
+    Program(ds):[]  -> 
+        {s}
+            new s,
+            decls(s, ds)
+    }.
+
+decls (s, ds) :- ds match {
+    DeclsNil()  -> 
+        true
+    | DeclsCons(d, ds)  -> 
+        decl(s, d),
+        decls(s, ds)
+    }.
+
+decl (s, d) :- d match {
+    DeclModule(x, ds)  -> 
+        {s_mod, x}
+            new s_mod -> DatumMod(x, s_mod),
+            s -[ `MOD ]-> s_mod,
+            s_mod -[ `LEX ]-> s,
+            decls(s_mod, ds),
+            x == s_mod,
+            x -[ `LEX ]-> s
+    | DeclImport(r)  -> 
+        {p, x, s_mod}
+            mod-ref(s, r, p),
+            datumOf(p, DatumMod(x, s_mod)),
+            s -[ `IMP ]-> s_mod
+    | DeclDef(b)  -> 
+        par-bind(s, b, s)
+    }.
+
+expr (s, e, ty) :- e match {
+    ExprInt(_)  -> 
+        ty == INT()
+    | ExprTrue()  -> 
+        ty == BOOL()
+    | ExprFalse()  -> 
+        ty == BOOL()
+    | ExprVar(r)  -> 
+        {p, x, d}
+            var-ref(s, r, p),
+            datumOf(p, DatumVar(x, ty))
+    | ExprAdd(e1, e2)  -> 
+        {ty1, ty2}
+            expr(s, e1, INT()),
+            expr(s, e2, INT()),
+            ty == INT()
+    | ExprSub(e1, e2)  -> 
+        {ty1, ty2}
+            expr(s, e1, INT()),
+            expr(s, e2, INT()),
+            ty == INT()
+    | ExprMul(e1, e2)  -> 
+        {ty1, ty2}
+            expr(s, e1, ty1),
+            expr(s, e2, ty2),
+            ty1 == INT(),
+            ty2 == INT(),
+            ty == INT()
+    | ExprDiv(e1, e2)  -> 
+        {ty1, ty2}
+            expr(s, e1, ty1),
+            expr(s, e2, ty2),
+            ty1 == INT(),
+            ty2 == INT(),
+            ty == INT()
+    | ExprAnd(e1, e2)  -> 
+        {ty1, ty2}
+            expr(s, e1, ty1),
+            expr(s, e2, ty2),
+            ty1 == BOOL(),
+            ty2 == BOOL(),
+            ty == BOOL()
+    | ExprOr(e1, e2)  -> 
+        {ty1, ty2}
+            expr(s, e1, ty1),
+            expr(s, e2, ty2),
+            ty1 == BOOL(),
+            ty2 == BOOL(),
+            ty == BOOL()
+    | ExprEq(e1, e2)  -> 
+        {ty1, ty2}
+            expr(s, e1, ty1),
+            expr(s, e2, ty2),
+            ty1 == ty2,
+            ty == BOOL()
+    | ExprApp(e1, e2)  -> 
+        {tyF, ty1, ty2, ty3}
+            expr(s, e1, tyF),
+            expr(s, e2, ty3),
+            tyF == FUN(ty1, ty2),
+            ty1 == ty3,
+            ty == ty2
+    | ExprIf(e1, e2, e3)  -> 
+        {ty1, ty2, ty3}
+            expr(s, e1, ty1),
+            expr(s, e2, ty2),
+            expr(s, e3, ty3),
+            ty1 == BOOL(),
+            ty2 == ty3,
+            ty == ty2
+    | ExprFun(d, e)  -> 
+        {s_fun, ty1, ty2}
+            new s_fun,
+            s_fun -[ `LEX ]-> s,
+            arg-decl(s_fun, d, ty1),
+            expr(s_fun, e, ty2),
+            ty == FUN(ty1, ty2)
+
+    | ExprLet(bs, e)  -> 
+        {s_let}
+
+            //s_let -[ `LEX ]-> s, // why does this cause a permissions error?
+                                   // requires permission to extend s_let. but we don't have that. seq-binds does not give permission to extend s_let because its match doesn't. not the case that every branch creates scope s_def.
+                                   // no permission error when you put `new s_def` within the `SeqBindsCons` case
+
+            seq-binds(s, bs, s_let),            
+            expr(s_let, e, ty)
+
+    | ExprLetRec(bs, e)  -> 
+        {s_let}
+            new s_let,
+            s_let -[ `LEX ]-> s,
+            par-binds(s_let, bs, s_let),
+            expr(s_let, e, ty)
+    | ExprLetPar(bs, e)  -> 
+        {s_let}
+            new s_let,
+            s_let -[ `LEX ]-> s,
+            par-binds(s, bs, s_let),
+            expr(s_let, e, ty)
+    }.
+
+seq-binds (s, bs, s_def) :- bs match {
+    SeqBindsNil()  -> 
+        new s_def,
+        s_def -[ `LEX ]-> s
+    | SeqBindsOne(b)  -> 
+        new s_def,
+        s_def -[ `LEX ]-> s,
+        seq-bind(s, b, s_def)
+    | SeqBindsCons(b, bs)  -> 
+        {s_def'}
+            new s_def',
+            s_def' -[ `LEX ]-> s,
+            seq-bind(s, b, s_def'),
+            seq-binds(s_def', bs, s_def)
+    }.
+
+seq-bind (s, b, s_def) :- b match {
+    DefBind(x, e)  -> 
+        {s_var, ty}
+            new s_var -> DatumVar(x, ty),
+            s_def -[ `VAR ]-> s_var,
+            expr(s, e, ty)
+    | DefBindTyped(x, tyann, e)  -> 
+        {s_var, ty1, ty2}
+            new s_var -> DatumVar(x, ty1),
+            s_def -[ `VAR ]-> s_var,
+            type(s, tyann, ty1),
+            expr(s, e, ty2),
+            ty1 == ty2
+    }.
+
+par-binds (s, bs, s_def) :- bs match {
+    ParBindsNil()  -> 
+        true
+    | ParBindsCons(b, bs)  -> 
+        par-bind(s, b, s_def),
+        par-binds(s, bs, s_def)
+    }.
+
+par-bind (s, b, s_def) :- b match {
+    DefBind(x, e)  -> 
+        {s_var, ty}
+            new s_var -> DatumVar(x, ty),
+            s_def -[ `VAR ]-> s_var,
+            expr(s, e, ty)
+    | DefBindTyped(x, tyann, e)  -> 
+        {s_var, ty}
+            new s_var -> DatumVar(x, ty),
+            s_def -[ `VAR ]-> s_var,
+            type(s, tyann, ty),
+            expr(s, e, ty)
+    }.
+
+arg-decl (s, d, ty) :- d match {
+    ArgDecl(x, tyann)  -> 
+        {s_var, ty1}
+            type(s, tyann, ty1),
+            new s_var -> DatumVar(x, ty1),
+            s -[ `VAR ]-> s_var,
+            ty == ty1
+    }.
+
+type (s, tyann, ty) :- tyann match {
+    TInt()  -> 
+        ty == INT()
+    | TBool()  -> 
+        ty == BOOL()
+    | TArrow(tyann1, tyann2)  -> 
+        {ty1, ty2}
+            type(s, tyann1, ty1),
+            type(s, tyann2, ty2),
+            ty == FUN(ty1, ty2)
+    }.
+
+mod-ref (s, r, p) :- r match {
+    ModRef(x)  -> 
+        {mods, xmods, xmods'}
+            query s `LEX*`IMP?`MOD as mods,
+            filter mods (DatumMod(x', _) where x' == x) xmods,
+            min-refs(xmods, xmods'),
+            only(xmods', p)
+    | ModQRef(r, x)  -> 
+        {p_mod, s_mod, mods, xmods}
+            mod-ref(s, r, p_mod),
+            tgt(p_mod, s_mod),
+            query s_mod `MOD as mods,
+            filter mods (DatumMod(x', _) where x' == x) xmods,
+            only(xmods, p)
+    }.
+
+var-ref (s, r, p) :- r match {
+    VarRef(x)  -> 
+        {vars, xvars, xvars'}
+            query s `LEX*(`EXT*|`IMP?)`VAR as vars,
+            filter vars (DatumVar(x', _) where x' == x) xvars,
+            min-refs(xvars, xvars'),
+            only(xvars', p)
+    | VarQRef(r, x)  -> 
+        {p_mod, s_mod, vars, xvars}
+            mod-ref(s, r, p_mod),
+            tgt(p_mod, s_mod),
+            query s_mod `VAR as vars,
+            filter vars (DatumVar(x', _) where x' == x) xvars,
+            only(xvars, p)
+    }.
+
+min-refs (z, z') :- min z lexico(`MOD<`LEX, `MOD<`IMP, `VAR<`LEX, `VAR<`IMP, `IMP<`LEX) z'.

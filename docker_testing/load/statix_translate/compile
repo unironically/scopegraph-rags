@@ -1,7 +1,0 @@
-#!/bin/sh
-
-#./silver -I .. --mwda --onejar $@ statix_translate:driver
-
-DIR=$(dirname $0)
-
-java -jar -Xmx5000M -Xss20M $DIR/jars/silver.compiler.composed.Default.jar -G $DIR/gen -I $DIR/.. --mwda --onejar $@ statix_translate:driver && ant

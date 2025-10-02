@@ -1,0 +1,14 @@
+#!/bin/sh
+
+pushd ../grammars/lm_semantics_0
+
+if ./compile; then
+  echo "[✔] LM compiler successfully built"
+  popd
+  cp ../grammars/lm_semantics_0/*.jar .
+else
+  echo "[✗] Something went wrong when building the LM compiler"
+  exit -1
+fi
+
+mv lm_semantics_0.driver.jar lm_language0.jar

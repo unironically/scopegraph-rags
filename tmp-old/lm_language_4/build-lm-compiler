@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+pushd ../grammars/lm_semantics_4
+
+if ./compile; then
+  echo "[✔] LM compiler successfully built"
+else
+  echo "[✗] Something went wrong when building the LM compiler"
+  exit -1
+fi
+
+popd
+
+mv ../grammars/lm_semantics_4/lm_semantics_4.driver.jar .
+
+mv lm_semantics_4.driver.jar lm_language4.jar

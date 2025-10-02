@@ -1,0 +1,3 @@
+#!/bin/sh
+
+rm -r out *.jar *.html *.txt *.sv *.ml *.mstx > /dev/null 2>&1

@@ -1,77 +1,44 @@
-# LM Implementations
+# Scope Graphs with Reference Attribute Grammars
 
-#### Implementations
-Note that the syntax for languages 2, 3 and 4 are identical, whereas the syntax for 1 is a subset.
-- 1:
-  - The only declarations allowed are `def`s. No modules or imports.
-  - Scope graphs only have `LEX` and `VAR` as edge labels
-  - See [lm_language_1/](lm_language_1/)
-- 2:
-  - Module and import declarations are allowed.
-  - Only one import edge is allowed per scope graph node.
-  - A new "lookup" scope is created for every declaration in a declaration list, as well as any scopes created for those declarations (such as the scope for a `module`). This "lookup" scope is the origin of the `IMP` edge we get from resolving the `import` declaration at the head of the declaration list (if it is one), however the resolution of that import occurs in the lexical parent of the "lookup" scope.
-  - The global or latest module scope a declaration list falls under is maintained as we descend through the list, despite these new "lookup" scopes being created. New declaration scope graph nodes are associated with this scope instead of the "lookup" one, allowing queries from elsewhere in the program to find declarations within a module scope.
-  - Forward referencing is not allowed in any instance.
-  - See [lm_language_2/](lm_language_2/)
-- 3:
-  - Module and import declarations are allowed.
-  - Only one import edge is allowed per scope graph node.
-  - A new "lookup" scope is created only when the current declaration in a declaration list is an `import`. In this case, the resolution of the import reference happens in the parent scope of the new "lookup" scope, but the resulting import edge appears on the "lookup" scope.
-  - Two scopes are maintained as we descend through a declaration list as described for language 2. The only difference is that less scopes are created with this approach.
-  - Forward referencing is allowed so long as there is not an `import` between the LM reference and declaration in question, since lookup occurs on the "lookup" scopes.
-  - See [lm_language_3/](lm_language_3/)
-- 4:
-  - Module and import declarations are allowed.
-  - Multiple import edges are allowed per scope graph node.
-  - No new lookup scopes are created under declaration lists. Instead only one lexically enclosing scope is passed down a declaration list for name resolution and scope edge referencing.
-  - In both Statix and Silver, we get stuck if a program in this language has an `import` declaration anywhere. This is because the scope the import reference is resolved in is the same scope which will receive the resulting `IMP` edge. In Statix, this results in a weakly critical `IMP` edge blocking the query it results from, whereas in Silver we get into an attribute dependency cycle.
-  - See [lm_language_4/](lm_language_4/)
+Repository for ongoing research projects in the use of scope graphs with
+Reference Attribute Grammars (RAGs).
 
-#### Scope Graph Examples
+## Structure
 
-##### Let expressions
+- [lmr-scopegraphs](./lmr-scopegraphs/) Implementations of LMR languages with RAGs and scope graphs
 
-```
-def a:int = let x:int = 1
-                y:int = 2
-                z:int = 3
-            in x + y + z
-```
+- [sle-2025-artifact](./sle-2025-artifact/): Dockerfile and directory submitted as an artifact to
+  SLE 2025
 
-- Sequential
+- [tmp-old](./tmp-old/): Some of the older structure of this repository, pending
+  reintegration elsewhere here
 
-![leqseq.lm for language 1](img/letseq_1.svg)
+## SLE 2025 Artifact
 
-- Recursive
+The artifact provided in [sle-2025-artifact](./sle-2025-artifact/) has the 
+primary purpose of validating Theorem 2 of our paper. Namely, that the results
+of running Statix for a given specification and input program are consistent
+with the results we get on the same input progam, with the translation of that
+specification to a demand-driven attribute grammar.
+We created a slightly modified version of Statix that includes
+some annotations to assist in the translation to attribute grammars.
+The artifact will, for one of these Statix specifications, translate that specification
+to; 1) an equivalent Ministatix specification, 2) an attribute grammar in our
+OCaml representation, 3) a Silver attribute grammar. It will then run a number 
+of input program test cases through each system, record the results of each,
+and check whether those results are consistent. 
 
-![leqrec.lm for language 1](img/letrec_1.svg)
+Ministatix is a playground implementation of Statix, introduced as an artifact
+of Knowing When to Ask (Rouvoet et al.). The OCaml AG representation encodes
+an attribute grammar system defined by the demand-driven operational semantics
+defined in the paper. On the other hand, Silver is an established demand-driven
+reference attribute grammar language developed by our research group.
 
-- Parallel
+- Silver installation guide here: https://melt.cs.umn.edu/silver/install-guide/
+- Ministatix can be found here: https://github.com/metaborg/ministatix.hs.
 
-![leqpar.lm for language 1](img/letpar_1.svg)
+The Docker image contains executables for Ministatix and Silver, so these do not
+need to be installed.
 
-
-##### `modulessimple.lm`
-
-```
-module A {
-  def a:int = 1
-}
-
-module B {
-  import A
-  def b:int = a
-}
-```
-
-- Language 2
-
-![modulessimple.lm for language 2](img/modulessimple_2.svg)
-
-- Language 3
-
-![modulessimple.lm for language 3](img/modulessimple_3.svg)
-
-- Language 4 (no `IMP` edges - dependency cycle during import queries)
-
-![modulessimple.lm for language 4](img/modulessimple_4.svg)
+More information [here](./sle-2025-artifact/load/README.md), and detailed
+instructions for test cases [here](./sle-2025-artifact/load/AUTHORS-TEMPLATE.md).

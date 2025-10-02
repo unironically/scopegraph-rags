@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+./../ministatix.hs/statix check -I statix-spec statix-spec $1

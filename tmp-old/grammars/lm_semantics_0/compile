@@ -1,0 +1,5 @@
+#!/bin/sh
+
+silver -I .. --onejar $@ lm_semantics_0:driver
+
+rm build.xml > /dev/null 2>&1

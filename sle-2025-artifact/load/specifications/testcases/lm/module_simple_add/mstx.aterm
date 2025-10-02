@@ -1,0 +1,17 @@
+Program (
+  DeclsCons(
+    DeclModule(
+      "A",
+      DeclsCons(
+        DeclDef(DefBindPar("x", ExprInt("1"))),
+        DeclsCons(
+          DeclDef(DefBindPar("y", 
+            ExprAdd(ExprInt("1"), ExprVar(VarRef("x")))
+          )),
+          DeclsNil()
+        )
+      )
+    ),
+    DeclsNil()
+  )
+)

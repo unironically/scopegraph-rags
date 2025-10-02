@@ -1,0 +1,35 @@
+Program (
+  DeclsCons(
+    DeclModule(
+      "A",
+      DeclsCons(
+        DeclDef(DefBindPar("x", ExprInt("1"))),
+        DeclsNil()
+      )
+    ),
+    DeclsCons (
+      DeclModule(
+        "B",
+        DeclsCons(
+          DeclImport(
+            ModRef("A")
+          ),
+          DeclsCons(
+            DeclDef(
+              DefBindPar(
+                "y",
+                ExprVar(
+                  VarRef(
+                    "x"
+                  )
+                )
+              )
+            ),
+            DeclsNil()
+          )
+        )
+      ),
+      DeclsNil()
+    )
+  )
+)

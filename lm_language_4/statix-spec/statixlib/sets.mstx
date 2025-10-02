@@ -1,1 +1,0 @@
-empty(set) :- every set(x -> false).

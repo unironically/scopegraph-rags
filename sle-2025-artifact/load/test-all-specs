@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for spec in $(find specifications -name "*.mstx"); do
+    bash test-one-spec $spec specifications/testcases/lm
+    echo "---"
+done

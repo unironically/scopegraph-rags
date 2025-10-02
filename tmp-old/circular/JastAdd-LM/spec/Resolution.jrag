@@ -1,0 +1,268 @@
+import java.util.*;
+
+aspect Resolution {
+
+  /*---------- DFA ----------*/
+
+  syn ArrayList<Resolution> DFA.decls(Ref ref, Scope current, Path p);
+
+  eq DFA.decls(Ref ref, Scope current, Path p) = lexState().decls(ref, current, p);
+
+  syn State DFA.lexState();
+  syn State DFA.impState();
+
+  syn nta lazy FinalState DFA.finalState() {
+    FinalState fs = new FinalState();
+    this.setChild(fs, 1);
+    return fs;
+  }
+
+  syn nta lazy SinkState DFA.sinkState() {
+    SinkState ss = new SinkState();
+    this.setChild(ss, 0);
+    return ss;
+  }
+
+  /*eq DFA.finalState() { FinalState fin = new FinalState();
+                        fin.setParent(this); return fin; }*/
+
+  /*eq DFA.sinkState()  { SinkState snk = new SinkState();
+                        snk.setParent(this); return snk; }*/
+
+  eq DFA.finalState().lexT() { return this.sinkState(); }
+  eq DFA.finalState().impT() { return this.sinkState(); }
+  eq DFA.finalState().varT() { return this.sinkState(); }
+  eq DFA.finalState().modT() { return this.sinkState(); }
+
+  eq DFA.sinkState().lexT() { return this.sinkState(); }
+  eq DFA.sinkState().impT() { return this.sinkState(); }
+  eq DFA.sinkState().varT() { return this.sinkState(); }
+  eq DFA.sinkState().modT() { return this.sinkState(); }
+
+  /*---------- VarDFA ----------*/
+
+  syn nta lazy State VarDFA.lexState() {
+    State s = new State();
+    this.setChild(s, 2);
+    return s;
+  }
+
+  syn nta lazy State VarDFA.impState() {
+    State s = new State();
+    this.setChild(s, 3);
+    return s;
+  }
+
+  /*eq VarDFA.lexState() { State lex = new State();
+                         lex.setParent(this); return lex; }*/
+  /*eq VarDFA.impState() { State imp = new State();
+                         imp.setParent(this); return imp; }*/
+  
+  eq VarDFA.lexState().lexT() { return this.lexState(); }
+  eq VarDFA.lexState().impT() { return this.impState(); }
+  eq VarDFA.lexState().varT() { return this.finalState(); }
+  eq VarDFA.lexState().modT() { return this.sinkState(); }
+
+  eq VarDFA.impState().lexT() { return this.sinkState(); }
+  eq VarDFA.impState().impT() { return this.impState(); }
+  eq VarDFA.impState().varT() { return this.finalState(); }
+  eq VarDFA.impState().modT() { return this.sinkState(); }
+
+  /*---------- ModDFA ----------*/
+
+  syn nta lazy State ModDFA.lexState() {
+    State s = new ModState();
+    this.setChild(s, 2);
+    return s;
+  }
+  syn nta lazy State ModDFA.impState() {
+    State s = new ModState();
+    this.setChild(s, 3);
+    return s;
+  }
+
+  /*eq ModDFA.lexState() { State lex = new ModState();
+                         lex.setParent(this); return lex; }*/
+  /*eq ModDFA.impState() { State imp = new ModState();
+                         imp.setParent(this); return imp; }*/
+
+  eq ModDFA.lexState().lexT() { return this.lexState(); }
+  eq ModDFA.lexState().impT() { return this.impState(); }
+  eq ModDFA.lexState().varT() { return this.sinkState(); }
+  eq ModDFA.lexState().modT() { return this.finalState(); }
+
+  eq ModDFA.impState().lexT() { return this.sinkState(); }
+  eq ModDFA.impState().impT() { return this.impState(); }
+  eq ModDFA.impState().varT() { return this.sinkState(); }
+  eq ModDFA.impState().modT() { return this.finalState(); }
+  
+  /*---------- State ----------*/
+
+  inh State State.lexT();
+  inh State State.impT();
+  inh State State.varT();
+  inh State State.modT();
+
+  syn ArrayList<Resolution> State.decls(Ref ref, Scope s, Path p);
+
+  eq State.decls(Ref ref, Scope s, Path p) {
+
+    // System.out.println("Decls call for " + ref.pp());
+    
+    ArrayList<Resolution> varRes = new ArrayList<Resolution>();
+
+    for (Edge eVar: s.var()) {
+      varRes.addAll(this.varT().decls(ref, eVar.gettgtNoTransform(), new PathCons(eVar, p)));
+    }
+
+    ArrayList<Resolution> modRes = new ArrayList<Resolution>();
+
+    for (Edge eMod: s.mod()) {
+      modRes.addAll(this.modT().decls(ref, eMod.gettgtNoTransform(), new PathCons(eMod, p)));
+    }
+
+    ArrayList<Resolution> impRes = new ArrayList<Resolution>();
+
+    for (Edge eImp: s.imp()) {
+      impRes.addAll(this.impT().decls(ref, eImp.gettgtNoTransform(), new PathCons(eImp, p)));
+    }
+
+    ArrayList<Resolution> lexRes = new ArrayList<Resolution>();
+
+    for (Edge eLex: s.lex()) {
+      lexRes.addAll(this.lexT().decls(ref, eLex.gettgtNoTransform(), new PathCons(eLex, p)));
+    }
+
+    ArrayList<Resolution> allRes = new ArrayList<Resolution>();
+
+    allRes.addAll(varRes);
+    allRes.addAll(modRes);
+    allRes.addAll(impRes);
+    allRes.addAll(lexRes);
+
+    // System.out.println("\tBottom with allRes size = " + Integer.toString(allRes.size()));
+
+    return allRes;
+
+  }
+
+  eq ModState.decls(Ref ref, Scope s, Path p) {
+
+    //System.out.println("ModState.decls call for " + ref.pp() + " in " + s.pp());
+
+    try {
+      Thread.sleep(10);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+    
+    ArrayList<Resolution> varRes = new ArrayList<Resolution>();
+
+    for (Edge eVar: s.var()) {
+      varRes.addAll(this.varT().decls(ref, eVar.gettgtNoTransform(), new PathCons(eVar, p)));
+    }
+
+    ArrayList<Resolution> modRes = new ArrayList<Resolution>();
+
+    for (Edge eMod: s.mod()) {
+      modRes.addAll(this.modT().decls(ref, eMod.gettgtNoTransform(), new PathCons(eMod, p)));
+    }
+
+    ArrayList<Resolution> impTentativeRes = new ArrayList<Resolution>();
+
+    for (Edge eImpTentative: s.impTentative()) {
+      impTentativeRes.addAll(this.impT().decls(ref, eImpTentative.gettgtNoTransform(), new PathCons(eImpTentative, p)));
+    }
+
+    ArrayList<Resolution> lexRes = new ArrayList<Resolution>();
+
+    for (Edge eLex: s.lex()) {
+      lexRes.addAll(this.lexT().decls(ref, eLex.gettgtNoTransform(), new PathCons(eLex, p)));
+    }
+
+    ArrayList<Resolution> allRes = new ArrayList<Resolution>();
+
+    allRes.addAll(varRes);
+    allRes.addAll(modRes);
+    allRes.addAll(impTentativeRes);
+    allRes.addAll(lexRes);
+
+    return allRes;
+
+  }
+  
+  eq FinalState.decls(Ref ref, Scope s, Path p) {
+
+    // System.out.println("\tFinal state");
+
+    ArrayList<Resolution> res = new ArrayList<Resolution>();
+
+    if (s.datum().str().equals(ref.str())) {
+      Resolution newRes = new Resolution();
+        newRes.setref(ref);
+        newRes.setpath(p);
+      res.add(newRes);
+    }
+
+    return res;
+
+  }
+
+
+  eq SinkState.decls(Ref ref, Scope s, Path p) {
+
+    // System.out.println("\tSink state");
+
+    return new ArrayList<Resolution>();
+
+  }
+
+
+  /*---------- MkVarRef ----------*/
+
+  //syn lazy ArrayList<Scope> MkVarRef.varRes();
+
+  syn nta lazy DFA MkVarRef.dfa() = new VarDFA();
+
+  // top.varRes = top.dfa.decls(top, head(top.lex))
+  //eq MkVarRef.varRes() { return dfa().decls(this, this.lex().get(0)); }
+
+  // res
+  //syn nta lazy Resolution MkVarRef.resolution() = new Resolution();
+
+  syn lazy ArrayList<Resolution> MkVarRef.resolution();
+  eq MkVarRef.resolution() { return dfa().decls(this, this.lex().get(0).gettgtNoTransform(), new PathCons(this.lex().get(0), new PathNil())); }
+
+  /*---------- MkModRef ----------*/
+
+  //syn ArrayList<Scope> MkModRef.modRes() circular [new ArrayList<Scope>()];
+
+  syn nta lazy DFA MkModRef.dfa() = new ModDFA();
+
+  // top.modRes = top.dfa.decls(top, head(top.lex))
+  //eq MkModRef.modRes() { return dfa().decls(this, this.lex().get(0)); }
+
+  // res
+  //syn nta lazy Resolution MkModRef.resolution() = new Resolution();
+
+  syn lazy ArrayList<Resolution> MkModRef.resolution() circular [new ArrayList<Resolution>()];
+  eq MkModRef.resolution() { 
+    ArrayList<Resolution> dcls = 
+      dfa().decls(
+        this, 
+        this.lex().get(0).gettgtNoTransform(), 
+        new PathCons(this.lex().get(0), new PathNil())
+      );
+    return dcls;
+  }
+
+  /*---------- Path ----------*/
+
+  syn lazy Scope Path.tgt();
+  eq Path.tgt() {
+    if (this instanceof PathNil) return null;
+    Edge e = (Edge) this.getChild(0);
+    return e.gettgtNoTransform();
+  }
+
+}

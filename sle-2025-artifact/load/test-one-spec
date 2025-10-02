@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Check args
+
+if [[ $# -ne 2 ]] ; then
+    echo "test-one-spec: Expected two argument, a Statix specification in our 
+          language, and a directory to look for test case programs."
+    exit 0
+fi
+
+TSTS=$2
+TSTS="${TSTS%/}"
+
+# Build the translator if not present
+
+if [ ! -f statix_translate.driver.jar ]; then
+    echo "test-one-spec: Building translator..."
+    statix_translate/compile
+    if [[ $? -ne 0 ]]; then
+        echo "test-one-spec: Something went wrong when building the translator - exiting."
+        exit -1
+    fi
+    echo "test-one-spec: Done building translator."
+fi
+
+# Translate the given spec
+
+echo "test-one-spec: Translating specification $1..."
+
+rm -f gen/*
+
+java -jar statix_translate.driver.jar $1
+
+rm -rf statix_translate/gen/*
+
+# Move generated files into correct directories
+
+cp gen/*.mstx lib/mstx_lib/src
+cp gen/*.ml lib/ocaml_lib
+cp gen/*.sv lib/silver_lib/statix_trans
+
+# Run all tests
+
+echo "test-one-spec: Running tests in $2..."
+
+./try-all-inputs $TSTS
+
+echo "test-one-spec: Done running tests."
+
+# cleanup
+
+echo "test-one-spec: Cleaning up."
+
+rm -rf _build gen
+rm -f build.xml *.byte lib/silver_lib/statix_trans/Spec_*.sv \
+      lib/mstx_lib/src/* lib/ocaml_lib/ocaml_ag_lm_spec.ml
+
+echo "test-one-spec: Done."

@@ -1,8 +1,0 @@
-module A {
-  def a:int = 1
-}
-
-module B {
-  import A
-  def b:int = a
-}
