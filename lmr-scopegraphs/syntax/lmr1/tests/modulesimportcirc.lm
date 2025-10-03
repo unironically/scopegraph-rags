@@ -1,0 +1,11 @@
+/* Note that this only works with the type annotations given. Without these we get stuck in a cycle. */
+
+module A {
+  import B
+  def a:int = b
+}
+
+module B {
+  import A
+  def b:int = a
+}

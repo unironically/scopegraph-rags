@@ -1,0 +1,8 @@
+module A {
+  module A {
+  }
+}
+
+module M {
+  import A
+}

@@ -34,6 +34,18 @@ top::Decls ::=
 
 nonterminal Decl with statix, location;
 
+abstract production declModule
+top::Decl ::= id::String ds::Decls
+{
+  top.statix = "DeclModule(\"" ++ id ++ "\", " ++ ds.statix ++ ")";
+}
+
+abstract production declImport
+top::Decl ::= r::ModRef
+{
+  top.statix = "DeclImport(" ++ r.statix ++ ")";
+}
+
 abstract production declDef
 top::Decl ::= b::ParBind
 {
@@ -233,13 +245,13 @@ nonterminal Type with statix;
 abstract production tInt
 top::Type ::=
 {
-  top.statix = "tInt()";
+  top.statix = "TInt()";
 }
 
 abstract production tBool
 top::Type ::=
 {
-  top.statix = "tBool()";
+  top.statix = "TBool()";
 }
 
 abstract production tFun
@@ -251,18 +263,30 @@ top::Type ::= tyann1::Type tyann2::Type
 abstract production tErr
 top::Type ::=
 {
-  top.statix = "tErr()";
+  top.statix = "TErr()";
 }
 
+fun eqType Boolean ::= t1::Type t2::Type =
+  case t1, t2 of
+  | tInt(), tInt() -> true
+  | tBool(), tBool() -> true              -- QUESTION: why need to use ^ here?
+  | tFun(t1_1, t1_2), tFun(t2_1, t2_2) -> eqType(^t1_1, ^t2_1) && eqType(^t1_2, ^t2_2)
+  | tErr(), tErr() -> true
+  | _, _ -> false
+  end;
+
 instance Eq Type {
-  eq = \l1::Type l2::Type ->
-    case l1, l2 of
-    | tInt(), tInt() -> true
-    | tBool(), tBool() -> true
-    | tFun(t1, t2), tFun(t3, t4) -> ^t1 == ^t3 && ^t2 == ^t4
-    | tErr(), tErr() -> true
-    | _, _ -> false
-    end;
+  eq = eqType;
+}
+
+--------------------------------------------------
+
+nonterminal ModRef with statix, location;
+
+abstract production modRef
+top::ModRef ::= x::String
+{
+  top.statix = "ModRef(\"" ++ x ++ "\")";
 }
 
 --------------------------------------------------

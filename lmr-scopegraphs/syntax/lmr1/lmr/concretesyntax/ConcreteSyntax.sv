@@ -36,6 +36,18 @@ top::Decls_c ::=
 
 nonterminal Decl_c with ast<Decl>, location;
 
+concrete production declModule_c
+top::Decl_c ::= 'module' id::ModId_t '{' ds::Decls_c '}'
+{
+  top.ast = declModule(id.lexeme, ds.ast, location=top.location);
+}
+
+concrete production declImport_c
+top::Decl_c ::= 'import' r::ModRef_c
+{
+  top.ast = declImport(r.ast, location=top.location);
+}
+
 concrete production declDef_c
 top::Decl_c ::= 'def' b::ParBind_c
 {
@@ -204,9 +216,8 @@ top::ParBinds_c ::=
 
 concrete production parBindsOne_c
 top::ParBinds_c ::= s::ParBind_c
-{
-  forwards to parBindsCons_c(^s, ',', parBindsNil_c(location=top.location),
-                             location=top.location);
+{ -- QUESTION: unsure why i need ^s (i.e. "new(s)") instead of s here
+  forwards to parBindsCons_c(^s, ',', parBindsNil_c(location=top.location), location=top.location);
 }
 
 concrete production parBindsCons_c
@@ -267,6 +278,16 @@ concrete production typeParens_c
 top::Type_c ::= '(' t::Type_c ')'
 {
   top.ast = t.ast;
+}
+
+--------------------------------------------------
+
+nonterminal ModRef_c with ast<ModRef>, location;
+
+concrete production modRef_c
+top::ModRef_c ::= x::ModId_t
+{
+  top.ast = modRef(x.lexeme, location=top.location);
 }
 
 --------------------------------------------------
