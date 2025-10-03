@@ -4,8 +4,8 @@ imports syntax:lmr1:lmr:driver;
 imports syntax:lmr1:lmr:concretesyntax;
 imports syntax:lmr1:lmr:abstractsyntax;
 
+-- match sg_lib<n> and nameanalysis<n> below
 imports lmr1:lmr:nameanalysis2;
-
 imports sg_lib2:src;
 
 function main

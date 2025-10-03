@@ -1,30 +1,25 @@
-grammar lmr0:lmr:nameanalysis1;
+grammar lmr1:lmr:nameanalysis1;
 
 --------------------------------------------------
 
-abstract production mkScopeVar
-top::SGScope ::=
-  name::String
-  ty::Type
-{ forwards to 
-  mkScopeDatum(datumVar(name, ^ty, location=top.location), 
-               location=top.location); }
+abstract production scopeNoDatum
+top::Scope ::=
+{ forwards to scope(datumNone()); }
+
+abstract production scopeVar
+top::Scope ::= name::String ty::Type
+{ forwards to scope(datumVar(name, ^ty)); }
+
+abstract production scopeMod
+top::Scope ::= name::String
+{ forwards to scope(datumMod(name)); }
 
 --------------------------------------------------
 
 abstract production datumVar
-top::SGDatum ::= name::String ty::Type
-{ forwards to datum(name, location=top.location); }
+top::Datum ::= name::String ty::Type
+{ forwards to datum(name); }
 
---------------------------------------------------
-
-function printDecl
-String ::= d::Decorated SGScope
-{
-  return 
-    case d of
-    | mkScopeVar(name, _) -> name ++ "_" ++ 
-        toString(d.location.line) ++ "_" ++ toString(d.location.column)
-    | _ -> ""
-    end;
-}
+abstract production datumMod
+top::Datum ::= name::String
+{ forwards to datum(name); }

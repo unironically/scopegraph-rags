@@ -1,25 +1,11 @@
-grammar sg_lib:src;
+grammar sg_lib1:src;
 
 --------------------------------------------------
 
--- Path
-
-nonterminal Path;
-
-abstract production pEnd
-top::Path ::= s::Decorated SGScope
-{}
-
-abstract production pEdge
-top::Path ::= s::Decorated SGScope lab::String rest::Path
-{}
-
---------------------------------------------------
-
-synthesized attribute paths::([Path] ::= Pred Decorated SGScope);
+synthesized attribute resolve::([Decorated Scope] ::= Pred Decorated Scope);
 synthesized attribute start::Decorated DFAState;
 
-nonterminal DFA with paths, start;
+nonterminal DFA with resolve, start;
 
 abstract production varRefDFA
 top::DFA ::=
@@ -49,7 +35,7 @@ top::DFA ::=
   sink.impT = sink;
   sink.lexT = sink;
 
-  top.paths = state0.paths;
+  top.resolve = state0.resolve;
   top.start = state0;
 }
 
@@ -81,7 +67,7 @@ top::DFA ::=
   sink.impT = sink;
   sink.lexT = sink;
 
-  top.paths = state0.paths;
+  top.resolve = state0.resolve;
   top.start = state0;
 }
 
@@ -92,29 +78,23 @@ inherited attribute modT::Decorated DFAState;
 inherited attribute impT::Decorated DFAState;
 inherited attribute lexT::Decorated DFAState;
 
-nonterminal DFAState with varT, modT, impT, lexT, paths;
+nonterminal DFAState with varT, modT, impT, lexT, resolve;
 
 abstract production stateVar
 top::DFAState ::=
 {
-  top.paths = \pred::Pred cur::Decorated SGScope ->
+  top.resolve = \pred::Pred cur::Decorated Scope ->
 
-    let varRes::[Path] = 
-      let varPaths::[Path] = concat(map(top.varT.paths(pred, _), cur.var)) in
-        map ((\p::Path -> pEdge(cur, "VAR", p)), varPaths)
-      end
+    let varRes::[Decorated Scope] = 
+      concat(map(top.varT.resolve(pred, _), cur.var))
     in
 
-    let impRes::[Path] = 
-      let impPaths::[Path] = concat(map(top.impT.paths(pred, _), cur.imp)) in
-        map ((\p::Path -> pEdge(cur, "IMP", p)), impPaths)
-      end 
+    let impRes::[Decorated Scope] = 
+      concat(map(top.impT.resolve(pred, _), cur.imp))
     in
 
-    let lexRes::[Path] = 
-      let lexPaths::[Path] = concat(map(top.lexT.paths(pred, _), cur.lex)) in
-        map ((\p::Path -> pEdge(cur, "LEX", p)), lexPaths)
-      end
+    let lexRes::[Decorated Scope] = 
+      concat(map(top.lexT.resolve(pred, _), cur.lex))
     in
     
     if !null(varRes) then varRes
@@ -122,30 +102,23 @@ top::DFAState ::=
     else lexRes
 
     end end end;
-
 }
 
 abstract production stateMod
 top::DFAState ::= 
 {
-  top.paths = \pred::Pred cur::Decorated SGScope ->
+  top.resolve = \pred::Pred cur::Decorated Scope ->
 
-    let modRes::[Path] = 
-      let modPaths::[Path] = concat(map(top.modT.paths(pred, _), cur.mod)) in
-        map ((\p::Path -> pEdge(cur, "MOD", p)), modPaths)
-      end
+    let modRes::[Decorated Scope] = 
+      concat(map(top.modT.resolve(pred, _), cur.mod))
     in
 
-    let impRes::[Path] = 
-      let impPaths::[Path] = concat(map(top.impT.paths(pred, _), cur.imp)) in
-        map ((\p::Path -> pEdge(cur, "IMP", p)), impPaths)
-      end 
+    let impRes::[Decorated Scope] = 
+      concat(map(top.impT.resolve(pred, _), cur.imp))
     in
 
-    let lexRes::[Path] = 
-      let lexPaths::[Path] = concat(map(top.lexT.paths(pred, _), cur.lex)) in
-        map ((\p::Path -> pEdge(cur, "LEX", p)), lexPaths)
-      end
+    let lexRes::[Decorated Scope] = 
+      concat(map(top.lexT.resolve(pred, _), cur.lex))
     in
     
     if !null(modRes) then modRes
@@ -158,40 +131,21 @@ top::DFAState ::=
 abstract production stateFinal
 top::DFAState ::=
 {
-  top.paths = \pred::Pred cur::Decorated SGScope -> 
-              if pred(cur.datum) then [pEnd(cur)] else [];
+  top.resolve = \pred::Pred cur::Decorated Scope -> 
+              if pred(cur.datum) then [cur] else [];
 }
 
 abstract production stateSink
 top::DFAState ::=
-{ top.paths = \_ _ -> []; }
-
+{ top.resolve = \_ _ -> []; }
 
 -----------------------------------------------------
--- Ministatix builtin functions
 
-type Pred = (Boolean ::= SGDatum);
+type Pred = (Boolean ::= Datum);
 
 function query
-[Path] ::= 
-  start::Decorated SGScope 
+[Decorated Scope] ::= 
+  start::Decorated Scope 
   dfa::DFA
   pred::Pred
-{ return dfa.paths(pred, start); }
-
-function pathFilter
-[Path] ::= f::(Boolean ::= SGDatum) ps::[Path]
-{
-  return filter (pathFilterOne(f, _), ps);
-}
-
-function pathFilterOne
-Boolean ::= f::(Boolean ::= SGDatum) p::Path
-{
-  return
-    case p of
-      pEnd(s)         -> f(s.datum)
-    | pEdge(s, l, ps) -> pathFilterOne(f, ^ps) -- QUESTION: why need ^ here?
-    | _               -> false
-    end;
-}
+{ return dfa.resolve(pred, start); }
