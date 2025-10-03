@@ -1,8 +1,8 @@
-grammar lmr0:lmr:nameanalysis;
+grammar lmr0:lmr:nameanalysis1;
 
 --------------------------------------------------
 
-abstract production mkDeclVar
+abstract production mkScopeVar
 top::SGScope ::=
   name::String
   ty::Type
@@ -23,7 +23,7 @@ String ::= d::Decorated SGScope
 {
   return 
     case d of
-    | mkDeclVar(name, _) -> name ++ "_" ++ 
+    | mkScopeVar(name, _) -> name ++ "_" ++ 
         toString(d.location.line) ++ "_" ++ toString(d.location.column)
     | _ -> ""
     end;

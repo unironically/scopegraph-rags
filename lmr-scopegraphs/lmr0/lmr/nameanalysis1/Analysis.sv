@@ -1,4 +1,4 @@
-grammar lmr0:lmr:nameanalysis;
+grammar lmr0:lmr:nameanalysis1;
 
 --------------------------------------------------
 
@@ -570,8 +570,7 @@ aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
 {
   -- new s_var -> DatumVar(x, ty)
-  local s_var::SGScope = mkScopeDatum(datumVar(id, ^ty, location=top.location),
-                                      location=top.location);
+  local s_var::SGScope = mkScopeVar(id, ^ty, location=top.location);
 
   -- no assertions for s_var, nor is it passed
   s_var.lex = [];
@@ -600,8 +599,7 @@ aspect production seqBindTyped
 top::SeqBind ::= ty::Type id::String e::Expr
 {
   -- new s_var -> DatumVar(x, ty1)
-  local s_var::SGScope = mkScopeDatum(datumVar(id, ^ty, location=top.location),
-                                      location=top.location);
+  local s_var::SGScope = mkScopeVar(id, ^ty, location=top.location);
 
   -- no assertions from s_var, nor is it passed
   s_var.lex = []; 
@@ -691,8 +689,7 @@ aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
 {
   -- new s_var -> DatumVar(x, ty)
-  local s_var::SGScope = mkScopeDatum(datumVar(id, e.ty, location=top.location),
-                                      location=top.location);
+  local s_var::SGScope = mkScopeVar(id, e.ty, location=top.location);
 
   -- no assertions for s_var, nor is it passed
   s_var.lex = [];
@@ -720,8 +717,7 @@ aspect production parBindTyped
 top::ParBind ::= ty::Type id::String e::Expr
 {
   -- new s_var -> DatumVar(x, ty1)
-  local s_var::SGScope = mkScopeDatum(datumVar(id, ^ty, location=top.location),
-                                      location=top.location);
+  local s_var::SGScope = mkScopeVar(id, ^ty, location=top.location);
 
   -- no assertions from s_var, nor is it passed
   s_var.lex = []; 
@@ -764,8 +760,7 @@ aspect production argDecl
 top::ArgDecl ::= id::String tyann::Type
 {
   -- new s_var -> DatumVar(x, ty)
-  local s_var::SGScope = mkScopeDatum(datumVar(id, tyann.ty, location=top.location),
-                                      location=top.location);
+  local s_var::SGScope = mkScopeVar(id, tyann.ty, location=top.location);
 
   -- no assertions, not passed
   s_var.lex = []; s_var.var = [];
