@@ -2,18 +2,23 @@
 
 - LMR 1: LMR with sequential semantics, no forward referencing.
 
+### Resolution semantics
+
+Sequential semantics for imports, modules and variables. Each name reference can
+only resolve to declaration which precede it syntactically. When imports are
+used, references afer the import may use it in their resolution. Resolution of
+imports may also use resolved imports in lexically enclosing scopes.
+
+### Directories:
+- `tests/`: LM example tests directory at `../grammars/lm_syntax_0/tests`.
+- `out/`: created by the LM compiler if files are generated.
+
 ### Execution:
 ```bash
 ./compile
 java -jar lmr1.lmr.driver.jar tests/letseq.lm
 ./clean
 ```
-
-### Directories:
-- `tests/`: LM example tests directory at `../grammars/lm_syntax_0/tests`.
-- `out/`: created by the LM compiler if files are generated.
-
-### Test cases:
 
 ### Concrete Syntax:
 ```

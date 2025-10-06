@@ -2,18 +2,22 @@
 
 - LMR 0: LMR without modules, imports and records
 
+### Resolution semantics
+
+Forward referencing of variable names is allowed. There is a single global scope
+which is treated the same as the body of a recursive `let` where all variables
+in the program are treated as binders of it.
+
+### Directories:
+- `tests/`: LM example tests directory at `../grammars/lm_syntax_0/tests`.
+- `out/`: created by the LM compiler if files are generated.
+
 ### Execution:
 ```bash
 ./compile
 java -jar lmr0.lmr.driver.jar tests/letseq.lm
 ./clean
 ```
-
-### Directories:
-- `tests/`: LM example tests directory at `../grammars/lm_syntax_0/tests`.
-- `out/`: created by the LM compiler if files are generated.
-
-### Test cases:
 
 ### Concrete Syntax:
 ```

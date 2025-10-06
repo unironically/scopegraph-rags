@@ -2,18 +2,24 @@
 
 - LMR 2: LMR with forward referencing of variables but sequential import semantics
 
+### Resolution semantics:
+
+Sequential semantics for imports, but forward referencing allowed for variable
+references. Import references may be resolved with respect to other imports in
+the same module, but only those which precede them syntactically. Variables are
+treated as in the body of a recursive `let` expression, and may resolve using
+any import in their scope or in lexically enclosing ones.
+
+### Directories:
+- `tests/`: LM example tests directory at `../grammars/lm_syntax_0/tests`.
+- `out/`: created by the LM compiler if files are generated.
+
 ### Execution:
 ```bash
 ./compile
 java -jar lmr2.lmr.driver.jar tests/letseq.lm
 ./clean
 ```
-
-### Directories:
-- `tests/`: LM example tests directory at `../grammars/lm_syntax_0/tests`.
-- `out/`: created by the LM compiler if files are generated.
-
-### Test cases:
 
 ### Concrete Syntax:
 ```

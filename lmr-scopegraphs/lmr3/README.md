@@ -2,18 +2,23 @@
 
 - LMR 3: LMR without modules, imports and records
 
+### Resolution semantics
+
+Same as in Ministatix LMR ([web link here](https://github.com/MetaBorgCube/metaborg-lmr/blob/d1cb439be8eba9468d95cfc0aa091558147a227d/lang.lmr.mstx/src/lmr.mstx)). Forward referencing of all names is allowed, and
+imports are self-influencing. In both Ministatix and (non-circular) reference
+AGs, imports are erroneous. For Ministatix, constraint solving becomes stuck.
+In RAGs, there are circular dependencies.
+
+### Directories:
+- `tests/`: LM example tests directory at `../grammars/lm_syntax_0/tests`.
+- `out/`: created by the LM compiler if files are generated.
+
 ### Execution:
 ```bash
 ./compile
 java -jar lmr3.lmr.driver.jar tests/letseq.lm
 ./clean
 ```
-
-### Directories:
-- `tests/`: LM example tests directory at `../grammars/lm_syntax_0/tests`.
-- `out/`: created by the LM compiler if files are generated.
-
-### Test cases:
 
 ### Concrete Syntax:
 ```
