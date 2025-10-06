@@ -3,6 +3,8 @@ grammar lmr1:lmr:nameanalysis2;
 imports syntax:lmr1:lmr:abstractsyntax;
 imports sg_lib2:src;
 
+import silver:langutil; -- for location.unparse
+
 --------------------------------------------------
 
 inherited attribute scope::Decorated Scope;
@@ -426,7 +428,11 @@ top::VarRef ::= x::String
 
   local okAndTy::(Boolean, Type) =
     if length(vars) != 1
-    then (false, tErr())
+    then unsafeTracePrint((false, tErr()), "[✗] " ++ top.location.unparse ++ 
+                          ": error: unresolvable variable reference '" ++ x ++ "'\n")
+    else if length(vars) > 1
+    then unsafeTracePrint((false, tErr()), "[✗] " ++ top.location.unparse ++ 
+                          ": error: ambiguous variable reference '" ++ x ++ "'\n")
     else case head(vars).datum of
          | datumVar(_, ty) -> (true, ^ty)
          | _ -> (false, tErr())
@@ -448,8 +454,12 @@ top::ModRef ::= x::String
   local mods::[Decorated Scope] = top.scope.resolve(isName(x), modRx());
 
   local okAndTy::(Boolean, Maybe<Decorated Scope>) =
-    if length(mods) != 1
-    then (false, nothing())
+    if length(mods) < 1
+    then unsafeTracePrint((false, nothing()), "[✗] " ++ top.location.unparse ++ 
+                          ": error: unresolvable module reference '" ++ x ++ "'\n")
+    else if length(mods) > 1
+    then unsafeTracePrint((false, nothing()), "[✗] " ++ top.location.unparse ++ 
+                          ": error: ambiguous module reference '" ++ x ++ "'\n")
     else case head(mods).datum of
          | datumMod(_) -> (true, just(head(mods)))
          | _ -> (false, nothing())

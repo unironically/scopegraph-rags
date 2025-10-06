@@ -5,8 +5,8 @@ imports syntax:lmr1:lmr:concretesyntax;
 imports syntax:lmr1:lmr:abstractsyntax;
 
 -- match sg_lib<n> and nameanalysis<n> below
-imports lmr1:lmr:nameanalysis2;
-imports sg_lib2:src;
+imports lmr1:lmr:nameanalysis1;
+imports sg_lib1:src;
 
 function main
 IO<Integer> ::= largs::[String]

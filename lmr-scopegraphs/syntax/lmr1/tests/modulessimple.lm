@@ -2,7 +2,12 @@ module A {
   def a:int = 1
 }
 
+module C {
+  def c:int = 2
+}
+
 module B {
   import A
-  def b:int = a
+  import C
+  def b:int = a + c
 }

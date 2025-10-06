@@ -1,5 +1,10 @@
 grammar lmr1:lmr:nameanalysis1;
 
+imports syntax:lmr1:lmr:abstractsyntax;
+imports sg_lib1:src;
+
+import silver:langutil; -- for location.unparse
+
 --------------------------------------------------
 
 monoid attribute ok::Boolean with true, &&;
@@ -503,18 +508,22 @@ top::Type ::=
 attribute ok, scope, type occurs on VarRef;
 
 aspect production varRef
-top::VarRef ::= name::String
+top::VarRef ::= x::String
 {
   local xvars_::[Decorated Scope] =
     query(top.scope, varRefDFA(),
           \d::Datum -> case d of 
-                       | datumVar(x, _) -> x == name 
+                       | datumVar(name, _) -> x == name 
                        | _ -> false 
                        end);
 
   local okAndRes::(Boolean, Type) = 
     if length(xvars_) != 1
-    then (false, tErr())
+    then unsafeTracePrint((false, tErr()), "[✗] " ++ top.location.unparse ++ 
+                          ": error: unresolvable variable reference '" ++ x ++ "'\n")
+    else if length(xvars_) > 1
+    then unsafeTracePrint((false, tErr()), "[✗] " ++ top.location.unparse ++ 
+                          ": error: ambiguous variable reference '" ++ x ++ "'\n")
     else case head(xvars_).datum of
          | datumVar(_, ty) -> (true, ^ty)
          | _ -> (false, tErr())
@@ -529,18 +538,22 @@ top::VarRef ::= name::String
 attribute scope, ok, mod occurs on ModRef;
 
 aspect production modRef
-top::ModRef ::= name::String
+top::ModRef ::= x::String
 {
   local xmods_::[Decorated Scope] =
     query(top.scope, modRefDFA(), 
           \d::Datum -> case d of 
-                       | datumMod(x) -> x == name 
+                       | datumMod(name) -> x == name 
                        | _ -> false 
                        end);
 
   local okAndRes::(Boolean, Maybe<Decorated Scope>) = 
-    if length(xmods_) != 1
-    then (false, nothing())
+    if length(xmods_) < 1
+    then unsafeTracePrint((false, nothing()), "[✗] " ++ top.location.unparse ++ 
+                          ": error: unresolvable module reference '" ++ x ++ "'\n")
+    else if length(xmods_) > 1
+    then unsafeTracePrint((false, nothing()), "[✗] " ++ top.location.unparse ++ 
+                          ": error: ambiguous module reference '" ++ x ++ "'\n")
     else case head(xmods_).datum of
          | datumMod(_) -> (true, just(head(xmods_)))
          | _ -> (false, nothing())
