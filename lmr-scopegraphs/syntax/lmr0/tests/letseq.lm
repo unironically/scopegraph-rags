@@ -5,3 +5,5 @@ def a =
     z = 3
   in
     x + y + z
+    
+def b = a + 1

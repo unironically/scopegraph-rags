@@ -21,6 +21,12 @@ java -jar lmr2.lmr.driver.jar tests/letseq.lm
 ./clean
 ```
 
+### Example scope graphs:
+
+#### [`program4.lm`](./tests/program4.lm)
+
+![graph](./img/program4.svg)
+
 ### Concrete Syntax:
 ```
 terminal Int_t /0|[1-9][0-9]*/;
