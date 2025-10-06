@@ -8,6 +8,7 @@
 java -jar lmr2.lmr.driver.jar tests/letseq.lm
 ./clean
 ```
+
 ### Directories:
 - `tests/`: LM example tests directory at `../grammars/lm_syntax_0/tests`.
 - `out/`: created by the LM compiler if files are generated.
