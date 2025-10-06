@@ -1,12 +1,10 @@
 grammar lmr2:lmr:nameanalysis2;
 
 imports syntax:lmr0:lmr:abstractsyntax;
--- imports sg_lib2:src;
 
 --------------------------------------------------
 
--- inherited attribute scope::Decorated Scope;
--- monoid attribute synEdges::[Edge] with [], ++;
+inherited attribute scope::Decorated Scope;
 
 synthesized attribute type::Type;
 monoid attribute ok::Boolean with true, &&;
