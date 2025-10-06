@@ -22,7 +22,7 @@ aspect production program
 top::Main ::= ds::Decls
 {
   local globScope::Scope = scopeNoData();
-  globScope.edges = ds.synEdges;
+  globScope.edges = [];
 
   ds.scope = globScope;
 }
@@ -36,7 +36,7 @@ aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
   local seqScope::Scope = scopeNoData();
-  seqScope.edges = lexEdge(top.scope) :: d.synEdges;
+  seqScope.edges = lexEdge(top.scope) :: (d.synEdges ++ d.dclEdges);
 
   d.scope = top.scope;
   ds.scope = seqScope;
@@ -61,10 +61,17 @@ top::Decl ::= id::String ds::Decls
   local modScope::Scope = scopeMod(id);
   modScope.edges = lexEdge(top.scope) :: ds.synEdges;
 
-  ds.scope = modScope;
-
   top.synEdges := [];
   top.dclEdges = [ modEdge(modScope) ];
+
+  -- lmr1: variable references should not be able to resolve using the decl
+  -- nodes that are defined by ds.synEdges, breaks forward referencing. so
+  -- introduce a different scope to pass down to ds that does not have these
+
+  local lookupScope::Scope = scopeNoData();
+  lookupScope.edges = [ lexEdge(top.scope) ];
+
+  ds.scope = lookupScope;
 }
 
 aspect production declImport
@@ -427,7 +434,7 @@ top::VarRef ::= x::String
   local vars::[Decorated Scope] = top.scope.resolve(isName(x), varRx());
 
   local okAndTy::(Boolean, Type) =
-    if length(vars) != 1
+    if length(vars) < 1
     then unsafeTracePrint((false, tErr()), "[✗] " ++ top.location.unparse ++ 
                           ": error: unresolvable variable reference '" ++ x ++ "'\n")
     else if length(vars) > 1

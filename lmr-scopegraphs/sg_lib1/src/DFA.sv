@@ -97,9 +97,13 @@ top::DFAState ::=
       concat(map(top.lexT.resolve(pred, _), cur.lex))
     in
     
-    if !null(varRes) then varRes
-    else if !null(impRes) then impRes
-    else lexRes
+    -- shadowing:
+    --if !null(varRes) then varRes
+    --else if !null(impRes) then impRes
+    --else lexRes
+
+    -- non-shadowing:
+    varRes ++ impRes ++ lexRes
 
     end end end;
 }
@@ -121,9 +125,13 @@ top::DFAState ::=
       concat(map(top.lexT.resolve(pred, _), cur.lex))
     in
     
-    if !null(modRes) then modRes
-    else if !null(impRes) then impRes
-    else lexRes
+    -- shadowing:
+    --if !null(modRes) then varRes
+    --else if !null(impRes) then impRes
+    --else lexRes
+
+    -- non-shadowing:
+    modRes ++ impRes ++ lexRes
 
     end end end;                                                                
 }

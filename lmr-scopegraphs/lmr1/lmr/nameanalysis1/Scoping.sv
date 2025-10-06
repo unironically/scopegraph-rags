@@ -29,10 +29,10 @@ propagate ok on Main;
 aspect production program
 top::Main ::= ds::Decls
 {
-  local globScope::Scope = scopeNoDatum();
+  local globScope::Scope = scopeNoData();
   globScope.lex = [];
-  globScope.var = ds.VAR_s;
-  globScope.mod = ds.MOD_s;
+  globScope.var = [];
+  globScope.mod = [];
   globScope.imp = [];
 
   ds.scope = globScope;
@@ -47,10 +47,10 @@ propagate ok on Decls;
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  local seqScope::Scope = scopeNoDatum();
+  local seqScope::Scope = scopeNoData();
   seqScope.lex = [top.scope];
-  seqScope.var = [];
-  seqScope.mod = [];
+  seqScope.var = d.VAR_s;
+  seqScope.mod = d.MOD_s;
   seqScope.imp = d.IMP_s;
 
   d.scope = top.scope;
@@ -87,11 +87,21 @@ top::Decl ::= id::String ds::Decls
   modScope.mod = ds.MOD_s;
   modScope.imp = [];
 
-  ds.scope = modScope;
-
   top.VAR_s = [];
   top.MOD_s = [modScope];
   top.IMP_s = [];
+
+  -- lmr1: variable references should not be able to resolve using the decl
+  -- nodes that are defined by ds.VAR_s or ds.MOD_s, breaks forward referencing.
+  -- so introduce a different scope to pass down to ds that does not have these
+
+  local lookupScope::Scope = scopeNoData();
+  lookupScope.lex = [top.scope];
+  lookupScope.var = [];
+  lookupScope.mod = [];
+  lookupScope.imp = [];
+
+  ds.scope = lookupScope;
 }
 
 aspect production declImport
@@ -281,7 +291,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 aspect production exprFun
 top::Expr ::= d::ArgDecl e::Expr
 {
-  local bodyScope::Scope = scopeNoDatum();
+  local bodyScope::Scope = scopeNoData();
   bodyScope.lex = [top.scope];
   bodyScope.var = d.VAR_s;
   bodyScope.mod = [];
@@ -307,7 +317,7 @@ top::Expr ::= bs::SeqBinds e::Expr
 aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local letScope::Scope = scopeNoDatum();
+  local letScope::Scope = scopeNoData();
   letScope.lex = [top.scope];
   letScope.var = bs.VAR_s;
   letScope.mod = [];
@@ -323,7 +333,7 @@ top::Expr ::= bs::ParBinds e::Expr
 aspect production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local letScope::Scope = scopeNoDatum();
+  local letScope::Scope = scopeNoData();
   letScope.lex = [top.scope];
   letScope.var = bs.VAR_s;
   letScope.mod = [];
@@ -352,7 +362,7 @@ top::SeqBinds ::=
 aspect production seqBindsOne
 top::SeqBinds ::= s::SeqBind
 {
-  local sbScope::Scope = scopeNoDatum();
+  local sbScope::Scope = scopeNoData();
   sbScope.lex = [top.scope];
   sbScope.var = s.VAR_s;
   sbScope.mod = [];
@@ -366,7 +376,7 @@ top::SeqBinds ::= s::SeqBind
 aspect production seqBindsCons
 top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
-  local sbScope::Scope = scopeNoDatum();
+  local sbScope::Scope = scopeNoData();
   sbScope.lex = [top.scope];
   sbScope.var = s.VAR_s;
   sbScope.mod = [];

@@ -2,7 +2,7 @@ grammar lmr1:lmr:nameanalysis1;
 
 --------------------------------------------------
 
-abstract production scopeNoDatum
+abstract production scopeNoData
 top::Scope ::=
 { forwards to scope(datumNone()); }
 

@@ -1,0 +1,5 @@
+module A {
+  def z = x + y
+  def y = 2
+  def x = 1
+}
