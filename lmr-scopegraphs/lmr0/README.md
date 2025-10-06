@@ -9,8 +9,26 @@ which is treated the same as the body of a recursive `let` where all variables
 in the program are treated as binders of it.
 
 ### Directories:
+
 - `tests/`: LM example tests directory at `../grammars/lm_syntax_0/tests`.
+
 - `out/`: created by the LM compiler if files are generated.
+
+- `lmr/nameanalysis1`: name analysis with older scope graphs library, using
+  inherited list attributes for all LMR edge types. Language coupled.
+
+- `lmr/nameanalysis2`: uses newer scope graphs library with one inherited
+  attribute for edges, a list of `Edge` nodes - one production of this type for
+  each edge type needed for the language. Less language coupled.
+
+- `lmr/nameanalysis3`: draft sketch of what scope graph-based name analysis may
+  look like with a Silver extension with constraint-like equations for scope
+  graph assertions and queries.
+
+- `lmr/nameanalysis4`: draft skets of what scope graph-based name analysis may
+  look like with JastAdd style collection attributes. Edge assertions in
+  `nameanalysis3` become contributions to collection attributes on scopes.
+  Contributions are to individual edge attributes as seen in `nameanalysis1`.
 
 ### Execution:
 ```bash
