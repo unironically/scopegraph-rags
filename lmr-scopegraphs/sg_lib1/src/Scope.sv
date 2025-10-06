@@ -11,11 +11,15 @@ inherited attribute var::[Decorated Scope] occurs on Scope;
 inherited attribute mod::[Decorated Scope] occurs on Scope;
 inherited attribute imp::[Decorated Scope] occurs on Scope;
 
+synthesized attribute id::Integer occurs on Scope;
+
 --------------------------------------------------
 
 abstract production scope
 top::Scope ::= datum::Datum
 {
+  top.id = genInt();
+
   top.datum = ^datum;
 }
 

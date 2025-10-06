@@ -1,6 +1,6 @@
-grammar lmr3:lmr:nameanalysis1;
+grammar lmr0:lmr:nameanalysis1;
 
-imports syntax:lmr1:lmr:abstractsyntax;
+imports syntax:lmr0:lmr:abstractsyntax;
 imports sg_lib1:src;
 
 import silver:langutil; -- for location.unparse
@@ -13,8 +13,6 @@ inherited attribute scope::Decorated Scope;
 
 synthesized attribute VAR_s::[Decorated Scope];
 synthesized attribute LEX_s::[Decorated Scope];
-synthesized attribute MOD_s::[Decorated Scope];
-synthesized attribute IMP_s::[Decorated Scope];
 
 synthesized attribute type::Type;
 
@@ -29,18 +27,18 @@ propagate ok on Main;
 aspect production program
 top::Main ::= ds::Decls
 {
-  production attribute globScope::Scope = scopeNoData();
+  local globScope::Scope = scopeNoData();
   globScope.lex = [];
   globScope.var = ds.VAR_s;
-  globScope.mod = ds.MOD_s;
-  globScope.imp = ds.IMP_s;
+  globScope.mod = [];
+  globScope.imp = [];
 
   ds.scope = globScope;
 }
 
 --------------------------------------------------
 
-attribute ok, scope, VAR_s, MOD_s, IMP_s occurs on Decls;
+attribute ok, scope, VAR_s occurs on Decls;
 
 propagate ok on Decls;
 
@@ -51,16 +49,12 @@ top::Decls ::= d::Decl ds::Decls
   ds.scope = top.scope;
 
   top.VAR_s = d.VAR_s ++ ds.VAR_s;
-  top.MOD_s = d.MOD_s ++ ds.MOD_s;
-  top.IMP_s = d.IMP_s ++ ds.IMP_s;
 }
 
 aspect production declsNil
 top::Decls ::=
 {
   top.VAR_s = [];
-  top.MOD_s = [];
-  top.IMP_s = [];
 }
 
 --------------------------------------------------
@@ -68,40 +62,9 @@ top::Decls ::=
 attribute scope occurs on Decl;
 
 attribute VAR_s occurs on Decl;
-attribute MOD_s occurs on Decl;
-attribute IMP_s occurs on Decl;
 
 attribute ok occurs on Decl;
 propagate ok on Decl;
-
-aspect production declModule
-top::Decl ::= id::String ds::Decls
-{
-  production attribute modScope::Scope = scopeMod(id);
-  modScope.lex = [top.scope];
-  modScope.var = ds.VAR_s;
-  modScope.mod = ds.MOD_s;
-  modScope.imp = ds.IMP_s;
-
-  ds.scope = modScope;
-
-  top.VAR_s = [];
-  top.MOD_s = [modScope];
-  top.IMP_s = [];
-}
-
-aspect production declImport
-top::Decl ::= r::ModRef
-{
-  r.scope = top.scope;
-
-  top.VAR_s = [];
-  top.MOD_s = [];
-  top.IMP_s = case r.mod of
-              | just(s) -> [s]
-              | _ -> []
-              end;
-}
 
 aspect production declDef
 top::Decl ::= b::ParBind
@@ -109,8 +72,6 @@ top::Decl ::= b::ParBind
   b.scope = top.scope;
 
   top.VAR_s = b.VAR_s;
-  top.MOD_s = [];
-  top.IMP_s = [];
 }
 
 --------------------------------------------------
@@ -277,7 +238,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 aspect production exprFun
 top::Expr ::= d::ArgDecl e::Expr
 {
-  production attribute bodyScope::Scope = scopeNoData();
+  local bodyScope::Scope = scopeNoData();
   bodyScope.lex = [top.scope];
   bodyScope.var = d.VAR_s;
   bodyScope.mod = [];
@@ -292,7 +253,7 @@ top::Expr ::= d::ArgDecl e::Expr
 aspect production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
-  production attribute letScope::Decorated Scope = bs.lastScope;
+  local letScope::Decorated Scope = bs.lastScope;
 
   bs.scope = top.scope;
   e.scope = letScope;
@@ -303,7 +264,7 @@ top::Expr ::= bs::SeqBinds e::Expr
 aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  production attribute letScope::Scope = scopeNoData();
+  local letScope::Scope = scopeNoData();
   letScope.lex = [top.scope];
   letScope.var = bs.VAR_s;
   letScope.mod = [];
@@ -319,7 +280,7 @@ top::Expr ::= bs::ParBinds e::Expr
 aspect production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
-  production attribute letScope::Scope = scopeNoData();
+  local letScope::Scope = scopeNoData();
   letScope.lex = [top.scope];
   letScope.var = bs.VAR_s;
   letScope.mod = [];
@@ -348,7 +309,7 @@ top::SeqBinds ::=
 aspect production seqBindsOne
 top::SeqBinds ::= s::SeqBind
 {
-  production attribute sbScope::Scope = scopeNoData();
+  local sbScope::Scope = scopeNoData();
   sbScope.lex = [top.scope];
   sbScope.var = s.VAR_s;
   sbScope.mod = [];
@@ -362,7 +323,7 @@ top::SeqBinds ::= s::SeqBind
 aspect production seqBindsCons
 top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
-  production attribute sbScope::Scope = scopeNoData();
+  local sbScope::Scope = scopeNoData();
   sbScope.lex = [top.scope];
   sbScope.var = s.VAR_s;
   sbScope.mod = [];
@@ -383,7 +344,7 @@ propagate ok on SeqBind;
 aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
 {
-  production attribute varScope::Scope = scopeVar(id, e.type);
+  local varScope::Scope = scopeVar(id, e.type);
   varScope.lex = [];
   varScope.var = [];
   varScope.mod = [];
@@ -397,7 +358,7 @@ top::SeqBind ::= id::String e::Expr
 aspect production seqBindTyped
 top::SeqBind ::= ty::Type id::String e::Expr
 {
-  production attribute varScope::Scope = scopeVar(id, ^ty);
+  local varScope::Scope = scopeVar(id, ^ty);
   varScope.lex = [];
   varScope.var = [];
   varScope.mod = [];
@@ -436,7 +397,7 @@ propagate ok on ParBind;
 aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
 {
-  production attribute varScope::Scope = scopeVar(id, e.type);
+  local varScope::Scope = scopeVar(id, e.type);
   varScope.lex = [];
   varScope.var = [];
   varScope.mod = [];
@@ -450,7 +411,7 @@ top::ParBind ::= id::String e::Expr
 aspect production parBindTyped
 top::ParBind ::= ty::Type id::String e::Expr
 {
-  production attribute varScope::Scope = scopeVar(id, ^ty);
+  local varScope::Scope = scopeVar(id, ^ty);
   varScope.lex = [];
   varScope.var = [];
   varScope.mod = [];
@@ -471,7 +432,7 @@ propagate ok on ArgDecl;
 aspect production argDecl
 top::ArgDecl ::= id::String tyann::Type
 {
-  production attribute varScope::Scope = scopeVar(id, ^tyann);
+  local varScope::Scope = scopeVar(id, ^tyann);
   varScope.lex = [];
   varScope.var = [];
   varScope.mod = [];
@@ -527,34 +488,4 @@ top::VarRef ::= x::String
 
   top.ok := okAndRes.1;
   top.type = okAndRes.2;
-}
-
---------------------------------------------------
-
-attribute scope, ok, mod occurs on ModRef;
-
-aspect production modRef
-top::ModRef ::= x::String
-{
-  local xmods_::[Decorated Scope] =
-    query(top.scope, modRefDFA(), 
-          \d::Datum -> case d of 
-                       | datumMod(name) -> x == name 
-                       | _ -> false 
-                       end);
-
-  local okAndRes::(Boolean, Maybe<Decorated Scope>) = 
-    if length(xmods_) < 1
-    then unsafeTracePrint((false, nothing()), "[✗] " ++ top.location.unparse ++ 
-                          ": error: unresolvable module reference '" ++ x ++ "'\n")
-    else if length(xmods_) > 1
-    then unsafeTracePrint((false, nothing()), "[✗] " ++ top.location.unparse ++ 
-                          ": error: ambiguous module reference '" ++ x ++ "'\n")
-    else case head(xmods_).datum of
-         | datumMod(_) -> (true, just(head(xmods_)))
-         | _ -> (false, nothing())
-         end;
-
-  top.ok := okAndRes.1;
-  top.mod = okAndRes.2;
 }

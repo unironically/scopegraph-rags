@@ -26,8 +26,11 @@ IO<Integer> ::= largs::[String]
         let fileNameExplode::[String] = explode(".", fileNameExt);
         let fileName::String = head(fileNameExplode);
 
-        --let viz::String = graphvizScopes(ast.allScopes);
-        --print(viz);
+        let viz::String = graphvizScopes(ast.allScopes);
+        
+        print("----------\n");
+        print(viz);
+        print("----------\n");
 
         if result.parseSuccess
           then do {
@@ -35,6 +38,7 @@ IO<Integer> ::= largs::[String]
               then do {
                 print("[✔] Parse success\n");
                 res::Integer <- programOk(ast.ok);
+                writeGraphViz(fileName, viz);
                 --system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
                 --writeStatixConstraints(filePath, file, ast.flattened, "StatixConstraints");
                 --writeSilverEquations(filePath, file, ast.equations, "SilverEquations");
@@ -76,6 +80,12 @@ fun writeStatixConstraints IO<Unit> ::= fname::String code::String cs::[String] 
     (numberedLines ++ ["```\n"]);
   writeFile("out/" ++ outFName ++ ".md", implode("\n", toWrite));
   print("[✔] See out/" ++ outFName ++ ".md for the resulting flattened Statix constraints\n");
+};
+
+fun writeGraphViz IO<Unit> ::= fname::String vizStr::String = do {
+  mkdir("out");
+  system("echo '" ++ vizStr ++ "' | dot -Tsvg > out/" ++ fname ++ ".svg");
+  return ();
 };
 
 fun writeSilverEquations IO<Unit> ::= fname::String code::String es::[String] outFName::String = do {
