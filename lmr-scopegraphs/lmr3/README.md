@@ -1,11 +1,11 @@
-# LMR 0
+# LMR 3
 
-- LMR 0: LMR without modules, imports and records
+- LMR 3: LMR without modules, imports and records
 
 ### Execution:
 ```bash
 ./compile
-java -jar lmr0.lmr.driver.jar tests/letseq.lm
+java -jar lmr3.lmr.driver.jar tests/letseq.lm
 ./clean
 ```
 ### Directories:
@@ -18,6 +18,7 @@ java -jar lmr0.lmr.driver.jar tests/letseq.lm
 ```
 terminal Int_t /0|[1-9][0-9]*/;
 terminal VarId_t /[a-z][a-zA-Z_0-9]*/
+terminal VarId_t /[A-Z][a-zA-Z_0-9]*/
 
 Main_c ::=
   Decls_c
@@ -27,7 +28,10 @@ Decls_c ::=
   |
 
 Decl_c ::=
-  'def' ParBind_c
+    'module' ModId_t '{' Decls_c '}'
+  | 'import' ModRef_c
+  | 'def' ParBind_c
+  
 
 Expr_c ::=
     Int_t
@@ -77,4 +81,7 @@ Type_c ::=
 
 VarRef_c ::=
     VarId_t
+
+ModRef_c ::=
+    ModId_t
 ```
