@@ -19,7 +19,6 @@ abstract production scope
 top::Scope ::= datum::Datum
 {
   top.id = genInt();
-
   top.datum = ^datum;
 }
 

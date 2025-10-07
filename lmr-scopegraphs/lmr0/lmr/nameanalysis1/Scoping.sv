@@ -16,8 +16,6 @@ synthesized attribute LEX_s::[Decorated Scope];
 
 synthesized attribute type::Type;
 
-synthesized attribute mod::Maybe<Decorated Scope>;
-
 --------------------------------------------------
 
 attribute ok occurs on Main;
@@ -27,7 +25,7 @@ propagate ok on Main;
 aspect production program
 top::Main ::= ds::Decls
 {
-  local globScope::Scope = scopeNoData();
+  production attribute globScope::Scope = scopeNoData();
   globScope.lex = [];
   globScope.var = ds.VAR_s;
   globScope.mod = [];
@@ -238,7 +236,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 aspect production exprFun
 top::Expr ::= d::ArgDecl e::Expr
 {
-  local bodyScope::Scope = scopeNoData();
+  production attribute bodyScope::Scope = scopeNoData();
   bodyScope.lex = [top.scope];
   bodyScope.var = d.VAR_s;
   bodyScope.mod = [];
@@ -253,7 +251,7 @@ top::Expr ::= d::ArgDecl e::Expr
 aspect production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
-  local letScope::Decorated Scope = bs.lastScope;
+  production attribute letScope::Decorated Scope = bs.lastScope;
 
   bs.scope = top.scope;
   e.scope = letScope;
@@ -264,7 +262,7 @@ top::Expr ::= bs::SeqBinds e::Expr
 aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local letScope::Scope = scopeNoData();
+  production attribute letScope::Scope = scopeNoData();
   letScope.lex = [top.scope];
   letScope.var = bs.VAR_s;
   letScope.mod = [];
@@ -280,7 +278,7 @@ top::Expr ::= bs::ParBinds e::Expr
 aspect production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local letScope::Scope = scopeNoData();
+  production attribute letScope::Scope = scopeNoData();
   letScope.lex = [top.scope];
   letScope.var = bs.VAR_s;
   letScope.mod = [];
@@ -309,7 +307,7 @@ top::SeqBinds ::=
 aspect production seqBindsOne
 top::SeqBinds ::= s::SeqBind
 {
-  local sbScope::Scope = scopeNoData();
+  production attribute sbScope::Scope = scopeNoData();
   sbScope.lex = [top.scope];
   sbScope.var = s.VAR_s;
   sbScope.mod = [];
@@ -323,7 +321,7 @@ top::SeqBinds ::= s::SeqBind
 aspect production seqBindsCons
 top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
-  local sbScope::Scope = scopeNoData();
+  production attribute sbScope::Scope = scopeNoData();
   sbScope.lex = [top.scope];
   sbScope.var = s.VAR_s;
   sbScope.mod = [];
@@ -344,7 +342,7 @@ propagate ok on SeqBind;
 aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
 {
-  local varScope::Scope = scopeVar(id, e.type);
+  production attribute varScope::Scope = scopeVar(id, e.type);
   varScope.lex = [];
   varScope.var = [];
   varScope.mod = [];
@@ -352,13 +350,14 @@ top::SeqBind ::= id::String e::Expr
 
   e.scope = top.scope;
 
+  top.ok <- e.type != tErr();
   top.VAR_s = [varScope];
 }
 
 aspect production seqBindTyped
 top::SeqBind ::= ty::Type id::String e::Expr
 {
-  local varScope::Scope = scopeVar(id, ^ty);
+  production attribute varScope::Scope = scopeVar(id, ^ty);
   varScope.lex = [];
   varScope.var = [];
   varScope.mod = [];
@@ -397,7 +396,7 @@ propagate ok on ParBind;
 aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
 {
-  local varScope::Scope = scopeVar(id, e.type);
+  production attribute varScope::Scope = scopeVar(id, e.type);
   varScope.lex = [];
   varScope.var = [];
   varScope.mod = [];
@@ -405,13 +404,14 @@ top::ParBind ::= id::String e::Expr
 
   e.scope = top.scope;
 
+  top.ok <- e.type != tErr();
   top.VAR_s = [varScope];
 }
 
 aspect production parBindTyped
 top::ParBind ::= ty::Type id::String e::Expr
 {
-  local varScope::Scope = scopeVar(id, ^ty);
+  production attribute varScope::Scope = scopeVar(id, ^ty);
   varScope.lex = [];
   varScope.var = [];
   varScope.mod = [];
@@ -420,6 +420,7 @@ top::ParBind ::= ty::Type id::String e::Expr
   e.scope = top.scope;
 
   top.ok <- e.type == ^ty;
+  
   top.VAR_s = [varScope];
 }
 
@@ -432,7 +433,7 @@ propagate ok on ArgDecl;
 aspect production argDecl
 top::ArgDecl ::= id::String tyann::Type
 {
-  local varScope::Scope = scopeVar(id, ^tyann);
+  production attribute varScope::Scope = scopeVar(id, ^tyann);
   varScope.lex = [];
   varScope.var = [];
   varScope.mod = [];

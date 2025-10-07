@@ -26,18 +26,16 @@ IO<Integer> ::= largs::[String]
         let fileNameExplode::[String] = explode(".", fileNameExt);
         let fileName::String = head(fileNameExplode);
 
-        let viz::String = graphvizScopes(ast.allScopes);
-        
-        print("----------\n");
-        print(viz);
-        print("----------\n");
-
         if result.parseSuccess
           then do {
             if length(fileNameExplode) >= 2 && last(fileNameExplode) == "lm"
               then do {
                 print("[✔] Parse success\n");
                 res::Integer <- programOk(ast.ok);
+                let viz::String = graphvizScopes(ast.allScopes, ast.allRefs);
+                print("----------\n");
+                print(viz);
+                print("----------\n");
                 writeGraphViz(fileName, viz);
                 --writeStatixConstraints(filePath, file, ast.flattened, "StatixConstraints");
                 --writeSilverEquations(filePath, file, ast.equations, "SilverEquations");

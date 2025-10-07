@@ -2,7 +2,7 @@ grammar sg_lib1:src;
 
 --------------------------------------------------
 
-synthesized attribute graphvizString::String occurs on Scope;--, SGRef;
+synthesized attribute graphvizString::String occurs on Scope;
 
 aspect production scope
 top::Scope ::= datum::Datum
@@ -23,11 +23,12 @@ top::Scope ::= datum::Datum
 --------------------------------------------------
 
 function graphvizScopes
-String ::= scopes::[Decorated Scope]
+String ::= scopes::[Decorated Scope] refs::[(String, Decorated Scope)]
 {
   return "digraph {layout=dot\n" ++ 
     implode("\n", map(nodeStyle, scopes)) ++ "\n" ++ 
     implode("\n", map((.graphvizString), scopes)) ++ "\n" ++
+    implode("\n", map((refStyle(_)), refs)) ++ "\n" ++
   "}\n";
 }
 
@@ -49,4 +50,14 @@ String ::= lab::String col::String src::Decorated Scope tgt::Decorated Scope
   return "{edge [label=" ++ lab ++ " color=\"" ++ col ++ "\" " ++ 
     "fontcolor=\"" ++ col ++ "\"] " ++ 
     toString(src.id) ++ "->" ++ toString(tgt.id) ++ "}";
+}
+
+--
+
+function refStyle
+String ::= ref::(String, Decorated Scope)
+{
+  return
+    "{ node [label=\"" ++ ref.1 ++ "\" shape=rect fontsize=12 margin=0 color=blue fontcolor=blue fillcolor=white] " ++ ref.1 ++ "}\n" ++
+    "{ edge [color=blue] " ++ ref.1 ++ "->" ++ toString(ref.2.id) ++ " }";
 }
