@@ -1,7 +1,6 @@
-grammar lmr1:lmr:nameanalysis1;
+grammar lmr0:lmr:nameanalysis5;
 
-imports syntax:lmr1:lmr:abstractsyntax;
-imports sg_lib1:src;
+imports syntax:lmr0:lmr:abstractsyntax;
 
 import silver:langutil; -- for location.unparse
 
@@ -13,12 +12,8 @@ inherited attribute scope::Decorated Scope;
 
 synthesized attribute VAR_s::[Decorated Scope];
 synthesized attribute LEX_s::[Decorated Scope];
-synthesized attribute MOD_s::[Decorated Scope];
-synthesized attribute IMP_s::[Decorated Scope];
 
 synthesized attribute type::Type;
-
-synthesized attribute mod::Maybe<Decorated Scope>;
 
 --------------------------------------------------
 
@@ -31,40 +26,30 @@ top::Main ::= ds::Decls
 {
   production attribute globScope::Scope = scopeNoData();
   globScope.lex = [];
-  globScope.var = [];
-  globScope.mod = [];
-  globScope.imp = [];
+  globScope.var = ds.VAR_s;
 
   ds.scope = globScope;
 }
 
 --------------------------------------------------
 
-attribute ok, scope, VAR_s, MOD_s occurs on Decls;
+attribute ok, scope, VAR_s occurs on Decls;
 
 propagate ok on Decls;
 
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  production attribute seqScope::Scope = scopeNoData();
-  seqScope.lex = [top.scope];
-  seqScope.var = d.VAR_s;
-  seqScope.mod = d.MOD_s;
-  seqScope.imp = d.IMP_s;
-
   d.scope = top.scope;
-  ds.scope = seqScope;
+  ds.scope = top.scope;
 
   top.VAR_s = d.VAR_s ++ ds.VAR_s;
-  top.MOD_s = d.MOD_s ++ ds.MOD_s;
 }
 
 aspect production declsNil
 top::Decls ::=
 {
   top.VAR_s = [];
-  top.MOD_s = [];
 }
 
 --------------------------------------------------
@@ -72,50 +57,9 @@ top::Decls ::=
 attribute scope occurs on Decl;
 
 attribute VAR_s occurs on Decl;
-attribute MOD_s occurs on Decl;
-attribute IMP_s occurs on Decl;
 
 attribute ok occurs on Decl;
 propagate ok on Decl;
-
-aspect production declModule
-top::Decl ::= id::String ds::Decls
-{
-  production attribute modScope::Scope = scopeMod(id);
-  modScope.lex = [top.scope];
-  modScope.var = ds.VAR_s;
-  modScope.mod = ds.MOD_s;
-  modScope.imp = [];
-
-  top.VAR_s = [];
-  top.MOD_s = [modScope];
-  top.IMP_s = [];
-
-  -- lmr1: variable references should not be able to resolve using the decl
-  -- nodes that are defined by ds.VAR_s or ds.MOD_s, breaks forward referencing.
-  -- so introduce a different scope to pass down to ds that does not have these
-
-  production attribute lookupScope::Scope = scopeNoData();
-  lookupScope.lex = [top.scope];
-  lookupScope.var = [];
-  lookupScope.mod = [];
-  lookupScope.imp = [];
-
-  ds.scope = lookupScope;
-}
-
-aspect production declImport
-top::Decl ::= r::ModRef
-{
-  r.scope = top.scope;
-
-  top.VAR_s = [];
-  top.MOD_s = [];
-  top.IMP_s = case r.mod of
-              | just(s) -> [s]
-              | _ -> []
-              end;
-}
 
 aspect production declDef
 top::Decl ::= b::ParBind
@@ -123,8 +67,6 @@ top::Decl ::= b::ParBind
   b.scope = top.scope;
 
   top.VAR_s = b.VAR_s;
-  top.MOD_s = [];
-  top.IMP_s = [];
 }
 
 --------------------------------------------------
@@ -294,8 +236,6 @@ top::Expr ::= d::ArgDecl e::Expr
   production attribute bodyScope::Scope = scopeNoData();
   bodyScope.lex = [top.scope];
   bodyScope.var = d.VAR_s;
-  bodyScope.mod = [];
-  bodyScope.imp = [];
 
   d.scope = top.scope;
   e.scope = bodyScope;
@@ -320,9 +260,6 @@ top::Expr ::= bs::ParBinds e::Expr
   production attribute letScope::Scope = scopeNoData();
   letScope.lex = [top.scope];
   letScope.var = bs.VAR_s;
-  letScope.mod = [];
-  letScope.imp = [];
-
 
   bs.scope = letScope;
   e.scope = letScope;
@@ -336,8 +273,6 @@ top::Expr ::= bs::ParBinds e::Expr
   production attribute letScope::Scope = scopeNoData();
   letScope.lex = [top.scope];
   letScope.var = bs.VAR_s;
-  letScope.mod = [];
-  letScope.imp = [];
 
   bs.scope = top.scope;
   e.scope = letScope;
@@ -365,8 +300,6 @@ top::SeqBinds ::= s::SeqBind
   production attribute sbScope::Scope = scopeNoData();
   sbScope.lex = [top.scope];
   sbScope.var = s.VAR_s;
-  sbScope.mod = [];
-  sbScope.imp = [];
 
   s.scope = top.scope;
 
@@ -379,8 +312,6 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
   production attribute sbScope::Scope = scopeNoData();
   sbScope.lex = [top.scope];
   sbScope.var = s.VAR_s;
-  sbScope.mod = [];
-  sbScope.imp = [];
 
   s.scope = top.scope;
   ss.scope = sbScope;
@@ -400,11 +331,10 @@ top::SeqBind ::= id::String e::Expr
   production attribute varScope::Scope = scopeVar(id, e.type);
   varScope.lex = [];
   varScope.var = [];
-  varScope.mod = [];
-  varScope.imp = [];
 
   e.scope = top.scope;
 
+  top.ok <- e.type != tErr();
   top.VAR_s = [varScope];
 }
 
@@ -414,8 +344,6 @@ top::SeqBind ::= ty::Type id::String e::Expr
   production attribute varScope::Scope = scopeVar(id, ^ty);
   varScope.lex = [];
   varScope.var = [];
-  varScope.mod = [];
-  varScope.imp = [];
 
   e.scope = top.scope;
 
@@ -453,11 +381,10 @@ top::ParBind ::= id::String e::Expr
   production attribute varScope::Scope = scopeVar(id, e.type);
   varScope.lex = [];
   varScope.var = [];
-  varScope.mod = [];
-  varScope.imp = [];
 
   e.scope = top.scope;
 
+  top.ok <- e.type != tErr();
   top.VAR_s = [varScope];
 }
 
@@ -467,12 +394,11 @@ top::ParBind ::= ty::Type id::String e::Expr
   production attribute varScope::Scope = scopeVar(id, ^ty);
   varScope.lex = [];
   varScope.var = [];
-  varScope.mod = [];
-  varScope.imp = [];
 
   e.scope = top.scope;
 
   top.ok <- e.type == ^ty;
+  
   top.VAR_s = [varScope];
 }
 
@@ -488,8 +414,6 @@ top::ArgDecl ::= id::String tyann::Type
   production attribute varScope::Scope = scopeVar(id, ^tyann);
   varScope.lex = [];
   varScope.var = [];
-  varScope.mod = [];
-  varScope.imp = [];
 
   top.type = ^tyann;
   top.VAR_s = [varScope];
@@ -520,12 +444,8 @@ attribute ok, scope, type occurs on VarRef;
 aspect production varRef
 top::VarRef ::= x::String
 {
-  local xvars_::[Decorated Scope] =
-    query(top.scope, varRefDFA(),
-          \d::Datum -> case d of 
-                       | datumVar(name, _) -> x == name 
-                       | _ -> false 
-                       end);
+  local xvars_::[Decorated Scope] = 
+    top.scope.resolve(isName(x), varRx(), labelOrd);
 
   local okAndRes::(Boolean, Type) = 
     if length(xvars_) < 1
@@ -541,34 +461,4 @@ top::VarRef ::= x::String
 
   top.ok := okAndRes.1;
   top.type = okAndRes.2;
-}
-
---------------------------------------------------
-
-attribute scope, ok, mod occurs on ModRef;
-
-aspect production modRef
-top::ModRef ::= x::String
-{
-  local xmods_::[Decorated Scope] =
-    query(top.scope, modRefDFA(), 
-          \d::Datum -> case d of 
-                       | datumMod(name) -> x == name 
-                       | _ -> false 
-                       end);
-
-  local okAndRes::(Boolean, Maybe<Decorated Scope>) = 
-    if length(xmods_) < 1
-    then unsafeTracePrint((false, nothing()), "[✗] " ++ top.location.unparse ++ 
-                          ": error: unresolvable module reference '" ++ x ++ "'\n")
-    else if length(xmods_) > 1
-    then unsafeTracePrint((false, nothing()), "[✗] " ++ top.location.unparse ++ 
-                          ": error: ambiguous module reference '" ++ x ++ "'\n")
-    else case head(xmods_).datum of
-         | datumMod(_) -> (true, just(head(xmods_)))
-         | _ -> (false, nothing())
-         end;
-
-  top.ok := okAndRes.1;
-  top.mod = okAndRes.2;
 }

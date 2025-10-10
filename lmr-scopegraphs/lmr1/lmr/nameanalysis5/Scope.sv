@@ -1,34 +1,8 @@
-grammar test;
+grammar lmr1:lmr:nameanalysis5;
 
-imports src;
+imports sg_lib3:src; -- use of sg_lib3 requires sg_lib3 exporting this grammar
 
---------------------------------------------------------------------------------
--- Testing ---------------------------------------------------------------------
-
-fun main IO<Integer> ::= args::[String] = do {
-
-  let sv1::Decorated Scope = decorate scopeVar("foo") with
-    { lex = []; var = []; mod = []; imp = []; };
-
-  let sv2::Decorated Scope = decorate scopeVar("foo") with
-    { lex = []; var = []; mod = []; imp = []; };
-
-  let s1::Decorated Scope = decorate scopeNoData() with 
-    { lex = []; var = [sv1]; mod = []; imp = []; };
-  
-  let s2::Decorated Scope = decorate scopeNoData() with 
-    { lex = [s1]; var = [sv2]; mod = []; imp = []; };
-
-  let resv::[Decorated Scope] = s2.resolve(isName("foo"), varRx(), labelOrd);
-
-  print("Resolution list length: " ++ toString(length(resv))++ "\n");
-
-  return 0;
-
-};
-
---------------------------------------------------------------------------------
--- Language specific -----------------------------------------------------------
+--------------------------------------------------
 
 flowtype Scope = decorate {lex, var, mod, imp};
 
@@ -37,31 +11,31 @@ inherited attribute var::[Decorated Scope] occurs on Scope;
 inherited attribute mod::[Decorated Scope] occurs on Scope;
 inherited attribute imp::[Decorated Scope] occurs on Scope;
 
--- Scopes:
+--------------------------------------------------
 
-production scopeNoData
+abstract production scopeNoData
 top::Scope ::=
 { forwards to scope(datumNone()); }
 
-production scopeVar
-top::Scope ::= name::String
-{ forwards to scope(datumVar(name)); }
+abstract production scopeVar
+top::Scope ::= name::String ty::Type
+{ forwards to scope(datumVar(name, ^ty)); }
 
-production scopeMod
+abstract production scopeMod
 top::Scope ::= name::String
 { forwards to scope(datumMod(name)); }
 
--- Data:
+--------------------------------------------------
 
-production datumVar
-top::Datum ::= name::String --ty::Type
+abstract production datumVar
+top::Datum ::= name::String ty::Type
 { forwards to datumJust(name); }
 
-production datumMod
+abstract production datumMod
 top::Datum ::= name::String
 { forwards to datumJust(name); }
 
--- Labels:
+--------------------------------------------------
 
 production labelLEX
 top::Label ::=
@@ -87,12 +61,12 @@ top::Label ::=
   top.demand = \s::Decorated Scope -> s.imp;
   forwards to label(); }
 
--- Label order: todo: currently only allows strictly gt or lt
+--------------------------------------------------
 
 -- descending path preference order: VAR < IMP < LEX
-global labelOrd::[Label] = [labelVAR(), labelIMP(), labelLEX()];
+global labelOrd::[Label] = [labelVAR(), labelMOD(), labelIMP(), labelLEX()];
 
--- Not required, but convenient Regex productions:
+--------------------------------------------------
 
 production regexLEX
 top::Regex ::=
@@ -110,7 +84,7 @@ production regexIMP
 top::Regex ::=
 { forwards to regexLabel(labelIMP()); }
 
--- Resolution regexes:
+--------------------------------------------------
 
 global varRx::Regex = 
   regexCat(
@@ -125,12 +99,25 @@ global varRx::Regex =
     )
   );
 
--- Predicates:
+global modRx::Regex = 
+  regexCat(
+    regexStar(
+      regexLEX()
+    ),
+    regexCat(
+      regexMaybe(
+        regexIMP()
+      ),
+      regexMOD()
+    )
+  );
+
+--------------------------------------------------
 
 fun isName (Boolean ::= Datum) ::= name::String =
   \d::Datum ->
     case d of
-    | datumVar(n) -> n == name
-    | datumJust(n) -> n == name
-    | _ -> false
+    | datumVar(n, _) -> n == name
+    | datumMod(n) -> n == name
+    | _ -> error("isName fell off for " ++ name)
     end;

@@ -1,7 +1,7 @@
-grammar src;
+grammar sg_lib3:src;
 
 -- TODO: how do we do this without the library exporting the importing language?
-exports test;
+exports lmr3:lmr:nameanalysis5;
 
 --------------------------------------------------------------------------------
 

@@ -1,7 +1,6 @@
-grammar lmr1:lmr:nameanalysis1;
+grammar lmr3:lmr:nameanalysis5;
 
 imports syntax:lmr1:lmr:abstractsyntax;
-imports sg_lib1:src;
 
 import silver:langutil; -- for location.unparse
 
@@ -18,7 +17,7 @@ synthesized attribute IMP_s::[Decorated Scope];
 
 synthesized attribute type::Type;
 
-synthesized attribute mod::Maybe<Decorated Scope>;
+synthesized attribute module::Maybe<Decorated Scope>;
 
 --------------------------------------------------
 
@@ -31,33 +30,28 @@ top::Main ::= ds::Decls
 {
   production attribute globScope::Scope = scopeNoData();
   globScope.lex = [];
-  globScope.var = [];
-  globScope.mod = [];
-  globScope.imp = [];
+  globScope.var = ds.VAR_s;
+  globScope.mod = ds.MOD_s;
+  globScope.imp = ds.IMP_s;
 
   ds.scope = globScope;
 }
 
 --------------------------------------------------
 
-attribute ok, scope, VAR_s, MOD_s occurs on Decls;
+attribute ok, scope, VAR_s, MOD_s, IMP_s occurs on Decls;
 
 propagate ok on Decls;
 
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  production attribute seqScope::Scope = scopeNoData();
-  seqScope.lex = [top.scope];
-  seqScope.var = d.VAR_s;
-  seqScope.mod = d.MOD_s;
-  seqScope.imp = d.IMP_s;
-
   d.scope = top.scope;
-  ds.scope = seqScope;
+  ds.scope = top.scope;
 
   top.VAR_s = d.VAR_s ++ ds.VAR_s;
   top.MOD_s = d.MOD_s ++ ds.MOD_s;
+  top.IMP_s = d.IMP_s ++ ds.IMP_s;
 }
 
 aspect production declsNil
@@ -65,6 +59,7 @@ top::Decls ::=
 {
   top.VAR_s = [];
   top.MOD_s = [];
+  top.IMP_s = [];
 }
 
 --------------------------------------------------
@@ -85,23 +80,13 @@ top::Decl ::= id::String ds::Decls
   modScope.lex = [top.scope];
   modScope.var = ds.VAR_s;
   modScope.mod = ds.MOD_s;
-  modScope.imp = [];
+  modScope.imp = ds.IMP_s;
+
+  ds.scope = modScope;
 
   top.VAR_s = [];
   top.MOD_s = [modScope];
   top.IMP_s = [];
-
-  -- lmr1: variable references should not be able to resolve using the decl
-  -- nodes that are defined by ds.VAR_s or ds.MOD_s, breaks forward referencing.
-  -- so introduce a different scope to pass down to ds that does not have these
-
-  production attribute lookupScope::Scope = scopeNoData();
-  lookupScope.lex = [top.scope];
-  lookupScope.var = [];
-  lookupScope.mod = [];
-  lookupScope.imp = [];
-
-  ds.scope = lookupScope;
 }
 
 aspect production declImport
@@ -111,7 +96,7 @@ top::Decl ::= r::ModRef
 
   top.VAR_s = [];
   top.MOD_s = [];
-  top.IMP_s = case r.mod of
+  top.IMP_s = case r.module of
               | just(s) -> [s]
               | _ -> []
               end;
@@ -521,11 +506,7 @@ aspect production varRef
 top::VarRef ::= x::String
 {
   local xvars_::[Decorated Scope] =
-    query(top.scope, varRefDFA(),
-          \d::Datum -> case d of 
-                       | datumVar(name, _) -> x == name 
-                       | _ -> false 
-                       end);
+    top.scope.resolve(isName(x), varRx(), labelOrd);
 
   local okAndRes::(Boolean, Type) = 
     if length(xvars_) < 1
@@ -545,17 +526,13 @@ top::VarRef ::= x::String
 
 --------------------------------------------------
 
-attribute scope, ok, mod occurs on ModRef;
+attribute scope, ok, module occurs on ModRef;
 
 aspect production modRef
 top::ModRef ::= x::String
 {
   local xmods_::[Decorated Scope] =
-    query(top.scope, modRefDFA(), 
-          \d::Datum -> case d of 
-                       | datumMod(name) -> x == name 
-                       | _ -> false 
-                       end);
+    top.scope.resolve(isName(x), modRx(), labelOrd);
 
   local okAndRes::(Boolean, Maybe<Decorated Scope>) = 
     if length(xmods_) < 1
@@ -570,5 +547,5 @@ top::ModRef ::= x::String
          end;
 
   top.ok := okAndRes.1;
-  top.mod = okAndRes.2;
+  top.module = okAndRes.2;
 }

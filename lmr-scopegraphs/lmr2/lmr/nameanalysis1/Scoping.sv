@@ -518,7 +518,7 @@ top::VarRef ::= x::String
                        end);
 
   local okAndRes::(Boolean, Type) = 
-    if length(xvars_) != 1
+    if length(xvars_) < 1
     then unsafeTracePrint((false, tErr()), "[✗] " ++ top.location.unparse ++ 
                           ": error: unresolvable variable reference '" ++ x ++ "'\n")
     else if length(xvars_) > 1

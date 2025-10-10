@@ -4,9 +4,7 @@ imports syntax:lmr0:lmr:driver;
 imports syntax:lmr0:lmr:concretesyntax;
 imports syntax:lmr0:lmr:abstractsyntax;
 
-imports lmr0:lmr:nameanalysis1;
-
-imports sg_lib1:src;
+imports lmr0:lmr:nameanalysis5;
 
 function main
 IO<Integer> ::= largs::[String]
@@ -32,11 +30,11 @@ IO<Integer> ::= largs::[String]
               then do {
                 print("[✔] Parse success\n");
                 res::Integer <- programOk(ast.ok);
-                let viz::String = graphvizScopes(ast.allScopes, ast.allRefs);
-                print("----------\n");
-                print(viz);
-                print("----------\n");
-                writeGraphViz(fileName, viz);
+                --let viz::String = graphvizScopes(ast.allScopes, ast.allRefs);
+                --print("----------\n");
+                --print(viz);
+                --print("----------\n");
+                --writeGraphViz(fileName, viz);
                 --writeStatixConstraints(filePath, file, ast.flattened, "StatixConstraints");
                 --writeSilverEquations(filePath, file, ast.equations, "SilverEquations");
                 --writeSilverEquations(filePath, file, ast.equationsSolvedCopies, "SilverEquationsSolvedCopies");
