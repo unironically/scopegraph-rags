@@ -7,16 +7,19 @@ imports src;
 
 fun main IO<Integer> ::= args::[String] = do {
 
-  let sv::Decorated Scope = decorate scopeVar("foo") with
+  let sv1::Decorated Scope = decorate scopeVar("foo") with
+    { lex = []; var = []; mod = []; imp = []; };
+
+  let sv2::Decorated Scope = decorate scopeVar("foo") with
     { lex = []; var = []; mod = []; imp = []; };
 
   let s1::Decorated Scope = decorate scopeNoData() with 
-    { lex = []; var = [sv]; mod = []; imp = []; };
+    { lex = []; var = [sv1]; mod = []; imp = []; };
   
   let s2::Decorated Scope = decorate scopeNoData() with 
-    { lex = [s1]; var = []; mod = []; imp = []; };
+    { lex = [s1]; var = [sv2]; mod = []; imp = []; };
 
-  let resv::[Decorated Scope] = s2.resolve(isName("foo"), varRx());
+  let resv::[Decorated Scope] = s2.resolve(isName("foo"), varRx(), lmLabelGt);
 
   print("Resolution list length: " ++ toString(length(resv))++ "\n");
 
@@ -83,6 +86,18 @@ top::Label ::=
 { top.name = "IMP";
   top.demand = \s::Decorated Scope -> s.imp;
   forwards to label(); }
+
+-- Label order:
+-- todo: currently only allows strictly gt or lt
+
+fun lmLabelGt Boolean ::= left::Label right::Label =
+  case left, right of
+  | _, labelVAR() -> true -- * > VAR
+  | _, labelMOD() -> true -- * > MOD
+  | labelLEX(), labelIMP() -> true -- LEX > IMP
+  | _, _ -> false
+  end
+;
 
 -- Not required, but convenient Regex productions:
 

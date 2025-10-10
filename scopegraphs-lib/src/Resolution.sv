@@ -6,37 +6,42 @@ exports test;
 --------------------------------------------------------------------------------
 
 type Predicate = (Boolean ::= Datum);
+type Order = (Boolean ::= Label Label);
 
-synthesized attribute resolve::([Decorated Scope] ::= Predicate Regex);
+synthesized attribute resolve::([Decorated Scope] ::= Predicate Regex Order);
 
---------------------------------------------------------------------------------
+-- Scope:
 
 attribute resolve occurs on Scope;
 
 aspect production scope
 top::Scope ::= datum::Datum
 {  
-  top.resolve = \p::Predicate r::Regex ->
-    case r.simplify of
-    | regexEmpty() -> []
-    | regexEpsilon() -> if p(^datum) then [top] else []
-    | _ ->
-      let validLabs::[Label] = r.first in
-        concat(map(\l::Label -> 
-          let stepScopes::[Decorated Scope] = l.demand(top) in
-            concat(map(
-              \s::Decorated Scope -> s.resolve(p, r.deriv(l.name)), 
-              stepScopes
-            ))
-          end, 
-          validLabs
-        ))
+  top.resolve = \p::Predicate r::Regex o::Order ->
+    let rSimp::Regex = r.simplify in
+      case r.simplify of
+      | regexEmpty() -> []
+      | regexEpsilon() -> if p(^datum) then [top] else []
+      | _ ->
+        let validLabs::[Label] = r.first in
+          let sortedLabs::[Label] = sortBy(o, validLabs) in
+            foldr(
+              \l::Label acc::[Decorated Scope] ->
+                if !null(acc)
+                then acc -- current label is shadowed
+                else concat(map(\s::Decorated Scope -> 
+                                  s.resolve(p, rSimp.deriv(l), o), 
+                                l.demand(top))),
+              [],
+              sortedLabs
+            )
+          end
+        end
       end
-    end
-  ;
+    end;
 }
 
---------------------------------------------------------------------------------
+-- Regex:
 
 nonterminal Regex;
 

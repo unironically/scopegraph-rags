@@ -1,12 +1,13 @@
 grammar src;
 
 --------------------------------------------------------------------------------
+-- Testing ---------------------------------------------------------------------
 
 fun main IO<Integer> ::= args::[String] = do {
   return 0;
 };
 
---
+-- Scope
 
 nonterminal Scope;
 
@@ -14,7 +15,7 @@ production scope
 top::Scope ::= datum::Datum
 {}
 
---------------------------------------------------------------------------------
+-- Data:
 
 nonterminal Datum;
 
@@ -26,7 +27,7 @@ production datumJust
 top::Datum ::= name::String
 {}
 
---------------------------------------------------------------------------------
+-- Label:
 
 nonterminal Label with name, demand;
 
@@ -41,6 +42,5 @@ top::Label ::=
 }
 
 instance Eq Label {
-  eq = \left::Label right::Label -> 
-    left.name == right.name;
+  eq = \left::Label right::Label -> left.name == right.name;
 }

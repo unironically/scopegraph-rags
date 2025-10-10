@@ -5,19 +5,20 @@ grammar src;
 -- Transform a Regex to an equivalent fully simplified one
 synthesized attribute simplify::Regex occurs on Regex;
 -- Theorem 3.1 of Brzozowski (1964). Derivative with respect to a single token
-synthesized attribute deriv::(Regex ::= String) occurs on Regex;
+synthesized attribute deriv::(Regex ::= Label) occurs on Regex;
 -- Definition 3.2 of Brzozowski (1964), return epsilon if Regex contains epsilon
 synthesized attribute hasEps::Regex occurs on Regex;
 -- True if epsilon is a valid string in the language of the Regex
 synthesized attribute nullable::Boolean occurs on Regex;
-
+-- Compute the first set of a Regex
 synthesized attribute first::[Label] occurs on Regex;
 
 aspect production regexLabel
 top::Regex ::= label::Label
 {
   top.hasEps = regexEmpty();
-  top.deriv = \l -> if l == label.name then regexEpsilon() else regexEmpty();
+  top.deriv = \l::Label -> if l.name == label.name 
+                           then regexEpsilon() else regexEmpty();
   top.simplify = ^top;
   top.nullable = false;
 
@@ -66,7 +67,9 @@ top::Regex ::= left::Regex right::Regex
     end end;
   top.nullable = left.nullable && right.nullable;
 
-  top.first = if left.nullable then left.first ++ right.first else left.first;
+  top.first = nub(if left.nullable 
+                  then left.first ++ right.first 
+                  else left.first);
 }
 
 aspect production regexOr
@@ -88,7 +91,7 @@ top::Regex ::= left::Regex right::Regex
     end end;
   top.nullable = left.nullable || right.nullable;
 
-  top.first = left.first ++ right.first;
+  top.first = nub(left.first ++ right.first);
 }
 
 aspect production regexAnd
