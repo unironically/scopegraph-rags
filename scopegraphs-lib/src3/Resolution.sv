@@ -1,7 +1,11 @@
 grammar src3;
 
--- TODO: how do we do this without the library exporting the importing language?
---exports test;
+{-
+
+  works when this definition is replaced with "null":
+  https://github.com/melt-umn/silver/blob/467f9e0f019834268a816f6e54579fec48d86e22/grammars/silver/compiler/translation/java/type/Type.sv#L168
+
+-}
 
 --------------------------------------------------------------------------------
 
@@ -17,5 +21,24 @@ function resolve
   r::Regex<i>
   o::Order<i>
 {
-  return [];
+  -- todo: order
+  return
+    let rest::[Decorated Scope with i] = 
+      let allowedLabs::[Label<i>] = r.first in
+        concat(map (
+          \l::Label<i> ->
+            let deriv::Regex<i> = r.deriv(l).simplify in
+              let allowedScopes::[Decorated Scope with i] = l.demand(s) in
+                concat(map(\s::Decorated Scope with i -> resolve(s, p, deriv, o),
+                    allowedScopes))
+              end
+            end,
+          allowedLabs
+        ))
+      end
+    in
+      if p(s.datum)
+      then s::rest
+      else rest
+    end;
 }
