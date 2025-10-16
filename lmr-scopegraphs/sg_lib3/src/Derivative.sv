@@ -1,61 +1,55 @@
 grammar sg_lib3:src;
 
---------------------------------------------------------------------------------
+--
+
+nonterminal Regex<(i::InhSet)>;
 
 -- Transform a Regex to an equivalent fully simplified one
-synthesized attribute simplify::Regex occurs on Regex;
+synthesized attribute simplify<(i::InhSet)>::Regex<(i::InhSet)> occurs on Regex<(i::InhSet)>;
 -- Theorem 3.1 of Brzozowski (1964). Derivative with respect to a single token
-synthesized attribute deriv::(Regex ::= Label) occurs on Regex;
+synthesized attribute deriv<(i::InhSet)>::(Regex<i> ::= Label<i>) occurs on Regex<(i::InhSet)>;
 -- Definition 3.2 of Brzozowski (1964), return epsilon if Regex contains epsilon
-synthesized attribute hasEps::Regex occurs on Regex;
+synthesized attribute hasEps<(i::InhSet)>::Regex<i> occurs on Regex<(i::InhSet)>;
 -- True if epsilon is a valid string in the language of the Regex
-synthesized attribute nullable::Boolean occurs on Regex;
--- Compute the first set of a Regex
-synthesized attribute first::[Label] occurs on Regex;
+synthesized attribute nullable::Boolean occurs on Regex<(i::InhSet)>;
 
-aspect production regexLabel
-top::Regex ::= label::Label
+production regexLabel
+top::Regex<(i::InhSet)> ::= label::Label<(i::InhSet)>
 {
   top.hasEps = regexEmpty();
-  top.deriv = \l::Label -> if l.name == label.name 
-                           then regexEpsilon() else regexEmpty();
+  top.deriv = \l::Label<i> -> if l.name == label.name 
+                              then regexEpsilon() else regexEmpty();
   top.simplify = ^top;
   top.nullable = false;
-
-  top.first = [^label];
 }
 
-aspect production regexEpsilon
-top::Regex ::=
+production regexEpsilon
+top::Regex<(i::InhSet)> ::=
 {
   top.hasEps = regexEpsilon();
   top.deriv = \_ -> regexEmpty();
   top.simplify = ^top;
   top.nullable = true;
-
-  top.first = [];
 }
 
-aspect production regexEmpty
-top::Regex ::=
+production regexEmpty
+top::Regex<(i::InhSet)> ::=
 {
   top.hasEps = regexEmpty();
   top.deriv = \_ -> regexEmpty();
   top.simplify = ^top;
   top.nullable = false;
-
-  top.first = [];
 }
 
-aspect production regexCat
-top::Regex ::= left::Regex right::Regex
+production regexCat
+top::Regex<(i::InhSet)> ::= left::Regex<i> right::Regex<i>
 {
   top.hasEps = regexAnd(left.hasEps, right.hasEps);
   top.deriv = \l -> regexOr(regexCat(left.deriv(l), ^right),
                             regexCat(left.hasEps, right.deriv(l)));
   top.simplify = 
-    let simpR1::Regex = left.simplify in
-    let simpR2::Regex = right.simplify in
+    let simpR1::Regex<i> = left.simplify in
+    let simpR2::Regex<i> = right.simplify in
       case (simpR1, simpR2) of
       | (regexEmpty(), _) -> regexEmpty()
       | (_, regexEmpty()) -> regexEmpty()
@@ -66,20 +60,16 @@ top::Regex ::= left::Regex right::Regex
       end
     end end;
   top.nullable = left.nullable && right.nullable;
-
-  top.first = nub(if left.nullable 
-                  then left.first ++ right.first 
-                  else left.first);
 }
 
-aspect production regexOr
-top::Regex ::= left::Regex right::Regex
+production regexOr
+top::Regex<(i::InhSet)> ::= left::Regex<i> right::Regex<i>
 {
   top.hasEps = regexOr(left.hasEps, right.hasEps);
   top.deriv = \l -> regexOr(left.deriv(l), right.deriv(l));
-  top.simplify = 
-    let simpR1::Regex = left.simplify in
-    let simpR2::Regex = right.simplify in
+  top.simplify =
+    let simpR1::Regex<i> = left.simplify in
+    let simpR2::Regex<i> = right.simplify in
       case (simpR1, simpR2) of
       | (regexEmpty(), _) -> simpR2
       | (_, regexEmpty()) -> simpR1
@@ -90,18 +80,16 @@ top::Regex ::= left::Regex right::Regex
       end
     end end;
   top.nullable = left.nullable || right.nullable;
-
-  top.first = nub(left.first ++ right.first);
 }
 
-aspect production regexAnd
-top::Regex ::= left::Regex right::Regex
+production regexAnd
+top::Regex<(i::InhSet)> ::= left::Regex<i> right::Regex<i>
 {
   top.hasEps = regexAnd(left.hasEps, right.hasEps);
   top.deriv = \l -> regexAnd(left.deriv(l), right.deriv(l));
   top.simplify =
-    let simpR1::Regex = left.simplify in
-    let simpR2::Regex = right.simplify in
+    let simpR1::Regex<i> = left.simplify in
+    let simpR2::Regex<i> = right.simplify in
       case (simpR1, simpR2) of
       | (regexEmpty(), _) -> regexEmpty()
       | (_ , regexEmpty()) -> regexEmpty()
@@ -111,17 +99,15 @@ top::Regex ::= left::Regex right::Regex
       end
     end end;
   top.nullable = left.nullable && right.nullable;
-
-  top.first = intersect(left.first, right.first);
 }
 
-aspect production regexStar
-top::Regex ::= sub::Regex
+production regexStar
+top::Regex<(i::InhSet)> ::= sub::Regex<i>
 {
   top.hasEps = regexEpsilon();
   top.deriv = \l -> regexCat(sub.deriv(l), regexStar(^sub));
   top.simplify =
-    let simpR::Regex = sub.simplify in 
+    let simpR::Regex<i> = sub.simplify in 
       case simpR of
       | regexEmpty() -> regexEmpty()
       | regexEpsilon() -> regexEpsilon()
@@ -129,6 +115,12 @@ top::Regex ::= sub::Regex
       end
     end;
   top.nullable = true;
-
-  top.first = sub.first;
 }
+
+production regexPlus
+top::Regex<(i::InhSet)> ::= sub::Regex<i>
+{ forwards to regexCat(^sub, regexStar(^sub)); }
+
+production regexMaybe
+top::Regex<(i::InhSet)> ::= sub::Regex<i>
+{ forwards to regexOr(regexEpsilon(), ^sub); }

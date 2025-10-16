@@ -7,20 +7,23 @@ imports src;
 
 fun main IO<Integer> ::= args::[String] = do {
 
-  let sv1::Decorated Scope = decorate scopeVar("foo") with
-    { lex = []; var = []; mod = []; imp = []; };
+  let sv0::LMScope = decorate scopeVar("baz") with
+    { lex = []; var = []; };
 
-  let sv2::Decorated Scope = decorate scopeVar("bar") with
-    { lex = []; var = []; mod = []; imp = []; };
+  let sv1::LMScope = decorate scopeVar("foo") with
+    { lex = []; var = []; };
 
-  let s1::Decorated Scope = decorate scopeNoData() with 
-    { lex = []; var = [sv1, sv2]; mod = []; imp = []; };
+  let sv2::LMScope = decorate scopeVar("bar") with
+    { lex = []; var = []; };
+
+  let s1::LMScope = decorate scopeNoData() with 
+    { lex = []; var = [sv1, sv2]; };
   
-  let s2::Decorated Scope = decorate scopeNoData() with 
-    { lex = [s1]; var = []; mod = []; imp = []; };
+  let s2::LMScope = decorate scopeNoData() with 
+    { lex = [s1]; var = [sv0]; };
 
-  let resFoo::[Decorated Scope] = s2.resolve(isName("foo"), varRx(), labelOrd);
-  let resAny::[Decorated Scope] = s2.resolve(anyVar(), varRx(), labelOrd);
+  let resFoo::[LMScope] = resolve(isName("foo"), varRx(), labelOrd, s2);
+  let resAny::[LMScope] = resolve(anyVar(), varRx(), labelOrd, s2);
 
   -- todo: why does resFoo have foo_0, and resAny has foo_1 instead of foo_0 ?
   print("resFoo: [" ++ implode(", ", map((.name), map((.datum), resFoo))) ++ "]\n");
@@ -33,14 +36,13 @@ fun main IO<Integer> ::= args::[String] = do {
 --------------------------------------------------------------------------------
 -- Language specific -----------------------------------------------------------
 
-flowtype Scope = decorate {lex, var, mod, imp};
+type LMScope = Decorated Scope with ScopeInhs;
+type ScopeInhs = {lex, var};
 
 -- Edge attributes:
 
-inherited attribute lex::[Decorated Scope] occurs on Scope;
-inherited attribute var::[Decorated Scope] occurs on Scope;
-inherited attribute mod::[Decorated Scope] occurs on Scope;
-inherited attribute imp::[Decorated Scope] occurs on Scope;
+inherited attribute lex::[LMScope] occurs on Scope;
+inherited attribute var::[LMScope] occurs on Scope;
 
 -- Scopes:
 
@@ -52,83 +54,51 @@ production scopeVar
 top::Scope ::= name::String
 { forwards to scope(datumVar(name)); }
 
-production scopeMod
-top::Scope ::= name::String
-{ forwards to scope(datumMod(name)); }
-
 -- Data:
 
 production datumVar
 top::Datum ::= name::String
 { forwards to datumJust(name); }
 
-production datumMod
-top::Datum ::= name::String
-{ forwards to datumJust(name); }
-
 -- Labels:
 
 production labelLEX
-top::Label ::=
+top::Label<ScopeInhs> ::=
 { top.name = "LEX";
-  top.demand = \s::Decorated Scope -> s.lex;
+  top.demand = \s::LMScope -> s.lex;
   forwards to label(); }
 
 production labelVAR
-top::Label ::=
+top::Label<ScopeInhs> ::=
 { top.name = "VAR";
-  top.demand = \s::Decorated Scope -> s.var;
-  forwards to label(); }
-
-production labelMOD
-top::Label ::=
-{ top.name = "MOD";
-  top.demand = \s::Decorated Scope -> s.mod;
-  forwards to label(); }
-
-production labelIMP
-top::Label ::=
-{ top.name = "IMP";
-  top.demand = \s::Decorated Scope -> s.imp;
+  top.demand = \s::LMScope -> s.var;
   forwards to label(); }
 
 -- Label order (todo: non-strict ordering):
 
-global labelOrd::[Label] = [
-  labelVAR(), labelIMP(), labelLEX() -- VAR < IMP < LEX
+global labelOrd::[Label<ScopeInhs>] = [
+  labelVAR(), labelLEX() -- VAR < IMP < LEX
 ];
 
 -- Regex productions:
 
 production regexLEX
-top::Regex ::=
+top::Regex<ScopeInhs> ::=
 { forwards to regexLabel(labelLEX()); }
 
 production regexVAR
-top::Regex ::=
+top::Regex<ScopeInhs> ::=
 { forwards to regexLabel(labelVAR()); }
 
-production regexMOD
-top::Regex ::=
-{ forwards to regexLabel(labelMOD()); }
-
-production regexIMP
-top::Regex ::=
-{ forwards to regexLabel(labelIMP()); }
 
 -- Resolution regexes:
 
-global varRx::Regex = 
+global varRx::Regex<ScopeInhs> = 
   regexCat(
     regexStar(
       regexLEX()
     ),
-    regexCat(
-      regexMaybe(
-        regexIMP()
-      ),
-      regexVAR()
-    )
+    regexVAR()
   );
 
 -- Resolution predicates:
@@ -136,7 +106,7 @@ global varRx::Regex =
 fun isName Predicate ::= name::String =
   \d::Datum ->
     case d of
-    | datumVar(n) -> n == name
+    | datumVar(n)  -> n == name
     | datumJust(n) -> n == name
     | _ -> false
     end

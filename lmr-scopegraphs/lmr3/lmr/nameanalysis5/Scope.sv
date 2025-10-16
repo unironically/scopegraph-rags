@@ -1,92 +1,95 @@
 grammar lmr3:lmr:nameanalysis5;
 
-imports sg_lib3:src; -- use of sg_lib3 requires sg_lib3 exporting this grammar
+imports sg_lib3:src;
 
---------------------------------------------------
+--
 
-flowtype Scope = decorate {lex, var, mod, imp};
+type LMScope = Decorated Scope with ScopeInhs;
+type ScopeInhs = {lex, var, mod, imp};
 
-inherited attribute lex::[Decorated Scope] occurs on Scope;
-inherited attribute var::[Decorated Scope] occurs on Scope;
-inherited attribute mod::[Decorated Scope] occurs on Scope;
-inherited attribute imp::[Decorated Scope] occurs on Scope;
+inherited attribute lex::[LMScope] occurs on Scope;
+inherited attribute var::[LMScope] occurs on Scope;
+inherited attribute mod::[LMScope] occurs on Scope;
+inherited attribute imp::[LMScope] occurs on Scope;
 
---------------------------------------------------
+--
 
-abstract production scopeNoData
+production scopeNoData
 top::Scope ::=
 { forwards to scope(datumNone()); }
 
-abstract production scopeVar
+production scopeVar
 top::Scope ::= name::String ty::Type
 { forwards to scope(datumVar(name, ^ty)); }
 
-abstract production scopeMod
+production scopeMod
 top::Scope ::= name::String
 { forwards to scope(datumMod(name)); }
 
---------------------------------------------------
+--
 
-abstract production datumVar
+production datumVar
 top::Datum ::= name::String ty::Type
 { forwards to datumJust(name); }
 
-abstract production datumMod
+production datumMod
 top::Datum ::= name::String
 { forwards to datumJust(name); }
 
---------------------------------------------------
+--
 
 production labelLEX
-top::Label ::=
+top::Label<ScopeInhs> ::=
 { top.name = "LEX";
-  top.demand = \s::Decorated Scope -> s.lex;
+  top.demand = \s::LMScope -> s.lex;
   forwards to label(); }
 
 production labelVAR
-top::Label ::=
+top::Label<ScopeInhs> ::=
 { top.name = "VAR";
-  top.demand = \s::Decorated Scope -> s.var;
+  top.demand = \s::LMScope -> s.var;
   forwards to label(); }
 
 production labelMOD
-top::Label ::=
+top::Label<ScopeInhs> ::=
 { top.name = "MOD";
-  top.demand = \s::Decorated Scope -> s.mod;
+  top.demand = \s::LMScope -> s.mod;
   forwards to label(); }
 
 production labelIMP
-top::Label ::=
+top::Label<ScopeInhs> ::=
 { top.name = "IMP";
-  top.demand = \s::Decorated Scope -> s.imp;
+  top.demand = \s::LMScope -> s.imp;
   forwards to label(); }
 
---------------------------------------------------
+--
 
 -- descending path preference order: VAR < IMP < LEX
-global labelOrd::[Label] = [labelVAR(), labelMOD(), labelIMP(), labelLEX()];
+global labelOrd::[Label<ScopeInhs>] = [
+  labelVAR(), labelMOD(), labelIMP(), labelLEX() -- VAR < LEX
+];
 
---------------------------------------------------
+--
 
 production regexLEX
-top::Regex ::=
+top::Regex<ScopeInhs> ::=
 { forwards to regexLabel(labelLEX()); }
 
 production regexVAR
-top::Regex ::=
+top::Regex<ScopeInhs> ::=
 { forwards to regexLabel(labelVAR()); }
 
 production regexMOD
-top::Regex ::=
+top::Regex<ScopeInhs> ::=
 { forwards to regexLabel(labelMOD()); }
 
 production regexIMP
-top::Regex ::=
+top::Regex<ScopeInhs> ::=
 { forwards to regexLabel(labelIMP()); }
 
---------------------------------------------------
+--
 
-global varRx::Regex = 
+global varRx::Regex<ScopeInhs> = 
   regexCat(
     regexStar(
       regexLEX()
@@ -99,7 +102,7 @@ global varRx::Regex =
     )
   );
 
-global modRx::Regex = 
+global modRx::Regex<ScopeInhs> = 
   regexCat(
     regexStar(
       regexLEX()
@@ -112,12 +115,14 @@ global modRx::Regex =
     )
   );
 
---------------------------------------------------
+--
 
-fun isName (Boolean ::= Datum) ::= name::String =
+fun isName Predicate ::= name::String =
   \d::Datum ->
     case d of
     | datumVar(n, _) -> n == name
-    | datumMod(n) -> n == name
-    | _ -> error("isName fell off for " ++ name)
-    end;
+    | datumMod(n)    -> n == name
+    | datumJust(n)   -> n == name 
+    | _ -> false
+    end
+;

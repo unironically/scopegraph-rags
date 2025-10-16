@@ -1,84 +1,40 @@
 grammar sg_lib3:src;
 
--- TODO: how do we do this without the library exporting the importing language?
-exports lmr3:lmr:nameanalysis5;
-
---------------------------------------------------------------------------------
+--
 
 type Predicate = (Boolean ::= Datum);
-type Order = [Label];
+type Ordering<(i::InhSet)> = [Label<i>];
 
-synthesized attribute resolve::([Decorated Scope] ::= Predicate Regex Order);
+--
 
--- Scope:
-
-attribute resolve occurs on Scope;
-
-aspect production scope
-top::Scope ::= datum::Datum
+function resolve
+[Decorated Scope with i] ::=
+  p::Predicate
+  r::Regex<i>
+  o::Ordering<i>
+  s::Decorated Scope with i
 {
-  top.resolve = \p::Predicate r::Regex ord::Order ->
-    let rSimp::Regex = r.simplify in
+  return
+    let cont::[Decorated Scope with i] =
+      let derivs::[Regex<i>] = map(r.deriv(_), o) in
+        foldl (
+          \acc::([Label<i>], [Decorated Scope with i]) dr::Regex<i> ->
+            let remainingLabels::[Label<i>] = acc.1 in
+            let accResolutions::[Decorated Scope with i] = acc.2 in
+              if !null(accResolutions)
+              then acc -- acc will shadow any more resolutions we may find
+              else (tail(remainingLabels),
+                    concat(map(resolve(p, dr.simplify, o, _), 
+                              head(remainingLabels).demand(s))))
+            end end,
+          (o, []),
+          derivs
+        ).2
+      end
+    in
       case r.simplify of
       | regexEmpty() -> []
-      | regexEpsilon() -> if p(^datum) then [top] else []
-      | _ ->
-        -- todo: only supports strictly greater/less than label ordering
-        let derivs::[Regex] = map(r.deriv(_), ord) in
-          foldl(
-            \acc::([Label], [Decorated Scope]) dr::Regex ->
-              if !null(acc.2) then acc else
-                (tail(acc.1),
-                 case dr.simplify of
-                 | regexEmpty() -> []
-                 | _ -> concat(map(\s::Decorated Scope -> 
-                                     s.resolve(p, dr, ord), 
-                                   head(acc.1).demand(top)))
-                 end),
-            (ord, []),
-            derivs
-          ).2
-        end
+      | _ -> if p(s.datum) && r.nullable then s::cont else cont
       end
     end;
 }
-
--- Regex:
-
-nonterminal Regex;
-
-production regexLabel
-top::Regex ::= label::Label
-{}
-
-production regexEpsilon
-top::Regex ::=
-{}
-
-production regexEmpty
-top::Regex ::=
-{}
-
-production regexCat
-top::Regex ::= left::Regex right::Regex
-{}
-
-production regexOr
-top::Regex ::= left::Regex right::Regex
-{}
-
-production regexAnd
-top::Regex ::= left::Regex right::Regex
-{}
-
-production regexStar
-top::Regex ::= sub::Regex
-{}
-
-production regexPlus
-top::Regex ::= sub::Regex
-{ forwards to regexCat(^sub, regexStar(^sub)); }
-
-production regexMaybe
-top::Regex ::= sub::Regex
-{ forwards to regexOr(regexEpsilon(), ^sub); }

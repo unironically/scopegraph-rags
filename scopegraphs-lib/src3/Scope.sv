@@ -31,16 +31,16 @@ top::Datum ::= name::String
 
 -- Label:
 
-nonterminal Label<(i::InhSet)> with name, demand <i>;
+nonterminal Label with name, demand;
 
 synthesized attribute name::String;
-synthesized attribute demand<(i::InhSet)>::([Decorated Scope with i] ::= Decorated Scope with i);
+synthesized attribute demand::([Decorated Scope] ::= Decorated Scope);
 
 production label
-top::Label<(i::InhSet)> ::=
+top::Label ::=
 { top.demand = error("label.demand");
   top.name = error("label.name"); }
 
-instance Eq Label<(i::InhSet)> {
-  eq = \left::Label<(i::InhSet)> right::Label<(i::InhSet)> -> left.name == right.name;
+instance Eq Label {
+  eq = \left::Label right::Label -> left.name == right.name;
 }

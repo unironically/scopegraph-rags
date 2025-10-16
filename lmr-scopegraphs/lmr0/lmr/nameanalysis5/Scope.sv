@@ -1,62 +1,65 @@
 grammar lmr0:lmr:nameanalysis5;
 
-imports sg_lib3:src; -- use of sg_lib3 requires sg_lib3 exporting this grammar
+imports sg_lib3:src;
 
---------------------------------------------------
+--
 
-flowtype Scope = decorate {lex, var};
+type LMScope = Decorated Scope with ScopeInhs;
+type ScopeInhs = {lex, var};
 
-inherited attribute lex::[Decorated Scope] occurs on Scope;
-inherited attribute var::[Decorated Scope] occurs on Scope;
+inherited attribute lex::[LMScope] occurs on Scope;
+inherited attribute var::[LMScope] occurs on Scope;
 
---------------------------------------------------
+--
 
-abstract production scopeNoData
+production scopeNoData
 top::Scope ::=
 { forwards to scope(datumNone()); }
 
-abstract production scopeVar
+production scopeVar
 top::Scope ::= name::String ty::Type
 { forwards to scope(datumVar(name, ^ty)); }
 
---------------------------------------------------
+--
 
-abstract production datumVar
+production datumVar
 top::Datum ::= name::String ty::Type
 { forwards to datumJust(name); }
 
---------------------------------------------------
+--
 
 production labelLEX
-top::Label ::=
+top::Label<ScopeInhs> ::=
 { top.name = "LEX";
-  top.demand = \s::Decorated Scope -> s.lex;
+  top.demand = \s::LMScope -> s.lex;
   forwards to label(); }
 
 production labelVAR
-top::Label ::=
+top::Label<ScopeInhs> ::=
 { top.name = "VAR";
-  top.demand = \s::Decorated Scope -> s.var;
+  top.demand = \s::LMScope -> s.var;
   forwards to label(); }
 
---------------------------------------------------
+--
 
 -- descending path preference order: VAR < IMP < LEX
-global labelOrd::[Label] = [labelVAR(), labelLEX()];
+global labelOrd::[Label<ScopeInhs>] = [
+  labelVAR(), labelLEX() -- VAR < LEX
+];
 
---------------------------------------------------
+--
 
 production regexLEX
-top::Regex ::=
+top::Regex<ScopeInhs> ::=
 { forwards to regexLabel(labelLEX()); }
 
 production regexVAR
-top::Regex ::=
+top::Regex<ScopeInhs> ::=
 { forwards to regexLabel(labelVAR()); }
 
---------------------------------------------------
+--
 
-global varRx::Regex = 
+global varRx::Regex<ScopeInhs> = 
   regexCat(
     regexStar(
       regexLEX()
@@ -64,11 +67,13 @@ global varRx::Regex =
     regexVAR()
   );
 
---------------------------------------------------
+--
 
-fun isName (Boolean ::= Datum) ::= name::String =
+fun isName Predicate ::= name::String =
   \d::Datum ->
     case d of
     | datumVar(n, _) -> n == name
-    | _ -> error("isName fell off for " ++ name)
-    end;
+    | datumJust(n)   -> n == name 
+    | _ -> false
+    end
+;

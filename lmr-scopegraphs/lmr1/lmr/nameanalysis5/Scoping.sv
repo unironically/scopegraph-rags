@@ -8,16 +8,16 @@ import silver:langutil; -- for location.unparse
 
 monoid attribute ok::Boolean with true, &&;
 
-inherited attribute scope::Decorated Scope;
+inherited attribute scope::LMScope;
 
-synthesized attribute VAR_s::[Decorated Scope];
-synthesized attribute LEX_s::[Decorated Scope];
-synthesized attribute MOD_s::[Decorated Scope];
-synthesized attribute IMP_s::[Decorated Scope];
+synthesized attribute VAR_s::[LMScope];
+synthesized attribute LEX_s::[LMScope];
+synthesized attribute MOD_s::[LMScope];
+synthesized attribute IMP_s::[LMScope];
 
 synthesized attribute type::Type;
 
-synthesized attribute module::Maybe<Decorated Scope>;
+synthesized attribute module::Maybe<LMScope>;
 
 --------------------------------------------------
 
@@ -305,7 +305,7 @@ top::Expr ::= d::ArgDecl e::Expr
 aspect production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
-  production attribute letScope::Decorated Scope = bs.lastScope;
+  production attribute letScope::LMScope = bs.lastScope;
 
   bs.scope = top.scope;
   e.scope = letScope;
@@ -350,7 +350,7 @@ attribute ok, scope, lastScope occurs on SeqBinds;
 
 propagate ok on SeqBinds;
 
-synthesized attribute lastScope::Decorated Scope;
+synthesized attribute lastScope::LMScope;
 
 aspect production seqBindsNil
 top::SeqBinds ::=
@@ -519,8 +519,7 @@ attribute ok, scope, type occurs on VarRef;
 aspect production varRef
 top::VarRef ::= x::String
 {
-  local xvars_::[Decorated Scope] =
-    top.scope.resolve(isName(x), varRx(), labelOrd);
+  local xvars_::[LMScope] = resolve(isName(x), varRx(), labelOrd, top.scope);
 
   local okAndRes::(Boolean, Type) = 
     if length(xvars_) < 1
@@ -545,10 +544,9 @@ attribute scope, ok, module occurs on ModRef;
 aspect production modRef
 top::ModRef ::= x::String
 {
-  local xmods_::[Decorated Scope] =
-    top.scope.resolve(isName(x), modRx(), labelOrd);
+  local xmods_::[LMScope] = resolve(isName(x), modRx(), labelOrd, top.scope);
 
-  local okAndRes::(Boolean, Maybe<Decorated Scope>) = 
+  local okAndRes::(Boolean, Maybe<LMScope>) = 
     if length(xmods_) < 1
     then unsafeTracePrint((false, nothing()), "[✗] " ++ top.location.unparse ++ 
                           ": error: unresolvable module reference '" ++ x ++ "'\n")

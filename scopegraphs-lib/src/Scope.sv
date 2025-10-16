@@ -1,25 +1,25 @@
 grammar src;
 
---------------------------------------------------------------------------------
--- Testing ---------------------------------------------------------------------
-
+--
 fun main IO<Integer> ::= args::[String] = do {
   return 0;
 };
 
--- Scope
+--
 
-nonterminal Scope;
+nonterminal Scope with datum;
 
-synthesized attribute datum::Datum occurs on Scope;
+synthesized attribute datum::Datum;
 
 production scope
 top::Scope ::= datum::Datum
 { top.datum = ^datum; }
 
--- Data:
+--
 
 nonterminal Datum with name;
+
+synthesized attribute name::String;
 
 production datumNone
 top::Datum ::=
@@ -29,18 +29,18 @@ production datumJust
 top::Datum ::= name::String
 { top.name = name ++ "_" ++ toString(genInt()); }
 
--- Label:
+--
 
-nonterminal Label with name, demand;
+nonterminal Label<(i::InhSet)> with name, demand <i>;
 
-synthesized attribute name::String;
-synthesized attribute demand::([Decorated Scope] ::= Decorated Scope);
+synthesized attribute demand<(i::InhSet)>::([Decorated Scope with i] ::= Decorated Scope with i);
 
 production label
-top::Label ::=
+top::Label<(i::InhSet)> ::=
 { top.demand = error("label.demand");
   top.name = error("label.name"); }
 
-instance Eq Label {
-  eq = \left::Label right::Label -> left.name == right.name;
+instance Eq Label<(i::InhSet)> {
+  eq = \left::Label<(i::InhSet)> right::Label<(i::InhSet)> -> 
+    left.name == right.name;
 }
