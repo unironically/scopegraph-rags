@@ -3,7 +3,7 @@ grammar sg_lib3:src;
 --
 
 type Predicate = (Boolean ::= Datum);
-type Ordering<(i::InhSet)> = [Label<i>];
+type Ordering<(i::InhSet)> = (Boolean ::= Label<i> Label<i>); --[Label<i>];
 
 --
 
@@ -11,24 +11,30 @@ function resolve
 [Decorated Scope with i] ::=
   p::Predicate
   r::Regex<i>
-  o::Ordering<i>
+  o::Maybe<Ordering<i>>
   s::Decorated Scope with i
 {
   return
     let cont::[Decorated Scope with i] =
-      let derivs::[Regex<i>] = map(r.deriv(_), o) in
+      let validLabels::[Label<i>] = r.first in
         foldl (
-          \acc::([Label<i>], [Decorated Scope with i]) dr::Regex<i> ->
-            let remainingLabels::[Label<i>] = acc.1 in
-            let accResolutions::[Decorated Scope with i] = acc.2 in
-              if !null(accResolutions)
-              then acc -- acc will shadow any more resolutions we may find
-              else (tail(remainingLabels),
-                    concat(map(resolve(p, dr.simplify, o, _), 
-                              head(remainingLabels).demand(s))))
-            end end,
-          (o, []),
-          derivs
+          \acc::(Maybe<Label<i>>, [Decorated Scope with i]) nextLab::Label<i> ->
+            let prevLab::Maybe<Label<i>> = acc.1 in
+            let prevRes::[Decorated Scope with i] = acc.2 in
+            let nextRes::[Decorated Scope with i] =
+              concat(map(resolve(p, r.deriv(nextLab).simplify, o, _),
+                         nextLab.demand(s)))
+            in
+              if o.isJust && prevLab.isJust && !null(nextRes)
+              then  -- visibility
+                if o.fromJust(nextLab, prevLab.fromJust)
+                then (prevLab, nextRes)       -- nextLab < prevLab
+                else (just(nextLab), prevRes) -- prevLab < nextLab
+              else  -- reachability
+                (just(nextLab), prevRes ++ nextRes)
+            end end end,
+          (nothing(), []),
+          validLabels
         ).2
       end
     in
@@ -38,3 +44,18 @@ function resolve
       end
     end;
 }
+
+function visible
+[Decorated Scope with i] ::=
+  p::Predicate
+  r::Regex<i>
+  o::Ordering<i>
+  s::Decorated Scope with i
+{ return resolve(p, ^r, just(o), s); }
+
+function reachable
+[Decorated Scope with i] ::=
+  p::Predicate
+  r::Regex<i>
+  s::Decorated Scope with i
+{ return resolve(p, ^r, nothing(), s); }

@@ -509,7 +509,7 @@ attribute ok, scope, type occurs on VarRef;
 aspect production varRef
 top::VarRef ::= x::String
 {
-  local xvars_::[LMScope] = resolve(isName(x), varRx(), labelOrd, top.scope);
+  local xvars_::[LMScope] = visible(isName(x), varRx(), labelOrd, top.scope);
 
   local okAndRes::(Boolean, Type) = 
     if length(xvars_) < 1
@@ -534,7 +534,7 @@ attribute scope, ok, module occurs on ModRef;
 aspect production modRef
 top::ModRef ::= x::String
 {
-  local xmods_::[LMScope] = resolve(isName(x), modRx(), labelOrd, top.scope);
+  local xmods_::[LMScope] = visible(isName(x), modRx(), labelOrd, top.scope);
 
   local okAndRes::(Boolean, Maybe<LMScope>) = 
     if length(xmods_) < 1

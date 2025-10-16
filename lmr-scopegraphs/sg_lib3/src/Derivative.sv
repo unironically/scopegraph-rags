@@ -12,6 +12,8 @@ synthesized attribute deriv<(i::InhSet)>::(Regex<i> ::= Label<i>) occurs on Rege
 synthesized attribute hasEps<(i::InhSet)>::Regex<i> occurs on Regex<(i::InhSet)>;
 -- True if epsilon is a valid string in the language of the Regex
 synthesized attribute nullable::Boolean occurs on Regex<(i::InhSet)>;
+-- Compute first set of a Regex
+synthesized attribute first<(i::InhSet)>::[Label<i>] occurs on Regex<(i::InhSet)>;
 
 production regexLabel
 top::Regex<(i::InhSet)> ::= label::Label<(i::InhSet)>
@@ -21,6 +23,7 @@ top::Regex<(i::InhSet)> ::= label::Label<(i::InhSet)>
                               then regexEpsilon() else regexEmpty();
   top.simplify = ^top;
   top.nullable = false;
+  top.first = [^label];
 }
 
 production regexEpsilon
@@ -30,6 +33,7 @@ top::Regex<(i::InhSet)> ::=
   top.deriv = \_ -> regexEmpty();
   top.simplify = ^top;
   top.nullable = true;
+  top.first = [];
 }
 
 production regexEmpty
@@ -39,6 +43,7 @@ top::Regex<(i::InhSet)> ::=
   top.deriv = \_ -> regexEmpty();
   top.simplify = ^top;
   top.nullable = false;
+  top.first = [];
 }
 
 production regexCat
@@ -60,6 +65,7 @@ top::Regex<(i::InhSet)> ::= left::Regex<i> right::Regex<i>
       end
     end end;
   top.nullable = left.nullable && right.nullable;
+  top.first = if !left.nullable then left.first else left.first ++ right.first; 
 }
 
 production regexOr
@@ -80,6 +86,7 @@ top::Regex<(i::InhSet)> ::= left::Regex<i> right::Regex<i>
       end
     end end;
   top.nullable = left.nullable || right.nullable;
+  top.first = left.first ++ right.first;
 }
 
 production regexAnd
@@ -99,6 +106,7 @@ top::Regex<(i::InhSet)> ::= left::Regex<i> right::Regex<i>
       end
     end end;
   top.nullable = left.nullable && right.nullable;
+  top.first = intersect(left.first, right.first);
 }
 
 production regexStar
@@ -115,6 +123,7 @@ top::Regex<(i::InhSet)> ::= sub::Regex<i>
       end
     end;
   top.nullable = true;
+  top.first = sub.first;
 }
 
 production regexPlus

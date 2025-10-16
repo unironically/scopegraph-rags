@@ -22,12 +22,17 @@ fun main IO<Integer> ::= args::[String] = do {
   let s2::LMScope = decorate scopeNoData() with 
     { lex = [s1]; var = [sv0]; };
 
-  let resFoo::[LMScope] = resolve(isName("foo"), varRx(), labelOrd, s2);
-  let resAny::[LMScope] = resolve(anyVar(), varRx(), labelOrd, s2);
+  let resFooV::[LMScope] = visible(isName("foo"), varRx(), labelOrd, s2);
+  let resAnyV::[LMScope] = visible(anyVar(), varRx(), labelOrd, s2);
 
-  -- todo: why does resFoo have foo_0, and resAny has foo_1 instead of foo_0 ?
-  print("resFoo: [" ++ implode(", ", map((.name), map((.datum), resFoo))) ++ "]\n");
-  print("resAny: [" ++ implode(", ", map((.name), map((.datum), resAny))) ++ "]\n");
+  let resFooR::[LMScope] = reachable(isName("foo"), varRx(), s2);
+  let resAnyR::[LMScope] = reachable(anyVar(), varRx(), s2);
+
+  print("resFooV: [" ++ implode(", ", map((.name), map((.datum), resFooV))) ++ "]\n");
+  print("resAnyV: [" ++ implode(", ", map((.name), map((.datum), resAnyV))) ++ "]\n");
+
+  print("resFooR: [" ++ implode(", ", map((.name), map((.datum), resFooR))) ++ "]\n");
+  print("resAnyR: [" ++ implode(", ", map((.name), map((.datum), resAnyR))) ++ "]\n");
 
   return 0;
 
@@ -76,9 +81,16 @@ top::Label<ScopeInhs> ::=
 
 -- Label order (todo: non-strict ordering):
 
-global labelOrd::[Label<ScopeInhs>] = [
-  labelVAR(), labelLEX() -- VAR < IMP < LEX
-];
+--global labelOrd::[Label<ScopeInhs>] = [
+--  labelVAR(), labelLEX() -- VAR < IMP < LEX
+--];
+
+fun labelOrd Boolean ::= left::Label<i> right::Label<i> =
+  case left, right of
+  | labelVAR(), _ -> true -- VAR < *
+  | _, _ -> false
+  end
+;
 
 -- Regex productions:
 

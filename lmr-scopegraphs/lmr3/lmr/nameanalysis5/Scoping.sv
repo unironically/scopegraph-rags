@@ -506,7 +506,7 @@ aspect production varRef
 top::VarRef ::= x::String
 {
   local xvars_::[LMScope] =
-    resolve(isName(x), varRx(), labelOrd, top.scope);
+    visible(isName(x), varRx(), labelOrd, top.scope);
 
   local okAndRes::(Boolean, Type) = 
     if length(xvars_) < 1
@@ -532,7 +532,7 @@ aspect production modRef
 top::ModRef ::= x::String
 {
   local xmods_::[LMScope] =
-    resolve(isName(x), modRx(), labelOrd, top.scope);
+    visible(isName(x), modRx(), labelOrd, top.scope);
 
   local okAndRes::(Boolean, Maybe<LMScope>) = 
     if length(xmods_) < 1

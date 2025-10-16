@@ -64,10 +64,14 @@ top::Label<ScopeInhs> ::=
 
 --
 
--- descending path preference order: VAR < IMP < LEX
-global labelOrd::[Label<ScopeInhs>] = [
-  labelVAR(), labelMOD(), labelIMP(), labelLEX() -- VAR < LEX
-];
+fun labelOrd Boolean ::= left::Label<i> right::Label<i> =
+  case left, right of
+  | labelVAR(), _ -> true | _, labelVAR() -> false -- VAR < *
+  | labelMOD(), _ -> true | _, labelMOD() -> false -- MOD < *
+  | labelIMP(), _ -> true | _, labelIMP() -> false -- IMP < LEX
+  | _, _ -> false
+  end
+;
 
 --
 
