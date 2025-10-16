@@ -33,7 +33,7 @@ top::Datum ::= name::String
 
 nonterminal Label<(i::InhSet)> with name, demand <i>;
 
-synthesized attribute demand<(i::InhSet)>::([Decorated Scope with i] ::= Decorated Scope with i);
+synthesized attribute demand<(i::InhSet)>::([DecScope<i>] ::= DecScope<i>);
 
 production label
 top::Label<(i::InhSet)> ::=
