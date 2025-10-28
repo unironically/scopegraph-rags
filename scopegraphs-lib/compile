@@ -1,7 +1,5 @@
 #!/bin/sh
 
 silver -I . --mwda --onejar $@ test src
-#silver -I . --mwda --onejar $@ test2 src2
-#silver -I . --mwda --onejar $@ test3 src3
 
 rm build.xml > /dev/null 2>&1

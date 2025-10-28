@@ -7,27 +7,31 @@ fun main IO<Integer> ::= args::[String] = do {
 
 --
 
-nonterminal Scope with datum;
-
-synthesized attribute datum::Datum;
-
-production scope
-top::Scope ::= datum::Datum
-{ top.datum = ^datum; }
+synthesized attribute id::Integer;
+synthesized attribute name::String;
+synthesized attribute datum::Decorated Datum;
 
 --
 
-nonterminal Datum with name;
+nonterminal Scope with datum;
 
-synthesized attribute name::String;
+production scope
+top::Scope ::= datum::Datum
+{ top.datum = datum; }
+
+--
+
+nonterminal Datum with id, name;
 
 production datumNone
 top::Datum ::=
-{ top.name = ""; }
+{ top.id = genInt();
+  top.name = ""; }
 
 production datumJust
 top::Datum ::= name::String
-{ top.name = name ++ "_" ++ toString(genInt()); }
+{ top.id = genInt();
+  top.name = name ++ "_" ++ toString(top.id); }
 
 --
 

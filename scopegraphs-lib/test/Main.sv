@@ -16,11 +16,13 @@ fun main IO<Integer> ::= args::[String] = do {
   let sv2::LMScope = decorate scopeVar("foo") with
     { lex = []; var = []; mod = []; imp = []; };
 
+
   let s1::LMScope = decorate scopeNoData() with
-    { lex = []; var = [sv1]; mod = [sv2]; imp = []; };
+    { lex = []; var = [sv2]; mod = []; imp = []; };
   
   let s2::LMScope = decorate scopeNoData() with
-    { lex = [s1]; var = [sv0]; mod = []; imp = []; };
+    { lex = [s1]; var = [sv0, sv1]; mod = []; imp = []; };
+
 
   let resFooV::[LMScope] = visible(isName("foo"), varRx(), labelOrd, s2);
   let resAnyV::[LMScope] = visible(anyVar(), varRx(), labelOrd, s2);
@@ -161,7 +163,7 @@ global modRx::Regex<ScopeInhs> =
 -- Resolution predicates:
 
 fun isName Predicate ::= name::String =
-  \d::Datum ->
+  \d::Decorated Datum ->
     case d of
     | datumVar(n)  -> n == name
     | datumMod(n)  -> n == name
@@ -171,7 +173,7 @@ fun isName Predicate ::= name::String =
 ;
 
 fun anyVar Predicate ::= =
-  \d::Datum ->
+  \d::Decorated Datum ->
     case d of
     | datumVar(_) -> true
     | _ -> false
@@ -179,7 +181,7 @@ fun anyVar Predicate ::= =
 ;
 
 fun anyMod Predicate ::= =
-  \d::Datum ->
+  \d::Decorated Datum ->
     case d of
     | datumVar(_) -> true
     | _ -> false
