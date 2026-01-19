@@ -7,19 +7,22 @@ fun main IO<Integer> ::= args::[String] = do {
 
 --
 
-nonterminal Scope with datum;
-
+synthesized attribute id::Integer;
+synthesized attribute name::String;
 synthesized attribute datum::Datum;
+
+--
+
+nonterminal Scope with id, datum;
 
 production scope
 top::Scope ::= datum::Datum
-{ top.datum = ^datum; }
+{ top.id = genInt();
+  top.datum = ^datum; }
 
 --
 
 nonterminal Datum with name;
-
-synthesized attribute name::String;
 
 production datumNone
 top::Datum ::=
@@ -27,13 +30,13 @@ top::Datum ::=
 
 production datumJust
 top::Datum ::= name::String
-{ top.name = name ++ "_" ++ toString(genInt()); }
+{ top.name = name; }
 
 --
 
 nonterminal Label<(i::InhSet)> with name, demand <i>;
 
-synthesized attribute demand<(i::InhSet)>::([Decorated Scope with i] ::= Decorated Scope with i);
+synthesized attribute demand<(i::InhSet)>::([DecScope<i>] ::= DecScope<i>);
 
 production label
 top::Label<(i::InhSet)> ::=
@@ -41,6 +44,5 @@ top::Label<(i::InhSet)> ::=
   top.name = error("label.name"); }
 
 instance Eq Label<(i::InhSet)> {
-  eq = \left::Label<(i::InhSet)> right::Label<(i::InhSet)> -> 
-    left.name == right.name;
+  eq = \left::Label<(i::InhSet)> right::Label<(i::InhSet)> -> left.name == right.name;
 }

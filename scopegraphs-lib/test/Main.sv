@@ -7,28 +7,30 @@ imports src;
 
 fun main IO<Integer> ::= args::[String] = do {
 
-  let sv0::LMScope = decorate scopeVar("baz") with
+  let sv2::LMScope = decorate scopeVar("baz") with
     { lex = []; var = []; mod = []; imp = []; };
 
-  let sv1::LMScope = decorate scopeVar("foo") with
+  let sv3::LMScope = decorate scopeVar("foo") with
     { lex = []; var = []; mod = []; imp = []; };
 
-  let sv2::LMScope = decorate scopeVar("foo") with
+  let sv4::LMScope = decorate scopeVar("foo") with
     { lex = []; var = []; mod = []; imp = []; };
 
-
-  let s1::LMScope = decorate scopeNoData() with
-    { lex = []; var = [sv2]; mod = []; imp = []; };
+  let s0::LMScope = decorate scopeNoData() with
+    { lex = []; var = [sv4]; mod = []; imp = []; };
   
-  let s2::LMScope = decorate scopeNoData() with
-    { lex = [s1]; var = [sv0, sv1]; mod = []; imp = []; };
+  let s1::LMScope = decorate scopeNoData() with
+    { lex = [s0]; var = [sv2, sv3]; mod = []; imp = []; };
 
+  let resFooV::[LMScope] = visible(isName("foo"), varRx(), labelOrd, s1);
+  let resAnyV::[LMScope] = visible(anyVar(), varRx(), labelOrd, s1);
 
-  let resFooV::[LMScope] = visible(isName("foo"), varRx(), labelOrd, s2);
-  let resAnyV::[LMScope] = visible(anyVar(), varRx(), labelOrd, s2);
+  let resFooR::[LMScope] = reachable(isName("foo"), varRx(), s1);
+  let resAnyR::[LMScope] = reachable(anyVar(), varRx(), s1);
 
-  let resFooR::[LMScope] = reachable(isName("foo"), varRx(), s2);
-  let resAnyR::[LMScope] = reachable(anyVar(), varRx(), s2);
+  let vizStr::String = vizStr(allLabs, [s0, s1, sv2, sv3, sv4]);
+
+  system("echo '" ++ vizStr ++ "' | dot -Tsvg > sg.svg");
 
   print("resFooV: [" ++ implode(", ", map((.name), map((.datum), resFooV))) ++ "]\n");
   print("resAnyV: [" ++ implode(", ", map((.name), map((.datum), resAnyV))) ++ "]\n");
@@ -47,6 +49,10 @@ type LMScope = Decorated Scope with ScopeInhs;
 type ScopeInhs = {lex, var, mod, imp};
 
 -- Edge attributes:
+
+global allLabs::[Label<ScopeInhs>] = [
+  labelLEX(), labelVAR(), labelMOD(), labelIMP()
+];
 
 inherited attribute lex::[LMScope] occurs on Scope;
 inherited attribute var::[LMScope] occurs on Scope;

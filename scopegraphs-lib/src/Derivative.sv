@@ -4,12 +4,16 @@ grammar src;
 
 nonterminal Regex<(i::InhSet)>;
 
+synthesized attribute noob::Boolean;
+attribute noob occurs on Regex<roo>;
+
 -- Transform a Regex to an equivalent fully simplified one
 synthesized attribute simplify<(i::InhSet)>::Regex<(i::InhSet)> occurs on Regex<(i::InhSet)>;
 -- Theorem 3.1 of Brzozowski (1964). Derivative with respect to a single token
 synthesized attribute deriv<(i::InhSet)>::(Regex<i> ::= Label<i>) occurs on Regex<(i::InhSet)>;
 -- Definition 3.2 of Brzozowski (1964), return epsilon if Regex contains epsilon
-synthesized attribute hasEps<(i::InhSet)>::Regex<i> occurs on Regex<(i::InhSet)>;
+synthesized attribute hasEps<(i::InhSet)>::Regex<i>;
+attribute hasEps<i> occurs on Regex<(i::InhSet)>;
 -- True if epsilon is a valid string in the language of the Regex
 synthesized attribute nullable::Boolean occurs on Regex<(i::InhSet)>;
 -- Compute first set of a Regex

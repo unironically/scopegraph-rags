@@ -46,11 +46,16 @@ propagate ok on Decls;
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  production attribute seqScope::Scope = scopeNoData();
-  seqScope.lex = [top.scope];
-  seqScope.var = [];
-  seqScope.mod = [];
-  seqScope.imp = d.IMP_s;
+  production attribute seqScope::LMScope = 
+    if null(d.IMP_s)
+    then top.scope
+    else
+      decorate scopeNoData() with {
+        lex = [top.scope];
+        var = [];
+        mod = [];
+        imp = d.IMP_s;
+      };
 
   d.scope = top.scope;
   ds.scope = seqScope;

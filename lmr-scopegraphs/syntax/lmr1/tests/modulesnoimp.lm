@@ -1,0 +1,7 @@
+def a:int = 1
+
+module A {
+  def b:int = a
+}
+
+def c:int = a

@@ -1,7 +1,5 @@
 grammar src;
 
--- TODO: non-strict label ordering
-
 --
 
 type DecScope<(i::InhSet)> = Decorated Scope with i;

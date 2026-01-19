@@ -1,0 +1,5 @@
+#!/bin/sh
+
+silver -I .. --mwda --onejar $@ sg_lib4:src
+
+rm build.xml > /dev/null 2>&1

@@ -13,25 +13,24 @@ synthesized attribute datum::Decorated Datum;
 
 --
 
-nonterminal Scope with datum;
+nonterminal Scope with id, datum;
 
 production scope
 top::Scope ::= datum::Datum
-{ top.datum = datum; }
+{ top.id = genInt();
+  top.datum = datum; }
 
 --
 
-nonterminal Datum with id, name;
+nonterminal Datum with name;
 
 production datumNone
 top::Datum ::=
-{ top.id = genInt();
-  top.name = ""; }
+{ top.name = ""; }
 
 production datumJust
 top::Datum ::= name::String
-{ top.id = genInt();
-  top.name = name ++ "_" ++ toString(top.id); }
+{ top.name = name; }
 
 --
 

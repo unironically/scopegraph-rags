@@ -58,6 +58,19 @@ fun tryEdge [Decorated Scope] ::= r::Regex p::DwfPred e::Edge =
 
 --
 
+fun unionDecScope [Decorated Scope] ::= l::[Decorated Scope] r::[Decorated Scope] =
+  case l of
+  | [] -> r
+  | h::t -> 
+      if containsBy(\l::Decorated Scope r::Decorated Scope -> l.id == r.id,
+                    h, r)
+      then unionDecScope(t, r)
+      else h::unionDecScope(t, r)
+  end
+;
+
+--
+
 nonterminal Datum with id;
 
 production datumName

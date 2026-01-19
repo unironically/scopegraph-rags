@@ -65,7 +65,7 @@ top::Regex<(i::InhSet)> ::= left::Regex<i> right::Regex<i>
       end
     end end;
   top.nullable = left.nullable && right.nullable;
-  top.first = if !left.nullable then left.first else left.first ++ right.first; 
+  top.first = if !left.nullable then left.first else union(left.first, right.first); 
 }
 
 production regexOr
@@ -86,7 +86,7 @@ top::Regex<(i::InhSet)> ::= left::Regex<i> right::Regex<i>
       end
     end end;
   top.nullable = left.nullable || right.nullable;
-  top.first = left.first ++ right.first;
+  top.first = union(left.first, right.first);
 }
 
 production regexAnd

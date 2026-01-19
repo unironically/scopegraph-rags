@@ -42,10 +42,10 @@ top::Label<ScopeInhs> ::=
 
 --
 
-fun labelOrd Boolean ::= left::Label<i> right::Label<i> =
+fun labelOrd Integer ::= left::Label<i> right::Label<i> =
   case left, right of
-  | labelVAR(), _ -> true -- VAR < *
-  | _, _ -> false
+  | labelVAR(), labelLEX() -> -1 | labelLEX(), labelVAR() -> 1 -- VAR < LEX
+  | _, _ -> 0
   end
 ;
 
