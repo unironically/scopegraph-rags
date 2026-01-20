@@ -98,10 +98,11 @@ global impRx::Regex =
     regexStar(
       regexLabel(lexLabel())
     ),
-    regexCat(
-      regexMaybe(regexLabel(impLabel())), -- option here, no host import res rx exists
-      regexLabel(modLabel())
-    )
+    --regexCat(
+    --  regexMaybe(regexLabel(impLabel())), -- option here, no host import res rx exists
+    --  regexLabel(modLabel())
+    --)
+    regexLabel(modLabel())
   );
 
 --------------------------------------------------
@@ -115,3 +116,8 @@ fun isName (Boolean ::= Datum) ::= name::String =
     | _ -> false
     end 
 ;
+
+--
+
+global dummyScope::Decorated Scope =
+  decorate scopeNoData() with {edges = mapNone(eq);};

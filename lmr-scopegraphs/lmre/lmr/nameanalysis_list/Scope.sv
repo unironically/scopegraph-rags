@@ -70,7 +70,7 @@ global newVarRx::Regex =
       regexLab("LEX")
     ),
     regexCat(
-      regexOpt(regexLab("IMP")),
+      regexLab("IMP"), -- no option here, host var rx already resolves using no IMP labs
       regexLab("VAR")
     )
   );
@@ -80,10 +80,11 @@ global impRx::Regex =
     regexStar(
       regexLab("LEX")
     ),
-    regexCat(
-      regexOpt(regexLab("IMP")),
-      regexLab("MOD")
-    )
+    --regexCat(
+    --  regexOpt(regexLab("IMP")),
+    --  regexLab("MOD")
+    --)
+    regexLab("MOD")
   );
 
 --------------------------------------------------
@@ -93,6 +94,12 @@ fun isName (Boolean ::= Datum) ::= name::String =
   \d::Datum -> 
     case d of
     | datumVar(dName, _) -> name == dName
+    | datumMod(mName) -> name == mName
     | _ -> false
     end 
 ;
+
+--
+
+global dummyScope::Decorated Scope =
+  decorate scopeNoData() with {edges = [];};

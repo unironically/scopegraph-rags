@@ -45,17 +45,17 @@ top::Decl ::= x::String
 {
   local mods::[Decorated Scope] = top.scope.resolve(isName(x), impRx());
 
-  local okAndModscope::(Boolean, Decorated Scope) =
-    if length(mods) != 1
-    then (false, error("Oh crap!"))
-    else case head(mods).datum of
-         | datumMod(_) -> (true, head(mods))
-         | _ -> (false, error("Oh crap!"))
-         end;
+  local okAndModscope::(Boolean, [Decorated Scope]) =
+    if length(mods) < 1
+    then unsafeTracePrint((false, [dummyScope]), "Bad resolution of " ++ x ++ " (E: not found)\n")
+    else if length(mods) > 1
+    then unsafeTracePrint((false, [dummyScope]), "Bad resolution of " ++ x ++ " (E: ambiguous)\n")
+    else (true, mods);
+
 
   top.ok := okAndModscope.1;
 
-  top.synEdges := [ impEdge(okAndModscope.2) ];
+  top.synEdges := map(impEdge(_), mods);--[ impEdge(okAndModscope.2) ];
 }
 
 --------------------------------------------------

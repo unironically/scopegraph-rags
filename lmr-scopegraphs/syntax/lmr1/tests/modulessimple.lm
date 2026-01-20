@@ -7,9 +7,7 @@ module C {
 }
 
 module B {
-  def a:bool = true
   import A
-  def c:bool = true
   import C
   def b:int = a + c
 }

@@ -75,17 +75,16 @@ top::Decl ::= x::String
 {
   local mods::[Decorated Scope] = resolve(isName(x), impRx(), top.scope);
 
-  local okAndModscope::(Boolean, Decorated Scope) =
-    if length(mods) != 1
-    then (false, error("Oh crap!"))
-    else case head(mods).datum of
-         | datumMod(_) -> (true, head(mods))
-         | _ -> (false, error("Oh crap!"))
-         end;
+  local okAndModscope::(Boolean, [Decorated Scope]) =
+    if length(mods) < 1
+    then unsafeTracePrint((false, [dummyScope]), "Bad resolution of " ++ x ++ " (E: not found)\n")
+    else if length(mods) > 1
+    then unsafeTracePrint((false, [dummyScope]), "Bad resolution of " ++ x ++ " (E: ambiguous)\n")
+    else (true, mods);
 
   top.synVar := [];
   top.synMod := [];
-  top.synImp := [okAndModscope.2];
+  top.synImp := okAndModscope.2;
 
   top.ok := okAndModscope.1;
 }
