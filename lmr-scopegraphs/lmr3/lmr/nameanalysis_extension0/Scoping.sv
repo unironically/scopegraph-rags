@@ -230,6 +230,32 @@ top::Expr ::= i::Integer
   top.type = tInt();
 }
 
+aspect production exprTrue
+top::Expr ::=
+{
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- not generated
+  top.type = tBool();
+}
+
+aspect production exprFalse
+top::Expr ::=
+{
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- not generated
+  top.type = tBool();
+}
+
 aspect production exprVar
 top::Expr ::= r::VarRef
 {
@@ -280,7 +306,364 @@ top::Expr ::= e1::Expr e2::Expr
   top.s_imp := [];
 
   -- not generated
-  top.type = tInt();
+  top.ok <- e1.type == tInt();
+  top.ok <- e2.type == tInt();
+
+  -- not generated
+  top.type = if top.ok then tInt() else tErr();
+}
+
+aspect production exprSub
+top::Expr ::= e1::Expr e2::Expr
+{
+  -- not generated
+  e1.s = top.s;
+
+  -- generated from `e1.s = top.s;`
+  top.s_lex <- e1.s_lex;
+  top.s_var <- e1.s_var;
+  top.s_mod <- e1.s_mod;
+  top.s_imp <- e1.s_imp;
+
+  -- not generated
+  e2.s = top.s;
+
+  -- generated from `e2.s = top.s;`
+  top.s_lex <- e2.s_lex;
+  top.s_var <- e2.s_var;
+  top.s_mod <- e2.s_mod;
+  top.s_imp <- e2.s_imp;
+
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- not generated
+  top.ok <- e1.type == tInt();
+  top.ok <- e2.type == tInt();
+
+  -- not generated
+  top.type = if top.ok then tInt() else tErr();
+}
+
+aspect production exprMul
+top::Expr ::= e1::Expr e2::Expr
+{
+  -- not generated
+  e1.s = top.s;
+
+  -- generated from `e1.s = top.s;`
+  top.s_lex <- e1.s_lex;
+  top.s_var <- e1.s_var;
+  top.s_mod <- e1.s_mod;
+  top.s_imp <- e1.s_imp;
+
+  -- not generated
+  e2.s = top.s;
+
+  -- generated from `e2.s = top.s;`
+  top.s_lex <- e2.s_lex;
+  top.s_var <- e2.s_var;
+  top.s_mod <- e2.s_mod;
+  top.s_imp <- e2.s_imp;
+
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- not generated
+  top.ok <- e1.type == tInt();
+  top.ok <- e2.type == tInt();
+
+  -- not generated
+  top.type = if top.ok then tInt() else tErr();
+}
+
+aspect production exprDiv
+top::Expr ::= e1::Expr e2::Expr
+{
+  -- not generated
+  e1.s = top.s;
+
+  -- generated from `e1.s = top.s;`
+  top.s_lex <- e1.s_lex;
+  top.s_var <- e1.s_var;
+  top.s_mod <- e1.s_mod;
+  top.s_imp <- e1.s_imp;
+
+  -- not generated
+  e2.s = top.s;
+
+  -- generated from `e2.s = top.s;`
+  top.s_lex <- e2.s_lex;
+  top.s_var <- e2.s_var;
+  top.s_mod <- e2.s_mod;
+  top.s_imp <- e2.s_imp;
+
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- not generated
+  top.ok <- e1.type == tInt();
+  top.ok <- e2.type == tInt();
+
+  -- not generated
+  top.type = if top.ok then tInt() else tErr();
+}
+
+aspect production exprAnd
+top::Expr ::= e1::Expr e2::Expr
+{
+  -- not generated
+  e1.s = top.s;
+
+  -- generated from `e1.s = top.s;`
+  top.s_lex <- e1.s_lex;
+  top.s_var <- e1.s_var;
+  top.s_mod <- e1.s_mod;
+  top.s_imp <- e1.s_imp;
+
+  -- not generated
+  e2.s = top.s;
+
+  -- generated from `e2.s = top.s;`
+  top.s_lex <- e2.s_lex;
+  top.s_var <- e2.s_var;
+  top.s_mod <- e2.s_mod;
+  top.s_imp <- e2.s_imp;
+
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- not generated
+  top.ok <- e1.type == tBool();
+  top.ok <- e2.type == tBool();
+
+  -- not generated
+  top.type = if top.ok then tBool() else tErr();
+}
+
+aspect production exprOr
+top::Expr ::= e1::Expr e2::Expr
+{
+  -- not generated
+  e1.s = top.s;
+
+  -- generated from `e1.s = top.s;`
+  top.s_lex <- e1.s_lex;
+  top.s_var <- e1.s_var;
+  top.s_mod <- e1.s_mod;
+  top.s_imp <- e1.s_imp;
+
+  -- not generated
+  e2.s = top.s;
+
+  -- generated from `e2.s = top.s;`
+  top.s_lex <- e2.s_lex;
+  top.s_var <- e2.s_var;
+  top.s_mod <- e2.s_mod;
+  top.s_imp <- e2.s_imp;
+
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- not generated
+  top.ok <- e1.type == tBool();
+  top.ok <- e2.type == tBool();
+
+  -- not generated
+  top.type = if top.ok then tBool() else tErr();
+}
+
+aspect production exprEq
+top::Expr ::= e1::Expr e2::Expr
+{
+  -- not generated
+  e1.s = top.s;
+
+  -- generated from `e1.s = top.s;`
+  top.s_lex <- e1.s_lex;
+  top.s_var <- e1.s_var;
+  top.s_mod <- e1.s_mod;
+  top.s_imp <- e1.s_imp;
+
+  -- not generated
+  e2.s = top.s;
+
+  -- generated from `e2.s = top.s;`
+  top.s_lex <- e2.s_lex;
+  top.s_var <- e2.s_var;
+  top.s_mod <- e2.s_mod;
+  top.s_imp <- e2.s_imp;
+
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- not generated
+  top.ok <- e1.type == e2.type;
+
+  -- not generated
+  top.type = if top.ok then tBool() else tErr();
+}
+
+aspect production exprApp
+top::Expr ::= e1::Expr e2::Expr
+{
+  -- not generated
+  e1.s = top.s;
+
+  -- generated from `e1.s = top.s;`
+  top.s_lex <- e1.s_lex;
+  top.s_var <- e1.s_var;
+  top.s_mod <- e1.s_mod;
+  top.s_imp <- e1.s_imp;
+
+  -- not generated
+  e2.s = top.s;
+
+  -- generated from `e2.s = top.s;`
+  top.s_lex <- e2.s_lex;
+  top.s_var <- e2.s_var;
+  top.s_mod <- e2.s_mod;
+  top.s_imp <- e2.s_imp;
+
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- not generated
+  local okAndTy::(Boolean, Type) =
+    case e1.type of
+    | tFun(t1, t2) when ^t1 == e2.type -> (true, ^t2)
+    | _ -> (false, tErr())
+    end;
+
+  -- not generated
+  top.ok <- okAndTy.1;
+
+  -- not generated
+  top.type = okAndTy.2;
+}
+
+aspect production exprIf
+top::Expr ::= e1::Expr e2::Expr e3::Expr
+{
+  -- not generated
+  e1.s = top.s;
+
+  -- generated from `e1.s = top.s;`
+  top.s_lex <- e1.s_lex;
+  top.s_var <- e1.s_var;
+  top.s_mod <- e1.s_mod;
+  top.s_imp <- e1.s_imp;
+
+  -- not generated
+  e2.s = top.s;
+
+  -- generated from `e2.s = top.s;`
+  top.s_lex <- e2.s_lex;
+  top.s_var <- e2.s_var;
+  top.s_mod <- e2.s_mod;
+  top.s_imp <- e2.s_imp;
+
+  -- not generated
+  e3.s = top.s;
+
+  -- generated from `ee.s = top.s;`
+  top.s_lex <- e3.s_lex;
+  top.s_var <- e3.s_var;
+  top.s_mod <- e3.s_mod;
+  top.s_imp <- e3.s_imp;
+
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- not generated
+  local okAndTy::(Boolean, Type) =
+    case e1.type of
+    | tFun(t1, t2) when ^t1 == e2.type -> (true, ^t2)
+    | _ -> (false, tErr())
+    end;
+
+  -- not generated
+  top.ok <- e1.type == tBool() && e2.type == e3.type;
+
+  -- not generated
+  top.type = if top.ok then e2.type else tErr();
+}
+
+aspect production exprFun
+top::Expr ::= d::ArgDecl e::Expr
+{
+  -- generated from `mkScope bodyScope -> datumLex();`
+  local bodyScope::Scope = scope(datumLex());
+  bodyScope.lex = bodyScope_lex;
+  bodyScope.var = bodyScope_var;
+  bodyScope.mod = bodyScope_mod;
+  bodyScope.imp = bodyScope_imp;
+
+  -- generated
+  production attribute bodyScope_lex::[Decorated Scope with LMGraph] with ++;
+  production attribute bodyScope_var::[Decorated Scope with LMGraph] with ++;
+  production attribute bodyScope_mod::[Decorated Scope with LMGraph] with ++;
+  production attribute bodyScope_imp::[Decorated Scope with LMGraph] with ++;
+
+  -- generated
+  bodyScope_lex := [];
+  bodyScope_var := [];
+  bodyScope_mod := [];
+  bodyScope_imp := [];
+
+  -- not generated
+  d.s = top.s;
+
+  -- generated from `d.s = top.s;`
+  top.s_lex <- d.s_lex;
+  top.s_var <- d.s_var;
+  top.s_mod <- d.s_mod;
+  top.s_imp <- d.s_imp;
+
+  -- not generated
+  e.s = bodyScope;
+
+  -- generated from e.s = bodyScope;`
+  bodyScope_lex <- e.s_lex;
+  bodyScope_var <- e.s_var;
+  bodyScope_mod <- e.s_mod;
+  bodyScope_imp <- e.s_imp;
+
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- generated from `bodyScope -[ lex ]-> top.s;`
+  bodyScope_lex <- [top.s];
+
+  -- not generated
+  top.type = tFun(d.type, e.type);
 }
 
 aspect production exprLet
@@ -342,12 +725,129 @@ top::Expr ::= bs::SeqBinds e::Expr
   top.type = e.type;
 }
 
-aspect default production top::Expr ::=
-{ top.type = tErr();
+aspect production exprLetRec
+top::Expr ::= bs::ParBinds e::Expr
+{
+  -- generated from `mkScope letScope -> datumLex();`
+  local letScope::Scope = scope(datumLex());
+  letScope.lex = letScope_lex;
+  letScope.var = letScope_var;
+  letScope.mod = letScope_mod;
+  letScope.imp = letScope_imp;
+
+  -- generated
+  production attribute letScope_lex::[Decorated Scope with LMGraph] with ++;
+  production attribute letScope_var::[Decorated Scope with LMGraph] with ++;
+  production attribute letScope_mod::[Decorated Scope with LMGraph] with ++;
+  production attribute letScope_imp::[Decorated Scope with LMGraph] with ++;
+
+  -- generated
+  letScope_lex := [];
+  letScope_var := [];
+  letScope_mod := [];
+  letScope_imp := [];
+
+  -- not generated
+  bs.s = letScope;
+
+  -- generated from `bs.s = top.s;`
+  letScope_lex <- bs.s_lex;
+  letScope_var <- bs.s_var;
+  letScope_mod <- bs.s_mod;
+  letScope_imp <- bs.s_imp;
+
+  -- not generated
+  bs.s_def = letScope;
+
+  -- generated from `bs.s_def = letScope;`
+  letScope_lex <- bs.s_def_lex;
+  letScope_var <- bs.s_def_var;
+  letScope_mod <- bs.s_def_mod;
+  letScope_imp <- bs.s_def_imp;
+
+  -- not generated
+  e.s = letScope;
+
+  -- generated from `e.s = letScope;`
+  letScope_lex <- e.s_lex;
+  letScope_var <- e.s_var;
+  letScope_mod <- e.s_mod;
+  letScope_imp <- e.s_imp;
+
+  -- generated
   top.s_lex := [];
   top.s_var := [];
   top.s_mod := [];
-  top.s_imp := []; }
+  top.s_imp := [];
+
+  -- generated from `letScope -[ lex ]-> top.s;`
+  letScope_lex <- [top.s];
+
+  -- not generated
+  top.type = e.type;
+}
+
+aspect production exprLetPar
+top::Expr ::= bs::ParBinds e::Expr
+{
+  -- generated from `mkScope letScope -> datumLex();`
+  local letScope::Scope = scope(datumLex());
+  letScope.lex = letScope_lex;
+  letScope.var = letScope_var;
+  letScope.mod = letScope_mod;
+  letScope.imp = letScope_imp;
+
+  -- generated
+  production attribute letScope_lex::[Decorated Scope with LMGraph] with ++;
+  production attribute letScope_var::[Decorated Scope with LMGraph] with ++;
+  production attribute letScope_mod::[Decorated Scope with LMGraph] with ++;
+  production attribute letScope_imp::[Decorated Scope with LMGraph] with ++;
+
+  -- generated
+  letScope_lex := [];
+  letScope_var := [];
+  letScope_mod := [];
+  letScope_imp := [];
+
+  -- not generated
+  bs.s = letScope;
+
+  -- generated from `bs.s = top.s;`
+  letScope_lex <- bs.s_lex;
+  letScope_var <- bs.s_var;
+  letScope_mod <- bs.s_mod;
+  letScope_imp <- bs.s_imp;
+
+  -- not generated
+  bs.s_def = letScope;
+
+  -- generated from `bs.s_def = letScope;`
+  letScope_lex <- bs.s_def_lex;
+  letScope_var <- bs.s_def_var;
+  letScope_mod <- bs.s_def_mod;
+  letScope_imp <- bs.s_def_imp;
+
+  -- not generated
+  e.s = top.s;
+
+  -- generated from `e.s = top.s;`
+  top.s_lex <- e.s_lex;
+  top.s_var <- e.s_var;
+  top.s_mod <- e.s_mod;
+  top.s_imp <- e.s_imp;
+
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- generated from `letScope -[ lex ]-> top.s;`
+  letScope_lex <- [top.s];
+
+  -- not generated
+  top.type = e.type;
+}
 
 --
 
@@ -589,6 +1089,82 @@ top::SeqBind ::= ty::Type id::String e::Expr
 
 --
 
+attribute s, s_lex, s_var, s_mod, s_imp occurs on ParBinds;
+attribute s_def, s_def_lex, s_def_var, s_def_mod, s_def_imp occurs on ParBinds;
+
+attribute ok occurs on ParBinds;
+propagate ok on ParBinds;
+
+aspect production parBindsNil
+top::ParBinds ::=
+{
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- generated
+  top.s_def_lex := [];
+  top.s_def_var := [];
+  top.s_def_mod := [];
+  top.s_def_imp := [];
+}
+
+aspect production parBindsCons
+top::ParBinds ::= s::ParBind ss::ParBinds
+{
+  -- not generated
+  s.s = top.s;
+
+  -- generated from `s.s = top.s;`
+  top.s_lex <- s.s_lex;
+  top.s_var <- s.s_var;
+  top.s_mod <- s.s_mod;
+  top.s_imp <- s.s_imp;
+  
+  -- not generated
+  s.s_def = top.s_def;
+
+  -- generated from `s.s_def = top.s_def;`
+  top.s_def_lex <- s.s_def_lex;
+  top.s_def_var <- s.s_def_var;
+  top.s_def_mod <- s.s_def_mod;
+  top.s_def_imp <- s.s_def_imp;
+
+  -- not generated
+  ss.s = top.s;
+
+  -- generated from `ss.s = top.s;`
+  top.s_lex <- ss.s_lex;
+  top.s_var <- ss.s_var;
+  top.s_mod <- ss.s_mod;
+  top.s_imp <- ss.s_imp;
+
+  -- not generated
+  ss.s_def = top.s_def;
+
+  -- generated from `ss.s_def = top.s_def;`
+  top.s_def_lex <- ss.s_def_lex;
+  top.s_def_var <- ss.s_def_var;
+  top.s_def_mod <- ss.s_def_mod;
+  top.s_def_imp <- ss.s_def_imp;
+
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- generated
+  top.s_def_lex := [];
+  top.s_def_var := [];
+  top.s_def_mod := [];
+  top.s_def_imp := [];
+}
+
+--
+
 attribute s, s_lex, s_var, s_mod, s_imp occurs on ParBind;
 attribute s_def, s_def_lex, s_def_var, s_def_mod, s_def_imp occurs on ParBind;
 
@@ -688,6 +1264,48 @@ top::ParBind ::= ty::Type id::String e::Expr
   -- generated from `top.s_def -[ var ]-> varScope;`
   top.s_def_var <- [varScope];
 }
+
+--
+
+attribute s, s_lex, s_var, s_mod, s_imp occurs on ArgDecl;
+attribute ok, type occurs on ArgDecl;
+propagate ok on ArgDecl;
+
+aspect production argDecl
+top::ArgDecl ::= id::String tyann::Type
+{
+  -- generated from `mkScope varScope -> datumVar(id, ^tyann);`
+  local varScope::Scope = scope(datumVar(id, ^tyann));
+  varScope.lex = varScope_lex;
+  varScope.var = varScope_var;
+  varScope.mod = varScope_mod;
+  varScope.imp = varScope_imp;
+
+  -- generated
+  production attribute varScope_lex::[Decorated Scope with LMGraph] with ++;
+  production attribute varScope_var::[Decorated Scope with LMGraph] with ++;
+  production attribute varScope_mod::[Decorated Scope with LMGraph] with ++;
+  production attribute varScope_imp::[Decorated Scope with LMGraph] with ++;
+
+  -- generated
+  varScope_lex := [];
+  varScope_var := [];
+  varScope_mod := [];
+  varScope_imp := [];
+
+  -- generated
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+
+  -- generated from `top.s -[ var ]-> varScope;`
+  top.s_var <- [varScope];
+
+  -- not generated
+  top.type = ^tyann;
+}
+
 
 --
 
