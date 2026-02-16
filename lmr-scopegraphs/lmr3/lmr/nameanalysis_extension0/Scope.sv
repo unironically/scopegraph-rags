@@ -13,28 +13,28 @@ imports sg_lib3:src;
 type LMGraph = {lex, var, mod, imp};
 
 
-inherited attribute lex::[Decorated Scope with LMGraph] occurs on Scope;
+inherited attribute lex::[Decorated Scope with LMGraph] with ++ occurs on Scope;
 
 production lexLabel
 top::Label<LMGraph> ::=
 { top.name = "lex";
   top.demand = \s::Decorated Scope with LMGraph -> s.lex; }
 
-inherited attribute var::[Decorated Scope with LMGraph] occurs on Scope;
+inherited attribute var::[Decorated Scope with LMGraph] with ++ occurs on Scope;
 
 production varLabel
 top::Label<LMGraph> ::=
 { top.name = "var";
   top.demand = \s::Decorated Scope with LMGraph -> s.var; }
 
-inherited attribute mod::[Decorated Scope with LMGraph] occurs on Scope;
+inherited attribute mod::[Decorated Scope with LMGraph] with ++ occurs on Scope;
 
 production modLabel
 top::Label<LMGraph> ::=
 { top.name = "mod";
   top.demand = \s::Decorated Scope with LMGraph -> s.mod; }
 
-inherited attribute imp::[Decorated Scope with LMGraph] occurs on Scope;
+inherited attribute imp::[Decorated Scope with LMGraph] with ++ occurs on Scope;
 
 production impLabel
 top::Label<LMGraph> ::=

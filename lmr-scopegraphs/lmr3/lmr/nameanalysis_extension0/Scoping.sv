@@ -40,31 +40,19 @@ top::Main ::= ds::Decls
 {
   -- generated from `mkScope glob -> datumLex();`
   local glob::Scope = scope(datumLex());
-  glob.lex = glob_lex;
-  glob.var = glob_var;
-  glob.mod = glob_mod;
-  glob.imp = glob_imp;
-
-  -- generated
-  production attribute glob_lex::[Decorated Scope with LMGraph] with ++;
-  production attribute glob_var::[Decorated Scope with LMGraph] with ++;
-  production attribute glob_mod::[Decorated Scope with LMGraph] with ++;
-  production attribute glob_imp::[Decorated Scope with LMGraph] with ++;
-
-  -- generated
-  glob_lex := [];
-  glob_var := [];
-  glob_mod := [];
-  glob_imp := [];
+  glob.lex := [];
+  glob.var := [];
+  glob.mod := [];
+  glob.imp := [];
 
   -- not generated
   ds.s = glob;
 
   -- generated from `ds.s = glob;`
-  glob_lex <- ds.s_lex;
-  glob_var <- ds.s_var;
-  glob_mod <- ds.s_mod;
-  glob_imp <- ds.s_imp;
+  glob.lex <- ds.s_lex;
+  glob.var <- ds.s_var;
+  glob.mod <- ds.s_mod;
+  glob.imp <- ds.s_imp;
 }
 
 --
@@ -122,31 +110,19 @@ top::Decl ::= id::String ds::Decls
 {
   -- generated from `mkScope mod -> datumMod(id);`
   local mod::Scope = scope(datumMod(id));
-  mod.lex = mod_lex;
-  mod.var = mod_var;
-  mod.mod = mod_mod;
-  mod.imp = mod_imp;
-
-  -- generated
-  production attribute mod_lex::[Decorated Scope with LMGraph] with ++;
-  production attribute mod_var::[Decorated Scope with LMGraph] with ++;
-  production attribute mod_mod::[Decorated Scope with LMGraph] with ++;
-  production attribute mod_imp::[Decorated Scope with LMGraph] with ++;
-
-  -- generated
-  mod_lex := [];
-  mod_var := [];
-  mod_mod := [];
-  mod_imp := [];
+  mod.lex := [];
+  mod.var := [];
+  mod.mod := [];
+  mod.imp := [];
 
   -- not generated
   ds.s = mod;
 
   -- generated from `ds.s = mod;`
-  mod_lex <- ds.s_lex;
-  mod_var <- ds.s_var;
-  mod_mod <- ds.s_mod;
-  mod_imp <- ds.s_imp;
+  mod.lex <- ds.s_lex;
+  mod.var <- ds.s_var;
+  mod.mod <- ds.s_mod;
+  mod.imp <- ds.s_imp;
 
   -- generated
   top.s_lex := [];
@@ -155,7 +131,7 @@ top::Decl ::= id::String ds::Decls
   top.s_imp := [];
 
   -- generated from `mod -[ lex ]-> top.s;`
-  mod_lex <- [top.s];
+  mod.lex <- [top.s];
 
   -- generated from `top.s -[ mod ]-> mod;
   top.s_mod <- [mod];
@@ -618,22 +594,10 @@ top::Expr ::= d::ArgDecl e::Expr
 {
   -- generated from `mkScope bodyScope -> datumLex();`
   local bodyScope::Scope = scope(datumLex());
-  bodyScope.lex = bodyScope_lex;
-  bodyScope.var = bodyScope_var;
-  bodyScope.mod = bodyScope_mod;
-  bodyScope.imp = bodyScope_imp;
-
-  -- generated
-  production attribute bodyScope_lex::[Decorated Scope with LMGraph] with ++;
-  production attribute bodyScope_var::[Decorated Scope with LMGraph] with ++;
-  production attribute bodyScope_mod::[Decorated Scope with LMGraph] with ++;
-  production attribute bodyScope_imp::[Decorated Scope with LMGraph] with ++;
-
-  -- generated
-  bodyScope_lex := [];
-  bodyScope_var := [];
-  bodyScope_mod := [];
-  bodyScope_imp := [];
+  bodyScope.lex := [];
+  bodyScope.var := [];
+  bodyScope.mod := [];
+  bodyScope.imp := [];
 
   -- not generated
   d.s = top.s;
@@ -648,10 +612,10 @@ top::Expr ::= d::ArgDecl e::Expr
   e.s = bodyScope;
 
   -- generated from e.s = bodyScope;`
-  bodyScope_lex <- e.s_lex;
-  bodyScope_var <- e.s_var;
-  bodyScope_mod <- e.s_mod;
-  bodyScope_imp <- e.s_imp;
+  bodyScope.lex <- e.s_lex;
+  bodyScope.var <- e.s_var;
+  bodyScope.mod <- e.s_mod;
+  bodyScope.imp <- e.s_imp;
 
   -- generated
   top.s_lex := [];
@@ -660,7 +624,7 @@ top::Expr ::= d::ArgDecl e::Expr
   top.s_imp := [];
 
   -- generated from `bodyScope -[ lex ]-> top.s;`
-  bodyScope_lex <- [top.s];
+  bodyScope.lex <- [top.s];
 
   -- not generated
   top.type = tFun(d.type, e.type);
@@ -671,22 +635,10 @@ top::Expr ::= bs::SeqBinds e::Expr
 {
   -- generated from `mkScope lastScope -> datumLex();`
   local lastScope::Scope = scope(datumLex());
-  lastScope.lex = lastScope_lex;
-  lastScope.var = lastScope_var;
-  lastScope.mod = lastScope_mod;
-  lastScope.imp = lastScope_imp;
-
-  -- generated
-  production attribute lastScope_lex::[Decorated Scope with LMGraph] with ++;
-  production attribute lastScope_var::[Decorated Scope with LMGraph] with ++;
-  production attribute lastScope_mod::[Decorated Scope with LMGraph] with ++;
-  production attribute lastScope_imp::[Decorated Scope with LMGraph] with ++;
-
-  -- generated
-  lastScope_lex := [];
-  lastScope_var := [];
-  lastScope_mod := [];
-  lastScope_imp := [];
+  lastScope.lex := [];
+  lastScope.var := [];
+  lastScope.mod := [];
+  lastScope.imp := [];
 
   -- not generated
   bs.s = top.s;
@@ -701,19 +653,19 @@ top::Expr ::= bs::SeqBinds e::Expr
   bs.s_def = lastScope;
 
   -- generated from `bs.s_def = lastScope;`
-  lastScope_lex <- bs.s_def_lex;
-  lastScope_var <- bs.s_def_var;
-  lastScope_mod <- bs.s_def_mod;
-  lastScope_imp <- bs.s_def_imp;
+  lastScope.lex <- bs.s_def_lex;
+  lastScope.var <- bs.s_def_var;
+  lastScope.mod <- bs.s_def_mod;
+  lastScope.imp <- bs.s_def_imp;
 
   -- not generated
   e.s = lastScope;
 
   -- generated from `e.s = lastScope;`
-  lastScope_lex <- e.s_lex;
-  lastScope_var <- e.s_var;
-  lastScope_mod <- e.s_mod;
-  lastScope_imp <- e.s_imp;
+  lastScope.lex <- e.s_lex;
+  lastScope.var <- e.s_var;
+  lastScope.mod <- e.s_mod;
+  lastScope.imp <- e.s_imp;
 
   -- generated
   top.s_lex := [];
@@ -730,49 +682,37 @@ top::Expr ::= bs::ParBinds e::Expr
 {
   -- generated from `mkScope letScope -> datumLex();`
   local letScope::Scope = scope(datumLex());
-  letScope.lex = letScope_lex;
-  letScope.var = letScope_var;
-  letScope.mod = letScope_mod;
-  letScope.imp = letScope_imp;
-
-  -- generated
-  production attribute letScope_lex::[Decorated Scope with LMGraph] with ++;
-  production attribute letScope_var::[Decorated Scope with LMGraph] with ++;
-  production attribute letScope_mod::[Decorated Scope with LMGraph] with ++;
-  production attribute letScope_imp::[Decorated Scope with LMGraph] with ++;
-
-  -- generated
-  letScope_lex := [];
-  letScope_var := [];
-  letScope_mod := [];
-  letScope_imp := [];
+  letScope.lex := [];
+  letScope.var := [];
+  letScope.mod := [];
+  letScope.imp := [];
 
   -- not generated
   bs.s = letScope;
 
   -- generated from `bs.s = top.s;`
-  letScope_lex <- bs.s_lex;
-  letScope_var <- bs.s_var;
-  letScope_mod <- bs.s_mod;
-  letScope_imp <- bs.s_imp;
+  letScope.lex <- bs.s_lex;
+  letScope.var <- bs.s_var;
+  letScope.mod <- bs.s_mod;
+  letScope.imp <- bs.s_imp;
 
   -- not generated
   bs.s_def = letScope;
 
   -- generated from `bs.s_def = letScope;`
-  letScope_lex <- bs.s_def_lex;
-  letScope_var <- bs.s_def_var;
-  letScope_mod <- bs.s_def_mod;
-  letScope_imp <- bs.s_def_imp;
+  letScope.lex <- bs.s_def_lex;
+  letScope.var <- bs.s_def_var;
+  letScope.mod <- bs.s_def_mod;
+  letScope.imp <- bs.s_def_imp;
 
   -- not generated
   e.s = letScope;
 
   -- generated from `e.s = letScope;`
-  letScope_lex <- e.s_lex;
-  letScope_var <- e.s_var;
-  letScope_mod <- e.s_mod;
-  letScope_imp <- e.s_imp;
+  letScope.lex <- e.s_lex;
+  letScope.var <- e.s_var;
+  letScope.mod <- e.s_mod;
+  letScope.imp <- e.s_imp;
 
   -- generated
   top.s_lex := [];
@@ -781,7 +721,7 @@ top::Expr ::= bs::ParBinds e::Expr
   top.s_imp := [];
 
   -- generated from `letScope -[ lex ]-> top.s;`
-  letScope_lex <- [top.s];
+  letScope.lex <- [top.s];
 
   -- not generated
   top.type = e.type;
@@ -792,40 +732,28 @@ top::Expr ::= bs::ParBinds e::Expr
 {
   -- generated from `mkScope letScope -> datumLex();`
   local letScope::Scope = scope(datumLex());
-  letScope.lex = letScope_lex;
-  letScope.var = letScope_var;
-  letScope.mod = letScope_mod;
-  letScope.imp = letScope_imp;
-
-  -- generated
-  production attribute letScope_lex::[Decorated Scope with LMGraph] with ++;
-  production attribute letScope_var::[Decorated Scope with LMGraph] with ++;
-  production attribute letScope_mod::[Decorated Scope with LMGraph] with ++;
-  production attribute letScope_imp::[Decorated Scope with LMGraph] with ++;
-
-  -- generated
-  letScope_lex := [];
-  letScope_var := [];
-  letScope_mod := [];
-  letScope_imp := [];
+  letScope.lex := [];
+  letScope.var := [];
+  letScope.mod := [];
+  letScope.imp := [];
 
   -- not generated
   bs.s = letScope;
 
   -- generated from `bs.s = top.s;`
-  letScope_lex <- bs.s_lex;
-  letScope_var <- bs.s_var;
-  letScope_mod <- bs.s_mod;
-  letScope_imp <- bs.s_imp;
+  letScope.lex <- bs.s_lex;
+  letScope.var <- bs.s_var;
+  letScope.mod <- bs.s_mod;
+  letScope.imp <- bs.s_imp;
 
   -- not generated
   bs.s_def = letScope;
 
   -- generated from `bs.s_def = letScope;`
-  letScope_lex <- bs.s_def_lex;
-  letScope_var <- bs.s_def_var;
-  letScope_mod <- bs.s_def_mod;
-  letScope_imp <- bs.s_def_imp;
+  letScope.lex <- bs.s_def_lex;
+  letScope.var <- bs.s_def_var;
+  letScope.mod <- bs.s_def_mod;
+  letScope.imp <- bs.s_def_imp;
 
   -- not generated
   e.s = top.s;
@@ -843,7 +771,7 @@ top::Expr ::= bs::ParBinds e::Expr
   top.s_imp := [];
 
   -- generated from `letScope -[ lex ]-> top.s;`
-  letScope_lex <- [top.s];
+  letScope.lex <- [top.s];
 
   -- not generated
   top.type = e.type;
@@ -918,22 +846,10 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
   -- generated from `mkScope nextScope -> datumLex();`
   local nextScope::Scope = scope(datumLex());
-  nextScope.lex = nextScope_lex;
-  nextScope.var = nextScope_var;
-  nextScope.mod = nextScope_mod;
-  nextScope.imp = nextScope_imp;
-
-  -- generated
-  production attribute nextScope_lex::[Decorated Scope with LMGraph] with ++;
-  production attribute nextScope_var::[Decorated Scope with LMGraph] with ++;
-  production attribute nextScope_mod::[Decorated Scope with LMGraph] with ++;
-  production attribute nextScope_imp::[Decorated Scope with LMGraph] with ++;
-
-  -- generated
-  nextScope_lex := [];
-  nextScope_var := [];
-  nextScope_mod := [];
-  nextScope_imp := [];
+  nextScope.lex := [];
+  nextScope.var := [];
+  nextScope.mod := [];
+  nextScope.imp := [];
 
   -- not generated
   s.s = top.s;
@@ -948,18 +864,18 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
   s.s_def = nextScope;
 
   -- generated from `s.s_def = nextScope;`
-  nextScope_lex <- s.s_def_lex;
-  nextScope_var <- s.s_def_var;
-  nextScope_mod <- s.s_def_mod;
-  nextScope_imp <- s.s_def_imp;
+  nextScope.lex <- s.s_def_lex;
+  nextScope.var <- s.s_def_var;
+  nextScope.mod <- s.s_def_mod;
+  nextScope.imp <- s.s_def_imp;
 
   ss.s = nextScope;
 
   -- generated from `ss.s = nextScope;`
-  nextScope_lex <- ss.s_lex;
-  nextScope_var <- ss.s_var;
-  nextScope_mod <- ss.s_mod;
-  nextScope_imp <- ss.s_imp;
+  nextScope.lex <- ss.s_lex;
+  nextScope.var <- ss.s_var;
+  nextScope.mod <- ss.s_mod;
+  nextScope.imp <- ss.s_imp;
 
   ss.s_def = top.s_def;
 
@@ -982,7 +898,7 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
   top.s_def_imp := [];
 
   -- generated from `nextScope -[ lex ]-> top.s`
-  nextScope_lex <- [top.s];
+  nextScope.lex <- [top.s];
 }
 
 --
@@ -998,22 +914,10 @@ top::SeqBind ::= id::String e::Expr
 {
   -- generated from `mkScope varScope -> datumVar(id, e.type);`
   local varScope::Scope = scope(datumVar(id, e.type));
-  varScope.lex = varScope_lex;
-  varScope.var = varScope_var;
-  varScope.mod = varScope_mod;
-  varScope.imp = varScope_imp;
-
-  -- generated
-  production attribute varScope_lex::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_var::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_mod::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_imp::[Decorated Scope with LMGraph] with ++;
-
-  -- generated
-  varScope_lex := [];
-  varScope_var := [];
-  varScope_mod := [];
-  varScope_imp := [];
+  varScope.lex := [];
+  varScope.var := [];
+  varScope.mod := [];
+  varScope.imp := [];
 
   -- not generated
   e.s = top.s;
@@ -1045,22 +949,10 @@ top::SeqBind ::= ty::Type id::String e::Expr
 {
   -- generated from `mkScope varScope -> datumVar(id, ^ty);`
   local varScope::Scope = scope(datumVar(id, ^ty));
-  varScope.lex = varScope_lex;
-  varScope.var = varScope_var;
-  varScope.mod = varScope_mod;
-  varScope.imp = varScope_imp;
-
-  -- generated
-  production attribute varScope_lex::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_var::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_mod::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_imp::[Decorated Scope with LMGraph] with ++;
-
-  -- generated
-  varScope_lex := [];
-  varScope_var := [];
-  varScope_mod := [];
-  varScope_imp := [];
+  varScope.lex := [];
+  varScope.var := [];
+  varScope.mod := [];
+  varScope.imp := [];
 
   -- not generated
   e.s = top.s;
@@ -1176,22 +1068,10 @@ top::ParBind ::= id::String e::Expr
 {
   -- generated from `mkScope varScope -> datumVar(id, e.type);`
   local varScope::Scope = scope(datumVar(id, e.type));
-  varScope.lex = varScope_lex;
-  varScope.var = varScope_var;
-  varScope.mod = varScope_mod;
-  varScope.imp = varScope_imp;
-
-  -- generated
-  production attribute varScope_lex::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_var::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_mod::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_imp::[Decorated Scope with LMGraph] with ++;
-
-  -- generated
-  varScope_lex := [];
-  varScope_var := [];
-  varScope_mod := [];
-  varScope_imp := [];
+  varScope.lex := [];
+  varScope.var := [];
+  varScope.mod := [];
+  varScope.imp := [];
 
   -- not generated
   e.s = top.s;
@@ -1223,22 +1103,10 @@ top::ParBind ::= ty::Type id::String e::Expr
 {
   -- generated from `mkScope varScope -> datumVar(id, ^ty);`
   local varScope::Scope = scope(datumVar(id, ^ty));
-  varScope.lex = varScope_lex;
-  varScope.var = varScope_var;
-  varScope.mod = varScope_mod;
-  varScope.imp = varScope_imp;
-
-  -- generated
-  production attribute varScope_lex::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_var::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_mod::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_imp::[Decorated Scope with LMGraph] with ++;
-
-  -- generated
-  varScope_lex := [];
-  varScope_var := [];
-  varScope_mod := [];
-  varScope_imp := [];
+  varScope.lex := [];
+  varScope.var := [];
+  varScope.mod := [];
+  varScope.imp := [];
 
   -- not generated
   e.s = top.s;
@@ -1276,22 +1144,10 @@ top::ArgDecl ::= id::String tyann::Type
 {
   -- generated from `mkScope varScope -> datumVar(id, ^tyann);`
   local varScope::Scope = scope(datumVar(id, ^tyann));
-  varScope.lex = varScope_lex;
-  varScope.var = varScope_var;
-  varScope.mod = varScope_mod;
-  varScope.imp = varScope_imp;
-
-  -- generated
-  production attribute varScope_lex::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_var::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_mod::[Decorated Scope with LMGraph] with ++;
-  production attribute varScope_imp::[Decorated Scope with LMGraph] with ++;
-
-  -- generated
-  varScope_lex := [];
-  varScope_var := [];
-  varScope_mod := [];
-  varScope_imp := [];
+  varScope.lex := [];
+  varScope.var := [];
+  varScope.mod := [];
+  varScope.imp := [];
 
   -- generated
   top.s_lex := [];
