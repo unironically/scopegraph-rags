@@ -1,3 +1,0 @@
-#!/bin/sh
-
-rm -rf *.aterm *.lm *.jar *.svg out > /dev/null 2>&1
