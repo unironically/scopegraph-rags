@@ -3,11 +3,6 @@ grammar sg_lib3:src;
 --
 
 synthesized attribute col::String occurs on Label<(i::InhSet)>;
-
-aspect production label
-top::Label<(i::InhSet)> ::=
-{ top.col = "black"; }
-
 --
 
 fun vizStr String ::= labs::[Label<i>] scopes::[Decorated Scope with i] =
@@ -27,10 +22,7 @@ fun vizStrScope String ::= scope::Decorated Scope with i =
 ;
 
 fun vizStrScopeLabel String ::= scope::Decorated Scope with i =
-  case scope.datum of
-  | datumNone()  -> toString(scope.id)
-  | d -> toString(scope.id) ++ " ↦ " ++ d.name
-  end
+  toString(scope.id) ++ " ↦ " ++ scope.datum.name
 ;
 
 --

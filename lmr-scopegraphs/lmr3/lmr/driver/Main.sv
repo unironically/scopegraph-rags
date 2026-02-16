@@ -4,7 +4,7 @@ imports syntax:lmr1:lmr:driver;
 imports syntax:lmr1:lmr:concretesyntax;
 imports syntax:lmr1:lmr:abstractsyntax;
 
-imports lmr3:lmr:nameanalysis5;
+imports lmr3:lmr:nameanalysis_extension0;
 
 function main
 IO<Integer> ::= largs::[String]

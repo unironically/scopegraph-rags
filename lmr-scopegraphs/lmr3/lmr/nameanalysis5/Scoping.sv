@@ -8,16 +8,16 @@ import silver:langutil; -- for location.unparse
 
 monoid attribute ok::Boolean with true, &&;
 
-inherited attribute scope::LMScope;
+inherited attribute scope::Decorated Scope with {lex, var, mod, imp};
 
-synthesized attribute VAR_s::[LMScope];
-synthesized attribute LEX_s::[LMScope];
-synthesized attribute MOD_s::[LMScope];
-synthesized attribute IMP_s::[LMScope];
+synthesized attribute VAR_s::[Decorated Scope with {lex, var, mod, imp}];
+synthesized attribute LEX_s::[Decorated Scope with {lex, var, mod, imp}];
+synthesized attribute MOD_s::[Decorated Scope with {lex, var, mod, imp}];
+synthesized attribute IMP_s::[Decorated Scope with {lex, var, mod, imp}];
 
 synthesized attribute type::Type;
 
-synthesized attribute module::Maybe<LMScope>;
+synthesized attribute module::Maybe<Decorated Scope with {lex, var, mod, imp}>;
 
 --------------------------------------------------
 
@@ -291,7 +291,7 @@ top::Expr ::= d::ArgDecl e::Expr
 aspect production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
-  production attribute letScope::LMScope = bs.lastScope;
+  production attribute letScope::Decorated Scope with {lex, var, mod, imp} = bs.lastScope;
 
   bs.scope = top.scope;
   e.scope = letScope;
@@ -336,7 +336,7 @@ attribute ok, scope, lastScope occurs on SeqBinds;
 
 propagate ok on SeqBinds;
 
-synthesized attribute lastScope::LMScope;
+synthesized attribute lastScope::Decorated Scope with {lex, var, mod, imp};
 
 aspect production seqBindsNil
 top::SeqBinds ::=
@@ -505,7 +505,7 @@ attribute ok, scope, type occurs on VarRef;
 aspect production varRef
 top::VarRef ::= x::String
 {
-  local xvars_::[LMScope] =
+  local xvars_::[Decorated Scope with {lex, var, mod, imp}] =
     visible(isName(x), varRx(), labelOrd, top.scope);
 
   local okAndRes::(Boolean, Type) = 
@@ -531,10 +531,10 @@ attribute scope, ok, module occurs on ModRef;
 aspect production modRef
 top::ModRef ::= x::String
 {
-  local xmods_::[LMScope] =
+  local xmods_::[Decorated Scope with {lex, var, mod, imp}] =
     visible(isName(x), modRx(), labelOrd, top.scope);
 
-  local okAndRes::(Boolean, Maybe<LMScope>) = 
+  local okAndRes::(Boolean, Maybe<Decorated Scope with {lex, var, mod, imp}>) = 
     if length(xmods_) < 1
     then unsafeTracePrint((false, nothing()), "[✗] " ++ top.location.unparse ++ 
                           ": error: unresolvable module reference '" ++ x ++ "'\n")

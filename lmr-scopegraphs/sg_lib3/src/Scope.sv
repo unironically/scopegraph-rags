@@ -22,26 +22,18 @@ top::Scope ::= datum::Datum
 
 --
 
-nonterminal Datum with name;
+closed nonterminal Datum with name;
 
-production datumNone
-top::Datum ::=
+aspect default production top::Datum ::=
 { top.name = ""; }
-
-production datumJust
-top::Datum ::= name::String
-{ top.name = name; }
-
 --
 
-nonterminal Label<(i::InhSet)> with name, demand <i>;
+closed nonterminal Label<(i::InhSet)> with name, demand <i>;
 
 synthesized attribute demand<(i::InhSet)>::([DecScope<i>] ::= DecScope<i>);
 
-production label
-top::Label<(i::InhSet)> ::=
-{ top.demand = error("label.demand");
-  top.name = error("label.name"); }
+aspect default production top::Label<i> ::=
+{ top.col = "black"; }
 
 instance Eq Label<(i::InhSet)> {
   eq = \left::Label<(i::InhSet)> right::Label<(i::InhSet)> -> left.name == right.name;
