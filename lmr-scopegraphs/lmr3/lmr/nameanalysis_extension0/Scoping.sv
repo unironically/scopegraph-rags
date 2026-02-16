@@ -39,7 +39,7 @@ aspect production program
 top::Main ::= ds::Decls
 {
   -- generated from `mkScope glob -> datumLex();`
-  local glob::Scope = scope(datumLex());
+  production attribute glob::Scope = scope(datumLex());
   glob.lex := [];
   glob.var := [];
   glob.mod := [];
@@ -63,12 +63,6 @@ propagate ok on Decls;
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
   -- not generated
   d.s = top.s;
 
@@ -91,7 +85,11 @@ top::Decls ::= d::Decl ds::Decls
 aspect production declsNil
 top::Decls ::=
 {
-  -- generated
+}
+
+-- generated
+aspect default production top::Decls ::=
+{
   top.s_lex := [];
   top.s_var := [];
   top.s_mod := [];
@@ -124,12 +122,6 @@ top::Decl ::= id::String ds::Decls
   mod.mod <- ds.s_mod;
   mod.imp <- ds.s_imp;
 
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
   -- generated from `mod -[ lex ]-> top.s;`
   mod.lex <- [top.s];
 
@@ -148,12 +140,6 @@ top::Decl ::= r::ModRef
   top.s_var <- r.s_var;
   top.s_mod <- r.s_mod;
   top.s_imp <- r.s_imp;
-
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
 }
 
 aspect production declDef
@@ -176,8 +162,11 @@ top::Decl ::= b::ParBind
   top.s_var <- b.s_def_var;
   top.s_mod <- b.s_def_mod;
   top.s_imp <- b.s_def_imp;
+}
 
-  -- generated
+-- generated
+aspect default production top::Decl ::=
+{
   top.s_lex := [];
   top.s_var := [];
   top.s_mod := [];
@@ -209,12 +198,6 @@ top::Expr ::= i::Integer
 aspect production exprTrue
 top::Expr ::=
 {
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
   -- not generated
   top.type = tBool();
 }
@@ -222,12 +205,6 @@ top::Expr ::=
 aspect production exprFalse
 top::Expr ::=
 {
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
   -- not generated
   top.type = tBool();
 }
@@ -243,12 +220,6 @@ top::Expr ::= r::VarRef
   top.s_var <- r.s_var;
   top.s_mod <- r.s_mod;
   top.s_imp <- r.s_imp;
-
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
 
   -- not generated
   top.type = r.type;
@@ -274,12 +245,6 @@ top::Expr ::= e1::Expr e2::Expr
   top.s_var <- e2.s_var;
   top.s_mod <- e2.s_mod;
   top.s_imp <- e2.s_imp;
-
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
 
   -- not generated
   top.ok <- e1.type == tInt();
@@ -310,12 +275,6 @@ top::Expr ::= e1::Expr e2::Expr
   top.s_mod <- e2.s_mod;
   top.s_imp <- e2.s_imp;
 
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
   -- not generated
   top.ok <- e1.type == tInt();
   top.ok <- e2.type == tInt();
@@ -344,12 +303,6 @@ top::Expr ::= e1::Expr e2::Expr
   top.s_var <- e2.s_var;
   top.s_mod <- e2.s_mod;
   top.s_imp <- e2.s_imp;
-
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
 
   -- not generated
   top.ok <- e1.type == tInt();
@@ -380,12 +333,6 @@ top::Expr ::= e1::Expr e2::Expr
   top.s_mod <- e2.s_mod;
   top.s_imp <- e2.s_imp;
 
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
   -- not generated
   top.ok <- e1.type == tInt();
   top.ok <- e2.type == tInt();
@@ -414,12 +361,6 @@ top::Expr ::= e1::Expr e2::Expr
   top.s_var <- e2.s_var;
   top.s_mod <- e2.s_mod;
   top.s_imp <- e2.s_imp;
-
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
 
   -- not generated
   top.ok <- e1.type == tBool();
@@ -450,12 +391,6 @@ top::Expr ::= e1::Expr e2::Expr
   top.s_mod <- e2.s_mod;
   top.s_imp <- e2.s_imp;
 
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
   -- not generated
   top.ok <- e1.type == tBool();
   top.ok <- e2.type == tBool();
@@ -485,12 +420,6 @@ top::Expr ::= e1::Expr e2::Expr
   top.s_mod <- e2.s_mod;
   top.s_imp <- e2.s_imp;
 
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
   -- not generated
   top.ok <- e1.type == e2.type;
 
@@ -518,12 +447,6 @@ top::Expr ::= e1::Expr e2::Expr
   top.s_var <- e2.s_var;
   top.s_mod <- e2.s_mod;
   top.s_imp <- e2.s_imp;
-
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
 
   -- not generated
   local okAndTy::(Boolean, Type) =
@@ -569,12 +492,6 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
   top.s_mod <- e3.s_mod;
   top.s_imp <- e3.s_imp;
 
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
   -- not generated
   local okAndTy::(Boolean, Type) =
     case e1.type of
@@ -616,12 +533,6 @@ top::Expr ::= d::ArgDecl e::Expr
   bodyScope.var <- e.s_var;
   bodyScope.mod <- e.s_mod;
   bodyScope.imp <- e.s_imp;
-
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
 
   -- generated from `bodyScope -[ lex ]-> top.s;`
   bodyScope.lex <- [top.s];
@@ -667,12 +578,6 @@ top::Expr ::= bs::SeqBinds e::Expr
   lastScope.mod <- e.s_mod;
   lastScope.imp <- e.s_imp;
 
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
   -- not generated
   top.type = e.type;
 }
@@ -713,12 +618,6 @@ top::Expr ::= bs::ParBinds e::Expr
   letScope.var <- e.s_var;
   letScope.mod <- e.s_mod;
   letScope.imp <- e.s_imp;
-
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
 
   -- generated from `letScope -[ lex ]-> top.s;`
   letScope.lex <- [top.s];
@@ -764,17 +663,20 @@ top::Expr ::= bs::ParBinds e::Expr
   top.s_mod <- e.s_mod;
   top.s_imp <- e.s_imp;
 
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
   -- generated from `letScope -[ lex ]-> top.s;`
   letScope.lex <- [top.s];
 
   -- not generated
   top.type = e.type;
+}
+
+-- generated
+aspect default production top::Expr ::=
+{
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
 }
 
 --
@@ -788,18 +690,6 @@ propagate ok on SeqBinds;
 aspect production seqBindsNil
 top::SeqBinds ::=
 {
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
-  -- generated
-  top.s_def_lex := [];
-  top.s_def_var := [];
-  top.s_def_mod := [];
-  top.s_def_imp := [];
-
   -- generated from `top.s_def -[ lex ]-> top.s;`
   top.s_def_lex <- [top.s];
 }
@@ -824,18 +714,6 @@ top::SeqBinds ::= s::SeqBind
   top.s_def_var <- s.s_def_var;
   top.s_def_mod <- s.s_def_mod;
   top.s_def_imp <- s.s_def_imp;
-
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
-  -- generated
-  top.s_def_lex := [];
-  top.s_def_var := [];
-  top.s_def_mod := [];
-  top.s_def_imp := [];
 
   -- generated from `top.s_def -[ lex ]-> top.s`
   top.s_def_lex <- [top.s];
@@ -869,6 +747,7 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
   nextScope.mod <- s.s_def_mod;
   nextScope.imp <- s.s_def_imp;
 
+  -- not generated
   ss.s = nextScope;
 
   -- generated from `ss.s = nextScope;`
@@ -877,6 +756,7 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
   nextScope.mod <- ss.s_mod;
   nextScope.imp <- ss.s_imp;
 
+  -- not generated
   ss.s_def = top.s_def;
 
   -- generated from `ss.s_def = top.s_def;`
@@ -885,20 +765,22 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
   top.s_def_mod <- ss.s_def_mod;
   top.s_def_imp <- ss.s_def_imp;
 
-  -- generated
+  -- generated from `nextScope -[ lex ]-> top.s`
+  nextScope.lex <- [top.s];
+}
+
+-- generated
+aspect default production top::SeqBinds ::=
+{
   top.s_lex := [];
   top.s_var := [];
   top.s_mod := [];
   top.s_imp := [];
 
-  -- generated
   top.s_def_lex := [];
   top.s_def_var := [];
   top.s_def_mod := [];
   top.s_def_imp := [];
-
-  -- generated from `nextScope -[ lex ]-> top.s`
-  nextScope.lex <- [top.s];
 }
 
 --
@@ -928,18 +810,6 @@ top::SeqBind ::= id::String e::Expr
   top.s_mod <- e.s_mod;
   top.s_imp <- e.s_imp;
 
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
-  -- generated
-  top.s_def_lex := [];
-  top.s_def_var := [];
-  top.s_def_mod := [];
-  top.s_def_imp := [];
-
   -- generated from `top.s_def -[ var ]-> varScope;`
   top.s_def_var <- [varScope];
 }
@@ -963,20 +833,22 @@ top::SeqBind ::= ty::Type id::String e::Expr
   top.s_mod <- e.s_mod;
   top.s_imp <- e.s_imp;
 
-  -- generated
+  -- generated from `top.s_def -[ var ]-> varScope;`
+  top.s_def_var <- [varScope];
+}
+
+-- generated
+aspect default production top::SeqBind ::=
+{
   top.s_lex := [];
   top.s_var := [];
   top.s_mod := [];
   top.s_imp := [];
 
-  -- generated
   top.s_def_lex := [];
   top.s_def_var := [];
   top.s_def_mod := [];
   top.s_def_imp := [];
-
-  -- generated from `top.s_def -[ var ]-> varScope;`
-  top.s_def_var <- [varScope];
 }
 
 --
@@ -990,17 +862,6 @@ propagate ok on ParBinds;
 aspect production parBindsNil
 top::ParBinds ::=
 {
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
-  -- generated
-  top.s_def_lex := [];
-  top.s_def_var := [];
-  top.s_def_mod := [];
-  top.s_def_imp := [];
 }
 
 aspect production parBindsCons
@@ -1041,14 +902,16 @@ top::ParBinds ::= s::ParBind ss::ParBinds
   top.s_def_var <- ss.s_def_var;
   top.s_def_mod <- ss.s_def_mod;
   top.s_def_imp <- ss.s_def_imp;
+}
 
-  -- generated
+-- generated
+aspect default production top::ParBinds ::=
+{
   top.s_lex := [];
   top.s_var := [];
   top.s_mod := [];
   top.s_imp := [];
 
-  -- generated
   top.s_def_lex := [];
   top.s_def_var := [];
   top.s_def_mod := [];
@@ -1082,18 +945,6 @@ top::ParBind ::= id::String e::Expr
   top.s_mod <- e.s_mod;
   top.s_imp <- e.s_imp;
 
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
-  -- generated
-  top.s_def_lex := [];
-  top.s_def_var := [];
-  top.s_def_mod := [];
-  top.s_def_imp := [];
-
   -- generated from `top.s_def -[ var ]-> varScope;`
   top.s_def_var <- [varScope];
 }
@@ -1117,20 +968,22 @@ top::ParBind ::= ty::Type id::String e::Expr
   top.s_mod <- e.s_mod;
   top.s_imp <- e.s_imp;
 
-  -- generated
+  -- generated from `top.s_def -[ var ]-> varScope;`
+  top.s_def_var <- [varScope];
+}
+
+-- generated
+aspect default production top::ParBind ::=
+{
   top.s_lex := [];
   top.s_var := [];
   top.s_mod := [];
   top.s_imp := [];
 
-  -- generated
   top.s_def_lex := [];
   top.s_def_var := [];
   top.s_def_mod := [];
   top.s_def_imp := [];
-
-  -- generated from `top.s_def -[ var ]-> varScope;`
-  top.s_def_var <- [varScope];
 }
 
 --
@@ -1149,12 +1002,6 @@ top::ArgDecl ::= id::String tyann::Type
   varScope.mod := [];
   varScope.imp := [];
 
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
   -- generated from `top.s -[ var ]-> varScope;`
   top.s_var <- [varScope];
 
@@ -1162,6 +1009,14 @@ top::ArgDecl ::= id::String tyann::Type
   top.type = ^tyann;
 }
 
+-- generated
+aspect default production top::ArgDecl ::=
+{
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
+}
 
 --
 
@@ -1206,15 +1061,18 @@ top::VarRef ::= x::String
          | _ -> (false, tErr())
          end; 
 
-  -- generated
+  -- not generated
+  top.ok := okAndRes.1;
+  top.type = okAndRes.2;
+}
+
+-- generated
+aspect default production top::VarRef ::=
+{
   top.s_lex := [];
   top.s_var := [];
   top.s_mod := [];
   top.s_imp := [];
-
-  -- not generated
-  top.ok := okAndRes.1;
-  top.type = okAndRes.2;
 }
 
 --
@@ -1242,15 +1100,18 @@ top::ModRef ::= x::String
          | _ -> (false, blankScope)
          end; 
 
-  -- generated
-  top.s_lex := [];
-  top.s_var := [];
-  top.s_mod := [];
-  top.s_imp := [];
-
   -- generated from `top.s -[ imp ]-> okAndRes.2;`
   top.s_imp <- [okAndRes.2];
 
   -- not generated
   top.ok := okAndRes.1;
+}
+
+-- generated
+aspect default production top::ModRef ::=
+{
+  top.s_lex := [];
+  top.s_var := [];
+  top.s_mod := [];
+  top.s_imp := [];
 }
