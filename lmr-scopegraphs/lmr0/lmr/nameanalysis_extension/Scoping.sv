@@ -58,6 +58,7 @@ aspect production declDef
 top::Decl ::= b::ParBind
 {
   b.s = top.s;
+  b.s_def = top.s;
 }
 
 --------------------------------------------------
@@ -92,160 +93,175 @@ aspect production exprAdd
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
+  nondecorated local ty1::Type = e1.type;
+  
   e2.s = top.s;
+  nondecorated local ty2::Type = e2.type;
 
-  local okAndTy::(Boolean, Type) = case e1.type, e2.type of
-                                   | tInt(), tInt() -> (true, tInt())
-                                   | _, _ -> (false, tErr())
-                                   end;
+  top.ok <- ty1 == tInt();
+  top.ok <- ty2 == tInt();
 
-  top.ok <- okAndTy.1;
-  top.type = okAndTy.2;
+  top.type = tInt();
 }
 
 aspect production exprSub
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
+  nondecorated local ty1::Type = e1.type;
+  
   e2.s = top.s;
+  nondecorated local ty2::Type = e2.type;
 
-  local okAndTy::(Boolean, Type) = case e1.type, e2.type of
-                                   | tInt(), tInt() -> (true, tInt())
-                                   | _, _ -> (false, tErr())
-                                   end;
+  top.ok <- ty1 == tInt();
+  top.ok <- ty2 == tInt();
 
-  top.ok <- okAndTy.1;
-  top.type = okAndTy.2;
+  top.type = tInt();
 }
 
 aspect production exprMul
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
+  nondecorated local ty1::Type = e1.type;
+  
   e2.s = top.s;
+  nondecorated local ty2::Type = e2.type;
 
-  local okAndTy::(Boolean, Type) = case e1.type, e2.type of
-                                   | tInt(), tInt() -> (true, tInt())
-                                   | _, _ -> (false, tErr())
-                                   end;
+  top.ok <- ty1 == tInt();
+  top.ok <- ty2 == tInt();
 
-  top.ok <- okAndTy.1;
-  top.type = okAndTy.2;
+  top.type = tInt();
 }
 
 aspect production exprDiv
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
+  nondecorated local ty1::Type = e1.type;
+  
   e2.s = top.s;
+  nondecorated local ty2::Type = e2.type;
 
-  local okAndTy::(Boolean, Type) = case e1.type, e2.type of
-                                   | tInt(), tInt() -> (true, tInt())
-                                   | _, _ -> (false, tErr())
-                                   end;
+  top.ok <- ty1 == tInt();
+  top.ok <- ty2 == tInt();
 
-  top.ok <- okAndTy.1;
-  top.type = okAndTy.2;
+  top.type = tInt();
 }
 
 aspect production exprAnd
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
+  nondecorated local ty1::Type = e1.type;
+  
   e2.s = top.s;
+  nondecorated local ty2::Type = e2.type;
 
-  local okAndTy::(Boolean, Type) = case e1.type, e2.type of
-                                   | tBool(), tBool() -> (true, tBool())
-                                   | _, _ -> (false, tErr())
-                                   end;
+  top.ok <- ty1 == tBool();
+  top.ok <- ty2 == tBool();
 
-  top.ok <- okAndTy.1;
-  top.type = okAndTy.2;
+  top.type = tBool();
 }
 
 aspect production exprOr
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
+  nondecorated local ty1::Type = e1.type;
+  
   e2.s = top.s;
+  nondecorated local ty2::Type = e2.type;
 
-  local okAndTy::(Boolean, Type) = case e1.type, e2.type of
-                                   | tBool(), tBool() -> (true, tBool())
-                                   | _, _ -> (false, tErr())
-                                   end;
+  top.ok <- ty1 == tBool();
+  top.ok <- ty2 == tBool();
 
-  top.ok <- okAndTy.1;
-  top.type = okAndTy.2;
+  top.type = tBool();
 }
 
 aspect production exprEq
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
+  nondecorated local ty1::Type = e1.type;
+  
   e2.s = top.s;
+  nondecorated local ty2::Type = e2.type;
 
-  local okAndTy::(Boolean, Type) = case e1.type, e2.type of
-                                   | t1, t2 when t1 == t2 -> (true, tBool())
-                                   | _, _ -> (false, tErr())
-                                   end;
+  top.ok <- ty1 == ty2;
 
-  top.ok <- okAndTy.1;
-  top.type = okAndTy.2;
+  top.type = tBool();
 }
 
 aspect production exprApp
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
+  nondecorated local ty1::Type = e1.type;
+  
   e2.s = top.s;
+  nondecorated local ty2::Type = e2.type;
 
-  local okAndTy::(Boolean, Type) = case e1.type, e2.type of
-                                   | tFun(t1, t2), t3 when ^t1 == t3 -> (true, ^t2)
-                                   | _, _ -> (false, tErr())
-                                   end;
+  local ty3and4::(Boolean, Type, Type) = 
+    case ty1 of
+    | tFun(ty3, ty4) -> (true, ^ty3, ^ty4)
+    | _ -> (false, tErr(), tErr())
+    end;
+  top.ok <- ty3and4.1;
+  nondecorated local ty3::Type = ty3and4.2;
+  nondecorated local ty4::Type = ty3and4.3;
 
-  top.ok <- okAndTy.1;
-  top.type = okAndTy.2;
+  top.ok <- ty2 == ty3;
+
+  top.type = ty4;
 }
+
 
 aspect production exprIf
 top::Expr ::= e1::Expr e2::Expr e3::Expr
 {
   e1.s = top.s;
+  nondecorated local ty1::Type = e1.type;
+  
   e2.s = top.s;
+  nondecorated local ty2::Type = e2.type;
+
   e3.s = top.s;
+  nondecorated local ty3::Type = e3.type;
 
-  local okAndTy::(Boolean, Type) = case e1.type, e2.type, e3.type of
-                                   | tBool(), t2, t3 when t2 == t3 -> (true, t2)
-                                   | _, _, _ -> (false, tErr())
-                                   end;
+  top.ok <- ty1 == tBool();
+  top.ok <- ty2 == ty3;
 
-  top.ok <- okAndTy.1;
-  top.type = okAndTy.2;
+  top.type = ty2;
 }
 
 aspect production exprFun
 top::Expr ::= d::ArgDecl e::Expr
 {
-  newScope bodyScope::LMGraph -> datumLex();
+  newScope s_fun::LMGraph -> datumLex();
 
-  bodyScope -[ lex ]-> top.s;
+  s_fun -[ lex ]-> top.s;
 
-  d.s = top.s;
-  e.s = bodyScope;
+  d.s = s_fun;
+  nondecorated local ty1::Type = d.type;
 
-  top.type = tFun(d.type, e.type);
+  e.s = s_fun;
+  nondecorated local ty2::Type = e.type;
+
+  top.type = tFun(ty1, ty2);
 }
 
 aspect production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
-  exists scope LMGraph:s_last;
+  existsScope LMGraph:s_last;
 
   bs.s = top.s;
   bs.s_last = s_last;
 
   e.s = s_last;
+
+  top.type = e.type;
 }
 
 aspect production exprLetRec
@@ -259,6 +275,8 @@ top::Expr ::= bs::ParBinds e::Expr
   bs.s_def = s_let;
 
   e.s = s_let;
+
+  top.type = e.type;
 }
 
 aspect production exprLetPar
@@ -272,6 +290,8 @@ top::Expr ::= bs::ParBinds e::Expr
   bs.s_def = s_let;
 
   e.s = s_let;
+
+  top.type = e.type;
 }
 
 --------------------------------------------------
@@ -279,6 +299,8 @@ top::Expr ::= bs::ParBinds e::Expr
 aspect production seqBindsNil
 top::SeqBinds ::=
 {
+  newScope top.s_last::LMGraph -> datumLex();
+
   top.s_last -[ lex ]-> top.s;
 }
 
@@ -296,38 +318,42 @@ top::SeqBinds ::= s::SeqBind
 aspect production seqBindsCons
 top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
-  newScope next::LMGraph -> datumLex();
-  next -[ lex ]-> top.s;
+  newScope s_next::LMGraph -> datumLex();
+  s_next -[ lex ]-> top.s;
 
   s.s = top.s;
-  s.s_def = next;
+  s.s_def = s_next;
 
-  ss.s = next;
+  ss.s = s_next;
   ss.s_last = top.s_last;
 }
 
 --------------------------------------------------
 
 aspect production seqBindUntyped
-top::SeqBind ::= id::String e::Expr
+top::SeqBind ::= x::String e::Expr
 {
-  newScope dcl::LMGraph -> datumVar(id, e.type);
+  newScope s_dcl::LMGraph -> datumVar(x, ty);
 
-  top.s_def -[ var ]-> dcl;
+  top.s_def -[ var ]-> s_dcl;
 
+  nondecorated local ty::Type = e.type;
   e.s = top.s;
 }
 
 aspect production seqBindTyped
-top::SeqBind ::= ty::Type id::String e::Expr
+top::SeqBind ::= tyann::Type x::String e::Expr
 {
-  newScope dcl::LMGraph -> datumVar(id, ^ty);
+  newScope s_dcl::LMGraph -> datumVar(x, ty1);
 
-  top.s_def -[ var ]-> dcl;
+  top.s_def -[ var ]-> s_dcl;
 
+  nondecorated local ty1::Type = ^tyann;
+
+  nondecorated local ty2::Type = e.type;
   e.s = top.s;
 
-  top.ok <- ^ty == e.type;
+  top.ok <- ty1 == ty2;
 }
 
 --------------------------------------------------
@@ -350,38 +376,43 @@ top::ParBinds ::= s::ParBind ss::ParBinds
 --------------------------------------------------
 
 aspect production parBindUntyped
-top::ParBind ::= id::String e::Expr
+top::ParBind ::= x::String e::Expr
 {
-  newScope dcl::LMGraph -> datumVar(id, e.type);
+  newScope s_dcl::LMGraph -> datumVar(x, ty);
 
-  top.s -[ var ]-> dcl;
+  top.s_def -[ var ]-> s_dcl;
 
+  nondecorated local ty::Type = e.type;
   e.s = top.s;
 }
 
 aspect production parBindTyped
-top::ParBind ::= ty::Type id::String e::Expr
+top::ParBind ::= tyann::Type x::String e::Expr
 {
-  newScope dcl::LMGraph -> datumVar(id, ^ty);
+  newScope s_dcl::LMGraph -> datumVar(x, ty1);
 
-  top.s -[ var ]-> dcl;
+  top.s_def -[ var ]-> s_dcl;
 
+  nondecorated local ty1::Type = ^tyann;
+
+  nondecorated local ty2::Type = e.type;
   e.s = top.s;
 
-  top.ok <- ^ty == e.type;
+  top.ok <- ty1 == ty2;
 }
-
 
 --------------------------------------------------
 
 aspect production argDecl
-top::ArgDecl ::= id::String ty::Type
+top::ArgDecl ::= id::String tyann::Type
 {
-  newScope varScope::LMGraph -> datumVar(id, ^ty);
+  newScope s_dcl::LMGraph -> datumVar(id, ty);
 
-  top.s -[ var ]-> varScope;
+  nondecorated local ty::Type = ^tyann;
 
-  top.type = ^ty;
+  top.type = ty;
+
+  top.s -[ var ]-> s_dcl;
 }
 
 --------------------------------------------------
@@ -411,6 +442,7 @@ top::Type ::=
 aspect production varRef
 top::VarRef ::= x::String
 {
+  -- does ministatix query, filter and min-refs constraints
   local vars::[Decorated Scope with LMGraph] =
     visible(
       \d::Datum -> case d of datumVar(x_, _) -> x_ == x | _ -> false end,
@@ -419,12 +451,20 @@ top::VarRef ::= x::String
       top.s
     );
 
-  nondecorated local headTy::Type = case head(vars).datum of 
+  -- does ministatix only and tgt
+  nondecorated local s_res::(Boolean, Decorated Scope with LMGraph) =
+    case vars of
+    | h::[] -> (true, h)
+    | _ -> (false, deadScope)
+    end;
+
+  -- ministatix datum assertion `s_res -> DatumVar(x, ty')`
+  nondecorated local res_ty::Type = case s_res.2.datum of 
                                     | datumVar(_, t) -> ^t 
-                                    | _ -> error("Oh no! (varRef)")
+                                    | _ -> tErr()
                                     end;
   
-  top.type = if top.ok then headTy else tErr();
+  top.type = res_ty;
 
-  top.ok <- length(vars) == 1;
+  top.ok <- s_res.1;
 }

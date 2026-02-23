@@ -149,7 +149,7 @@ fun modPredicate (Boolean ::= Datum) ::= x::String =
 
 --
 
-{- Generated
+{- Generated?
 -}
 
 global blankScope::Decorated Scope with LMGraph =

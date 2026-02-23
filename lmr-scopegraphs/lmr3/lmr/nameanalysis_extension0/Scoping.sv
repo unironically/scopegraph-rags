@@ -1,4 +1,4 @@
-grammar lmr3:lmr:nameanalysis_extension0;
+grammar lmr3:lmr:nameanalysis_extension1;
 
 imports syntax:lmr1:lmr:abstractsyntax;
 
@@ -38,8 +38,8 @@ propagate ok on Main;
 aspect production program
 top::Main ::= ds::Decls
 {
-  -- generated from `mkScope glob -> datumLex();`
-  production attribute glob::Scope = scope(datumLex());
+  -- generated from `mkScope LMGraph:lex glob -> ();`
+  production attribute glob::Scope = scope(datumLex(()));
   glob.lex := [];
   glob.var := [];
   glob.mod := [];
@@ -106,27 +106,27 @@ propagate ok on Decl;
 aspect production declModule
 top::Decl ::= id::String ds::Decls
 {
-  -- generated from `mkScope mod -> datumMod(id);`
-  local mod::Scope = scope(datumMod(id));
-  mod.lex := [];
-  mod.var := [];
-  mod.mod := [];
-  mod.imp := [];
+  -- generated from `mkScope LMGraph:mod myMod -> id;`
+  local myMod::Scope = scope(datumMod(id));
+  myMod.lex := [];
+  myMod.var := [];
+  myMod.mod := [];
+  myMod.imp := [];
 
   -- not generated
-  ds.s = mod;
+  ds.s = myMod;
 
-  -- generated from `ds.s = mod;`
-  mod.lex <- ds.s_lex;
-  mod.var <- ds.s_var;
-  mod.mod <- ds.s_mod;
-  mod.imp <- ds.s_imp;
+  -- generated from `ds.s = myMod;`
+  myMod.lex <- ds.s_lex;
+  myMod.var <- ds.s_var;
+  myMod.mod <- ds.s_mod;
+  myMod.imp <- ds.s_imp;
 
   -- generated from `mod -[ lex ]-> top.s;`
-  mod.lex <- [top.s];
+  myMod.lex <- [top.s];
 
-  -- generated from `top.s -[ mod ]-> mod;
-  top.s_mod <- [mod];
+  -- generated from `top.s -[ mod ]-> myMod;
+  top.s_mod <- [myMod];
 }
 
 aspect production declImport
@@ -509,8 +509,8 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 aspect production exprFun
 top::Expr ::= d::ArgDecl e::Expr
 {
-  -- generated from `mkScope bodyScope -> datumLex();`
-  local bodyScope::Scope = scope(datumLex());
+  -- generated from `mkScope LMGraph:lex bodyScope -> ();`
+  local bodyScope::Scope = scope(datumLex(()));
   bodyScope.lex := [];
   bodyScope.var := [];
   bodyScope.mod := [];
@@ -544,8 +544,8 @@ top::Expr ::= d::ArgDecl e::Expr
 aspect production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
-  -- generated from `mkScope lastScope -> datumLex();`
-  local lastScope::Scope = scope(datumLex());
+  -- generated from `mkScope LMGraph:lex lastScope -> ();`
+  local lastScope::Scope = scope(datumLex(()));
   lastScope.lex := [];
   lastScope.var := [];
   lastScope.mod := [];
@@ -585,8 +585,8 @@ top::Expr ::= bs::SeqBinds e::Expr
 aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  -- generated from `mkScope letScope -> datumLex();`
-  local letScope::Scope = scope(datumLex());
+  -- generated from `mkScope LMGraph:lex letScope -> ();`
+  local letScope::Scope = scope(datumLex(()));
   letScope.lex := [];
   letScope.var := [];
   letScope.mod := [];
@@ -629,8 +629,8 @@ top::Expr ::= bs::ParBinds e::Expr
 aspect production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
-  -- generated from `mkScope letScope -> datumLex();`
-  local letScope::Scope = scope(datumLex());
+  -- generated from `mkScope LMGraph:lex letScope -> ();`
+  local letScope::Scope = scope(datumLex(()));
   letScope.lex := [];
   letScope.var := [];
   letScope.mod := [];
@@ -722,8 +722,8 @@ top::SeqBinds ::= s::SeqBind
 aspect production seqBindsCons
 top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
-  -- generated from `mkScope nextScope -> datumLex();`
-  local nextScope::Scope = scope(datumLex());
+  -- generated from `mkScope LMGraph:lex nextScope -> ();`
+  local nextScope::Scope = scope(datumLex(()));
   nextScope.lex := [];
   nextScope.var := [];
   nextScope.mod := [];
@@ -794,8 +794,8 @@ propagate ok on SeqBind;
 aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
 {
-  -- generated from `mkScope varScope -> datumVar(id, e.type);`
-  local varScope::Scope = scope(datumVar(id, e.type));
+  -- generated from `mkScope LMGraph:var varScope -> (id, e.type);`
+  local varScope::Scope = scope(datumVar((id, e.type)));
   varScope.lex := [];
   varScope.var := [];
   varScope.mod := [];
@@ -817,8 +817,8 @@ top::SeqBind ::= id::String e::Expr
 aspect production seqBindTyped
 top::SeqBind ::= ty::Type id::String e::Expr
 {
-  -- generated from `mkScope varScope -> datumVar(id, ^ty);`
-  local varScope::Scope = scope(datumVar(id, ^ty));
+  -- generated from `mkScope LMGraph:var varScope -> (id, ^ty);`
+  local varScope::Scope = scope(datumVar((id, ^ty)));
   varScope.lex := [];
   varScope.var := [];
   varScope.mod := [];
@@ -929,8 +929,8 @@ propagate ok on ParBind;
 aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
 {
-  -- generated from `mkScope varScope -> datumVar(id, e.type);`
-  local varScope::Scope = scope(datumVar(id, e.type));
+  -- generated from `mkScope LMGraph:var varScope -> (id, e.type);`
+  local varScope::Scope = scope(datumVar((id, e.type)));
   varScope.lex := [];
   varScope.var := [];
   varScope.mod := [];
@@ -952,8 +952,8 @@ top::ParBind ::= id::String e::Expr
 aspect production parBindTyped
 top::ParBind ::= ty::Type id::String e::Expr
 {
-  -- generated from `mkScope varScope -> datumVar(id, ^ty);`
-  local varScope::Scope = scope(datumVar(id, ^ty));
+  -- generated from `mkScope LMGraph:var varScope -> (id, ^ty);`
+  local varScope::Scope = scope(datumVar((id, ^ty)));
   varScope.lex := [];
   varScope.var := [];
   varScope.mod := [];
@@ -995,8 +995,8 @@ propagate ok on ArgDecl;
 aspect production argDecl
 top::ArgDecl ::= id::String tyann::Type
 {
-  -- generated from `mkScope varScope -> datumVar(id, ^tyann);`
-  local varScope::Scope = scope(datumVar(id, ^tyann));
+  -- generated from `mkScope LMGraph:var varScope -> (id, ^tyann);`
+  local varScope::Scope = scope(datumVar((id, ^tyann)));
   varScope.lex := [];
   varScope.var := [];
   varScope.mod := [];
@@ -1057,7 +1057,7 @@ top::VarRef ::= x::String
     then unsafeTracePrint((false, tErr()), "[✗] " ++ top.location.unparse ++ 
                           ": error: ambiguous variable reference '" ++ x ++ "'\n")
     else case head(vars).datum of
-         | datumVar(_, ty) -> (true, ^ty)
+         | datumVar((_, ty)) -> (true, ^ty)
          | _ -> (false, tErr())
          end; 
 

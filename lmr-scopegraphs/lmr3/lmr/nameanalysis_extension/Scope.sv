@@ -2,7 +2,7 @@ grammar lmr3:lmr:nameanalysis_extension;
 
 --
 
-imports silver:compiler:extension:scopegraphs2;
+imports silver:compiler:extension:scopegraphs;
 
 --
 
