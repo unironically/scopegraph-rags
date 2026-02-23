@@ -2,8 +2,8 @@ grammar lmre:lmr:driver;
 
 imports lmre:lmr:syntax;
 
-imports lmre:lmr:nameanalysis_map;
 --imports lmre:lmr:nameanalysis_list;
+imports lmre:lmr:nameanalysis_map;
 
 --
 

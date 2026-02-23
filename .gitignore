@@ -1,5 +1,4 @@
-grammars/*/*.jar
-lm_language_*/*.jar
+*.jar
 
 equations.md
 ministatix.hs

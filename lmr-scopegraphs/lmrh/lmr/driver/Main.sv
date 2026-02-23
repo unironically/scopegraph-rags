@@ -4,6 +4,7 @@ imports syntax:lmr0:lmr:driver;
 imports syntax:lmr0:lmr:concretesyntax;
 imports syntax:lmr0:lmr:abstractsyntax;
 
+--imports lmrh:lmr:nameanalysis_list;
 imports lmrh:lmr:nameanalysis_map;
 
 function main
