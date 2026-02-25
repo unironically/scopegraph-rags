@@ -37,7 +37,7 @@ top::Decls_c ::=
 nonterminal Decl_c with ast<Decl>, location;
 
 concrete production declModule_c
-top::Decl_c ::= 'module' id::ModId_t '{' ds::Decls_c '}'
+top::Decl_c ::= 'module' id::Id_t '{' ds::Decls_c '}'
 {
   top.ast = declModule(id.lexeme, ds.ast, location=top.location);
 }
@@ -197,13 +197,13 @@ top::ParBinds_c ::= s::Bind_c ',' ss::ParBinds_c
 nonterminal Bind_c with ast<Bind>, location;
 
 concrete production bindUntyped_c
-top::Bind_c ::= id::VarId_t '=' e::Expr_c
+top::Bind_c ::= id::Id_t '=' e::Expr_c
 {
   top.ast = bindUntyped(id.lexeme, e.ast, location=top.location);
 }
 
 concrete production bindTyped_c
-top::Bind_c ::= id::VarId_t ':' ty::Type_c '=' e::Expr_c
+top::Bind_c ::= id::Id_t ':' ty::Type_c '=' e::Expr_c
 {
   top.ast = bindTyped(ty.ast, id.lexeme, e.ast, location=top.location);
 }
@@ -213,7 +213,7 @@ top::Bind_c ::= id::VarId_t ':' ty::Type_c '=' e::Expr_c
 nonterminal ArgDecl_c with ast<ArgDecl>, location;
 
 concrete production argDecl_c
-top::ArgDecl_c ::= id::VarId_t ':' ty::Type_c
+top::ArgDecl_c ::= id::Id_t ':' ty::Type_c
 {
   top.ast = argDecl(id.lexeme, ty.ast, location=top.location);
 }
@@ -257,7 +257,7 @@ top::Type_c ::= '(' t::Type_c ')'
 nonterminal ModRef_c with ast<ModRef>, location;
 
 concrete production modRef_c
-top::ModRef_c ::= x::ModId_t
+top::ModRef_c ::= x::Id_t
 {
   top.ast = modRef(x.lexeme, location=top.location);
 }
@@ -267,7 +267,7 @@ top::ModRef_c ::= x::ModId_t
 nonterminal VarRef_c with ast<VarRef>, location;
 
 concrete production varRef_c
-top::VarRef_c ::= x::VarId_t
+top::VarRef_c ::= x::Id_t
 {
   top.ast = varRef(x.lexeme, location=top.location);
 }

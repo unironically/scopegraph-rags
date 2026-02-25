@@ -1,12 +1,6 @@
 grammar syntax:lmr1:lmr:concretesyntax;
 
-terminal VarId_t /[a-z][a-zA-Z_0-9]*/
-  submits to {
-    True_t, False_t, Module_t, Import_t, Def_t, If_t, Then_t, Else_t, Apply_t,
-    Fun_t, Let_t, LetRec_t, LetPar_t, In_t, FloatType_t, IntType_t, BoolType_t
-  };
-
-terminal ModId_t /[A-Z][a-zA-Z_0-9]*/
+terminal Id_t /[A-Za-z][a-zA-Z_0-9]*/
   submits to {
     True_t, False_t, Module_t, Import_t, Def_t, If_t, Then_t, Else_t, Apply_t,
     Fun_t, Let_t, LetRec_t, LetPar_t, In_t, FloatType_t, IntType_t, BoolType_t
