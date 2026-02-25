@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<classpath>
-	<classpathentry excluding="examples/|spec/|test/|tools/" kind="src" path=""/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="tools/beaver-rt.jar"/>
-	<classpathentry kind="lib" path="tools/jastadd2.jar"/>
-	<classpathentry kind="lib" path="tools/junit.jar"/>
-	<classpathentry kind="output" path=""/>
-</classpath>
