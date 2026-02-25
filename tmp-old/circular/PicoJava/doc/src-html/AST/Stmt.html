@@ -1,0 +1,70 @@
+<HTML>
+<head><script src="../../resources/jquery.js"></script><script>$(document).ready(function(event) {$(document.location.hash).css('background', 'yellow');$(document.location.hash + ' span').css('color', 'red');});</script></head><BODY BGCOLOR="white">
+<PRE>
+<span id="line-1"><span style="color: green">001</span>    /* This file was generated with JastAdd2 (http://jastadd.org) version 2.1.3 */<a name="line-1"></a></span>
+<span id="line-2"><span style="color: green">002</span>    package AST;<a name="line-2"></a></span>
+<span id="line-3"><span style="color: green">003</span>    <a name="line-3"></a></span>
+<span id="line-4"><span style="color: green">004</span>    import java.util.Collection;<a name="line-4"></a></span>
+<span id="line-5"><span style="color: green">005</span>    import java.util.ArrayList;<a name="line-5"></a></span>
+<span id="line-6"><span style="color: green">006</span>    import java.util.HashSet;<a name="line-6"></a></span>
+<span id="line-7"><span style="color: green">007</span>    /**<a name="line-7"></a></span>
+<span id="line-8"><span style="color: green">008</span>     * @ast node<a name="line-8"></a></span>
+<span id="line-9"><span style="color: green">009</span>     * @declaredat /home/csz-naf/examples/PicoJava/spec/picojava.ast:5<a name="line-9"></a></span>
+<span id="line-10"><span style="color: green">010</span>     * @production Stmt : {@link BlockStmt};<a name="line-10"></a></span>
+<span id="line-11"><span style="color: green">011</span>    <a name="line-11"></a></span>
+<span id="line-12"><span style="color: green">012</span>     */<a name="line-12"></a></span>
+<span id="line-13"><span style="color: green">013</span>    public abstract class Stmt extends BlockStmt implements Cloneable {<a name="line-13"></a></span>
+<span id="line-14"><span style="color: green">014</span>      /**<a name="line-14"></a></span>
+<span id="line-15"><span style="color: green">015</span>       * @apilevel internal<a name="line-15"></a></span>
+<span id="line-16"><span style="color: green">016</span>       */<a name="line-16"></a></span>
+<span id="line-17"><span style="color: green">017</span>      public Stmt clone() throws CloneNotSupportedException {<a name="line-17"></a></span>
+<span id="line-18"><span style="color: green">018</span>        Stmt node = (Stmt) super.clone();<a name="line-18"></a></span>
+<span id="line-19"><span style="color: green">019</span>        node.in$Circle(false);<a name="line-19"></a></span>
+<span id="line-20"><span style="color: green">020</span>        node.is$Final(false);<a name="line-20"></a></span>
+<span id="line-21"><span style="color: green">021</span>        return node;<a name="line-21"></a></span>
+<span id="line-22"><span style="color: green">022</span>      }<a name="line-22"></a></span>
+<span id="line-23"><span style="color: green">023</span>      /**<a name="line-23"></a></span>
+<span id="line-24"><span style="color: green">024</span>       */<a name="line-24"></a></span>
+<span id="line-25"><span style="color: green">025</span>      public Stmt() {<a name="line-25"></a></span>
+<span id="line-26"><span style="color: green">026</span>        super();<a name="line-26"></a></span>
+<span id="line-27"><span style="color: green">027</span>      }<a name="line-27"></a></span>
+<span id="line-28"><span style="color: green">028</span>      /**<a name="line-28"></a></span>
+<span id="line-29"><span style="color: green">029</span>       * Initializes the child array to the correct size.<a name="line-29"></a></span>
+<span id="line-30"><span style="color: green">030</span>       * Initializes List and Opt nta children.<a name="line-30"></a></span>
+<span id="line-31"><span style="color: green">031</span>       * @apilevel internal<a name="line-31"></a></span>
+<span id="line-32"><span style="color: green">032</span>       * @ast method<a name="line-32"></a></span>
+<span id="line-33"><span style="color: green">033</span>       */<a name="line-33"></a></span>
+<span id="line-34"><span style="color: green">034</span>      public void init$Children() {<a name="line-34"></a></span>
+<span id="line-35"><span style="color: green">035</span>      }<a name="line-35"></a></span>
+<span id="line-36"><span style="color: green">036</span>      /**<a name="line-36"></a></span>
+<span id="line-37"><span style="color: green">037</span>       * @apilevel low-level<a name="line-37"></a></span>
+<span id="line-38"><span style="color: green">038</span>       */<a name="line-38"></a></span>
+<span id="line-39"><span style="color: green">039</span>      protected int numChildren() {<a name="line-39"></a></span>
+<span id="line-40"><span style="color: green">040</span>        return 0;<a name="line-40"></a></span>
+<span id="line-41"><span style="color: green">041</span>      }<a name="line-41"></a></span>
+<span id="line-42"><span style="color: green">042</span>      /**<a name="line-42"></a></span>
+<span id="line-43"><span style="color: green">043</span>       * @apilevel internal<a name="line-43"></a></span>
+<span id="line-44"><span style="color: green">044</span>       */<a name="line-44"></a></span>
+<span id="line-45"><span style="color: green">045</span>      public boolean mayHaveRewrite() {<a name="line-45"></a></span>
+<span id="line-46"><span style="color: green">046</span>        return false;<a name="line-46"></a></span>
+<span id="line-47"><span style="color: green">047</span>      }<a name="line-47"></a></span>
+<span id="line-48"><span style="color: green">048</span>      /**<a name="line-48"></a></span>
+<span id="line-49"><span style="color: green">049</span>       * @apilevel low-level<a name="line-49"></a></span>
+<span id="line-50"><span style="color: green">050</span>       */<a name="line-50"></a></span>
+<span id="line-51"><span style="color: green">051</span>      public void flushCache() {<a name="line-51"></a></span>
+<span id="line-52"><span style="color: green">052</span>        super.flushCache();<a name="line-52"></a></span>
+<span id="line-53"><span style="color: green">053</span>      }<a name="line-53"></a></span>
+<span id="line-54"><span style="color: green">054</span>      /**<a name="line-54"></a></span>
+<span id="line-55"><span style="color: green">055</span>       * @apilevel internal<a name="line-55"></a></span>
+<span id="line-56"><span style="color: green">056</span>       */<a name="line-56"></a></span>
+<span id="line-57"><span style="color: green">057</span>      public void flushCollectionCache() {<a name="line-57"></a></span>
+<span id="line-58"><span style="color: green">058</span>        super.flushCollectionCache();<a name="line-58"></a></span>
+<span id="line-59"><span style="color: green">059</span>      }<a name="line-59"></a></span>
+<span id="line-60"><span style="color: green">060</span>      /**<a name="line-60"></a></span>
+<span id="line-61"><span style="color: green">061</span>       * @apilevel internal<a name="line-61"></a></span>
+<span id="line-62"><span style="color: green">062</span>       */<a name="line-62"></a></span>
+<span id="line-63"><span style="color: green">063</span>      public ASTNode rewriteTo() {    return super.rewriteTo();<a name="line-63"></a></span>
+<span id="line-64"><span style="color: green">064</span>      }}<a name="line-64"></a></span>
+</PRE>
+</BODY>
+</HTML>

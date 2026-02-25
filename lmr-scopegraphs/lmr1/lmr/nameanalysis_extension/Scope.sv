@@ -11,7 +11,7 @@ top::Datum ::=
 {}
 
 production datumVar
-top::Datum ::= name::String ty::Type
+top::Datum ::= name::String ty::Type seqRecPar::Integer
 {}
 
 production datumMod

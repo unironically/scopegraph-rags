@@ -1,0 +1,6 @@
+
+-- Building --
+
+JastAddParser has the same name on its ast package (AST) which means that the 
+classpath given to JastAddParser needs to have that package before this package 
+for a successful build.

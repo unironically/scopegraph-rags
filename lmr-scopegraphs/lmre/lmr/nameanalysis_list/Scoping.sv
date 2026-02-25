@@ -40,22 +40,42 @@ top::Decl ::= id::String ds::Decls
 }
 
 -- orphaned production, mwda turned off
+{-aspect production declImp
+top::Decl ::= x::String
+{
+  production attribute mods::[Decorated Scope] with ++;
+  mods := top.scope.resolve(isName(x), impRx());
+
+  local okLookup::Maybe<Decorated Scope> =
+    case mods of
+    | h::[] -> case h.datum of
+               | datumMod(_) -> just(h)
+               | _ -> nothing()
+               end
+    | _ -> nothing()
+    end;
+
+  top.ok := okLookup.isJust;
+  top.synEdges := [ impEdge(okLookup.fromJust) ];
+}-}
+
 aspect production declImp
 top::Decl ::= x::String
 {
-  local mods::[Decorated Scope] = top.scope.resolve(isName(x), impRx());
+  production attribute mods::[Decorated Scope] with ++;
+  mods := top.scope.resolve(isName(x), impRx());
 
-  local okAndModscope::(Boolean, [Decorated Scope]) =
-    if length(mods) < 1
-    then unsafeTracePrint((false, [dummyScope]), "Bad resolution of " ++ x ++ " (E: not found)\n")
-    else if length(mods) > 1
-    then unsafeTracePrint((false, [dummyScope]), "Bad resolution of " ++ x ++ " (E: ambiguous)\n")
-    else (true, mods);
+  local okLookup::Maybe<Decorated Scope> =
+    case mods of
+    | h::[] -> case h.datum of
+               | datumMod(_) -> just(h)
+               | _ -> nothing()
+               end
+    | _ -> nothing()
+    end;
 
-
-  top.ok := okAndModscope.1;
-
-  top.synEdges := map(impEdge(_), mods);--[ impEdge(okAndModscope.2) ];
+  top.ok := okLookup.isJust;
+  top.synEdges := [ impEdge(okLookup.fromJust) ];
 }
 
 --------------------------------------------------

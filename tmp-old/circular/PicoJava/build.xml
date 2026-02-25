@@ -1,0 +1,162 @@
+<!-- Targets for working from terminal window:
+       build (default) - generates java files and compiles them
+       test            - runs junit test cases
+     Targets for working from Eclipse:
+       gen             - generates java files
+	 General targets:
+       clean           - removes all generated files and all class files
+	   doc             - generate javadoc documentation
+ -->
+
+<project 
+	name    = "PicoJava" 
+	default = "build" 
+	basedir = "." >
+	
+	<property name = "jar.file" location = "picojava.jar" />
+	<property name = "tools.dir" 	location = "tools" />
+	<property name = "parser.name"	value = "PicoJavaParser" />
+	<property name = "scanner.name"	value = "PicoJavaScanner" />
+	<property name = "package.ast" 	value = "AST" />
+	<property name = "gen.dir" 		location = "AST" />
+	<property name = "spec.dir" 	location = "spec" />
+	<property name = "test-reports.dir" location = "test-reports" />
+
+	<property name = "junit.jar"    location = "${tools.dir}/junit-4.11.jar" />
+	
+	<taskdef
+		name      = "jastadd"
+		classname = "jastadd.JastAddTask" 
+		classpath = "${tools.dir}/jastadd2.jar" />
+
+	<taskdef 
+		name	  = "jflex" 
+		classname = "JFlex.anttask.JFlexTask" 
+		classpath = "${tools.dir}/JFlex.jar" />
+	
+  	<taskdef 
+  		name	  = "beaver" 
+  		classname = "beaver.comp.run.AntTask" 
+  		classpath = "${tools.dir}/beaver.jar" />
+
+	
+	<target name = "build" depends = "gen" >
+			<javac 
+				includeantruntime = "false"
+				debug     = "true" 
+				srcdir    = "." 
+				classpath = ".:${tools.dir}/junit.jar:${tools.dir}/beaver.jar" />
+	</target>
+	
+	<target name="gen">
+		    <jastadd 
+				package = "${package.ast}" 
+				outdir  = "${basedir}"
+				lineColumnNumbers = "true"
+				rewrite = "true"
+				>
+				<fileset dir = "${spec.dir}" >
+					<include name = "*.ast" />
+					<include name = "*.jrag" />
+					<include name = "*.jadd" />
+				</fileset> 
+		    	
+		    </jastadd>
+
+		    <echo message = "Running jflex"/>
+		    
+			<jflex 
+				file   = "${spec.dir}/picojava.flex" 
+				outdir = "${gen.dir}" 
+				nobak  = "yes" />
+		
+			<echo message = "Generating parser phase 1, translating .lalr to .beaver ..."/>
+				
+			<concat 
+				destfile = "${gen.dir}/${parser.name}.all" 
+				binary   = "true" 
+				force    = "false" >
+						
+				<filelist dir = ".">
+					<file name = "${spec.dir}/preamble.parser" />
+					<file name = "${spec.dir}/picojava.parser" />
+				</filelist>
+			</concat>
+			
+			<!-- Running JastAddParser --> 
+			<java 
+				classpath="${tools.dir}/JastAddParser.jar:${tools.dir}/beaver.jar" 
+				classname="Main" 
+				fork="true">
+					<arg value="--no-beaver-symbol" />
+					<arg value="${gen.dir}/${parser.name}.all" />
+					<arg value="${gen.dir}/${parser.name}.beaver" />
+			</java>
+			
+	    	<echo message = "Generating parser phase 2, translating .beaver to .java ..."/>
+		
+		    <beaver 
+		    	file		  = "${gen.dir}/${parser.name}.beaver" 
+		    	terminalNames = "yes" 
+		    	compress	  = "no" 
+		    	useSwitch	  = "yes" />
+	</target>
+  	
+	
+	<target name = "clean" >
+		<delete dir="${test-reports.dir}"/>
+		<delete dir="${gen.dir}"/>
+		<delete>
+				<fileset dir = "."> 
+					<include name= "**/*.class"/>
+				</fileset>
+		</delete>
+	</target>
+
+	<target name="test" depends="build" >
+		<mkdir dir="${test-reports.dir}" />
+		<junit>
+			<classpath>
+				<pathelement path="." />
+				<pathelement path="${tools.dir}/junit.jar" />
+				<pathelement path="${tools.dir}/beaver.jar" />
+			</classpath>
+			<formatter type="brief" usefile="false" />
+			<formatter type="xml"/>
+
+			<batchtest todir="${test-reports.dir}">
+				<fileset dir=".">
+					<include name="tests/*.java" />
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+
+	<target name="doc" depends="build" description="generate javadoc">
+		<mkdir dir="doc"/>
+		<javadoc 
+				destdir="doc" 
+				classpath=".:${tools.dir}/beaver.jar" 
+				sourcepath="." 
+				packagenames="AST" 
+				docletpath="${tools.dir}/RagDoll.jar" 
+				doclet="ragdoll.RagDollDoclet">
+			<arg value="-linksource"/>
+			<arg value="-ragroot"/>
+			<arg value="."/>
+		</javadoc>
+	</target>
+
+	<target name="jar" depends="build">
+		<jar destfile="${jar.file}">
+			<manifest>
+				<attribute name="Main-Class" value="PrettyPrint" />
+			</manifest>
+			<fileset dir=".">
+				<include name="**/*.class"/>
+				<exclude name="tests/**"/>
+			</fileset>
+			<zipfileset includes="**/*.class" src="${tools.dir}/beaver-rt.jar"/>
+		</jar>
+	</target>
+</project>

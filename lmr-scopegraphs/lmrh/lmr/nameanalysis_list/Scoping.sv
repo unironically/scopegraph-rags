@@ -19,7 +19,7 @@ propagate ok on Main;
 aspect production program
 top::Main ::= ds::Decls
 {
-  local globScope::Scope = scopeNoData();
+  production attribute globScope::Scope = scopeNoData();
   globScope.edges = ds.synEdges;
 
   ds.scope = globScope;

@@ -1,0 +1,22 @@
+<HTML>
+<head><script src="../../resources/jquery.js"></script><script>$(document).ready(function(event) {$(document.location.hash).css('background', 'yellow');$(document.location.hash + ' span').css('color', 'red');});</script></head><BODY BGCOLOR="white">
+<PRE>
+<span id="line-1"><span style="color: green">001</span>    aspect PredefinedTypes {<a name="line-1"></a></span>
+<span id="line-2"><span style="color: green">002</span>      // Define the NTA<a name="line-2"></a></span>
+<span id="line-3"><span style="color: green">003</span>      syn lazy List Program.getPredefinedTypeList() {<a name="line-3"></a></span>
+<span id="line-4"><span style="color: green">004</span>      return new List().<a name="line-4"></a></span>
+<span id="line-5"><span style="color: green">005</span>        add(new UnknownDecl("$unknown")).<a name="line-5"></a></span>
+<span id="line-6"><span style="color: green">006</span>        add(new PrimitiveDecl("boolean"));<a name="line-6"></a></span>
+<span id="line-7"><span style="color: green">007</span>      }<a name="line-7"></a></span>
+<span id="line-8"><span style="color: green">008</span>        <a name="line-8"></a></span>
+<span id="line-9"><span style="color: green">009</span>      // Broadcast the predefined types to useful places in the AST<a name="line-9"></a></span>
+<span id="line-10"><span style="color: green">010</span>      syn lazy PrimitiveDecl Program.booleanType() = (PrimitiveDecl) localLookup("boolean");<a name="line-10"></a></span>
+<span id="line-11"><span style="color: green">011</span>      eq Program.getBlock().booleanType() = booleanType();<a name="line-11"></a></span>
+<span id="line-12"><span style="color: green">012</span>      eq Program.getPredefinedType().booleanType() = booleanType();<a name="line-12"></a></span>
+<span id="line-13"><span style="color: green">013</span>      inh PrimitiveDecl BooleanLiteral.booleanType();<a name="line-13"></a></span>
+<span id="line-14"><span style="color: green">014</span>      inh PrimitiveDecl WhileStmt.booleanType();<a name="line-14"></a></span>
+<span id="line-15"><span style="color: green">015</span>      inh PrimitiveDecl Decl.booleanType();<a name="line-15"></a></span>
+<span id="line-16"><span style="color: green">016</span>    }<a name="line-16"></a></span>
+</PRE>
+</BODY>
+</HTML>

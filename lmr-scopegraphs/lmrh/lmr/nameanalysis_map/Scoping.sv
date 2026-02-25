@@ -20,8 +20,7 @@ aspect production program
 top::Main ::= ds::Decls
 {
   production attribute globScope::Scope = scopeNoData();
-  globScope.edges := mapNone(eq);
-  globScope.edges <- mapCons("VAR", ds.synVar, mapNone(eq));
+  globScope.edges := mapLast("VAR", ds.synVar);
 
   ds.scope = globScope;
 }
@@ -197,8 +196,7 @@ top::Expr ::= d::ArgDecl e::Expr
   propagate synVar;
   
   local funScope::Scope = scopeNoData();
-  funScope.edges := mapNone(eq);
-  funScope.edges <- mapCons("VAR", d.synVar, mapNone(eq));
+  funScope.edges := mapLast("VAR", d.synVar);
 
   d.scope = top.scope;
   e.scope = funScope;
@@ -222,8 +220,7 @@ aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
   local letScope::Scope = scopeNoData();
-  letScope.edges := mapNone(eq);
-  letScope.edges <- mapCons("VAR", bs.synVar, mapNone(eq));
+  letScope.edges := mapLast("VAR", bs.synVar);
 
   bs.scope = letScope;
   e.scope = letScope;
@@ -236,8 +233,7 @@ aspect production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
   local letScope::Scope = scopeNoData();
-  letScope.edges := mapNone(eq);
-  letScope.edges <- mapCons("VAR", bs.synVar, mapNone(eq));
+  letScope.edges := mapLast("VAR", bs.synVar);
 
   bs.scope = top.scope;
   e.scope = letScope;
@@ -264,9 +260,9 @@ aspect production seqBindsOne
 top::SeqBinds ::= s::SeqBind
 {
   local sbScope::Scope = scopeNoData();
-  sbScope.edges := mapNone(eq);
-  sbScope.edges <- mapCons("LEX", [top.scope], mapNone(eq));
-  sbScope.edges <- mapCons("VAR", s.synVar, mapNone(eq));
+  sbScope.edges := 
+    mapCons("LEX", [top.scope], 
+    mapLast("VAR", s.synVar));
 
   s.scope = top.scope;
 
@@ -277,9 +273,9 @@ aspect production seqBindsCons
 top::SeqBinds ::= s::SeqBind ss::SeqBinds
 {
   local sbScope::Scope = scopeNoData();
-  sbScope.edges := mapNone(eq);
-  sbScope.edges <- mapCons("LEX", [top.scope], mapNone(eq));
-  sbScope.edges <- mapCons("VAR", s.synVar, mapNone(eq));
+  sbScope.edges := 
+    mapCons("LEX", [top.scope], 
+    mapLast("VAR", s.synVar));
 
   s.scope = top.scope;
   ss.scope = sbScope;
@@ -297,7 +293,7 @@ aspect production seqBindUntyped
 top::SeqBind ::= id::String e::Expr
 {
   local bindScope::Scope = scopeVar(id, e.type);
-  bindScope.edges := mapNone(eq);
+  bindScope.edges := mapNone();
 
   top.synVar := [ bindScope ];
 }
@@ -306,7 +302,7 @@ aspect production seqBindTyped
 top::SeqBind ::= ty::Type id::String e::Expr
 {
   local bindScope::Scope = scopeVar(id, ^ty);
-  bindScope.edges := mapNone(eq);
+  bindScope.edges := mapNone();
 
   top.synVar := [ bindScope ];
 
@@ -335,7 +331,7 @@ aspect production parBindUntyped
 top::ParBind ::= id::String e::Expr
 {
   local bindScope::Scope = scopeVar(id, e.type);
-  bindScope.edges := mapNone(eq);
+  bindScope.edges := mapNone();
 
   top.synVar := [ bindScope ];
 }
@@ -344,7 +340,7 @@ aspect production parBindTyped
 top::ParBind ::= ty::Type id::String e::Expr
 {
   local bindScope::Scope = scopeVar(id, ^ty);
-  bindScope.edges := mapNone(eq);
+  bindScope.edges := mapNone();
 
   top.synVar := [ bindScope ];
 
@@ -360,7 +356,7 @@ aspect production argDecl
 top::ArgDecl ::= id::String ty::Type
 {
   local bindScope::Scope = scopeVar(id, ^ty);
-  bindScope.edges := mapNone(eq);
+  bindScope.edges := mapNone();
 
   top.synVar := [ bindScope ];
 
@@ -393,19 +389,17 @@ aspect production varRef
 top::VarRef ::= x::String
 {
   production attribute vars::[Decorated Scope] with ++;
-  vars := [];
-  vars <- resolve(isName(x), varRx(), top.scope);
+  vars := resolve(isName(x), varRx(), top.scope);
 
-  local okAndTy::(Boolean, Type) =
-    if length(vars) < 1
-    then unsafeTracePrint((false, tErr()), "Bad resolution of " ++ x ++ " (H: not found)\n")
-    else if length(vars) > 1
-    then unsafeTracePrint((false, tErr()), "Bad resolution of " ++ x ++ " (H: ambiguous)\n")
-    else case head(vars).datum of
-         | datumVar(_, ty) -> (true, ^ty)
-         | _ -> unsafeTracePrint((false, tErr()), "Bad resolution of " ++ x ++ " (H: bad data)\n")
-         end;
+  local ty::Maybe<Type> =
+    case vars of
+    | h::[] -> case h.datum of
+               | datumVar(_, ty) -> just(^ty)
+               | _ -> nothing()
+               end
+    | _ -> nothing()
+    end;
 
-  top.ok := okAndTy.1;
-  top.type = okAndTy.2;
+  top.ok := ty.isJust;
+  top.type = if ty.isJust then ty.fromJust else tErr();
 }

@@ -9,9 +9,7 @@ inherited attribute edges::Map<String [Decorated Scope]> with combineMap occurs 
 
 production scope
 top::Scope ::= datum::Datum
-{
-  top.datum = ^datum;
-}
+{ top.datum = ^datum; }
 
 --
 
@@ -21,15 +19,11 @@ synthesized attribute name::String occurs on Datum;
 
 production datumNone
 top::Datum ::=
-{
-  top.name = "";
-}
+{ top.name = ""; }
 
 production datumName
 top::Datum ::= x::String
-{
-  top.name = x;
-}
+{ top.name = x; }
 
 --
 

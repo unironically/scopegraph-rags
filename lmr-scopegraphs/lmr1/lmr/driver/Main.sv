@@ -5,7 +5,9 @@ imports syntax:lmr1:lmr:concretesyntax;
 imports syntax:lmr1:lmr:abstractsyntax;
 
 imports sg_lib3:src;
+
 imports lmr1:lmr:nameanalysis_extension;
+imports lmr1:lmr:translation;
 
 function main
 IO<Integer> ::= largs::[String]
@@ -30,15 +32,19 @@ IO<Integer> ::= largs::[String]
             if length(fileNameExplode) >= 2 && last(fileNameExplode) == "lm"
               then do {
                 print("[✔] Parse success\n");
-                res::Integer <- programOk(ast.msgs);
-                --let viz::String = vizStr(allLabs, ast.allScopes);
-                --mkdir("out");
-                --system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
-                --writeStatixConstraints(filePath, file, ast.flattened, "StatixConstraints");
-                --writeSilverEquations(filePath, file, ast.equations, "SilverEquations");
-                --writeSilverEquations(filePath, file, ast.equationsSolvedCopies, "SilverEquationsSolvedCopies");
-                --writeJastEquations(filePath, file, ast.jastEquations);
-                --writeStatixAterm(fileName, ast.statix);
+                res::Integer <- 
+                  if null(ast.msgs)
+                  then do {
+                    print("[✔] Semantic check successful\n");
+                    mkdir("out");
+                    writeFile("out/" ++ fileName ++ ".ml", ast.translation);
+                    return 0;
+                  }
+                  else do {
+                    print("[✗] Semantic check failed with the following errors:\n" ++
+                          concat(map((.pp), ast.msgs)));
+                    return -1;
+                  };
                 return res;
               }
               else do {
@@ -47,7 +53,7 @@ IO<Integer> ::= largs::[String]
               };
           }
           else do {
-            print("[✗] Parse failure\n");
+            print("[✗] Parse failure\n" ++ result.parseErrors);
             return -1;
           };
       }

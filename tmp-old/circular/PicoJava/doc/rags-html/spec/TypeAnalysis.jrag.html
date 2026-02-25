@@ -1,0 +1,111 @@
+<HTML>
+<head><script src="../../resources/jquery.js"></script><script>$(document).ready(function(event) {$(document.location.hash).css('background', 'yellow');$(document.location.hash + ' span').css('color', 'red');});</script></head><BODY BGCOLOR="white">
+<PRE>
+<span id="line-1"><span style="color: green">001</span>    aspect TypeAnalysis {<a name="line-1"></a></span>
+<span id="line-2"><span style="color: green">002</span>      <a name="line-2"></a></span>
+<span id="line-3"><span style="color: green">003</span>      <a name="line-3"></a></span>
+<span id="line-4"><span style="color: green">004</span>      // ***API***<a name="line-4"></a></span>
+<span id="line-5"><span style="color: green">005</span>      <a name="line-5"></a></span>
+<span id="line-6"><span style="color: green">006</span>      // Declaration of *type*<a name="line-6"></a></span>
+<span id="line-7"><span style="color: green">007</span>      // Refers to the appropriate type of the declaration or expression,<a name="line-7"></a></span>
+<span id="line-8"><span style="color: green">008</span>      // or refers to unknownDecl if there is no appropriate type in the program.<a name="line-8"></a></span>
+<span id="line-9"><span style="color: green">009</span>      syn lazy TypeDecl Decl.type();<a name="line-9"></a></span>
+<span id="line-10"><span style="color: green">010</span>      syn lazy TypeDecl Exp.type();<a name="line-10"></a></span>
+<span id="line-11"><span style="color: green">011</span>    <a name="line-11"></a></span>
+<span id="line-12"><span style="color: green">012</span>      // Declaration of *isSubtypeOf*<a name="line-12"></a></span>
+<span id="line-13"><span style="color: green">013</span>      // Compares two types<a name="line-13"></a></span>
+<span id="line-14"><span style="color: green">014</span>      syn lazy boolean TypeDecl.isSubtypeOf(TypeDecl typeDecl);<a name="line-14"></a></span>
+<span id="line-15"><span style="color: green">015</span>    <a name="line-15"></a></span>
+<span id="line-16"><span style="color: green">016</span>      // Declaration of *isValue*<a name="line-16"></a></span>
+<span id="line-17"><span style="color: green">017</span>      // True if the expression denotes a value, i.e., something that can be assigned to a variable.<a name="line-17"></a></span>
+<span id="line-18"><span style="color: green">018</span>      syn boolean Exp.isValue();<a name="line-18"></a></span>
+<span id="line-19"><span style="color: green">019</span>    <a name="line-19"></a></span>
+<span id="line-20"><span style="color: green">020</span>      // *hasCycleOnSuperclassChain* - true if there is a cycle somewhere on the superclass chain<a name="line-20"></a></span>
+<span id="line-21"><span style="color: green">021</span>      // Defined using a circular attribute.<a name="line-21"></a></span>
+<span id="line-22"><span style="color: green">022</span>      syn lazy boolean ClassDecl.hasCycleOnSuperclassChain() circular [true];<a name="line-22"></a></span>
+<span id="line-23"><span style="color: green">023</span>      <a name="line-23"></a></span>
+<span id="line-24"><span style="color: green">024</span>      // *superClass* - the superclass declaration<a name="line-24"></a></span>
+<span id="line-25"><span style="color: green">025</span>      // - if it exists and if there are no cycles on the superclass chain<a name="line-25"></a></span>
+<span id="line-26"><span style="color: green">026</span>      // - otherwise null<a name="line-26"></a></span>
+<span id="line-27"><span style="color: green">027</span>      syn lazy ClassDecl ClassDecl.superClass();<a name="line-27"></a></span>
+<span id="line-28"><span style="color: green">028</span>      <a name="line-28"></a></span>
+<span id="line-29"><span style="color: green">029</span>      <a name="line-29"></a></span>
+<span id="line-30"><span style="color: green">030</span>      // ***Implementation***<a name="line-30"></a></span>
+<span id="line-31"><span style="color: green">031</span>      <a name="line-31"></a></span>
+<span id="line-32"><span style="color: green">032</span>      // Definition of *type*<a name="line-32"></a></span>
+<span id="line-33"><span style="color: green">033</span>      eq TypeDecl.type() = this;<a name="line-33"></a></span>
+<span id="line-34"><span style="color: green">034</span>      eq VarDecl.type() = getType().decl().type();<a name="line-34"></a></span>
+<span id="line-35"><span style="color: green">035</span>    <a name="line-35"></a></span>
+<span id="line-36"><span style="color: green">036</span>      eq IdUse.type() = decl().type();<a name="line-36"></a></span>
+<span id="line-37"><span style="color: green">037</span>      eq Dot.type() = getIdUse().type();<a name="line-37"></a></span>
+<span id="line-38"><span style="color: green">038</span>    <a name="line-38"></a></span>
+<span id="line-39"><span style="color: green">039</span>      eq BooleanLiteral.type() = booleanType();<a name="line-39"></a></span>
+<span id="line-40"><span style="color: green">040</span>    <a name="line-40"></a></span>
+<span id="line-41"><span style="color: green">041</span>      // Definition of *isSubtypeOf*<a name="line-41"></a></span>
+<span id="line-42"><span style="color: green">042</span>      // use double dispatch to allow modular extension of type comparisons<a name="line-42"></a></span>
+<span id="line-43"><span style="color: green">043</span>      eq TypeDecl.isSubtypeOf(TypeDecl typeDecl) = typeDecl.isSuperTypeOf(this);<a name="line-43"></a></span>
+<span id="line-44"><span style="color: green">044</span>      eq ClassDecl.isSubtypeOf(TypeDecl typeDecl) = typeDecl.isSuperTypeOfClassDecl(this);<a name="line-44"></a></span>
+<span id="line-45"><span style="color: green">045</span>    <a name="line-45"></a></span>
+<span id="line-46"><span style="color: green">046</span>      syn lazy boolean TypeDecl.isSuperTypeOf(TypeDecl typeDecl) = this == typeDecl;<a name="line-46"></a></span>
+<span id="line-47"><span style="color: green">047</span>      syn lazy boolean TypeDecl.isSuperTypeOfClassDecl(ClassDecl typeDecl) = <a name="line-47"></a></span>
+<span id="line-48"><span style="color: green">048</span>        this == typeDecl || typeDecl.superClass() != null &amp;&amp; typeDecl.superClass().isSubtypeOf(this);<a name="line-48"></a></span>
+<span id="line-49"><span style="color: green">049</span>        <a name="line-49"></a></span>
+<span id="line-50"><span style="color: green">050</span>      // Definition of *superClass*<a name="line-50"></a></span>
+<span id="line-51"><span style="color: green">051</span>      eq ClassDecl.superClass() {<a name="line-51"></a></span>
+<span id="line-52"><span style="color: green">052</span>        if (hasSuperclass() &amp;&amp; getSuperclass().decl() instanceof ClassDecl &amp;&amp; !hasCycleOnSuperclassChain())<a name="line-52"></a></span>
+<span id="line-53"><span style="color: green">053</span>          return (ClassDecl) getSuperclass().decl();<a name="line-53"></a></span>
+<span id="line-54"><span style="color: green">054</span>        else<a name="line-54"></a></span>
+<span id="line-55"><span style="color: green">055</span>          return null;<a name="line-55"></a></span>
+<span id="line-56"><span style="color: green">056</span>      }<a name="line-56"></a></span>
+<span id="line-57"><span style="color: green">057</span>    <a name="line-57"></a></span>
+<span id="line-58"><span style="color: green">058</span>      // *hasCycleOnSuperclassChain* - true if there is a cycle somewhere on the superclass chain<a name="line-58"></a></span>
+<span id="line-59"><span style="color: green">059</span>      eq ClassDecl.hasCycleOnSuperclassChain() {<a name="line-59"></a></span>
+<span id="line-60"><span style="color: green">060</span>        if (hasSuperclass() &amp;&amp; getSuperclass().decl() instanceof ClassDecl) //First, check if there is a superclass<a name="line-60"></a></span>
+<span id="line-61"><span style="color: green">061</span>          return ((ClassDecl) getSuperclass().decl()).hasCycleOnSuperclassChain();<a name="line-61"></a></span>
+<span id="line-62"><span style="color: green">062</span>        else<a name="line-62"></a></span>
+<span id="line-63"><span style="color: green">063</span>          return false;<a name="line-63"></a></span>
+<span id="line-64"><span style="color: green">064</span>      }<a name="line-64"></a></span>
+<span id="line-65"><span style="color: green">065</span>    <a name="line-65"></a></span>
+<span id="line-66"><span style="color: green">066</span>      // Definition of *isValue*<a name="line-66"></a></span>
+<span id="line-67"><span style="color: green">067</span>      eq Exp.isValue() = true;<a name="line-67"></a></span>
+<span id="line-68"><span style="color: green">068</span>      eq Dot.isValue() = getIdUse().isValue();<a name="line-68"></a></span>
+<span id="line-69"><span style="color: green">069</span>    <a name="line-69"></a></span>
+<span id="line-70"><span style="color: green">070</span>      eq TypeUse.isValue() = false;<a name="line-70"></a></span>
+<span id="line-71"><span style="color: green">071</span>      // Note! If we did not have the rewrites below, the above equation would have to instead be written as:<a name="line-71"></a></span>
+<span id="line-72"><span style="color: green">072</span>      // eq IdUse.isValue() = !(decl() instanceof TypeDecl)<a name="line-72"></a></span>
+<span id="line-73"><span style="color: green">073</span>    <a name="line-73"></a></span>
+<span id="line-74"><span style="color: green">074</span>      // Rewrite rules for replacing Use-nodes based on their declaration kind<a name="line-74"></a></span>
+<span id="line-75"><span style="color: green">075</span>      /*<a name="line-75"></a></span>
+<span id="line-76"><span style="color: green">076</span>      rewrite Use {<a name="line-76"></a></span>
+<span id="line-77"><span style="color: green">077</span>        when(decl() instanceof VarDecl) to VariableUse <a name="line-77"></a></span>
+<span id="line-78"><span style="color: green">078</span>        new VariableUse(getName());<a name="line-78"></a></span>
+<span id="line-79"><span style="color: green">079</span>        <a name="line-79"></a></span>
+<span id="line-80"><span style="color: green">080</span>      }<a name="line-80"></a></span>
+<span id="line-81"><span style="color: green">081</span>      <a name="line-81"></a></span>
+<span id="line-82"><span style="color: green">082</span>      rewrite Use {<a name="line-82"></a></span>
+<span id="line-83"><span style="color: green">083</span>        when(decl() instanceof TypeDecl)<a name="line-83"></a></span>
+<span id="line-84"><span style="color: green">084</span>        to TypeUse new TypeUse(getName());<a name="line-84"></a></span>
+<span id="line-85"><span style="color: green">085</span>      }<a name="line-85"></a></span>
+<span id="line-86"><span style="color: green">086</span>      */<a name="line-86"></a></span>
+<span id="line-87"><span style="color: green">087</span>      <a name="line-87"></a></span>
+<span id="line-88"><span style="color: green">088</span>      rewrite Use {<a name="line-88"></a></span>
+<span id="line-89"><span style="color: green">089</span>        when(decl() instanceof VarDecl) to VariableUse {<a name="line-89"></a></span>
+<span id="line-90"><span style="color: green">090</span>    <a name="line-90"></a></span>
+<span id="line-91"><span style="color: green">091</span>                VariableUse use = new VariableUse(getName());           <a name="line-91"></a></span>
+<span id="line-92"><span style="color: green">092</span>                return use;<a name="line-92"></a></span>
+<span id="line-93"><span style="color: green">093</span>        }<a name="line-93"></a></span>
+<span id="line-94"><span style="color: green">094</span>        <a name="line-94"></a></span>
+<span id="line-95"><span style="color: green">095</span>      }<a name="line-95"></a></span>
+<span id="line-96"><span style="color: green">096</span>      <a name="line-96"></a></span>
+<span id="line-97"><span style="color: green">097</span>      rewrite Use {<a name="line-97"></a></span>
+<span id="line-98"><span style="color: green">098</span>        when(decl() instanceof TypeDecl) to TypeUse {<a name="line-98"></a></span>
+<span id="line-99"><span style="color: green">099</span>        <a name="line-99"></a></span>
+<span id="line-100"><span style="color: green">100</span>               TypeUse use = new TypeUse(getName());           <a name="line-100"></a></span>
+<span id="line-101"><span style="color: green">101</span>               return use;<a name="line-101"></a></span>
+<span id="line-102"><span style="color: green">102</span>        }<a name="line-102"></a></span>
+<span id="line-103"><span style="color: green">103</span>      }<a name="line-103"></a></span>
+<span id="line-104"><span style="color: green">104</span>      <a name="line-104"></a></span>
+<span id="line-105"><span style="color: green">105</span>    }<a name="line-105"></a></span>
+</PRE>
+</BODY>
+</HTML>

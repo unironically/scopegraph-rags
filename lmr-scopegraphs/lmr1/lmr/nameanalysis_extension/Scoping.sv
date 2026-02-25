@@ -88,6 +88,7 @@ top::Decl ::= b::Bind
 {
   b.s = top.s;
   b.s_def = top.s_module;
+  b.seqRecPar = 0;
 }
 
 --------------------------------------------------
@@ -294,6 +295,7 @@ top::Expr ::= bs::ParBinds e::Expr
 
   bs.s = s_let;
   bs.s_def = s_let;
+  bs.seqRecPar = 1;
 
   e.s = s_let;
 
@@ -309,6 +311,7 @@ top::Expr ::= bs::ParBinds e::Expr
 
   bs.s = top.s;
   bs.s_def = s_let;
+  bs.seqRecPar = 2;
 
   e.s = s_let;
 
@@ -334,6 +337,7 @@ top::SeqBinds ::= s::Bind
 
   s.s = top.s;
   s.s_def = top.s_last;
+  s.seqRecPar = 0;
 }
 
 aspect production seqBindsCons
@@ -344,6 +348,7 @@ top::SeqBinds ::= s::Bind ss::SeqBinds
 
   s.s = top.s;
   s.s_def = s_next;
+  s.seqRecPar = 0;
 
   ss.s = s_next;
   ss.s_last = top.s_last;
@@ -351,9 +356,19 @@ top::SeqBinds ::= s::Bind ss::SeqBinds
 
 --------------------------------------------------
 
+inherited attribute seqRecPar::Integer occurs on ParBinds;
+
 aspect production parBindsNil
 top::ParBinds ::=
 {
+}
+
+aspect production parBindsOne
+top::ParBinds ::= s::Bind
+{
+  s.s = top.s;
+  s.s_def = top.s_def;
+  s.seqRecPar = top.seqRecPar;
 }
 
 aspect production parBindsCons
@@ -361,6 +376,7 @@ top::ParBinds ::= s::Bind ss::ParBinds
 {
   s.s = top.s;
   s.s_def = top.s_def;
+  s.seqRecPar = top.seqRecPar;
 
   ss.s = top.s;
   ss.s_def = top.s_def;
@@ -368,10 +384,13 @@ top::ParBinds ::= s::Bind ss::ParBinds
 
 --------------------------------------------------
 
+-- seq 0, rec 1, par 2
+attribute seqRecPar occurs on Bind;
+
 aspect production bindUntyped
 top::Bind ::= x::String e::Expr
 {
-  newScope s_dcl::LMGraph -> datumVar(x, ty);
+  newScope s_dcl::LMGraph -> datumVar(x, ty, top.seqRecPar);
 
   top.s_def -[ var ]-> s_dcl;
 
@@ -382,7 +401,7 @@ top::Bind ::= x::String e::Expr
 aspect production bindTyped
 top::Bind ::= tyann::Type x::String e::Expr
 {
-  newScope s_dcl::LMGraph -> datumVar(x, ty1);
+  newScope s_dcl::LMGraph -> datumVar(x, ty1, top.seqRecPar);
 
   top.s_def -[ var ]-> s_dcl;
 
@@ -392,7 +411,7 @@ top::Bind ::= tyann::Type x::String e::Expr
   e.s = top.s;
 
   top.msgs <-
-    if ty1 == ty2
+    if ty1 == ty2 || e.type == tErr()
     then []
     else [errorMessage(
             "variable " ++ x ++ " declared with type " ++ ty1.pp ++ ", but its " ++
@@ -406,7 +425,7 @@ top::Bind ::= tyann::Type x::String e::Expr
 aspect production argDecl
 top::ArgDecl ::= id::String tyann::Type
 {
-  newScope s_dcl::LMGraph -> datumVar(id, ty);
+  newScope s_dcl::LMGraph -> datumVar(id, ty, 0);
 
   nondecorated local ty::Type = ^tyann;
 
@@ -470,7 +489,7 @@ top::ModRef ::= x::String
   nondecorated local s_res::Decorated Scope with LMGraph =
     if length(mods) == 1 then head(mods) else deadScope;
 
-  top.s -[ imp ]-> s_res;
+  top.s_def -[ imp ]-> s_res;
 
   top.msgs <- 
     case mods of
@@ -494,7 +513,7 @@ top::VarRef ::= x::String
   -- does ministatix query, filter and min-refs constraints
   local vars::[Decorated Scope with LMGraph] =
     visible(
-      \d::Datum -> case d of datumVar(x_, _) -> x_ == x | _ -> false end,
+      \d::Datum -> case d of datumVar(x_, _, _) -> x_ == x | _ -> false end,
       `lex* . imp? . var`::LMGraph,
       `lex > var, lex > imp, imp > var`::LMGraph,
       top.s
@@ -509,7 +528,10 @@ top::VarRef ::= x::String
 
   -- ministatix datum assertion `s_res -> DatumVar(x, ty')`
   nondecorated local res_ty::Type = 
-    case s_res.2.datum of | datumVar(_, t) -> ^t | _ -> tErr() end;
+    case s_res.2.datum of | datumVar(_, t, _) -> ^t | _ -> tErr() end;
+
+  production attribute seqRecPar::Integer = 
+    case s_res.2.datum of | datumVar(_, _, n) -> n | _ -> 0 end;
 
   top.type = res_ty;
 

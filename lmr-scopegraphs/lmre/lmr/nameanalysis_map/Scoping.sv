@@ -21,8 +21,9 @@ monoid attribute synImp::[Decorated Scope] with [], ++;
 aspect production program
 top::Main ::= ds::Decls
 {
-  globScope.edges <- mapCons("MOD", ds.synMod, mapNone(eq));
-  globScope.edges <- mapCons("IMP", ds.synImp, mapNone(eq));
+  globScope.edges <- 
+    mapCons("MOD", ds.synMod,
+    mapLast("IMP", ds.synImp));
 }
 
 --------------------------------------------------
@@ -54,11 +55,11 @@ aspect production declMod
 top::Decl ::= id::String ds::Decls
 {
   local modScope::Scope = scopeMod(id);
-  modScope.edges := mapNone(eq);
-  modScope.edges <- mapCons("LEX", [top.scope], mapNone(eq));
-  modScope.edges <- mapCons("VAR", ds.synVar, mapNone(eq));
-  modScope.edges <- mapCons("MOD", ds.synMod, mapNone(eq));
-  modScope.edges <- mapCons("IMP", ds.synImp, mapNone(eq));
+  modScope.edges := 
+    mapCons("LEX", [top.scope], 
+    mapCons("VAR", ds.synVar, 
+    mapCons("MOD", ds.synMod, 
+    mapLast("IMP", ds.synImp))));
 
   ds.scope = modScope;
 
@@ -75,18 +76,17 @@ top::Decl ::= x::String
 {
   local mods::[Decorated Scope] = resolve(isName(x), impRx(), top.scope);
 
-  local okAndModscope::(Boolean, [Decorated Scope]) =
-    if length(mods) < 1
-    then unsafeTracePrint((false, [dummyScope]), "Bad resolution of " ++ x ++ " (E: not found)\n")
-    else if length(mods) > 1
-    then unsafeTracePrint((false, [dummyScope]), "Bad resolution of " ++ x ++ " (E: ambiguous)\n")
-    else (true, mods);
+  local modScope::Maybe<Decorated Scope> =
+    case mods of
+    | h::[] -> just(h)
+    | _ -> nothing()
+    end;
 
   top.synVar := [];
   top.synMod := [];
-  top.synImp := okAndModscope.2;
+  top.synImp := if modScope.isJust then [modScope.fromJust] else [];
 
-  top.ok := okAndModscope.1;
+  top.ok := modScope.isJust;
 }
 
 --------------------------------------------------

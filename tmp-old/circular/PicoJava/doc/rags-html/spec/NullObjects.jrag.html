@@ -1,0 +1,29 @@
+<HTML>
+<head><script src="../../resources/jquery.js"></script><script>$(document).ready(function(event) {$(document.location.hash).css('background', 'yellow');$(document.location.hash + ' span').css('color', 'red');});</script></head><BODY BGCOLOR="white">
+<PRE>
+<span id="line-1"><span style="color: green">001</span>    aspect NullObjects {<a name="line-1"></a></span>
+<span id="line-2"><span style="color: green">002</span>      // the actual unknown declaration null object is created in PredefinedTypes.jrag<a name="line-2"></a></span>
+<span id="line-3"><span style="color: green">003</span>        <a name="line-3"></a></span>
+<span id="line-4"><span style="color: green">004</span>      // explicit check if declaration is null object<a name="line-4"></a></span>
+<span id="line-5"><span style="color: green">005</span>      syn boolean Decl.isUnknown() = false;<a name="line-5"></a></span>
+<span id="line-6"><span style="color: green">006</span>      eq UnknownDecl.isUnknown() = true;<a name="line-6"></a></span>
+<span id="line-7"><span style="color: green">007</span>    <a name="line-7"></a></span>
+<span id="line-8"><span style="color: green">008</span>    <a name="line-8"></a></span>
+<span id="line-9"><span style="color: green">009</span>      // all types are compatible with the unknown type<a name="line-9"></a></span>
+<span id="line-10"><span style="color: green">010</span>      eq UnknownDecl.isSubtypeOf(TypeDecl typeDecl) = true;<a name="line-10"></a></span>
+<span id="line-11"><span style="color: green">011</span>      eq UnknownDecl.isSuperTypeOf(TypeDecl typeDecl) = true;<a name="line-11"></a></span>
+<span id="line-12"><span style="color: green">012</span>      eq UnknownDecl.isSuperTypeOfClassDecl(ClassDecl typeDecl) = true;<a name="line-12"></a></span>
+<span id="line-13"><span style="color: green">013</span>    <a name="line-13"></a></span>
+<span id="line-14"><span style="color: green">014</span>        <a name="line-14"></a></span>
+<span id="line-15"><span style="color: green">015</span>      // broadcast the unknown declaration null object to useful places in the AST<a name="line-15"></a></span>
+<span id="line-16"><span style="color: green">016</span>      syn lazy UnknownDecl Program.unknownDecl() = (UnknownDecl) localLookup("$unknown");<a name="line-16"></a></span>
+<span id="line-17"><span style="color: green">017</span>      eq Program.getBlock().unknownDecl() = unknownDecl();<a name="line-17"></a></span>
+<span id="line-18"><span style="color: green">018</span>      eq Program.getPredefinedType().unknownDecl() = unknownDecl();<a name="line-18"></a></span>
+<span id="line-19"><span style="color: green">019</span>    <a name="line-19"></a></span>
+<span id="line-20"><span style="color: green">020</span>      inh Decl TypeDecl.unknownDecl();<a name="line-20"></a></span>
+<span id="line-21"><span style="color: green">021</span>      inh Decl Block.unknownDecl();<a name="line-21"></a></span>
+<span id="line-22"><span style="color: green">022</span>    }<a name="line-22"></a></span>
+<span id="line-23"><span style="color: green">023</span>    <a name="line-23"></a></span>
+</PRE>
+</BODY>
+</HTML>

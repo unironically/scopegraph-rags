@@ -120,4 +120,4 @@ fun isName (Boolean ::= Datum) ::= name::String =
 --
 
 global dummyScope::Decorated Scope =
-  decorate scopeNoData() with {edges = mapNone(eq);};
+  decorate scopeNoData() with {edges = mapNone();};
