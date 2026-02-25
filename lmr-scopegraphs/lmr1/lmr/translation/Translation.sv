@@ -143,7 +143,7 @@ top::Expr ::= d::ArgDecl e::Expr
 aspect production exprApp
 top::Expr ::= e1::Expr e2::Expr
 {
-  top.translation = e1.translation ++ " " ++ e2.translation;
+  top.translation = "(" ++ e1.translation ++ " " ++ e2.translation ++ ")";
 }
 
 aspect production exprIf
