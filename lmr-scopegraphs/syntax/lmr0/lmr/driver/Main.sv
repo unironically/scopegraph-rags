@@ -39,7 +39,7 @@ IO<Integer> ::= largs::[String]
               };
           }
           else do {
-            print("[✗] Parse failure\n");
+            print("[✗] Parse failure\n" ++ result.parseErrors);
             return -1;
           };
       }

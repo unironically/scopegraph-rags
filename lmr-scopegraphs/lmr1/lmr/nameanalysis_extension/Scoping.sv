@@ -2,18 +2,16 @@ grammar lmr1:lmr:nameanalysis_extension;
 
 imports syntax:lmr1:lmr:abstractsyntax;
 
-import silver:langutil; -- for location.unparse
-
 --------------------------------------------------
 
 scopegraph LMGraph labels lex, var, mod, imp;
 
 scope attribute LMGraph:s;
-attribute s occurs on Decls, Decl, SeqBinds, SeqBind, ParBinds, ParBind, Expr,
+attribute s occurs on Decls, Decl, SeqBinds, ParBinds, Bind, Expr,
   ArgDecl, VarRef, ModRef;
 
 scope attribute LMGraph:s_def;
-attribute s_def occurs on SeqBind, ParBinds, ParBind, Decl, ModRef;
+attribute s_def occurs on ParBinds, Bind, Decl, ModRef;
 
 scope attribute LMGraph:s_last;
 attribute s_last occurs on SeqBinds;
@@ -23,10 +21,10 @@ attribute s_module occurs on Decls, Decl;
 
 --------------------------------------------------
 
-monoid attribute ok::Boolean with true, && occurs on Main, Decls, Decl, ParBind, 
-  Expr, VarRef, ArgDecl, SeqBind, SeqBinds, ParBinds, ModRef;
+monoid attribute msgs::[Message] with [], ++ occurs on Main, Decls, Decl, Bind, 
+  Expr, VarRef, ArgDecl, SeqBinds, ParBinds, ModRef;
 
-propagate ok on Main, Decls, Decl, ParBind, Expr, VarRef, ArgDecl, SeqBind,
+propagate msgs on Main, Decls, Decl, Expr, VarRef, ArgDecl, Bind,
   SeqBinds, ParBinds, ModRef;
 
 synthesized attribute type::Type occurs on Expr, ArgDecl, VarRef;
@@ -86,13 +84,19 @@ top::Decl ::= mr::ModRef
 }
 
 aspect production declDef
-top::Decl ::= b::ParBind
+top::Decl ::= b::Bind
 {
   b.s = top.s;
   b.s_def = top.s_module;
 }
 
 --------------------------------------------------
+
+aspect production exprFloat
+top::Expr ::= f::Float
+{
+  top.type = tFloat();
+}
 
 aspect production exprInt
 top::Expr ::= i::Integer
@@ -129,55 +133,10 @@ top::Expr ::= e1::Expr e2::Expr
   e2.s = top.s;
   nondecorated local ty2::Type = e2.type;
 
-  top.ok <- ty1 == tInt();
-  top.ok <- ty2 == tInt();
+  local ok::([Message], Type) = addOk(ty1, ty2, top.location);
 
-  top.type = tInt();
-}
-
-aspect production exprSub
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.s = top.s;
-  nondecorated local ty1::Type = e1.type;
-  
-  e2.s = top.s;
-  nondecorated local ty2::Type = e2.type;
-
-  top.ok <- ty1 == tInt();
-  top.ok <- ty2 == tInt();
-
-  top.type = tInt();
-}
-
-aspect production exprMul
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.s = top.s;
-  nondecorated local ty1::Type = e1.type;
-  
-  e2.s = top.s;
-  nondecorated local ty2::Type = e2.type;
-
-  top.ok <- ty1 == tInt();
-  top.ok <- ty2 == tInt();
-
-  top.type = tInt();
-}
-
-aspect production exprDiv
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.s = top.s;
-  nondecorated local ty1::Type = e1.type;
-  
-  e2.s = top.s;
-  nondecorated local ty2::Type = e2.type;
-
-  top.ok <- ty1 == tInt();
-  top.ok <- ty2 == tInt();
-
-  top.type = tInt();
+  top.msgs <- ok.1;
+  top.type = ok.2;
 }
 
 aspect production exprAnd
@@ -189,25 +148,10 @@ top::Expr ::= e1::Expr e2::Expr
   e2.s = top.s;
   nondecorated local ty2::Type = e2.type;
 
-  top.ok <- ty1 == tBool();
-  top.ok <- ty2 == tBool();
+  local ok::([Message], Type) = andOk(ty1, ty2, top.location);
 
-  top.type = tBool();
-}
-
-aspect production exprOr
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.s = top.s;
-  nondecorated local ty1::Type = e1.type;
-  
-  e2.s = top.s;
-  nondecorated local ty2::Type = e2.type;
-
-  top.ok <- ty1 == tBool();
-  top.ok <- ty2 == tBool();
-
-  top.type = tBool();
+  top.msgs <- ok.1;
+  top.type = ok.2;
 }
 
 aspect production exprEq
@@ -219,51 +163,26 @@ top::Expr ::= e1::Expr e2::Expr
   e2.s = top.s;
   nondecorated local ty2::Type = e2.type;
 
-  top.ok <- ty1 == ty2;
+  local msgLeft::[Message] =
+    if ty1 == tInt() || ty1 == tFloat() || ty1 == tBool()
+    then []
+    else [errorMessage(
+      "equality expects left operand to be of type int or float or bool, " ++
+      "but an expression was given of type " ++ ty1.pp,
+      top.location
+    )];
+  
+  local msgRight::[Message] =
+    if !null(msgLeft) || ty1 == ty2
+    then []
+    else [errorMessage(
+      "equality expects right operand to be of type " ++ ty1.pp ++ ", but an " ++
+      "expression was given of type " ++ ty2.pp,
+      top.location
+    )];
 
+  top.msgs <- if !null(msgLeft) then msgLeft else msgRight;
   top.type = tBool();
-}
-
-aspect production exprApp
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.s = top.s;
-  nondecorated local ty1::Type = e1.type;
-  
-  e2.s = top.s;
-  nondecorated local ty2::Type = e2.type;
-
-  local ty3and4::(Boolean, Type, Type) = 
-    case ty1 of
-    | tFun(ty3, ty4) -> (true, ^ty3, ^ty4)
-    | _ -> (false, tErr(), tErr())
-    end;
-  top.ok <- ty3and4.1;
-  nondecorated local ty3::Type = ty3and4.2;
-  nondecorated local ty4::Type = ty3and4.3;
-
-  top.ok <- ty2 == ty3;
-
-  top.type = ty4;
-}
-
-
-aspect production exprIf
-top::Expr ::= e1::Expr e2::Expr e3::Expr
-{
-  e1.s = top.s;
-  nondecorated local ty1::Type = e1.type;
-  
-  e2.s = top.s;
-  nondecorated local ty2::Type = e2.type;
-
-  e3.s = top.s;
-  nondecorated local ty3::Type = e3.type;
-
-  top.ok <- ty1 == tBool();
-  top.ok <- ty2 == ty3;
-
-  top.type = ty2;
 }
 
 aspect production exprFun
@@ -280,6 +199,77 @@ top::Expr ::= d::ArgDecl e::Expr
   nondecorated local ty2::Type = e.type;
 
   top.type = tFun(ty1, ty2);
+}
+
+aspect production exprApp
+top::Expr ::= e1::Expr e2::Expr
+{
+  e1.s = top.s;
+  nondecorated local ty1::Type = e1.type;
+  
+  e2.s = top.s;
+  nondecorated local ty2::Type = e2.type;
+
+  local ty3and4::(Boolean, Type, Type) = 
+    case ty1 of
+    | tFun(ty3, ty4) -> (true, ^ty3, ^ty4)
+    | _ -> (false, tErr(), tErr())
+    end;
+
+  nondecorated local ty3::Type = ty3and4.2;
+  nondecorated local ty4::Type = ty3and4.3;
+
+  local msgLeft::[Message] =
+    if ty3and4.1
+    then []
+    else [errorMessage("application expects left operand to be of function type, " ++
+                       "but an expression was given of type " ++ ty1.pp,
+                       top.location)];
+
+  local msgRight::[Message] =
+    if !null(msgLeft) || ty2 == ty3
+    then []
+    else [errorMessage(
+      "application expects right operand to be of type " ++ ty3.pp ++ ", but an " ++
+      "expression was given of type " ++ ty2.pp,
+      top.location
+    )];
+
+  top.msgs <- if !null(msgLeft) then msgLeft else msgRight;
+  top.type = ty4;
+}
+
+aspect production exprIf
+top::Expr ::= e1::Expr e2::Expr e3::Expr
+{
+  e1.s = top.s;
+  nondecorated local ty1::Type = e1.type;
+  
+  e2.s = top.s;
+  nondecorated local ty2::Type = e2.type;
+
+  e3.s = top.s;
+  nondecorated local ty3::Type = e3.type;
+
+  top.msgs <-
+    if ty1 == tBool()
+    then []
+    else [errorMessage(
+      "conditional expects first operand to be of type bool, but an expression " ++
+      "was given of type " ++ ty1.pp,
+      top.location
+    )];
+  
+  top.msgs <-
+    if ty2 == ty3
+    then []
+    else [errorMessage(
+      "conditional expects else branch to be of type " ++ ty2.pp ++ ", but an expression " ++
+      "was given of type " ++ ty3.pp,
+      top.location
+    )];
+
+  top.type = if ty1 == tBool() && ty2 == ty3 then ty2 else tErr();
 }
 
 aspect production exprLet
@@ -336,7 +326,7 @@ top::SeqBinds ::=
 }
 
 aspect production seqBindsOne
-top::SeqBinds ::= s::SeqBind
+top::SeqBinds ::= s::Bind
 {
   newScope top.s_last::LMGraph -> datumLex();
 
@@ -347,7 +337,7 @@ top::SeqBinds ::= s::SeqBind
 }
 
 aspect production seqBindsCons
-top::SeqBinds ::= s::SeqBind ss::SeqBinds
+top::SeqBinds ::= s::Bind ss::SeqBinds
 {
   newScope s_next::LMGraph -> datumLex();
   s_next -[ lex ]-> top.s;
@@ -361,41 +351,13 @@ top::SeqBinds ::= s::SeqBind ss::SeqBinds
 
 --------------------------------------------------
 
-aspect production seqBindUntyped
-top::SeqBind ::= x::String e::Expr
-{
-  newScope s_dcl::LMGraph -> datumVar(x, ty);
-
-  top.s_def -[ var ]-> s_dcl;
-
-  nondecorated local ty::Type = e.type;
-  e.s = top.s;
-}
-
-aspect production seqBindTyped
-top::SeqBind ::= tyann::Type x::String e::Expr
-{
-  newScope s_dcl::LMGraph -> datumVar(x, ty1);
-
-  top.s_def -[ var ]-> s_dcl;
-
-  nondecorated local ty1::Type = ^tyann;
-
-  nondecorated local ty2::Type = e.type;
-  e.s = top.s;
-
-  top.ok <- ty1 == ty2;
-}
-
---------------------------------------------------
-
 aspect production parBindsNil
 top::ParBinds ::=
 {
 }
 
 aspect production parBindsCons
-top::ParBinds ::= s::ParBind ss::ParBinds
+top::ParBinds ::= s::Bind ss::ParBinds
 {
   s.s = top.s;
   s.s_def = top.s_def;
@@ -406,8 +368,8 @@ top::ParBinds ::= s::ParBind ss::ParBinds
 
 --------------------------------------------------
 
-aspect production parBindUntyped
-top::ParBind ::= x::String e::Expr
+aspect production bindUntyped
+top::Bind ::= x::String e::Expr
 {
   newScope s_dcl::LMGraph -> datumVar(x, ty);
 
@@ -417,8 +379,8 @@ top::ParBind ::= x::String e::Expr
   e.s = top.s;
 }
 
-aspect production parBindTyped
-top::ParBind ::= tyann::Type x::String e::Expr
+aspect production bindTyped
+top::Bind ::= tyann::Type x::String e::Expr
 {
   newScope s_dcl::LMGraph -> datumVar(x, ty1);
 
@@ -429,7 +391,14 @@ top::ParBind ::= tyann::Type x::String e::Expr
   nondecorated local ty2::Type = e.type;
   e.s = top.s;
 
-  top.ok <- ty1 == ty2;
+  top.msgs <-
+    if ty1 == ty2
+    then []
+    else [errorMessage(
+            "variable " ++ x ++ " declared with type " ++ ty1.pp ++ ", but its " ++
+            "definition has type " ++ ty2.pp,
+            top.location
+          )];
 }
 
 --------------------------------------------------
@@ -448,24 +417,39 @@ top::ArgDecl ::= id::String tyann::Type
 
 --------------------------------------------------
 
+attribute pp occurs on Type;
+
 aspect production tFun
 top::Type ::= tyann1::Type tyann2::Type
 {
+  top.pp = case tyann1 of
+           | tFun(_, _) -> "(" ++ tyann1.pp ++ ") -> " ++ tyann2.pp
+           | _ -> tyann1.pp ++ " -> " ++ tyann2.pp
+           end;
+}
+
+aspect production tFloat
+top::Type ::=
+{
+  top.pp = "float";
 }
 
 aspect production tInt
 top::Type ::=
 {
+  top.pp = "int";
 }
 
 aspect production tBool
 top::Type ::=
 {
+  top.pp = "bool";
 }
 
 aspect production tErr
 top::Type ::=
 {
+  top.pp = "<err>";
 }
 
 --------------------------------------------------
@@ -483,15 +467,23 @@ top::ModRef ::= x::String
     );
   
   -- does ministatix only and tgt
-  nondecorated local s_res::(Boolean, Decorated Scope with LMGraph) =
+  nondecorated local s_res::Decorated Scope with LMGraph =
+    if length(mods) == 1 then head(mods) else deadScope;
+
+  top.s -[ imp ]-> s_res;
+
+  top.msgs <- 
     case mods of
-    | h::[] -> (true, h)
-    | _ -> (false, deadScope)
+    | h::[] -> []
+    | _::_ -> [errorMessage(
+                "ambiguous module reference " ++ x,
+                top.location
+              )]
+    | [] -> [errorMessage(
+                "unresolvable module reference " ++ x,
+                top.location
+            )]
     end;
-
-  top.s -[ imp ]-> s_res.2;
-
-  top.ok <- s_res.1;
 }
 
 --------------------------------------------------
@@ -516,12 +508,21 @@ top::VarRef ::= x::String
     end;
 
   -- ministatix datum assertion `s_res -> DatumVar(x, ty')`
-  nondecorated local res_ty::Type = case s_res.2.datum of 
-                                    | datumVar(_, t) -> ^t 
-                                    | _ -> tErr()
-                                    end;
+  nondecorated local res_ty::Type = 
+    case s_res.2.datum of | datumVar(_, t) -> ^t | _ -> tErr() end;
 
   top.type = res_ty;
 
-  top.ok <- s_res.1;
+  top.msgs <- 
+    case vars of
+    | h::[] -> []
+    | _::_ -> [errorMessage(
+                "ambiguous variable reference " ++ x,
+                top.location
+              )]
+    | [] -> [errorMessage(
+                "unresolvable variable reference " ++ x,
+                top.location
+            )]
+    end;
 }

@@ -30,7 +30,7 @@ IO<Integer> ::= largs::[String]
             if length(fileNameExplode) >= 2 && last(fileNameExplode) == "lm"
               then do {
                 print("[✔] Parse success\n");
-                res::Integer <- programOk(ast.ok);
+                res::Integer <- programOk(ast.msgs);
                 --let viz::String = vizStr(allLabs, ast.allScopes);
                 --mkdir("out");
                 --system("echo '" ++ viz ++ "' | dot -Tsvg > out/" ++ fileName ++ ".svg");
@@ -115,7 +115,11 @@ fun printBinds IO<Integer> ::= binds::[(String, String)] = do {
   return if anyUnfound then -1 else 0;
 };-}
 
-fun programOk IO<Integer> ::= ok::Boolean = do {
-  print(if ok then "[✔] Semantic check successful\n" else "[✗] Semantic check failed\n");
-  return if ok then 0 else -1;
+fun programOk IO<Integer> ::= msgs::[Message] = do {
+  print(if null(msgs) 
+        then "[✔] Semantic check successful\n" 
+        else "[✗] Semantic check failed with the following errors:\n" ++
+             concat(map((.pp), msgs)));
+
+  return if null(msgs) then 0 else -1;
 };

@@ -1,0 +1,4 @@
+def a = 1
+def b = true
+
+def c:int = a

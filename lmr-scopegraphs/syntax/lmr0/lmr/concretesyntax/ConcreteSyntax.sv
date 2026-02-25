@@ -37,7 +37,7 @@ top::Decls_c ::=
 nonterminal Decl_c with ast<Decl>, location;
 
 concrete production declDef_c
-top::Decl_c ::= 'def' b::ParBind_c
+top::Decl_c ::= 'def' b::Bind_c
 {
   top.ast = declDef(b.ast, location=top.location);
 }
@@ -45,6 +45,12 @@ top::Decl_c ::= 'def' b::ParBind_c
 --------------------------------------------------
 
 nonterminal Expr_c with ast<Expr>, location;
+
+concrete production exprFloat_c
+top::Expr_c ::= f::Float_t
+{
+  top.ast = exprFloat(toFloat(f.lexeme), location=top.location);
+}
 
 concrete production exprInt_c
 top::Expr_c ::= i::Int_t
@@ -76,34 +82,10 @@ top::Expr_c ::= e1::Expr_c '+' e2::Expr_c
   top.ast = exprAdd(e1.ast, e2.ast, location=top.location);
 }
 
-concrete production exprSub_c
-top::Expr_c ::= e1::Expr_c '-' e2::Expr_c
-{
-  top.ast = exprSub(e1.ast, e2.ast, location=top.location);
-}
-
-concrete production exprMul_c
-top::Expr_c ::= e1::Expr_c '*' e2::Expr_c
-{
-  top.ast = exprMul(e1.ast, e2.ast, location=top.location);
-}
-
-concrete production exprDiv_c
-top::Expr_c ::= e1::Expr_c '/' e2::Expr_c
-{
-  top.ast = exprDiv(e1.ast, e2.ast, location=top.location);
-}
-
 concrete production exprAnd_c
 top::Expr_c ::= e1::Expr_c '&' e2::Expr_c
 {
   top.ast = exprAnd(e1.ast, e2.ast, location=top.location);
-}
-
-concrete production exprOr_c
-top::Expr_c ::= e1::Expr_c '|' e2::Expr_c
-{
-  top.ast = exprOr(e1.ast, e2.ast, location=top.location);
 }
 
 concrete production exprEq_c
@@ -112,8 +94,14 @@ top::Expr_c ::= e1::Expr_c '==' e2::Expr_c
   top.ast = exprEq(e1.ast, e2.ast, location=top.location);
 }
 
+concrete production exprFun_c
+top::Expr_c ::= 'fun' '(' d::ArgDecl_c ')' '{' e::Expr_c '}'
+{
+  top.ast = exprFun(d.ast, e.ast, location=top.location);
+}
+
 concrete production exprApp_c
-top::Expr_c ::= e1::Expr_c '$' e2::Expr_c
+top::Expr_c ::= 'apply' '(' e1::Expr_c ',' e2::Expr_c ')'
 {
   top.ast = exprApp(e1.ast, e2.ast, location=top.location);
 }
@@ -122,12 +110,6 @@ concrete production exprIf_c
 top::Expr_c ::= 'if' e1::Expr_c 'then' e2::Expr_c 'else' e3::Expr_c
 {
   top.ast = exprIf(e1.ast, e2.ast, e3.ast, location=top.location);
-}
-
-concrete production exprFun_c
-top::Expr_c ::= 'fun' '(' d::ArgDecl_c ')' '{' e::Expr_c '}'
-{
-  top.ast = exprFun(d.ast, e.ast, location=top.location);
 }
 
 concrete production exprLet_c
@@ -165,31 +147,15 @@ top::SeqBinds_c ::=
 }
 
 concrete production seqBindsOne_c
-top::SeqBinds_c ::= s::SeqBind_c
+top::SeqBinds_c ::= s::Bind_c
 {
   top.ast = seqBindsOne(s.ast, location=top.location);
 }
 
 concrete production seqBindsCons_c
-top::SeqBinds_c ::= s::SeqBind_c ',' ss::SeqBinds_c
+top::SeqBinds_c ::= s::Bind_c ',' ss::SeqBinds_c
 {
   top.ast = seqBindsCons(s.ast, ss.ast, location=top.location);
-}
-
---------------------------------------------------
-
-nonterminal SeqBind_c with ast<SeqBind>, location;
-
-concrete production seqBindUntyped_c
-top::SeqBind_c ::= id::VarId_t '=' e::Expr_c
-{
-  top.ast = seqBindUntyped(id.lexeme, e.ast, location=top.location);
-}
-
-concrete production seqBindTyped_c
-top::SeqBind_c ::= id::VarId_t ':' ty::Type_c '=' e::Expr_c
-{
-  top.ast = seqBindTyped(ty.ast, id.lexeme, e.ast, location=top.location);
 }
 
 --------------------------------------------------
@@ -203,32 +169,31 @@ top::ParBinds_c ::=
 }
 
 concrete production parBindsOne_c
-top::ParBinds_c ::= s::ParBind_c
-{
-  forwards to parBindsCons_c(^s, ',', parBindsNil_c(location=top.location),
-                             location=top.location);
+top::ParBinds_c ::= s::Bind_c
+{ 
+  top.ast = parBindsOne(s.ast, location=top.location);
 }
 
 concrete production parBindsCons_c
-top::ParBinds_c ::= s::ParBind_c ',' ss::ParBinds_c
+top::ParBinds_c ::= s::Bind_c ',' ss::ParBinds_c
 {
   top.ast = parBindsCons(s.ast, ss.ast, location=top.location);
 }
 
 --------------------------------------------------
 
-nonterminal ParBind_c with ast<ParBind>, location;
+nonterminal Bind_c with ast<Bind>, location;
 
-concrete production parBindUntyped_c
-top::ParBind_c ::= id::VarId_t '=' e::Expr_c
+concrete production bindUntyped_c
+top::Bind_c ::= id::VarId_t '=' e::Expr_c
 {
-  top.ast = parBindUntyped(id.lexeme, e.ast, location=top.location);
+  top.ast = bindUntyped(id.lexeme, e.ast, location=top.location);
 }
 
-concrete production parBindTyped_c
-top::ParBind_c ::= id::VarId_t ':' ty::Type_c '=' e::Expr_c
+concrete production bindTyped_c
+top::Bind_c ::= id::VarId_t ':' ty::Type_c '=' e::Expr_c
 {
-  top.ast = parBindTyped(ty.ast, id.lexeme, e.ast, location=top.location);
+  top.ast = bindTyped(ty.ast, id.lexeme, e.ast, location=top.location);
 }
 
 --------------------------------------------------
@@ -244,6 +209,12 @@ top::ArgDecl_c ::= id::VarId_t ':' ty::Type_c
 --------------------------------------------------
 
 nonterminal Type_c with ast<Type>, location;
+
+concrete production tFloat_c
+top::Type_c ::= 'float'
+{
+  top.ast = tFloat();
+}
 
 concrete production tInt_c
 top::Type_c ::= 'int'

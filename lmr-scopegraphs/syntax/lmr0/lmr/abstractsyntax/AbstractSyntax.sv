@@ -35,7 +35,7 @@ top::Decls ::=
 nonterminal Decl with statix, location;
 
 abstract production declDef
-top::Decl ::= b::ParBind
+top::Decl ::= b::Bind
 {
   top.statix = "DeclDef(" ++ b.statix ++ ")";
 }
@@ -43,6 +43,12 @@ top::Decl ::= b::ParBind
 --------------------------------------------------
 
 nonterminal Expr with statix, location;
+
+abstract production exprFloat
+top::Expr ::= f::Float
+{
+  top.statix = "ExprFloat(\"" ++ toString(f) ++ "\")";
+}
 
 abstract production exprInt
 top::Expr ::= i::Integer
@@ -74,40 +80,22 @@ top::Expr ::= e1::Expr e2::Expr
   top.statix = "ExprAdd(" ++ e1.statix ++ ", " ++ e2.statix ++ ")";
 }
 
-abstract production exprSub
-top::Expr ::= e1::Expr e2::Expr
-{
-  top.statix = "ExprSub(" ++ e1.statix ++ ", " ++ e2.statix ++ ")";
-}
-
-abstract production exprMul
-top::Expr ::= e1::Expr e2::Expr
-{
-  top.statix = "ExprMul(" ++ e1.statix ++ ", " ++ e2.statix ++ ")";
-}
-
-abstract production exprDiv
-top::Expr ::= e1::Expr e2::Expr
-{
-  top.statix = "ExprDiv(" ++ e1.statix ++ ", " ++ e2.statix ++ ")";
-}
-
 abstract production exprAnd
 top::Expr ::= e1::Expr e2::Expr
 {
   top.statix = "ExprAnd(" ++ e1.statix ++ ", " ++ e2.statix ++ ")";
 }
 
-abstract production exprOr
-top::Expr ::= e1::Expr e2::Expr
-{
-  top.statix = "ExprOr(" ++ e1.statix ++ ", " ++ e2.statix ++ ")";
-}
-
 abstract production exprEq
 top::Expr ::= e1::Expr e2::Expr
 {
   top.statix = "ExprEq(" ++ e1.statix ++ ", " ++ e2.statix ++ ")";
+}
+
+abstract production exprFun
+top::Expr ::= d::ArgDecl e::Expr
+{
+  top.statix = "ExprFun(" ++ d.statix ++ ", " ++ e.statix ++ ")";
 }
 
 abstract production exprApp
@@ -120,12 +108,6 @@ abstract production exprIf
 top::Expr ::= e1::Expr e2::Expr e3::Expr
 {
   top.statix = "ExprIf(" ++ e1.statix ++ ", " ++ e2.statix ++ ", " ++ e3.statix ++ ")";
-}
-
-abstract production exprFun
-top::Expr ::= d::ArgDecl e::Expr
-{
-  top.statix = "ExprFun(" ++ d.statix ++ ", " ++ e.statix ++ ")";
 }
 
 abstract production exprLet
@@ -157,31 +139,15 @@ top::SeqBinds ::=
 }
 
 abstract production seqBindsOne
-top::SeqBinds ::= s::SeqBind
+top::SeqBinds ::= s::Bind
 {
   top.statix = "SeqBindsOne(" ++ s.statix ++ ")";
 }
 
 abstract production seqBindsCons
-top::SeqBinds ::= s::SeqBind ss::SeqBinds
+top::SeqBinds ::= s::Bind ss::SeqBinds
 {
   top.statix = "SeqBindsCons(" ++ s.statix ++ ", " ++ ss.statix ++ ")";
-}
-
---------------------------------------------------
-
-nonterminal SeqBind with statix, location;
-
-abstract production seqBindUntyped
-top::SeqBind ::= id::String e::Expr
-{
-  top.statix = "DefBind(\"" ++ id ++ "\", " ++ e.statix ++ ")";
-}
-
-abstract production seqBindTyped
-top::SeqBind ::= ty::Type id::String e::Expr
-{
-  top.statix = "DefBindTyped(\"" ++ id ++ "\", " ++ ty.statix ++ ", " ++ e.statix ++ ")";
 }
 
 --------------------------------------------------
@@ -194,24 +160,30 @@ top::ParBinds ::=
   top.statix = "ParBindsNil()";
 }
 
+abstract production parBindsOne
+top::ParBinds ::= s::Bind
+{
+  top.statix = "ParBindsOne(" ++ s.statix ++ ")";
+}
+
 abstract production parBindsCons
-top::ParBinds ::= s::ParBind ss::ParBinds
+top::ParBinds ::= s::Bind ss::ParBinds
 {
   top.statix = "ParBindsCons(" ++ s.statix ++ ", " ++ ss.statix ++ ")";
 }
 
 --------------------------------------------------
 
-nonterminal ParBind with statix, location;
+nonterminal Bind with statix, location;
 
-abstract production parBindUntyped
-top::ParBind ::= id::String e::Expr
+abstract production bindUntyped
+top::Bind ::= id::String e::Expr
 {
   top.statix = "DefBind(\"" ++ id ++ "\", " ++ e.statix ++ ")";
 }
 
-abstract production parBindTyped
-top::ParBind ::= ty::Type id::String e::Expr
+abstract production bindTyped
+top::Bind ::= ty::Type id::String e::Expr
 {
   top.statix = "DefBindTyped(\"" ++ id ++ "\", " ++ ty.statix ++ ", " ++ e.statix ++ ")";
 }
@@ -230,16 +202,22 @@ top::ArgDecl ::= id::String ty::Type
 
 nonterminal Type with statix;
 
+abstract production tFloat
+top::Type ::=
+{
+  top.statix = "tFloat()";
+}
+
 abstract production tInt
 top::Type ::=
 {
-  top.statix = "tInt()";
+  top.statix = "TInt()";
 }
 
 abstract production tBool
 top::Type ::=
 {
-  top.statix = "tBool()";
+  top.statix = "TBool()";
 }
 
 abstract production tFun
@@ -251,18 +229,20 @@ top::Type ::= tyann1::Type tyann2::Type
 abstract production tErr
 top::Type ::=
 {
-  top.statix = "tErr()";
+  top.statix = "TErr()";
 }
 
+fun eqType Boolean ::= t1::Type t2::Type =
+  case t1, t2 of
+  | tInt(), tInt() -> true
+  | tBool(), tBool() -> true
+  | tFun(t1_1, t1_2), tFun(t2_1, t2_2) -> eqType(^t1_1, ^t2_1) && eqType(^t1_2, ^t2_2)
+  | tErr(), tErr() -> true
+  | _, _ -> false
+  end;
+
 instance Eq Type {
-  eq = \l1::Type l2::Type ->
-    case l1, l2 of
-    | tInt(), tInt() -> true
-    | tBool(), tBool() -> true
-    | tFun(t1, t2), tFun(t3, t4) -> ^t1 == ^t3 && ^t2 == ^t4
-    | tErr(), tErr() -> true
-    | _, _ -> false
-    end;
+  eq = eqType;
 }
 
 --------------------------------------------------
