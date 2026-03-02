@@ -37,9 +37,9 @@ top::Decls_c ::=
 nonterminal Decl_c with ast<Decl>, location;
 
 concrete production declModule_c
-top::Decl_c ::= 'module' id::Id_t '{' ds::Decls_c '}'
+top::Decl_c ::= m::Module_c
 {
-  top.ast = declModule(id.lexeme, ds.ast, location=top.location);
+  top.ast = declModule(m.ast, location=top.location);
 }
 
 concrete production declImport_c
@@ -52,6 +52,16 @@ concrete production declDef_c
 top::Decl_c ::= 'def' b::Bind_c
 {
   top.ast = declDef(b.ast, location=top.location);
+}
+
+--------------------------------------------------
+
+nonterminal Module_c with ast<Module>, location;
+
+concrete production module_c
+top::Module_c ::= 'module' id::Id_t '{' ds::Decls_c '}'
+{
+  top.ast = module(id.lexeme, ds.ast, location=top.location);
 }
 
 --------------------------------------------------
@@ -208,14 +218,15 @@ top::Bind_c ::= id::Id_t ':' ty::Type_c '=' e::Expr_c
   top.ast = bindTyped(ty.ast, id.lexeme, e.ast, location=top.location);
 }
 
+
 --------------------------------------------------
 
-nonterminal ArgDecl_c with ast<ArgDecl>, location;
+nonterminal ArgDecl_c with ast<Bind>, location;
 
 concrete production argDecl_c
 top::ArgDecl_c ::= id::Id_t ':' ty::Type_c
 {
-  top.ast = argDecl(id.lexeme, ty.ast, location=top.location);
+  top.ast = bindArgDcl(id.lexeme, ty.ast, location=top.location);
 }
 
 --------------------------------------------------

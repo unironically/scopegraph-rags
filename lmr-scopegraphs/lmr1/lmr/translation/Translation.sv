@@ -6,19 +6,9 @@ imports lmr1:lmr:nameanalysis_extension;
 --------------------------------------------------
 
 synthesized attribute translation::String occurs on
-  Main,
-  Decls,
-  Decl,
-  Expr,
-  SeqBinds,
-  ParBinds,
-  Bind,
-  ArgDecl,
-  Type,
-  ModRef,
-  VarRef;
+  Main, Decls, Decl, Module, Expr, SeqBinds, ParBinds, Bind, Type, ModRef, VarRef;
 
-inherited attribute tab::String occurs on Decls, Decl;
+inherited attribute tab::String occurs on Decls, Decl, Module;
 
 --------------------------------------------------
 
@@ -52,14 +42,10 @@ top::Decls ::=
 --------------------------------------------------
 
 aspect production declModule
-top::Decl ::= name::String ds::Decls
+top::Decl ::= m::Module
 {
-  top.translation =
-    top.tab ++ "module Mod_" ++ name ++ " = struct\n" ++
-    ds.translation ++
-    top.tab ++ "end";
-
-  ds.tab = top.tab ++ "\t";
+  m.tab = top.tab;
+  top.translation = m.translation;
 }
 
 aspect production declImport
@@ -72,6 +58,19 @@ aspect production declDef
 top::Decl ::= b::Bind
 {
   top.translation = top.tab ++ "let " ++ b.translation;
+}
+
+--------------------------------------------------
+
+aspect production module
+top::Module ::= x::String ds::Decls
+{
+  top.translation =
+    top.tab ++ "module Mod_" ++ x ++ " = struct\n" ++
+    ds.translation ++
+    top.tab ++ "end";
+
+  ds.tab = top.tab ++ "\t";
 }
 
 --------------------------------------------------
@@ -135,9 +134,9 @@ top::Expr ::= e1::Expr e2::Expr
 }
 
 aspect production exprFun
-top::Expr ::= d::ArgDecl e::Expr
+top::Expr ::= b::Bind e::Expr
 {
-  top.translation = "(" ++ d.translation ++ " -> " ++ e.translation ++ ")"; 
+  top.translation = "(" ++ b.translation ++ " -> " ++ e.translation ++ ")"; 
 }
 
 aspect production exprApp
@@ -171,21 +170,9 @@ top::Expr ::= bs::ParBinds e::Expr
 aspect production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
-  local pre::String = if null(bs.liftedExprs) then "" else foldr(
-    \pair::(String, Decorated Expr) acc::String ->
-      "let " ++ pair.1 ++ "_unpar = " ++ pair.2.translation ++ " in " ++ acc,
-    "",
-    bs.liftedExprs
-  );
-
-  top.translation = pre ++ bs.translation ++ e.translation;
+  top.translation = error("exprLetPar.translation TODO");
 
   bs.isFirst = true;
-}
-
-aspect default production top::Expr ::=
-{
-  top.translation = error("unimplemented Expr translation");
 }
 
 --------------------------------------------------
@@ -211,7 +198,7 @@ top::SeqBinds ::= s::Bind ss::SeqBinds
 --------------------------------------------------
 
 inherited attribute isFirst::Boolean occurs on ParBinds;
-synthesized attribute liftedExprs::[(String, Decorated Expr)] occurs on ParBinds;
+synthesized attribute liftedExprs::[(String, Decorated Expr with {s})] occurs on ParBinds;
 
 aspect production parBindsNil
 top::ParBinds ::=
@@ -241,22 +228,19 @@ top::ParBinds ::= s::Bind ss::ParBinds
   top.liftedExprs = s.liftedExpr :: ss.liftedExprs;
 
   ss.isFirst = false;
-  ss.seqRecPar = top.seqRecPar;
 }
 
 --------------------------------------------------
 
-synthesized attribute liftedExpr::(String, Decorated Expr) occurs on Bind;
+synthesized attribute liftedExpr::(String, Decorated Expr with {s}) occurs on Bind;
 
 aspect production bindUntyped
 top::Bind ::= x::String e::Expr
 {
   top.translation = 
-    "var_" ++ x ++ " = " ++ 
-    if top.seqRecPar == 1
+    x ++ " = " ++
+    if top.isRec
     then "lazy (" ++ e.translation ++ ")"
-    else if top.seqRecPar == 2
-    then "lazy (" ++ x ++ "_unpar)"
     else e.translation;
 
   top.liftedExpr = (x, e);
@@ -266,22 +250,20 @@ aspect production bindTyped
 top::Bind ::= tyann::Type x::String e::Expr
 {
   top.translation = 
-    "var_" ++ x ++ ": " ++ tyann.translation ++ " = " ++ 
-    if top.seqRecPar == 1
+    x ++ ": " ++ tyann.translation ++ " = " ++ 
+    if top.isRec
     then "lazy (" ++ e.translation ++ ")"
-    else if top.seqRecPar == 2
-    then "lazy (" ++ x ++ "_unpar)"
     else e.translation;
 
   top.liftedExpr = (x, e);
 }
 
---------------------------------------------------
-
-aspect production argDecl
-top::ArgDecl ::= id::String tyann::Type
+aspect production bindArgDcl
+top::Bind ::= x::String tyann::Type
 {
-  top.translation = "fun var_" ++ id ++ ":" ++ tyann.translation;
+  top.translation = "fun " ++ x ++ ":" ++ tyann.translation;
+
+  top.liftedExpr = error("Impossible! bindArgDcl.liftedExpr");
 }
 
 --------------------------------------------------
@@ -334,7 +316,7 @@ aspect production varRef
 top::VarRef ::= x::String
 {
   top.translation = 
-    if seqRecPar == 1 || seqRecPar == 2
-    then "(Lazy.force var_" ++ x ++ ")"
-    else "var_" ++ x;
+    if bindNode.isRec
+    then "(Lazy.force " ++ x ++ ")"
+    else x;
 }

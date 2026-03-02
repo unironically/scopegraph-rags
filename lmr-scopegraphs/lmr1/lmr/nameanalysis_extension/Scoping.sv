@@ -7,8 +7,8 @@ imports syntax:lmr1:lmr:abstractsyntax;
 scopegraph LMGraph labels lex, var, mod, imp;
 
 scope attribute LMGraph:s;
-attribute s occurs on Decls, Decl, SeqBinds, ParBinds, Bind, Expr,
-  ArgDecl, VarRef, ModRef;
+attribute s occurs on Decls, Decl, SeqBinds, ParBinds, Bind, Module, Expr,
+   VarRef, ModRef;
 
 scope attribute LMGraph:s_def;
 attribute s_def occurs on ParBinds, Bind, Decl, ModRef;
@@ -17,17 +17,17 @@ scope attribute LMGraph:s_last;
 attribute s_last occurs on SeqBinds;
 
 scope attribute LMGraph:s_module;
-attribute s_module occurs on Decls, Decl;
+attribute s_module occurs on Decls, Decl, Module;
 
 --------------------------------------------------
 
-monoid attribute msgs::[Message] with [], ++ occurs on Main, Decls, Decl, Bind, 
-  Expr, VarRef, ArgDecl, SeqBinds, ParBinds, ModRef;
+monoid attribute msgs::[Message] with [], ++ occurs on Main, Decls, Decl, 
+  Module, Bind, Expr, VarRef, SeqBinds, ParBinds, ModRef;
 
-propagate msgs on Main, Decls, Decl, Expr, VarRef, ArgDecl, Bind,
+propagate msgs on Main, Decls, Decl, Expr, VarRef, Bind, Module,
   SeqBinds, ParBinds, ModRef;
 
-synthesized attribute type::Type occurs on Expr, ArgDecl, VarRef;
+synthesized attribute type::Type occurs on Expr, VarRef;
 
 --------------------------------------------------
 
@@ -65,15 +65,10 @@ top::Decls ::=
 --------------------------------------------------
 
 aspect production declModule
-top::Decl ::= name::String ds::Decls
+top::Decl ::= m::Module
 {
-  newScope modScope::LMGraph -> datumMod(name);
-
-  modScope -[ lex ]-> top.s;
-  top.s_module -[ mod ]-> modScope;
-
-  ds.s = modScope;
-  ds.s_module = modScope;
+  m.s = top.s;
+  m.s_module = top.s_module;
 }
 
 aspect production declImport
@@ -88,7 +83,21 @@ top::Decl ::= b::Bind
 {
   b.s = top.s;
   b.s_def = top.s_module;
-  b.seqRecPar = 0;
+  b.isRec = false;
+}
+
+--------------------------------------------------
+
+aspect production module
+top::Module ::= x::String ds::Decls
+{
+  newScope modScope::LMGraph -> datumMod(x, top);
+
+  modScope -[ lex ]-> top.s;
+  top.s_module -[ mod ]-> modScope;
+
+  ds.s = modScope;
+  ds.s_module = modScope;
 }
 
 --------------------------------------------------
@@ -134,10 +143,30 @@ top::Expr ::= e1::Expr e2::Expr
   e2.s = top.s;
   nondecorated local ty2::Type = e2.type;
 
-  local ok::([Message], Type) = addOk(ty1, ty2, top.location);
+  local msgLeft::[Message] =
+    if ty1 == tInt() || ty1 == tFloat() || ty1 == tErr()
+    then []
+    else [errorMessage(
+      "addition expects left operand to be of type int or float or bool, " ++
+      "but an expression was given of type " ++ ty1.pp,
+      top.location
+    )];
 
-  top.msgs <- ok.1;
-  top.type = ok.2;
+  local msgRight::[Message] =
+    if ty2 == tInt() || ty2 == tInt() || ty2 == tErr()
+    then []
+    else [errorMessage(
+      "addition expects right operand to be of type " ++ ty1.pp ++ ", but an " ++
+      "expression was given of type " ++ ty2.pp,
+      top.location
+    )];
+
+
+  top.msgs <- msgLeft ++ msgRight;
+  top.type = 
+    if null(top.msgs)
+    then (if e1.type == tFloat() || e2.type == tFloat() then tFloat() else tInt())
+    else tErr();
 }
 
 aspect production exprAnd
@@ -187,14 +216,17 @@ top::Expr ::= e1::Expr e2::Expr
 }
 
 aspect production exprFun
-top::Expr ::= d::ArgDecl e::Expr
+top::Expr ::= b::Bind e::Expr
 {
   newScope s_fun::LMGraph -> datumLex();
 
   s_fun -[ lex ]-> top.s;
 
-  d.s = s_fun;
-  nondecorated local ty1::Type = d.type;
+  b.s = top.s;
+  b.s_def = s_fun;
+  b.isRec = false;
+
+  nondecorated local ty1::Type = b.type;
 
   e.s = s_fun;
   nondecorated local ty2::Type = e.type;
@@ -295,7 +327,6 @@ top::Expr ::= bs::ParBinds e::Expr
 
   bs.s = s_let;
   bs.s_def = s_let;
-  bs.seqRecPar = 1;
 
   e.s = s_let;
 
@@ -311,7 +342,6 @@ top::Expr ::= bs::ParBinds e::Expr
 
   bs.s = top.s;
   bs.s_def = s_let;
-  bs.seqRecPar = 2;
 
   e.s = s_let;
 
@@ -337,7 +367,7 @@ top::SeqBinds ::= s::Bind
 
   s.s = top.s;
   s.s_def = top.s_last;
-  s.seqRecPar = 0;
+  s.isRec = false;
 }
 
 aspect production seqBindsCons
@@ -348,15 +378,13 @@ top::SeqBinds ::= s::Bind ss::SeqBinds
 
   s.s = top.s;
   s.s_def = s_next;
-  s.seqRecPar = 0;
+  s.isRec = false;
 
   ss.s = s_next;
   ss.s_last = top.s_last;
 }
 
 --------------------------------------------------
-
-inherited attribute seqRecPar::Integer occurs on ParBinds;
 
 aspect production parBindsNil
 top::ParBinds ::=
@@ -368,7 +396,7 @@ top::ParBinds ::= s::Bind
 {
   s.s = top.s;
   s.s_def = top.s_def;
-  s.seqRecPar = top.seqRecPar;
+  s.isRec = true;
 }
 
 aspect production parBindsCons
@@ -376,7 +404,7 @@ top::ParBinds ::= s::Bind ss::ParBinds
 {
   s.s = top.s;
   s.s_def = top.s_def;
-  s.seqRecPar = top.seqRecPar;
+  s.isRec = true;
 
   ss.s = top.s;
   ss.s_def = top.s_def;
@@ -384,24 +412,26 @@ top::ParBinds ::= s::Bind ss::ParBinds
 
 --------------------------------------------------
 
--- seq 0, rec 1, par 2
-attribute seqRecPar occurs on Bind;
+inherited attribute isRec::Boolean occurs on Bind;
+
+attribute type occurs on Bind;
 
 aspect production bindUntyped
 top::Bind ::= x::String e::Expr
 {
-  newScope s_dcl::LMGraph -> datumVar(x, ty, top.seqRecPar);
+  newScope s_dcl::LMGraph -> datumVar(x, top);
 
   top.s_def -[ var ]-> s_dcl;
 
-  nondecorated local ty::Type = e.type;
   e.s = top.s;
+
+  top.type = e.type;
 }
 
 aspect production bindTyped
 top::Bind ::= tyann::Type x::String e::Expr
 {
-  newScope s_dcl::LMGraph -> datumVar(x, ty1, top.seqRecPar);
+  newScope s_dcl::LMGraph -> datumVar(x, top);
 
   top.s_def -[ var ]-> s_dcl;
 
@@ -409,6 +439,8 @@ top::Bind ::= tyann::Type x::String e::Expr
 
   nondecorated local ty2::Type = e.type;
   e.s = top.s;
+
+  top.type = ^tyann;
 
   top.msgs <-
     if ty1 == ty2 || e.type == tErr()
@@ -420,18 +452,14 @@ top::Bind ::= tyann::Type x::String e::Expr
           )];
 }
 
---------------------------------------------------
-
-aspect production argDecl
-top::ArgDecl ::= id::String tyann::Type
+aspect production bindArgDcl
+top::Bind ::= x::String tyann::Type
 {
-  newScope s_dcl::LMGraph -> datumVar(id, ty, 0);
-
-  nondecorated local ty::Type = ^tyann;
-
-  top.type = ty;
+  newScope s_dcl::LMGraph -> datumVar(x, top);
 
   top.s -[ var ]-> s_dcl;
+
+  top.type = ^tyann;
 }
 
 --------------------------------------------------
@@ -479,14 +507,13 @@ top::ModRef ::= x::String
   -- does ministatix query, filter and min-refs constraints
   local mods::[Decorated Scope with LMGraph] =
     visible(
-      \d::Datum -> case d of datumMod(x_) -> x_ == x | _ -> false end,
+      \d::Datum -> case d of datumMod(dx, _) -> x == dx | _ -> false end,
       `lex* . imp? . mod`::LMGraph,
       `lex > mod, lex > imp, imp > mod`::LMGraph,
       top.s
     );
   
-  -- does ministatix only and tgt
-  nondecorated local s_res::Decorated Scope with LMGraph =
+  local s_res::Decorated Scope with LMGraph =
     if length(mods) == 1 then head(mods) else deadScope;
 
   top.s_def -[ imp ]-> s_res;
@@ -494,14 +521,8 @@ top::ModRef ::= x::String
   top.msgs <- 
     case mods of
     | h::[] -> []
-    | _::_ -> [errorMessage(
-                "ambiguous module reference " ++ x,
-                top.location
-              )]
-    | [] -> [errorMessage(
-                "unresolvable module reference " ++ x,
-                top.location
-            )]
+    | _::_ -> [errorMessage("ambiguous module reference " ++ x, top.location)]
+    | [] -> [errorMessage("unresolvable module reference " ++ x, top.location)]
     end;
 }
 
@@ -510,41 +531,31 @@ top::ModRef ::= x::String
 aspect production varRef
 top::VarRef ::= x::String
 {
-  -- does ministatix query, filter and min-refs constraints
+  -- for ministatix 'query', 'filter' and 'min-refs' constraints
   local vars::[Decorated Scope with LMGraph] =
     visible(
-      \d::Datum -> case d of datumVar(x_, _, _) -> x_ == x | _ -> false end,
+      \d::Datum -> case d of datumVar(dx, _) -> x == dx | _ -> false end,
       `lex* . imp? . var`::LMGraph,
       `lex > var, lex > imp, imp > var`::LMGraph,
       top.s
     );
 
-  -- does ministatix only and tgt
-  nondecorated local s_res::(Boolean, Decorated Scope with LMGraph) =
-    case vars of
-    | h::[] -> (true, h)
-    | _ -> (false, deadScope)
+  local s_res::Maybe<Decorated Scope with LMGraph> =
+    if length(vars) == 1 then just(head(vars)) else nothing();
+
+  production attribute bindNode::Decorated Bind with {s, isRec} =
+    case s_res.fromJust.datum of
+    | datumVar(_, node) -> node
+    | _ -> error("Impossible! varRef.bindNode")
     end;
 
-  -- ministatix datum assertion `s_res -> DatumVar(x, ty')`
-  nondecorated local res_ty::Type = 
-    case s_res.2.datum of | datumVar(_, t, _) -> ^t | _ -> tErr() end;
-
-  production attribute seqRecPar::Integer = 
-    case s_res.2.datum of | datumVar(_, _, n) -> n | _ -> 0 end;
-
-  top.type = res_ty;
+  top.type = if s_res.isJust then bindNode.type else tErr();
 
   top.msgs <- 
     case vars of
     | h::[] -> []
-    | _::_ -> [errorMessage(
-                "ambiguous variable reference " ++ x,
-                top.location
-              )]
-    | [] -> [errorMessage(
-                "unresolvable variable reference " ++ x,
-                top.location
-            )]
+    | _::_ -> [errorMessage("ambiguous variable reference " ++ x, top.location)]
+    | [] -> [errorMessage("unresolvable variable reference " ++ x, top.location)]
     end;
+
 }

@@ -11,11 +11,11 @@ top::Datum ::=
 {}
 
 production datumVar
-top::Datum ::= name::String ty::Type seqRecPar::Integer
+top::Datum ::= name::String b::Decorated Bind with {s, isRec}
 {}
 
 production datumMod
-top::Datum ::= name::String
+top::Datum ::= name::String m::Decorated Module
 {}
 
 --

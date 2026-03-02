@@ -35,9 +35,9 @@ top::Decls ::=
 nonterminal Decl with statix, location;
 
 abstract production declModule
-top::Decl ::= id::String ds::Decls
+top::Decl ::= m::Module
 {
-  top.statix = "DeclModule(\"" ++ id ++ "\", " ++ ds.statix ++ ")";
+  top.statix = m.statix;
 }
 
 abstract production declImport
@@ -50,6 +50,16 @@ abstract production declDef
 top::Decl ::= b::Bind
 {
   top.statix = "DeclDef(" ++ b.statix ++ ")";
+}
+
+--------------------------------------------------
+
+nonterminal Module with statix, location;
+
+abstract production module
+top::Module ::= x::String ds::Decls
+{
+  top.statix = "DeclModule(\"" ++ x ++ "\", " ++ ds.statix ++ ")";
 }
 
 --------------------------------------------------
@@ -105,9 +115,9 @@ top::Expr ::= e1::Expr e2::Expr
 }
 
 abstract production exprFun
-top::Expr ::= d::ArgDecl e::Expr
+top::Expr ::= b::Bind e::Expr
 {
-  top.statix = "ExprFun(" ++ d.statix ++ ", " ++ e.statix ++ ")";
+  top.statix = "ExprFun(" ++ b.statix ++ ", " ++ e.statix ++ ")";
 }
 
 abstract production exprApp
@@ -195,19 +205,15 @@ top::Bind ::= id::String e::Expr
 }
 
 abstract production bindTyped
-top::Bind ::= ty::Type id::String e::Expr
+top::Bind ::= tyann::Type id::String e::Expr
 {
-  top.statix = "DefBindTyped(\"" ++ id ++ "\", " ++ ty.statix ++ ", " ++ e.statix ++ ")";
+  top.statix = "DefBindTyped(\"" ++ id ++ "\", " ++ tyann.statix ++ ", " ++ e.statix ++ ")";
 }
 
---------------------------------------------------
-
-nonterminal ArgDecl with statix, location;
-
-abstract production argDecl
-top::ArgDecl ::= id::String ty::Type
+abstract production bindArgDcl
+top::Bind ::= x::String tyann::Type
 {
-  top.statix = "ArgDecl(\"" ++ id ++ "\", " ++ ty.statix ++ ")";
+  top.statix = "ArgDecl(\"" ++ x ++ "\", " ++ tyann.statix ++ ")";
 }
 
 --------------------------------------------------
@@ -246,6 +252,7 @@ top::Type ::=
 
 fun eqType Boolean ::= t1::Type t2::Type =
   case t1, t2 of
+  | tFloat(), tFloat() -> true
   | tInt(), tInt() -> true
   | tBool(), tBool() -> true
   | tFun(t1_1, t1_2), tFun(t2_1, t2_2) -> eqType(^t1_1, ^t2_1) && eqType(^t1_2, ^t2_2)
