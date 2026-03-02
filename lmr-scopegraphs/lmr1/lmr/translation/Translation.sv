@@ -109,28 +109,30 @@ aspect production exprAdd
 top::Expr ::= e1::Expr e2::Expr
 {
   top.translation =
-    case e1.type, e2.type of
-    | tFloat(), tFloat() ->
-        e1.translation ++ " +. " ++ e2.translation
-    | tFloat(), tInt() ->
-        e1.translation ++ " +. (float_of_int " ++ e2.translation ++ ")"
-    | tInt(), tFloat() ->
-        "(float_of_int " ++ e1.translation ++ ") +. " ++ e2.translation
-    | _, _ ->
-        e1.translation ++ " + " ++ e2.translation
-    end;
+    "(" ++
+      case e1.type, e2.type of
+      | tFloat(), tFloat() ->
+          e1.translation ++ " +. " ++ e2.translation
+      | tFloat(), tInt() ->
+          e1.translation ++ " +. (float_of_int " ++ e2.translation ++ ")"
+      | tInt(), tFloat() ->
+          "(float_of_int " ++ e1.translation ++ ") +. " ++ e2.translation
+      | _, _ ->
+          e1.translation ++ " + " ++ e2.translation
+      end ++
+    ")";
 }
 
 aspect production exprAnd
 top::Expr ::= e1::Expr e2::Expr
 {
-  top.translation = e1.translation ++ " && " ++ e2.translation;
+  top.translation = "(" ++ e1.translation ++ " && " ++ e2.translation ++ ")";
 }
 
 aspect production exprEq
 top::Expr ::= e1::Expr e2::Expr
 {
-  top.translation = e1.translation ++ " = " ++ e2.translation;
+  top.translation = "(" ++ e1.translation ++ " = " ++ e2.translation ++ ")";
 }
 
 aspect production exprFun
