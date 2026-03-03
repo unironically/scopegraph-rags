@@ -1,4 +1,4 @@
-*/*.jar
+*.jar
 
 equations.md
 ministatix.hs
@@ -9,4 +9,3 @@ out
 *.class
 
 JastAdd-LM/AST
-JastAdd-LM/LM.jar

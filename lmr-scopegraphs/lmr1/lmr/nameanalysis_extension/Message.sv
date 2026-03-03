@@ -8,13 +8,13 @@ synthesized attribute pp::String;
 
 nonterminal Message with pp;
 
-production errorMessage
+production err
 top::Message ::= msg::String loc::Location
 {
   top.pp = loc.unparse ++ ": error: " ++ msg ++ "\n"; 
 }
 
-production warnMessage
+production warn
 top::Message ::= msg::String loc::Location
 {
   top.pp = loc.unparse ++ ": warning: " ++ msg ++ "\n"; 
@@ -27,7 +27,7 @@ fun binopOk([Message], Type) ::= l::Type r::Type loc::Location
   let msgs::[Message] =
     if r == tErr() || cond(r)
     then []
-    else [errorMessage(
+    else [err(
       op ++ " expects type of right operand to be " ++ expect ++ ", but an expression " ++
       "was given of type " ++ r.pp,
       loc
@@ -36,7 +36,7 @@ fun binopOk([Message], Type) ::= l::Type r::Type loc::Location
   let msgs::[Message] =
     if l == tErr() || cond(l)
     then msgs
-    else errorMessage(
+    else err(
       op ++ " expects type of left operand to be " ++ expect ++ ", but an expression " ++
       "was given of type " ++ l.pp,
       loc

@@ -7,7 +7,6 @@ imports syntax:lmr1:lmr:abstractsyntax;
 imports sg_lib3:src;
 
 imports lmr1:lmr:nameanalysis_extension;
-imports lmr1:lmr:translation;
 
 function main
 IO<Integer> ::= largs::[String]
@@ -37,7 +36,7 @@ IO<Integer> ::= largs::[String]
                   then do {
                     print("[✔] Semantic check successful\n");
                     mkdir("out");
-                    writeFile("out/" ++ fileName ++ ".ml", ast.translation);
+                    writeFile("out/" ++ fileName ++ ".ml", ast.ocaml);
                     return 0;
                   }
                   else do {
