@@ -1,7 +1,5 @@
 grammar lmr1:lmr:nameanalysis_extension;
 
-imports syntax:lmr1:lmr:abstractsyntax;
-
 --------------------------------------------------
 
 -- { scopeAttributeExample }
@@ -32,7 +30,9 @@ synthesized attribute ocaml::String occurs on
 
 --------------------------------------------------
 
-aspect production program
+nonterminal Main with location;
+
+production program
 top::Main ::= ds::Decls
 {
   newScope glob -> datumLex();
@@ -47,7 +47,9 @@ top::Main ::= ds::Decls
 
 --------------------------------------------------
 
-aspect production declsCons
+nonterminal Decls with location;
+
+production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
   newScope seqScope -> datumLex();
@@ -68,7 +70,7 @@ top::Decls ::= d::Decl ds::Decls
     ds.ocaml;
 }
 
-aspect production declsNil
+production declsNil
 top::Decls ::=
 {
   top.msgs = [];
@@ -78,7 +80,9 @@ top::Decls ::=
 
 --------------------------------------------------
 
-aspect production declModule
+nonterminal Decl with location;
+
+production declModule
 top::Decl ::= m::Module
 {
   m.s = top.s;
@@ -89,7 +93,7 @@ top::Decl ::= m::Module
   top.ocaml = m.ocaml;
 }
 
-aspect production declImport
+production declImport
 top::Decl ::= mr::ModRef
 {
   mr.s = top.s;
@@ -100,7 +104,7 @@ top::Decl ::= mr::ModRef
   top.ocaml = mr.ocaml;
 }
 
-aspect production declDef
+production declDef
 top::Decl ::= b::Bind
 {
   b.s = top.s;
@@ -115,8 +119,10 @@ top::Decl ::= b::Bind
 
 --------------------------------------------------
 
+nonterminal Module with location;
+
 -- { moduleDeclExample }
-aspect production module
+production module
 top::Module ::= x::String ds::Decls
 {
   newScope modScope -> datumMod(x, top);
@@ -135,7 +141,10 @@ top::Module ::= x::String ds::Decls
 
 --------------------------------------------------
 
-aspect production exprFloat
+
+nonterminal Expr with location;
+
+production exprFloat
 top::Expr ::= f::Float
 {
   top.type = tFloat();
@@ -145,7 +154,7 @@ top::Expr ::= f::Float
   top.ocaml = toString(f);
 }
 
-aspect production exprInt
+production exprInt
 top::Expr ::= i::Integer
 {
   top.type = tInt();
@@ -155,7 +164,7 @@ top::Expr ::= i::Integer
   top.ocaml = toString(i);
 }
 
-aspect production exprTrue
+production exprTrue
 top::Expr ::=
 {
   top.type = tBool();
@@ -165,7 +174,7 @@ top::Expr ::=
   top.ocaml = "true";
 }
 
-aspect production exprFalse
+production exprFalse
 top::Expr ::=
 {
   top.type = tBool();
@@ -175,7 +184,7 @@ top::Expr ::=
   top.ocaml = "false";
 }
 
-aspect production exprVar
+production exprVar
 top::Expr ::= r::VarRef
 {
   r.s = top.s;
@@ -188,7 +197,7 @@ top::Expr ::= r::VarRef
 }
 
 -- { addExample }
-aspect production exprAdd
+production exprAdd
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
@@ -238,7 +247,7 @@ top::Expr ::= e1::Expr e2::Expr
 }
 -- { addExample }
 
-aspect production exprAnd
+production exprAnd
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
@@ -255,7 +264,7 @@ top::Expr ::= e1::Expr e2::Expr
   top.ocaml = "(" ++ e1.ocaml ++ " && " ++ e2.ocaml ++ ")";
 }
 
-aspect production exprEq
+production exprEq
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
@@ -289,7 +298,7 @@ top::Expr ::= e1::Expr e2::Expr
   top.ocaml = "(" ++ e1.ocaml ++ " = " ++ e2.ocaml ++ ")";
 }
 
-aspect production exprFun
+production exprFun
 top::Expr ::= b::Bind e::Expr
 {
   newScope s_fun -> datumLex();
@@ -313,7 +322,7 @@ top::Expr ::= b::Bind e::Expr
   top.ocaml = "(" ++ b.ocaml ++ " -> " ++ e.ocaml ++ ")"; 
 }
 
-aspect production exprApp
+production exprApp
 top::Expr ::= e1::Expr e2::Expr
 {
   e1.s = top.s;
@@ -354,7 +363,7 @@ top::Expr ::= e1::Expr e2::Expr
   top.ocaml = "(" ++ e1.ocaml ++ " " ++ e2.ocaml ++ ")";
 }
 
-aspect production exprIf
+production exprIf
 top::Expr ::= e1::Expr e2::Expr e3::Expr
 {
   e1.s = top.s;
@@ -393,7 +402,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
                     " else " ++ e3.ocaml;
 }
 
-aspect production exprLetRec
+production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
   newScope s_let -> datumLex();
@@ -414,7 +423,7 @@ top::Expr ::= bs::ParBinds e::Expr
   bs.isFirst = true;
 }
 
-aspect production exprLetPar
+production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
   newScope s_let -> datumLex();
@@ -440,7 +449,7 @@ top::Expr ::= bs::ParBinds e::Expr
 inherited attribute isRecLet::Boolean;
 
 -- { exprLetExample }
-aspect production exprLet
+production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
   existsScope s_let;
@@ -455,7 +464,7 @@ top::Expr ::= bs::SeqBinds e::Expr
   top.ocaml = bs.ocaml ++ e.ocaml;
 }
 
-aspect production seqBindsLast
+production seqBindsLast
 top::SeqBinds ::= s::Bind
 {
   newScope top.s_last -> datumLex();
@@ -473,7 +482,7 @@ top::SeqBinds ::= s::Bind
 attribute isRecLet occurs on Bind;
 attribute type occurs on Bind;
 
-aspect production bindUntyped
+production bindUntyped
 top::Bind ::= x::String e::Expr
 {
   newScope s_dcl -> datumVar(x, top);
@@ -490,7 +499,9 @@ top::Bind ::= x::String e::Expr
 }
 -- { exprLetExample }
 
-aspect production seqBindsCons
+nonterminal SeqBinds with location;
+
+production seqBindsCons
 top::SeqBinds ::= s::Bind ss::SeqBinds
 {
   newScope s_next -> datumLex();
@@ -509,7 +520,7 @@ top::SeqBinds ::= s::Bind ss::SeqBinds
   top.ocaml = "let " ++ s.ocaml ++ " in " ++ ss.ocaml;
 }
 
-aspect production seqBindsNil
+production seqBindsNil
 top::SeqBinds ::=
 {
   newScope top.s_last -> datumLex();
@@ -523,9 +534,12 @@ top::SeqBinds ::=
 
 --------------------------------------------------
 
+
+nonterminal ParBinds with location;
+
 inherited attribute isFirst::Boolean occurs on ParBinds;
 
-aspect production parBindsNil
+production parBindsNil
 top::ParBinds ::=
 {
   top.msgs = [];
@@ -533,7 +547,7 @@ top::ParBinds ::=
   top.ocaml = "";
 }
 
-aspect production parBindsOne
+production parBindsOne
 top::ParBinds ::= s::Bind
 {
   s.s = top.s;
@@ -548,7 +562,7 @@ top::ParBinds ::= s::Bind
     s.ocaml ++ " in ";
 }
 
-aspect production parBindsCons
+production parBindsCons
 top::ParBinds ::= s::Bind ss::ParBinds
 {
   s.s = top.s;
@@ -570,7 +584,9 @@ top::ParBinds ::= s::Bind ss::ParBinds
 
 --------------------------------------------------
 
-aspect production bindTyped
+nonterminal Bind with location;
+
+production bindTyped
 top::Bind ::= tyann::Type x::String e::Expr
 {
   newScope s_dcl -> datumVar(x, top);
@@ -600,7 +616,7 @@ top::Bind ::= tyann::Type x::String e::Expr
     else e.ocaml;
 }
 
-aspect production bindArgDcl
+production bindArgDcl
 top::Bind ::= x::String tyann::Type
 {
   newScope s_dcl -> datumVar(x, top);
@@ -616,9 +632,11 @@ top::Bind ::= x::String tyann::Type
 
 --------------------------------------------------
 
+nonterminal Type;
+
 attribute pp occurs on Type;
 
-aspect production tFun
+production tFun
 top::Type ::= tyann1::Type tyann2::Type
 {
   top.pp =
@@ -634,37 +652,53 @@ top::Type ::= tyann1::Type tyann2::Type
     end;
 }
 
-aspect production tFloat
+production tFloat
 top::Type ::=
 {
   top.pp = "float";
   top.ocaml = top.pp;
 }
 
-aspect production tInt
+production tInt
 top::Type ::=
 {
   top.pp = "int";
   top.ocaml = top.pp;
 }
 
-aspect production tBool
+production tBool
 top::Type ::=
 {
   top.pp = "bool";
   top.ocaml = top.pp;
 }
 
-aspect production tErr
+production tErr
 top::Type ::=
 {
   top.pp = "<err>";
   top.ocaml = error("tErr.ocaml demanded");
 }
 
+fun eqType Boolean ::= t1::Type t2::Type =
+  case t1, t2 of
+  | tFloat(), tFloat() -> true
+  | tInt(), tInt() -> true
+  | tBool(), tBool() -> true
+  | tFun(t1_1, t1_2), tFun(t2_1, t2_2) -> eqType(^t1_1, ^t2_1) && eqType(^t1_2, ^t2_2)
+  | tErr(), tErr() -> true
+  | _, _ -> false
+  end;
+
+instance Eq Type {
+  eq = eqType;
+}
+
 --------------------------------------------------
 
-aspect production modRef
+nonterminal ModRef with location;
+
+production modRef
 top::ModRef ::= x::String
 {
   -- does ministatix query, filter and min-refs constraints
@@ -692,8 +726,10 @@ top::ModRef ::= x::String
 
 --------------------------------------------------
 
+nonterminal VarRef with location;
+
 -- { varRefExample }
-aspect production varRef
+production varRef
 top::VarRef ::= x::String
 {
   local vars::[Decorated Scope with LMLabels] =

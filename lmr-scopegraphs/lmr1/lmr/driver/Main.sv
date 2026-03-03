@@ -1,12 +1,13 @@
 grammar lmr1:lmr:driver;
 
-imports syntax:lmr1:lmr:driver;
-imports syntax:lmr1:lmr:concretesyntax;
-imports syntax:lmr1:lmr:abstractsyntax;
-
 imports sg_lib3:src;
 
+imports lmr1:lmr:concretesyntax;
 imports lmr1:lmr:nameanalysis_extension;
+
+parser parse :: Main_c {
+  lmr1:lmr:concretesyntax;
+}
 
 function main
 IO<Integer> ::= largs::[String]
