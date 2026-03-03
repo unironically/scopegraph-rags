@@ -4,11 +4,13 @@ imports syntax:lmr1:lmr:abstractsyntax;
 
 --------------------------------------------------
 
+-- { scopeAttributeExample }
 scopegraph LMGraph labels lex, var, mod, imp;
 
-scope attribute LMGraph:s;
-attribute s occurs on Decls, Decl, SeqBinds, ParBinds, Bind, Module, Expr,
-   VarRef, ModRef;
+scope attribute LMGraph:s occurs on 
+  Decls, Decl, Module, Bind, SeqBinds, ParBinds
+  Expr, VarRef, ModRef;
+-- { scopeAttributeExample }
 
 scope attribute LMGraph:s_def;
 attribute s_def occurs on ParBinds, Bind, Decl, ModRef;
@@ -88,6 +90,7 @@ top::Decl ::= b::Bind
 
 --------------------------------------------------
 
+-- { moduleDeclExample }
 aspect production module
 top::Module ::= x::String ds::Decls
 {
@@ -99,6 +102,7 @@ top::Module ::= x::String ds::Decls
   ds.s = modScope;
   ds.s_module = modScope;
 }
+-- { moduleDeclExample }
 
 --------------------------------------------------
 
@@ -134,6 +138,7 @@ top::Expr ::= r::VarRef
   top.type = r.type;
 }
 
+-- { addExample }
 aspect production exprAdd
 top::Expr ::= e1::Expr e2::Expr
 {
@@ -147,16 +152,16 @@ top::Expr ::= e1::Expr e2::Expr
     if ty1 == tInt() || ty1 == tFloat() || ty1 == tErr()
     then []
     else [errorMessage(
-      "addition expects left operand to be of type int or float or bool, " ++
+      "addition left operand must be int or float, " ++
       "but an expression was given of type " ++ ty1.pp,
       top.location
     )];
 
   local msgRight::[Message] =
-    if ty2 == tInt() || ty2 == tInt() || ty2 == tErr()
+    if ty2 == tInt() || ty2 == tFloat() || ty2 == tErr()
     then []
     else [errorMessage(
-      "addition expects right operand to be of type " ++ ty1.pp ++ ", but an " ++
+      "addition right operand must be int or float, " ++
       "expression was given of type " ++ ty2.pp,
       top.location
     )];
@@ -168,6 +173,7 @@ top::Expr ::= e1::Expr e2::Expr
     then (if e1.type == tFloat() || e2.type == tFloat() then tFloat() else tInt())
     else tErr();
 }
+-- { addExample }
 
 aspect production exprAnd
 top::Expr ::= e1::Expr e2::Expr
@@ -305,18 +311,20 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
   top.type = if ty1 == tBool() && ty2 == ty3 then ty2 else tErr();
 }
 
+-- { exprLetExample }
 aspect production exprLet
 top::Expr ::= bs::SeqBinds e::Expr
 {
-  existsScope LMGraph:s_last;
+  existsScope LMGraph:s_let;
 
   bs.s = top.s;
-  bs.s_last = s_last;
+  bs.s_last = s_let;
 
-  e.s = s_last;
+  e.s = s_let;
 
   top.type = e.type;
 }
+-- { exprLetExample }
 
 aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
@@ -506,10 +514,9 @@ top::ModRef ::= x::String
 {
   -- does ministatix query, filter and min-refs constraints
   local mods::[Decorated Scope with LMGraph] =
-    visible(
+    query(
+      `lex*`imp?`mod,
       \d::Datum -> case d of datumMod(dx, _) -> x == dx | _ -> false end,
-      `lex* . imp? . mod`::LMGraph,
-      `lex > mod, lex > imp, imp > mod`::LMGraph,
       top.s
     );
   
@@ -528,34 +535,43 @@ top::ModRef ::= x::String
 
 --------------------------------------------------
 
+-- { varRefExample }
 aspect production varRef
 top::VarRef ::= x::String
 {
-  -- for ministatix 'query', 'filter' and 'min-refs' constraints
   local vars::[Decorated Scope with LMGraph] =
-    visible(
-      \d::Datum -> case d of datumVar(dx, _) -> x == dx | _ -> false end,
-      `lex* . imp? . var`::LMGraph,
-      `lex > var, lex > imp, imp > var`::LMGraph,
-      top.s
-    );
+    query(`lex*`imp?`var, isDatumVar(x), top.s);
 
-  local s_res::Maybe<Decorated Scope with LMGraph> =
-    if length(vars) == 1 then just(head(vars)) else nothing();
+  production attribute 
+    bindNode::Maybe<Decorated Bind with {s, isRec}> =
+    if length(vars) == 1 
+    then just(extractBind(head(vars)))
+    else nothing();
 
-  production attribute bindNode::Decorated Bind with {s, isRec} =
-    case s_res.fromJust.datum of
-    | datumVar(_, node) -> node
-    | _ -> error("Impossible! varRef.bindNode")
-    end;
-
-  top.type = if s_res.isJust then bindNode.type else tErr();
+  top.type = mapOrElse(tErr(), (.type), bindNode);
 
   top.msgs <- 
     case vars of
-    | h::[] -> []
-    | _::_ -> [errorMessage("ambiguous variable reference " ++ x, top.location)]
-    | [] -> [errorMessage("unresolvable variable reference " ++ x, top.location)]
+    | [h]  -> []
+    | []   -> [errorMessage(x ++ " unresolvable",
+                            top.location)]
+    | _::_ -> [errorMessage(x ++ " ambiguous",
+                            top.location)]
     end;
-
 }
+-- { varRefExample }
+
+fun isDatumVar (Boolean ::= Datum) ::= x::String =
+  \d::Datum ->
+    case d of
+    | datumVar(dx, _) -> x == dx
+    | _ -> false
+    end
+;
+
+fun extractBind Decorated Bind with {s, isRec} ::= s::Decorated Scope with LMGraph =
+  case s.datum of
+  | datumVar(_, n) -> n
+  | _ -> error("Used extractBind on a scope not using datumVar!")
+  end
+;

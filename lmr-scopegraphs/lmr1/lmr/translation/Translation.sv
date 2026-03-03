@@ -318,7 +318,7 @@ aspect production varRef
 top::VarRef ::= x::String
 {
   top.translation = 
-    if bindNode.isRec
+    if bindNode.fromJust.isRec
     then "(Lazy.force " ++ x ++ ")"
     else x;
 }
