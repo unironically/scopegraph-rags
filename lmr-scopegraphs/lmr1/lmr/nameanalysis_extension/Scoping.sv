@@ -7,10 +7,10 @@ imports syntax:lmr1:lmr:abstractsyntax;
 -- { scopeAttributeExample }
 scopegraph LMGraph labels lex, var, mod, imp;
 
-scope attribute LMGraph:s occurs on 
-  Decls, Decl, Module, Bind, SeqBinds, ParBinds
-  Expr, VarRef, ModRef;
+scope attribute LMGraph:s;
+attribute s occurs on Decls, Decl;
 -- { scopeAttributeExample }
+attribute s occurs on Bind, Module, ParBinds, SeqBinds, Expr, VarRef, ModRef;
 
 scope attribute LMGraph:s_def;
 attribute s_def occurs on ParBinds, Bind, Decl, ModRef;
@@ -85,7 +85,6 @@ top::Decl ::= b::Bind
 {
   b.s = top.s;
   b.s_def = top.s_module;
-  b.isRec = false;
 }
 
 --------------------------------------------------
@@ -230,7 +229,6 @@ top::Expr ::= b::Bind e::Expr
 
   b.s = top.s;
   b.s_def = s_fun;
-  b.isRec = false;
 
   nondecorated local ty1::Type = b.type;
 
@@ -311,21 +309,6 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
   top.type = if ty1 == tBool() && ty2 == ty3 then ty2 else tErr();
 }
 
--- { exprLetExample }
-aspect production exprLet
-top::Expr ::= bs::SeqBinds e::Expr
-{
-  existsScope LMGraph:s_let;
-
-  bs.s = top.s;
-  bs.s_last = s_let;
-
-  e.s = s_let;
-
-  top.type = e.type;
-}
--- { exprLetExample }
-
 aspect production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
@@ -358,25 +341,30 @@ top::Expr ::= bs::ParBinds e::Expr
 
 --------------------------------------------------
 
-aspect production seqBindsNil
-top::SeqBinds ::=
+-- { exprLetExample }
+aspect production exprLet
+top::Expr ::= bs::SeqBinds e::Expr
 {
-  newScope top.s_last::LMGraph -> datumLex();
+  existsScope LMGraph:s_let;
 
-  top.s_last -[ lex ]-> top.s;
+  bs.s = top.s;
+  bs.s_last = s_let;
+
+  e.s = s_let;
+
+  top.type = e.type;
 }
 
-aspect production seqBindsOne
+aspect production seqBindsLast
 top::SeqBinds ::= s::Bind
 {
   newScope top.s_last::LMGraph -> datumLex();
-
   top.s_last -[ lex ]-> top.s;
 
   s.s = top.s;
   s.s_def = top.s_last;
-  s.isRec = false;
 }
+-- { exprLetExample }
 
 aspect production seqBindsCons
 top::SeqBinds ::= s::Bind ss::SeqBinds
@@ -386,10 +374,17 @@ top::SeqBinds ::= s::Bind ss::SeqBinds
 
   s.s = top.s;
   s.s_def = s_next;
-  s.isRec = false;
 
   ss.s = s_next;
   ss.s_last = top.s_last;
+}
+
+aspect production seqBindsNil
+top::SeqBinds ::=
+{
+  newScope top.s_last::LMGraph -> datumLex();
+
+  top.s_last -[ lex ]-> top.s;
 }
 
 --------------------------------------------------
@@ -404,7 +399,6 @@ top::ParBinds ::= s::Bind
 {
   s.s = top.s;
   s.s_def = top.s_def;
-  s.isRec = true;
 }
 
 aspect production parBindsCons
@@ -412,15 +406,12 @@ top::ParBinds ::= s::Bind ss::ParBinds
 {
   s.s = top.s;
   s.s_def = top.s_def;
-  s.isRec = true;
 
   ss.s = top.s;
   ss.s_def = top.s_def;
 }
 
 --------------------------------------------------
-
-inherited attribute isRec::Boolean occurs on Bind;
 
 attribute type occurs on Bind;
 
@@ -549,7 +540,6 @@ top::VarRef ::= x::String
     else nothing();
 
   top.type = mapOrElse(tErr(), (.type), bindNode);
-
   top.msgs <- 
     case vars of
     | [h]  -> []

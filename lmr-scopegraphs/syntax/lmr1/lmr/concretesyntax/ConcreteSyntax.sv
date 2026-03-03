@@ -168,10 +168,10 @@ top::SeqBinds_c ::=
   top.ast = seqBindsNil(location=top.location);
 }
 
-concrete production seqBindsOne_c
+concrete production seqBindsLast_c
 top::SeqBinds_c ::= s::Bind_c
 {
-  top.ast = seqBindsOne(s.ast, location=top.location);
+  top.ast = seqBindsLast(s.ast, location=top.location);
 }
 
 concrete production seqBindsCons_c

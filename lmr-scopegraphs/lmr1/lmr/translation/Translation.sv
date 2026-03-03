@@ -57,6 +57,8 @@ top::Decl ::= mr::ModRef
 aspect production declDef
 top::Decl ::= b::Bind
 {
+  b.isRec = false;
+
   top.translation = top.tab ++ "let " ++ b.translation;
 }
 
@@ -138,6 +140,8 @@ top::Expr ::= e1::Expr e2::Expr
 aspect production exprFun
 top::Expr ::= b::Bind e::Expr
 {
+  b.isRec = false;
+  
   top.translation = "(" ++ b.translation ++ " -> " ++ e.translation ++ ")"; 
 }
 
@@ -185,15 +189,19 @@ top::SeqBinds ::=
   top.translation = "";
 }
 
-aspect production seqBindsOne
+aspect production seqBindsLast
 top::SeqBinds ::= s::Bind
 {
+  s.isRec = false;
+
   top.translation = "let " ++ s.translation ++ " in ";
 }
 
 aspect production seqBindsCons
 top::SeqBinds ::= s::Bind ss::SeqBinds
 {
+  s.isRec = false;
+
   top.translation = "let " ++ s.translation ++ " in " ++ ss.translation;
 }
 
@@ -213,6 +221,8 @@ top::ParBinds ::=
 aspect production parBindsOne
 top::ParBinds ::= s::Bind
 {
+  s.isRec = true;
+
   top.translation =
     (if top.isFirst then "let " else " and ") ++
     s.translation ++ " in ";
@@ -223,6 +233,8 @@ top::ParBinds ::= s::Bind
 aspect production parBindsCons
 top::ParBinds ::= s::Bind ss::ParBinds
 {
+  s.isRec = true;
+
   top.translation = 
     (if top.isFirst then "let rec " else " and ") ++
     s.translation ++ ss.translation;
@@ -235,6 +247,8 @@ top::ParBinds ::= s::Bind ss::ParBinds
 --------------------------------------------------
 
 synthesized attribute liftedExpr::(String, Decorated Expr with {s}) occurs on Bind;
+
+inherited attribute isRec::Boolean occurs on Bind;
 
 aspect production bindUntyped
 top::Bind ::= x::String e::Expr

@@ -160,7 +160,7 @@ top::SeqBinds ::=
   top.statix = "SeqBindsNil()";
 }
 
-abstract production seqBindsOne
+abstract production seqBindsLast
 top::SeqBinds ::= s::Bind
 {
   top.statix = "SeqBindsOne(" ++ s.statix ++ ")";
