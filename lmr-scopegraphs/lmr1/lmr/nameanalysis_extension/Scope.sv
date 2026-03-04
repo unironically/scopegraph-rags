@@ -6,10 +6,6 @@ imports silver:compiler:extension:scopegraphs;
 
 --
 
-production datumLex
-top::Datum ::=
-{}
-
 production datumVar
 top::Datum ::= name::String b::Decorated Bind with {s, isRecLet}
 {}
@@ -21,4 +17,4 @@ top::Datum ::= name::String m::Decorated Module
 --
 
 global deadScope::Decorated Scope with LMLabels = 
-  decorate scope(datumLex()) with { lex = []; var = []; mod = []; imp = []; };
+  decorate scope(datumDefault()) with { lex = []; var = []; mod = []; imp = []; };

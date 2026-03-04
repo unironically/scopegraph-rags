@@ -1,10 +1,14 @@
+import statixlib.paths
+import statixlib.sets
+
+
+
 main(p) :- p match {
 
     Program(ds):[] -> {globScope, deadScope}
       new globScope,
       new deadScope,
       decls(globScope, deadScope, ds)
-
 }.
 
 
@@ -138,7 +142,7 @@ bind(s, s_def, b, s_dcl) :- b match {
     
     DefBind(x, e) -> {ty1}
       new s_dcl -> DatumVar(x, ty1),
-      s_def -[ `VAR ]-> s_dcl,
+      s_def    -[ `VAR ]-> s_dcl,
       expr(s, e, ty1)
 
   | DefBindTyped(x, tyann, e) -> {ty1}
@@ -209,17 +213,3 @@ cast-add(tyL, tyR, ty) :- (tyL, tyR) match {
   | (TInt(), TFloat()) -> ty == TFloat()
   | _ -> false
 }.
-
-
-
-tgt(p,s) :- p match
-  { End(x)       -> s == x
-  | Edge(x,l,xs) -> tgt(xs,s)
-  }.
-
-
-
-src(p,s) :- p match
-  { End(x)       -> s == x
-  | Edge(x,l,xs) -> s == x
-  }.

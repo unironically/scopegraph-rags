@@ -10,13 +10,15 @@ scope attribute s occurs on Decls, Decl, Bind,
 -- { scopeAttributeExample }
 
 scope attribute s_def;
-attribute s_def occurs on ParBinds, Bind, Decl, ModRef;
+attribute s_def occurs on ParBinds, Bind, Module, Decl, ModRef;
 
 scope attribute s_last;
 attribute s_last occurs on SeqBinds;
 
 scope attribute s_module;
 attribute s_module occurs on Decls, Decl, Module;
+
+scope attribute s_dcl occurs on Bind;
 
 --------------------------------------------------
 
@@ -35,10 +37,11 @@ nonterminal Main with location;
 production program
 top::Main ::= ds::Decls
 {
-  newScope glob -> datumLex();
+  newScope glob;
+  newScope deadScope;
 
   ds.s = glob;
-  ds.s_module = glob;
+  ds.s_module = deadScope;
 
   top.msgs = ds.msgs;
 
@@ -52,7 +55,7 @@ nonterminal Decls with location;
 production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  newScope seqScope -> datumLex();
+  newScope seqScope;
 
   seqScope -[ lex ]-> top.s;
 
@@ -86,6 +89,7 @@ production declModule
 top::Decl ::= m::Module
 {
   m.s = top.s;
+  m.s_def = top.s_def;
   m.s_module = top.s_module;
 
   top.msgs = m.msgs;
@@ -107,8 +111,13 @@ top::Decl ::= mr::ModRef
 production declDef
 top::Decl ::= b::Bind
 {
+  existsScope s_dcl;
+
   b.s = top.s;
   b.s_def = top.s_module;
+  b.s_dcl = s_dcl;
+
+  top.s_module -[ var ]-> s_dcl;
 
   top.msgs = b.msgs;
 
@@ -128,6 +137,7 @@ top::Module ::= x::String ds::Decls
   newScope modScope -> datumMod(x, top);
 
   modScope -[ lex ]-> top.s;
+  top.s_def    -[ mod ]-> modScope;
   top.s_module -[ mod ]-> modScope;
 
   ds.s = modScope;
@@ -301,12 +311,15 @@ top::Expr ::= e1::Expr e2::Expr
 production exprFun
 top::Expr ::= b::Bind e::Expr
 {
-  newScope s_fun -> datumLex();
+  existsScope s_dcl;
+
+  newScope s_fun;
 
   s_fun -[ lex ]-> top.s;
 
   b.s = top.s;
   b.s_def = s_fun;
+  b.s_dcl = s_dcl;
 
   nondecorated local ty1::Type = b.type;
 
@@ -405,7 +418,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  newScope s_let -> datumLex();
+  newScope s_let;
 
   s_let -[ lex ]-> top.s;
 
@@ -426,7 +439,7 @@ top::Expr ::= bs::ParBinds e::Expr
 production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
-  newScope s_let -> datumLex();
+  newScope s_let;
 
   s_let -[ lex ]-> top.s;
 
@@ -467,12 +480,15 @@ top::Expr ::= bs::SeqBinds e::Expr
 production seqBindsLast
 top::SeqBinds ::= s::Bind
 {
-  newScope top.s_last -> datumLex();
+  existsScope s_dcl;
+
+  newScope top.s_last;
 
   top.s_last -[ lex ]-> top.s;
 
   s.s = top.s;
   s.s_def = top.s_last;
+  s.s_dcl = s_dcl;
   s.isRecLet = false;
 
   top.msgs = s.msgs;
@@ -485,9 +501,9 @@ attribute type occurs on Bind;
 production bindUntyped
 top::Bind ::= x::String e::Expr
 {
-  newScope s_dcl -> datumVar(x, top);
+  newScope top.s_dcl -> datumVar(x, top);
 
-  top.s_def -[ var ]-> s_dcl;
+  top.s_def -[ var ]-> top.s_dcl;
 
   e.s = top.s;
 
@@ -495,7 +511,7 @@ top::Bind ::= x::String e::Expr
   top.msgs = e.msgs;
   top.ocaml = x ++ " = " ++
     if top.isRecLet then "lazy (" ++ e.ocaml ++ ")"
-                 else e.ocaml;
+                    else e.ocaml;
 }
 -- { exprLetExample }
 
@@ -504,11 +520,14 @@ nonterminal SeqBinds with location;
 production seqBindsCons
 top::SeqBinds ::= s::Bind ss::SeqBinds
 {
-  newScope s_next -> datumLex();
+  existsScope s_dcl;
+
+  newScope s_next;
   s_next -[ lex ]-> top.s;
 
   s.s = top.s;
   s.s_def = s_next;
+  s.s_dcl = s_dcl;
 
   ss.s = s_next;
   ss.s_last = top.s_last;
@@ -523,7 +542,7 @@ top::SeqBinds ::= s::Bind ss::SeqBinds
 production seqBindsNil
 top::SeqBinds ::=
 {
-  newScope top.s_last -> datumLex();
+  newScope top.s_last;
 
   top.s_last -[ lex ]-> top.s;
 
@@ -550,8 +569,11 @@ top::ParBinds ::=
 production parBindsOne
 top::ParBinds ::= s::Bind
 {
+  existsScope s_dcl;
+
   s.s = top.s;
   s.s_def = top.s_def;
+  s.s_dcl = s_dcl;
 
   top.msgs = s.msgs;
 
@@ -565,8 +587,11 @@ top::ParBinds ::= s::Bind
 production parBindsCons
 top::ParBinds ::= s::Bind ss::ParBinds
 {
+  existsScope s_dcl;
+
   s.s = top.s;
   s.s_def = top.s_def;
+  s.s_dcl = s_dcl;
 
   ss.s = top.s;
   ss.s_def = top.s_def;
@@ -589,9 +614,9 @@ nonterminal Bind with location;
 production bindTyped
 top::Bind ::= tyann::Type x::String e::Expr
 {
-  newScope s_dcl -> datumVar(x, top);
+  newScope top.s_dcl -> datumVar(x, top);
 
-  top.s_def -[ var ]-> s_dcl;
+  top.s_def -[ var ]-> top.s_dcl;
 
   nondecorated local ty1::Type = ^tyann;
 
@@ -619,9 +644,9 @@ top::Bind ::= tyann::Type x::String e::Expr
 production bindArgDcl
 top::Bind ::= x::String tyann::Type
 {
-  newScope s_dcl -> datumVar(x, top);
+  newScope top.s_dcl -> datumVar(x, top);
 
-  top.s -[ var ]-> s_dcl;
+  top.s_def -[ var ]-> top.s_dcl;
 
   top.type = ^tyann;
 
