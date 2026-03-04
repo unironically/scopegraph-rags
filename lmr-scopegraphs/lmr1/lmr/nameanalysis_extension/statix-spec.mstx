@@ -29,7 +29,7 @@ decl(s, s_def, s_module, d) :- d match {
       module(s, s_def, s_module, m)
 
   | DeclImport(r) -> {s_tgt}
-      mod-ref(s, s_def, r)
+      modRef(s, s_def, r)
 
   | DeclDef(b) -> {s_var}
       bind(s, s_def, b, s_var),
@@ -39,8 +39,8 @@ decl(s, s_def, s_module, d) :- d match {
 
 
 
+// { moduleDeclExample }
 module(s, s_def, s_module, m) :- m match {
-
     Module(x, ds) -> {modScope}
       new modScope -> DatumMod(x, modScope),
       modScope -[ `LEX ]-> s,
@@ -48,6 +48,7 @@ module(s, s_def, s_module, m) :- m match {
       s_module -[ `MOD ]-> modScope,
       decls(s, modScope, ds)
 }.
+// { moduleDeclExample }
 
 
 
@@ -66,7 +67,7 @@ expr(s, e, ty) :- e match {
       ty == TBool()
 
   | ExprVar(r) ->
-      var-ref(s, r, ty)
+      varRef(s, r, ty)
 
   | ExprAdd(e1, e2) -> {ty1, ty2}
       expr(s, e1, ty1),
@@ -159,67 +160,59 @@ type(s, tyann, ty) :- tyann match {
 
 
 
-mod-ref(s, s_def, r) :- r match {
-    
+modRef(s, s_def, r) :- r match {
     ModRef(x) -> {mods, xmods, xmods', p, s_tgt, s_mod}
       query s `LEX*`IMP?`MOD as mods,
       filter mods(DatumMod(x', _) where x' == x) xmods,
-      min-refs(xmods, xmods'),
+      min xmods lexico(`MOD < `LEX, `IMP < `LEX, `MOD < `IMP) xmods',
       only(xmods', p),
       tgt(p, s_tgt),
       s_tgt -> DatumMod(x, s_mod),
       s_def -[ `IMP ]-> s_mod
-
 }.
 
 
 
-var-ref(s, r, ty) :- r match {
-    
-    VarRef(x) -> {vars, xvars, xvars', p, s_tgt}
-      query s `LEX*`IMP?`VAR as vars,
-      filter vars(DatumVar(x', _) where x' == x) xvars,
-      min-refs(xvars, xvars'),
-      only(xvars', p),
-      tgt(p, s_tgt),
-      s_tgt -> DatumVar(x, ty)
-
+// { varRefExample }
+varRef(s, r, ty) :- r match {
+  VarRef(x) -> {vars, xvars, xvars', p, s_tgt}
+    query s `LEX*`IMP?`VAR as vars,
+    filter vars (DatumVar(x', _) where x' == x) xvars,
+    min xvars lexico(`VAR < `LEX, `IMP < `LEX,
+                     `VAR < `IMP) xvars',
+    only(xvars', p), tgt(p, s_tgt),
+    s_tgt -> DatumVar(x, ty)
 }.
-
-
-
-min-refs(z, z') :-
-  min z lexico( `MOD < `LEX, `MOD < `IMP,
-                `VAR < `LEX, `VAR < `IMP,
-                `IMP < `LEX ) z'.
+// { varRefExample }
 
 
 
 int-or-float(ty) :- ty match {
     TInt() -> true
   | TFloat() -> true
-}.
-
-
-
-cast-add(tyL, tyR, ty) :- (tyL, tyR) match {
-    (TInt(), TInt()) -> ty == TInt()
-  | (TFloat(), TFloat()) -> ty == TFloat()
-  | (TFloat(), TInt()) -> ty == TFloat()
-  | (TInt(), TFloat()) -> ty == TFloat()
   | _ -> false
 }.
 
 
 
-tgt(p,s) :- p match
-  { End(x)       -> s == x
+cast-add(tyL, tyR, ty) :- (tyL, tyR) match {
+    (TInt(), TInt())     -> ty == TInt()
+  | (TFloat(), TFloat()) -> ty == TFloat()
+  | (TFloat(), TInt())   -> ty == TFloat()
+  | (TInt(), TFloat())   -> ty == TFloat()
+  | _ -> false
+}.
+
+
+
+tgt(p,s) :- p match {
+    End(x)       -> s == x
   | Edge(x,l,xs) -> tgt(xs,s)
-  }.
+}.
 
 
 
-src(p,s) :- p match
-  { End(x)       -> s == x
+src(p,s) :- p match {
+    End(x)       -> s == x
   | Edge(x,l,xs) -> s == x
-  }.
+}.

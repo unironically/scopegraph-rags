@@ -1,0 +1,11 @@
+Program(
+  DeclsCons(
+    DeclModule(
+      Module(
+        "A",
+        DeclsNil()
+      )
+    ),
+    DeclsNil()
+  )
+)
