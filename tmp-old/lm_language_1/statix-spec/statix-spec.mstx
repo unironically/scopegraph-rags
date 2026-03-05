@@ -177,12 +177,12 @@ mod-ref(s, s_def, r) :- r match {
 
 // { varRefExample }
 var-ref(s, r, ty) :- r match {
-  VarRef(x) -> {vars, xvars, xvars', p, s_tgt}
-    query s `LEX*`IMP?`VAR as vars,
-    filter vars (DatumVar(x', _) where x' == x) xvars,
-    min xvars lexico(`VAR < `LEX, `IMP < `LEX,
-                     `VAR < `IMP) xvars',
-    only(xvars', p), tgt(p, s_tgt),
+  VarRef(x) -> {vs, vs', vs'', p, s_tgt}
+    query s `LEX*`IMP?`VAR as vs,
+    filter vs (DatumVar(x', _) where x' == x) vs',
+    min vs' lexico(`VAR < `LEX, `IMP < `LEX,
+                     `VAR < `IMP) vs'',
+    only(vs'', p), tgt(p, s_tgt),
     s_tgt -> DatumVar(x, ty)
 }.
 // { varRefExample }

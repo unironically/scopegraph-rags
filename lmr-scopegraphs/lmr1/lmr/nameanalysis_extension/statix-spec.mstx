@@ -72,9 +72,9 @@ expr(s, e, ty) :- e match {
   | ExprAdd(e1, e2) -> {ty1, ty2}
       expr(s, e1, ty1),
       expr(s, e2, ty2),
-      int-or-float(ty1),
-      int-or-float(ty2),
-      cast-add(ty1, ty2, ty)
+      intOrFloat(ty1),
+      intOrFloat(ty2),
+      castAdd(ty1, ty2, ty)
   
   | ExprAnd(e1, e2) ->
       expr(s, e1, TBool()),
@@ -88,7 +88,7 @@ expr(s, e, ty) :- e match {
       ty == TBool()
 
   | ExprLet(bs, e) -> {s_let}
-      seq-binds(s, bs, s_let),
+      seqBinds(s, bs, s_let),
       expr(s_let, e, ty)
 
   | ExprLetRec(bs, e) -> {s_let}
@@ -100,27 +100,32 @@ expr(s, e, ty) :- e match {
   }.
 
 
-
-seq-binds(s, bs, s_last) :- bs match {
-    
-    SeqBindsNil() ->
-      new s_last,
-      s_last -[ `LEX ]-> s
-
-  | SeqBindsLast(b) -> {s_var}
-      new s_last,
-      s_last -[ `LEX ]-> s,
+// { exprLetExample }
+expr(s, e, ty) :- e match
+  { ExprInt(_) -> ty == TInt()
+  | ExprVar(r) -> varRef(s, r, ty)
+  | ExprAdd(e1, e2) -> {ty1, ty2}
+      expr(s, e1, ty1), expr(s, e2, ty2),
+      intOrFloat(ty1), intOrFloat(ty2),
+      castAdd(ty1, ty2, ty)
+  | ExprLet(bs, e) -> {s_let}
+      seqBinds(s, bs, s_let),
+      expr(s_let, e, ty)
+  | ... }.
+seqBinds(s, bs, s_last) :- bs match
+  { SeqBindsLast(b) -> {s_var}
+      new s_last, s_last -[ `LEX ]-> s,
       bind(s, s_last, b, s_var)
-
   | SeqBindsCons(b, bs) -> {s_next, s_var}
-      new s_next,
-      s_next -[ `LEX ]-> s,
+      new s_next, s_next -[ `LEX ]-> s,
       bind(s, s_next, b, s_var),
-      seq-binds(s_next, bs, s_last)
-
-}.
-
-
+      seqBinds(s_next, bs, s_last) }.
+bind(s, s_def, b, s_dcl) :- b match
+  { Bind(x, e) -> {ty}
+      new s_dcl -> DatumVar(x, ty),
+      s_def -[ `VAR ]-> s_dcl,
+      expr(s, e, ty) }.
+// { exprLetExample }
 
 par-binds(s, s_def, bs) :- bs match {
     
@@ -131,23 +136,6 @@ par-binds(s, s_def, bs) :- bs match {
       bind(s, s_def, b, s_var),
       par-binds(s, s_def, bs)
   
-}.
-
-
-
-bind(s, s_def, b, s_dcl) :- b match {
-    
-    DefBind(x, e) -> {ty1}
-      new s_dcl -> DatumVar(x, ty1),
-      s_def -[ `VAR ]-> s_dcl,
-      expr(s, e, ty1)
-
-  | DefBindTyped(x, tyann, e) -> {ty1}
-      new s_dcl -> DatumVar(x, tyann),
-      s_def -[ `VAR ]-> s_dcl,
-      expr(s, e, ty1),
-      ty1 == tyann
-
 }.
 
 
@@ -174,20 +162,19 @@ modRef(s, s_def, r) :- r match {
 
 
 // { varRefExample }
-varRef(s, r, ty) :- r match {
-  VarRef(x) -> {vars, xvars, xvars', p, s_tgt}
-    query s `LEX*`IMP?`VAR as vars,
-    filter vars (DatumVar(x', _) where x' == x) xvars,
-    min xvars lexico(`VAR < `LEX, `IMP < `LEX,
-                     `VAR < `IMP) xvars',
-    only(xvars', p), tgt(p, s_tgt),
-    s_tgt -> DatumVar(x, ty)
-}.
+varRef(s, r, ty) :- r match
+  { VarRef(x) -> {vs, vs', vs'', p, s_tgt}
+      query s `LEX*`IMP?`VAR as vs,
+      filter vs (DatumVar(x', _) where x' == x) vs',
+      min vs' lexico(`VAR < `LEX, `IMP < `LEX,
+                     `VAR < `IMP) vs'',
+      only(vs'', p), tgt(p, s_tgt),
+      datumOf(s_tgt, DatumVar(x, ty)) }.
 // { varRefExample }
 
 
 
-int-or-float(ty) :- ty match {
+intOrFloat(ty) :- ty match {
     TInt() -> true
   | TFloat() -> true
   | _ -> false
@@ -195,7 +182,7 @@ int-or-float(ty) :- ty match {
 
 
 
-cast-add(tyL, tyR, ty) :- (tyL, tyR) match {
+castAdd(tyL, tyR, ty) :- (tyL, tyR) match {
     (TInt(), TInt())     -> ty == TInt()
   | (TFloat(), TFloat()) -> ty == TFloat()
   | (TFloat(), TInt())   -> ty == TFloat()

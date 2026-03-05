@@ -7,7 +7,7 @@ imports silver:compiler:extension:scopegraphs;
 --
 
 production datumVar
-top::Datum ::= name::String b::Decorated Bind with {s, isRecLet}
+top::Datum ::= name::String b::Decorated Bind with {s, isSeqLet}
 {}
 
 production datumMod

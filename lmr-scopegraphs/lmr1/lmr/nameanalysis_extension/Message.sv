@@ -4,27 +4,27 @@ import silver:langutil; -- for location.unparse
 
 --------------------------------------------------
 
-synthesized attribute pp::String;
-
-nonterminal Message with pp;
-
-production err
-top::Message ::= msg::String loc::Location
+function err
+String ::= msg::String loc::Location
 {
-  top.pp = loc.unparse ++ ": error: " ++ msg ++ "\n"; 
+  return loc.unparse ++ ": error: " ++ msg ++ "\n"; 
 }
 
-production warn
-top::Message ::= msg::String loc::Location
+function warn
+String ::= msg::String loc::Location
 {
-  top.pp = loc.unparse ++ ": warning: " ++ msg ++ "\n"; 
+  return loc.unparse ++ ": warning: " ++ msg ++ "\n"; 
 }
+
+
 
 --------------------------------------------------
 
-fun binopOk([Message], Type) ::= l::Type r::Type loc::Location 
+synthesized attribute pp::String;
+
+fun binopOk([String], Type) ::= l::Type r::Type loc::Location 
                                  cond::(Boolean ::= Type) op::String expect::String =
-  let msgs::[Message] =
+  let msgs::[String] =
     if r == tErr() || cond(r)
     then []
     else [err(
@@ -33,7 +33,7 @@ fun binopOk([Message], Type) ::= l::Type r::Type loc::Location
       loc
     )]
   in
-  let msgs::[Message] =
+  let msgs::[String] =
     if l == tErr() || cond(l)
     then msgs
     else err(
@@ -45,8 +45,8 @@ fun binopOk([Message], Type) ::= l::Type r::Type loc::Location
     (msgs, if null(msgs) then castAdd(l, r) else tErr())
   end end;
 
-fun addOk ([Message], Type) ::= l::Type r::Type loc::Location =
-  let ok::([Message], Type) = 
+fun addOk ([String], Type) ::= l::Type r::Type loc::Location =
+  let ok::([String], Type) = 
     binopOk(
       l, r, loc, \t::Type -> t == tInt() || t == tFloat(), "addition", "int or float"
     )
@@ -54,7 +54,7 @@ fun addOk ([Message], Type) ::= l::Type r::Type loc::Location =
     if ok.2 == tErr() then ok else (ok.1, castAdd(l, r))
   end;
 
-fun andOk ([Message], Type) ::= l::Type r::Type loc::Location =
+fun andOk ([String], Type) ::= l::Type r::Type loc::Location =
   binopOk(
     l, r, loc, \t::Type -> t == tBool(), "conjunction", "bool"
   );
@@ -68,3 +68,9 @@ fun castAdd Type ::= l::Type r::Type =
   | _, _        -> tInt()
   end
 ;
+
+fun assert [String] ::= c::Boolean msg::String =
+  if c then [] else [msg];
+
+fun singleton Boolean ::= lst::[a] =
+  length(lst) == 1;

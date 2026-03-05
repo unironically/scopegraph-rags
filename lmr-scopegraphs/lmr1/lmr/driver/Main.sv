@@ -33,7 +33,7 @@ IO<Integer> ::= largs::[String]
               then do {
                 print("[✔] Parse success\n");
                 res::Integer <- 
-                  if null(ast.msgs)
+                  if null(ast.errs)
                   then do {
                     print("[✔] Semantic check successful\n");
                     mkdir("out");
@@ -42,7 +42,7 @@ IO<Integer> ::= largs::[String]
                   }
                   else do {
                     print("[✗] Semantic check failed with the following errors:\n" ++
-                          concat(map((.pp), ast.msgs)));
+                          concat(ast.errs));
                     return -1;
                   };
                 return res;
@@ -121,11 +121,11 @@ fun printBinds IO<Integer> ::= binds::[(String, String)] = do {
   return if anyUnfound then -1 else 0;
 };-}
 
-fun programOk IO<Integer> ::= msgs::[Message] = do {
+fun programOk IO<Integer> ::= msgs::[String] = do {
   print(if null(msgs) 
         then "[✔] Semantic check successful\n" 
         else "[✗] Semantic check failed with the following errors:\n" ++
-             concat(map((.pp), msgs)));
+             concat(msgs));
 
   return if null(msgs) then 0 else -1;
 };

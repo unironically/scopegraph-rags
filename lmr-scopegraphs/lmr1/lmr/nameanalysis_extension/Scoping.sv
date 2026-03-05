@@ -2,33 +2,42 @@ grammar lmr1:lmr:nameanalysis_extension;
 
 --------------------------------------------------
 
--- { scopeAttributeExample }
-scope labels lex, var, mod, imp as LMLabels;
+attribute s occurs on Decls, Decl, Module, ParBinds, ModRef;
 
-scope attribute s occurs on Decls, Decl, Bind, 
-  Module, ParBinds, SeqBinds, Expr, VarRef, ModRef;
--- { scopeAttributeExample }
-
-scope attribute s_def;
-attribute s_def occurs on ParBinds, Bind, Module, Decl, ModRef;
-
-scope attribute s_last;
-attribute s_last occurs on SeqBinds;
+attribute s_def occurs on ParBinds, Module, Decl, ModRef;
 
 scope attribute s_module;
 attribute s_module occurs on Decls, Decl, Module;
 
-scope attribute s_dcl occurs on Bind;
+--------------------------------------------------
+
+attribute errs occurs on Main, Decls, Decl, 
+  Module, ParBinds, ModRef;
+
+attribute ocaml occurs on
+  Main, Decls, Decl, Module, ParBinds, Type, ModRef;
 
 --------------------------------------------------
 
-synthesized attribute msgs::[Message] occurs on Main, Decls, Decl, 
-  Module, Bind, Expr, VarRef, SeqBinds, ParBinds, ModRef;
+-- { nonterminalsAttrs }
+nonterminal Expr; nonterminal VarRef; nonterminal Type;
+nonterminal Bind; nonterminal Binds;
 
-synthesized attribute type::Type occurs on Expr, VarRef;
-
+synthesized attribute errs::[String] occurs on
+  Expr, Binds, Bind, VarRef;
 synthesized attribute ocaml::String occurs on
-  Main, Decls, Decl, Module, Expr, SeqBinds, ParBinds, Bind, Type, ModRef, VarRef;
+  Expr, Binds, Bind, VarRef;
+inherited attribute isSeqLet::Boolean occurs on Bind;
+
+synthesized attribute type::Type occurs on
+  Expr, Bind, VarRef;
+
+scope labels lex, var, mod, imp as LMLabels;
+scope attribute s occurs on Expr, Binds, Bind, VarRef;
+scope attribute s_last occurs on Binds;
+scope attribute s_def occurs on Bind;
+scope attribute s_dcl occurs on Bind;
+-- { nonterminalsAttrs }
 
 --------------------------------------------------
 
@@ -43,7 +52,7 @@ top::Main ::= ds::Decls
   ds.s = glob;
   ds.s_module = deadScope;
 
-  top.msgs = ds.msgs;
+  top.errs = ds.errs;
 
   top.ocaml = ds.ocaml;
 }
@@ -66,7 +75,7 @@ top::Decls ::= d::Decl ds::Decls
   ds.s = seqScope;
   ds.s_module = top.s_module;
 
-  top.msgs = d.msgs ++ ds.msgs;
+  top.errs = d.errs ++ ds.errs;
 
   top.ocaml = 
     d.ocaml ++ "\n" ++
@@ -76,7 +85,7 @@ top::Decls ::= d::Decl ds::Decls
 production declsNil
 top::Decls ::=
 {
-  top.msgs = [];
+  top.errs = [];
 
   top.ocaml = "";
 }
@@ -92,7 +101,7 @@ top::Decl ::= m::Module
   m.s_def = top.s_def;
   m.s_module = top.s_module;
 
-  top.msgs = m.msgs;
+  top.errs = m.errs;
 
   top.ocaml = m.ocaml;
 }
@@ -103,7 +112,7 @@ top::Decl ::= mr::ModRef
   mr.s = top.s;
   mr.s_def = top.s_def;
 
-  top.msgs = mr.msgs;
+  top.errs = mr.errs;
 
   top.ocaml = mr.ocaml;
 }
@@ -119,9 +128,9 @@ top::Decl ::= b::Bind
 
   top.s_module -[ var ]-> s_dcl;
 
-  top.msgs = b.msgs;
+  top.errs = b.errs;
 
-  b.isRecLet = false;
+  b.isSeqLet = true;
 
   top.ocaml = "let " ++ b.ocaml;
 }
@@ -143,7 +152,7 @@ top::Module ::= x::String ds::Decls
   ds.s = modScope;
   ds.s_module = modScope;
 
-  top.msgs = ds.msgs;
+  top.errs = ds.errs;
   top.ocaml = "module Mod_" ++ x ++ " = struct " ++
               ds.ocaml ++ "end";
 }
@@ -151,15 +160,14 @@ top::Module ::= x::String ds::Decls
 
 --------------------------------------------------
 
-
-nonterminal Expr with location;
+annotation location occurs on Expr;
 
 production exprFloat
 top::Expr ::= f::Float
 {
   top.type = tFloat();
 
-  top.msgs = [];
+  top.errs = [];
 
   top.ocaml = toString(f);
 }
@@ -169,7 +177,7 @@ top::Expr ::= i::Integer
 {
   top.type = tInt();
 
-  top.msgs = [];
+  top.errs = [];
 
   top.ocaml = toString(i);
 }
@@ -179,7 +187,7 @@ top::Expr ::=
 {
   top.type = tBool();
 
-  top.msgs = [];
+  top.errs = [];
 
   top.ocaml = "true";
 }
@@ -189,7 +197,7 @@ top::Expr ::=
 {
   top.type = tBool();
 
-  top.msgs = [];
+  top.errs = [];
 
   top.ocaml = "false";
 }
@@ -201,61 +209,10 @@ top::Expr ::= r::VarRef
 
   top.type = r.type;
 
-  top.msgs = r.msgs;
+  top.errs = r.errs;
 
   top.ocaml = r.ocaml;
 }
-
--- { addExample }
-production exprAdd
-top::Expr ::= e1::Expr e2::Expr
-{
-  e1.s = top.s;
-  nondecorated local ty1::Type = e1.type;
-  
-  e2.s = top.s;
-  nondecorated local ty2::Type = e2.type;
-
-  local msgLeft::[Message] =
-    if ty1 == tInt() || ty1 == tFloat() || ty1 == tErr()
-    then []
-    else [err(
-      "addition left operand must be int or float, " ++
-      "but an expression was given of type " ++ ty1.pp,
-      top.location
-    )];
-
-  local msgRight::[Message] =
-    if ty2 == tInt() || ty2 == tFloat() || ty2 == tErr()
-    then []
-    else [err(
-      "addition right operand must be int or float, " ++
-      "expression was given of type " ++ ty2.pp,
-      top.location
-    )];
-
-
-  top.msgs = msgLeft ++ msgRight ++ e1.msgs ++ e2.msgs;
-  top.type = 
-    if null(top.msgs)
-    then (if e1.type == tFloat() || e2.type == tFloat() then tFloat() else tInt())
-    else tErr();
-
-  top.ocaml =
-    "(" ++
-      case e1.type, e2.type of
-      | tFloat(), tFloat() ->
-          e1.ocaml ++ " +. " ++ e2.ocaml
-      | tFloat(), tInt() ->
-          e1.ocaml ++ " +. (float_of_int " ++ e2.ocaml ++ ")"
-      | tInt(), tFloat() ->
-          "(float_of_int " ++ e1.ocaml ++ ") +. " ++ e2.ocaml
-      | _, _ ->
-          e1.ocaml ++ " + " ++ e2.ocaml
-      end ++
-    ")";
-}
--- { addExample }
 
 production exprAnd
 top::Expr ::= e1::Expr e2::Expr
@@ -266,9 +223,9 @@ top::Expr ::= e1::Expr e2::Expr
   e2.s = top.s;
   nondecorated local ty2::Type = e2.type;
 
-  local ok::([Message], Type) = andOk(ty1, ty2, top.location);
+  local ok::([String], Type) = andOk(ty1, ty2, top.location);
 
-  top.msgs = ok.1 ++ e1.msgs ++ e2.msgs;
+  top.errs = ok.1 ++ e1.errs ++ e2.errs;
   top.type = ok.2;
 
   top.ocaml = "(" ++ e1.ocaml ++ " && " ++ e2.ocaml ++ ")";
@@ -283,7 +240,7 @@ top::Expr ::= e1::Expr e2::Expr
   e2.s = top.s;
   nondecorated local ty2::Type = e2.type;
 
-  local msgLeft::[Message] =
+  local msgLeft::[String] =
     if ty1 == tInt() || ty1 == tFloat() || ty1 == tBool()
     then []
     else [err(
@@ -292,7 +249,7 @@ top::Expr ::= e1::Expr e2::Expr
       top.location
     )];
   
-  local msgRight::[Message] =
+  local msgRight::[String] =
     if !null(msgLeft) || ty1 == ty2
     then []
     else [err(
@@ -301,8 +258,8 @@ top::Expr ::= e1::Expr e2::Expr
       top.location
     )];
 
-  top.msgs = if !null(msgLeft) then msgLeft else msgRight
-             ++ e1.msgs ++ e2.msgs;
+  top.errs = if !null(msgLeft) then msgLeft else msgRight
+             ++ e1.errs ++ e2.errs;
   top.type = tBool();
 
   top.ocaml = "(" ++ e1.ocaml ++ " = " ++ e2.ocaml ++ ")";
@@ -328,9 +285,9 @@ top::Expr ::= b::Bind e::Expr
 
   top.type = tFun(ty1, ty2);
 
-  top.msgs = b.msgs ++ e.msgs;
+  top.errs = b.errs ++ e.errs;
 
-  b.isRecLet = false;
+  b.isSeqLet = true;
   
   top.ocaml = "(" ++ b.ocaml ++ " -> " ++ e.ocaml ++ ")"; 
 }
@@ -353,14 +310,14 @@ top::Expr ::= e1::Expr e2::Expr
   nondecorated local ty3::Type = ty3and4.2;
   nondecorated local ty4::Type = ty3and4.3;
 
-  local msgLeft::[Message] =
+  local msgLeft::[String] =
     if ty3and4.1
     then []
     else [err("application expects left operand to be of function type, " ++
                        "but an expression was given of type " ++ ty1.pp,
                        top.location)];
 
-  local msgRight::[Message] =
+  local msgRight::[String] =
     if !null(msgLeft) || ty2 == ty3
     then []
     else [err(
@@ -369,8 +326,8 @@ top::Expr ::= e1::Expr e2::Expr
       top.location
     )];
 
-  top.msgs = if !null(msgLeft) then msgLeft else msgRight
-             ++ e1.msgs ++ e2.msgs;
+  top.errs = if !null(msgLeft) then msgLeft else msgRight
+             ++ e1.errs ++ e2.errs;
   top.type = ty4;
 
   top.ocaml = "(" ++ e1.ocaml ++ " " ++ e2.ocaml ++ ")";
@@ -388,7 +345,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
   e3.s = top.s;
   nondecorated local ty3::Type = e3.type;
 
-  local msgs1::[Message] =
+  local msgs1::[String] =
     if ty1 == tBool()
     then []
     else [err(
@@ -397,7 +354,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
       top.location
     )];
   
-  local msgs2::[Message] =
+  local msgs2::[String] =
     if ty2 == ty3
     then []
     else [err(
@@ -408,7 +365,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 
   top.type = if ty1 == tBool() && ty2 == ty3 then ty2 else tErr();
 
-  top.msgs = msgs1 ++ msgs2 ++ e1.msgs ++ e2.msgs ++ e3.msgs;
+  top.errs = msgs1 ++ msgs2 ++ e1.errs ++ e2.errs ++ e3.errs;
 
   top.ocaml = "if " ++ e1.ocaml ++ 
                     " then " ++ e2.ocaml ++
@@ -429,7 +386,7 @@ top::Expr ::= bs::ParBinds e::Expr
 
   top.type = e.type;
 
-  top.msgs = bs.msgs ++ e.msgs;
+  top.errs = bs.errs ++ e.errs;
 
   top.ocaml = bs.ocaml ++ e.ocaml;
 
@@ -450,7 +407,7 @@ top::Expr ::= bs::ParBinds e::Expr
 
   top.type = e.type;
 
-  top.msgs = bs.msgs ++ e.msgs;
+  top.errs = bs.errs ++ e.errs;
 
   top.ocaml = error("exprLetPar.ocaml TODO");
 
@@ -459,94 +416,80 @@ top::Expr ::= bs::ParBinds e::Expr
 
 --------------------------------------------------
 
-inherited attribute isRecLet::Boolean;
-
 -- { exprLetExample }
-production exprLet
-top::Expr ::= bs::SeqBinds e::Expr
-{
-  existsScope s_let;
+production exprAdd top::Expr ::= e1::Expr e2::Expr
+{ e1.s = top.s; e2.s = top.s;
+  local msgLeft::[String] = assert(addable(e1.type),
+    "(+) LHS type not int/float, is " ++ e1.type.pp);
+  local msgRight::[String] = assert(addable(e2.type),
+    "(+) RHS type not int/float, is " ++ e2.type.pp);
+  top.errs = msgLeft ++ msgRight ++ e1.errs ++ e2.errs;
+  top.type = castAdd(e1.type, e2.type);
+  top.ocaml = "(" ++
+    case e1.type, e2.type of
+    | tFloat(), tFloat() ->
+      e1.ocaml ++ " +. " ++ e2.ocaml
+    | tFloat(), tInt() ->
+      e1.ocaml ++ " +. (float_of_int " ++ e2.ocaml ++ ")"
+    | tInt(), tFloat() ->
+      "(float_of_int " ++ e1.ocaml ++ ") +. " ++ e2.ocaml
+    | _, _ ->
+      e1.ocaml ++ " + " ++ e2.ocaml
+    end ++ ")"; }
+production exprLet top::Expr ::= bs::Binds e::Expr
+{ existsScope s_var;
+  bs.s = top.s; bs.s_last = s_var;
+  e.s = s_var;
+  top.type = e.type; top.errs = bs.errs ++ e.errs;
+  top.ocaml = bs.ocaml ++ e.ocaml; }
 
-  bs.s = top.s;
-  bs.s_last = s_let;
-
-  e.s = s_let;
-
-  top.type = e.type;
-  top.msgs = bs.msgs ++ e.msgs;
-  top.ocaml = bs.ocaml ++ e.ocaml;
-}
-
-production seqBindsLast
-top::SeqBinds ::= s::Bind
-{
-  existsScope s_dcl;
-
-  newScope top.s_last;
-
+production seqBindsLast top::Binds ::= s::Bind
+{ existsScope s_var; newScope top.s_last;
   top.s_last -[ lex ]-> top.s;
+  s.isSeqLet = false; s.s = top.s;
+  s.s_def = top.s_last; s.s_dcl = s_var; 
+  top.errs = s.errs;
+  top.ocaml = "let " ++ s.ocaml ++ " in "; }
+production seqBindsCons top::Binds ::= s::Bind ss::Binds
+{ existsScope s_dcl; newScope s_next;
+  s_next -[ lex ]-> top.s;
+  s.isSeqLet = true;
+  s.s = top.s; s.s_def = s_next; s.s_dcl = s_dcl;
+  ss.s = s_next; ss.s_last = top.s_last;
+  top.errs = s.errs ++ ss.errs;
+  top.ocaml = "let " ++ s.ocaml ++ " in " ++ ss.ocaml; }
 
-  s.s = top.s;
-  s.s_def = top.s_last;
-  s.s_dcl = s_dcl;
-  s.isRecLet = false;
-
-  top.msgs = s.msgs;
-  top.ocaml = "let " ++ s.ocaml ++ " in ";
-}
-
-attribute isRecLet occurs on Bind;
-attribute type occurs on Bind;
-
-production bindUntyped
-top::Bind ::= x::String e::Expr
-{
-  newScope top.s_dcl -> datumVar(x, top);
-
+production bind top::Bind ::= x::String e::Expr
+{ newScope top.s_dcl -> datumVar(x, top);
   top.s_def -[ var ]-> top.s_dcl;
-
   e.s = top.s;
-
-  top.type = e.type;
-  top.msgs = e.msgs;
+  top.type = e.type; top.errs = e.errs;
   top.ocaml = x ++ " = " ++
-    if top.isRecLet then "lazy (" ++ e.ocaml ++ ")"
-                    else e.ocaml;
-}
+    if top.isSeqLet then e.ocaml
+                    else "lazy (" ++ e.ocaml ++ ")"; }
+
+production varRef top::VarRef ::= x::String
+{ local vars::[Decorated Scope with LMLabels] =
+    query(`lex*`imp?`var, isDatumVar(x), top.s);
+  local bindNode::Decorated Bind with {s, isSeqLet} =
+    if length(vars) == 1 then getDecoratedBind(head(vars))
+                         else defaultErrorBind;
+  top.type = bindNode.type;
+  top.errs = assert(singleton(vars), "err resolving " ++ x);
+  top.ocaml = if !bindNode.isSeqLet
+              then "(Lazy.force " ++ x ++ ")" else x;}
 -- { exprLetExample }
 
-nonterminal SeqBinds with location;
-
-production seqBindsCons
-top::SeqBinds ::= s::Bind ss::SeqBinds
-{
-  existsScope s_dcl;
-
-  newScope s_next;
-  s_next -[ lex ]-> top.s;
-
-  s.s = top.s;
-  s.s_def = s_next;
-  s.s_dcl = s_dcl;
-
-  ss.s = s_next;
-  ss.s_last = top.s_last;
-
-  top.msgs = s.msgs ++ ss.msgs;
-
-  s.isRecLet = false;
-
-  top.ocaml = "let " ++ s.ocaml ++ " in " ++ ss.ocaml;
-}
+annotation location occurs on Binds;
 
 production seqBindsNil
-top::SeqBinds ::=
+top::Binds ::=
 {
   newScope top.s_last;
 
   top.s_last -[ lex ]-> top.s;
 
-  top.msgs = [];
+  top.errs = [];
 
   top.ocaml = "";
 }
@@ -561,7 +504,7 @@ inherited attribute isFirst::Boolean occurs on ParBinds;
 production parBindsNil
 top::ParBinds ::=
 {
-  top.msgs = [];
+  top.errs = [];
 
   top.ocaml = "";
 }
@@ -575,9 +518,9 @@ top::ParBinds ::= s::Bind
   s.s_def = top.s_def;
   s.s_dcl = s_dcl;
 
-  top.msgs = s.msgs;
+  top.errs = s.errs;
 
-  s.isRecLet = true;
+  s.isSeqLet = false;
 
   top.ocaml =
     (if top.isFirst then "let " else " and ") ++
@@ -596,9 +539,9 @@ top::ParBinds ::= s::Bind ss::ParBinds
   ss.s = top.s;
   ss.s_def = top.s_def;
 
-  top.msgs = s.msgs ++ ss.msgs;
+  top.errs = s.errs ++ ss.errs;
 
-  s.isRecLet = true;
+  s.isSeqLet = false;
 
   top.ocaml = 
     (if top.isFirst then "let rec " else " and ") ++
@@ -609,7 +552,7 @@ top::ParBinds ::= s::Bind ss::ParBinds
 
 --------------------------------------------------
 
-nonterminal Bind with location;
+annotation location occurs on Bind;
 
 production bindTyped
 top::Bind ::= tyann::Type x::String e::Expr
@@ -625,18 +568,18 @@ top::Bind ::= tyann::Type x::String e::Expr
 
   top.type = ^tyann;
 
-  top.msgs =
+  top.errs =
     if ty1 == ty2 || e.type == tErr()
-    then e.msgs
+    then e.errs
     else err(
             "variable " ++ x ++ " declared with type " ++ ty1.pp ++ ", but its " ++
             "definition has type " ++ ty2.pp,
             top.location
-         )::e.msgs;
+         )::e.errs;
 
   top.ocaml = 
     x ++ ": " ++ tyann.ocaml ++ " = " ++ 
-    if top.isRecLet
+    if !top.isSeqLet
     then "lazy (" ++ e.ocaml ++ ")"
     else e.ocaml;
 }
@@ -650,14 +593,12 @@ top::Bind ::= x::String tyann::Type
 
   top.type = ^tyann;
 
-  top.msgs = [];
+  top.errs = [];
 
   top.ocaml = "fun " ++ x ++ ":" ++ tyann.ocaml;
 }
 
 --------------------------------------------------
-
-nonterminal Type;
 
 attribute pp occurs on Type;
 
@@ -739,7 +680,7 @@ top::ModRef ::= x::String
 
   top.s_def -[ imp ]-> s_res;
 
-  top.msgs = 
+  top.errs = 
     case mods of
     | h::[] -> []
     | _::_ -> [err("ambiguous module reference " ++ x, top.location)]
@@ -751,33 +692,7 @@ top::ModRef ::= x::String
 
 --------------------------------------------------
 
-nonterminal VarRef with location;
-
--- { varRefExample }
-production varRef
-top::VarRef ::= x::String
-{
-  local vars::[Decorated Scope with LMLabels] =
-    query(`lex*`imp?`var, isDatumVar(x), top.s);
-
-  local bindNode::Decorated Bind with {s, isRecLet} =
-    if length(vars) == 1 
-    then getDecoratedBind(head(vars))
-    else defaultErrorBind;
-
-  top.type = bindNode.type;
-  top.ocaml = if bindNode.isRecLet
-              then "(Lazy.force " ++ x ++ ")"
-              else x;
-  top.msgs = case vars of
-             | [h]  -> []
-             | []   -> [err(x ++ " unresolvable",
-                            top.location)]
-             | _::_ -> [err(x ++ " ambiguous",
-                            top.location)]
-             end;
-}
--- { varRefExample }
+annotation location occurs on VarRef;
 
 fun isDatumVar (Boolean ::= Datum) ::= x::String =
   \d::Datum ->
@@ -787,12 +702,16 @@ fun isDatumVar (Boolean ::= Datum) ::= x::String =
     end
 ;
 
-fun getDecoratedBind Decorated Bind with {s, isRecLet} ::= s::Decorated Scope with LMLabels =
+fun getDecoratedBind Decorated Bind with {s, isSeqLet} ::= s::Decorated Scope with LMLabels =
   case s.datum of
   | datumVar(_, n) -> n
   | _ -> error("Used extractBind on a scope not using datumVar!")
   end
 ;
 
-global defaultErrorBind::Decorated Bind with {s, isRecLet} =
-  decorate bindArgDcl("", tErr(), location=bogusLoc()) with {s=deadScope; isRecLet=false;};
+global defaultErrorBind::Decorated Bind with {s, isSeqLet} =
+  decorate bindArgDcl("", tErr(), location=bogusLoc()) with {s=deadScope; isSeqLet=true;};
+
+fun addable Boolean ::= t::Type =
+  t == tInt() || t == tFloat() || t == tErr()
+;

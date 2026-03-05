@@ -160,7 +160,7 @@ top::Expr_c ::= '(' e::Expr_c ')'
 
 --------------------------------------------------
 
-nonterminal SeqBinds_c with ast<SeqBinds>, location;
+nonterminal SeqBinds_c with ast<Binds>, location;
 
 concrete production seqBindsNil_c
 top::SeqBinds_c ::=
@@ -209,7 +209,7 @@ nonterminal Bind_c with ast<Bind>, location;
 concrete production bindUntyped_c
 top::Bind_c ::= id::Id_t '=' e::Expr_c
 {
-  top.ast = bindUntyped(id.lexeme, e.ast, location=top.location);
+  top.ast = bind(id.lexeme, e.ast, location=top.location);
 }
 
 concrete production bindTyped_c
