@@ -101,29 +101,36 @@ expr(s, e, ty) :- e match {
 
 
 // { exprLetExample }
-expr(s, e, ty) :- e match
-  { ExprInt(_) -> ty == TInt()
-  | ExprVar(r) -> varRef(s, r, ty)
-  | ExprAdd(e1, e2) -> {ty1, ty2}
-      expr(s, e1, ty1), expr(s, e2, ty2),
-      intOrFloat(ty1), intOrFloat(ty2),
-      castAdd(ty1, ty2, ty)
-  | ExprLet(bs, e) -> {s_let}
+expr(s, e, ty) :- e match                           ^\label{line:expr-predicate}^
+  { ExprInt(_) -> ty == TInt()                      ^\label{line:expr-int-ty}^
+  | ExprAdd(e1, e2) -> {tyL, tyR}                   ^\label{line:expr-add-exists}^
+      expr(s, e1, tyL), expr(s, e2, tyR),
+      tyL match {INT() -> true | FLOAT() -> true | _ -> false}, ^\label{line:expr-tyL-match}^
+      tyR match {INT() -> true | FLOAT() -> true | _ -> false}, ^\label{line:expr-tyR-match}^
+      castAdd(tyL, tyR, ty)
+  | ExprLet(bs, e) -> {s_let}                       ^\label{line:expr-s_let-assert}^
       seqBinds(s, bs, s_let),
-      expr(s_let, e, ty)
-  | ... }.
-seqBinds(s, bs, s_last) :- bs match
+      expr(s_let, e, ty)                            ^\label{line:expr-s_let}^
+  | ExprVar(x) -> {vs, vs', vs'', p, s_tgt}
+      query s `LEX*`IMP?`VAR as vs,                 ^\label{line:expr-query}^
+      filter vs (DatumVar(x', _) where x' == x) vs',^\label{line:expr-filter}^
+      min vs' lexico(`VAR < `LEX, `IMP < `LEX,
+                     `VAR < `IMP) vs'',             ^\label{line:expr-min-end}^
+      only(vs'', p), tgt(p, s_tgt),                 ^\label{line:expr-only-tgt}^
+      datumOf(s_tgt, DatumVar(x, ty))               ^\label{line:expr-datumOf}^
+  | ... }.                                          ^\label{line:expr-predicate-end}^
+seqBinds(s, bs, s_last) :- bs match                 ^\label{line:seqBinds-predicate}^
   { SeqBindsLast(b) -> {s_var}
-      new s_last, s_last -[ `LEX ]-> s,
+      new s_last, s_last -[ `LEX ]-> s,             ^\label{line:new-s_last}^ ^\label{line:edge-s_last}^
       bind(s, s_last, b, s_var)
   | SeqBindsCons(b, bs) -> {s_next, s_var}
-      new s_next, s_next -[ `LEX ]-> s,
+      new s_next, s_next -[ `LEX ]-> s,             ^\label{line:new-s_next}^ ^\label{line:edge-s_next}^
       bind(s, s_next, b, s_var),
       seqBinds(s_next, bs, s_last) }.
-bind(s, s_def, b, s_dcl) :- b match
+bind(s, s_def, b, s_dcl) :- b match                 ^\label{line:bind-predicate}^
   { Bind(x, e) -> {ty}
-      new s_dcl -> DatumVar(x, ty),
-      s_def -[ `VAR ]-> s_dcl,
+      new s_dcl -> DatumVar(x, ty),                 ^\label{line:new-s_dcl}^
+      s_def -[ `VAR ]-> s_dcl,                      ^\label{line:edge-s_def}^
       expr(s, e, ty) }.
 // { exprLetExample }
 
@@ -162,7 +169,7 @@ modRef(s, s_def, r) :- r match {
 
 
 // { varRefExample }
-varRef(s, r, ty) :- r match
+varRef(s, r, ty) :- r match                         ^\label{line:varRef-predicate}^
   { VarRef(x) -> {vs, vs', vs'', p, s_tgt}
       query s `LEX*`IMP?`VAR as vs,
       filter vs (DatumVar(x', _) where x' == x) vs',
