@@ -20,17 +20,16 @@ attribute ocaml occurs on
 --------------------------------------------------
 
 -- { nonterminalsAttrs }
-nonterminal Expr; nonterminal Type;
-nonterminal Bind; nonterminal Binds;
+nonterminal Expr; nonterminal Type;  ^\label{line:nts-start}^
+nonterminal Bind; nonterminal Binds; ^\label{line:nts-end}^
 
-synthesized attribute errs::[String] occurs on
-  Expr, Binds, Bind;
-synthesized attribute ocaml::String occurs on
-  Expr, Binds, Bind;
-inherited attribute isSeqLet::Boolean occurs on Bind;
+synthesized attribute errs::[String];                   ^\label{line:attr-errs}^
+synthesized attribute ocaml::String;                    ^\label{line:attr-ocaml}^
+inherited attribute inSeqLet::Boolean                   ^\label{line:attr-inSeqLet}^
+attribute errs, ocaml occurs on Expr, Binds, Bind;      ^\label{line:occ-errs-ocaml}^
+attribute inSeqLet occurs on Bind;                      ^\label{line:occ-inSeqLet}^
 
-synthesized attribute type::Type occurs on
-  Expr, Bind;
+synthesized attribute type::Type occurs on Expr, Bind;
 
 scope labels lex, var, mod, imp as LMLabels;
 scope attribute s occurs on Expr, Binds, Bind;
@@ -130,7 +129,7 @@ top::Decl ::= b::Bind
 
   top.errs = b.errs;
 
-  b.isSeqLet = true;
+  b.inSeqLet = true;
 
   top.ocaml = "let " ++ b.ocaml;
 }
@@ -275,7 +274,7 @@ top::Expr ::= b::Bind e::Expr
 
   top.errs = b.errs ++ e.errs;
 
-  b.isSeqLet = true;
+  b.inSeqLet = true;
   
   top.ocaml = "(" ++ b.ocaml ++ " -> " ++ e.ocaml ++ ")"; 
 }
@@ -405,15 +404,14 @@ top::Expr ::= bs::ParBinds e::Expr
 --------------------------------------------------
 
 -- { exprLetExample }
-production exprAdd top::Expr ::= e1::Expr e2::Expr
+production exprAdd top::Expr ::= e1::Expr e2::Expr                              ^\label{line:prod-exprAdd}^
 { e1.s = top.s; e2.s = top.s;
-  local msgLeft::[String] = assert(addable(e1.type),
-    "(+) LHS type not int/float, is " ++ e1.type.pp);
-  local msgRight::[String] = assert(addable(e2.type),
+  local msgLeft::[String] = assert(addable(e1.type),                            ^\label{line:msgLeft-exprAdd}^
+    "(+) LHS type not int/float, is " ++ e1.type.pp);                     
+  local msgRight::[String] = assert(addable(e2.type),                           ^\label{line:msgRight-exprAdd}^
     "(+) RHS type not int/float, is " ++ e2.type.pp);
-  top.errs = msgLeft ++ msgRight ++ e1.errs ++ e2.errs;
-  top.type = castAdd(e1.type, e2.type);
-  top.ocaml = "(" ++
+  top.errs = msgLeft ++ msgRight ++ e1.errs ++ e2.errs;                         ^\label{line:errs-exprAdd}^
+  top.ocaml = "(" ++                                                            ^\label{line:ocaml-exprAdd}^
     case e1.type, e2.type of
     | tFloat(), tFloat() -> e1.ocaml ++ " +. " ++ e2.ocaml
     | tFloat(), tInt() ->
@@ -421,52 +419,54 @@ production exprAdd top::Expr ::= e1::Expr e2::Expr
     | tInt(), tFloat() ->
       "(float_of_int " ++ e1.ocaml ++ ") +. " ++ e2.ocaml
     | _, _ -> e1.ocaml ++ " + " ++ e2.ocaml
-    end ++ ")"; }
-production exprLet top::Expr ::= bs::Binds e::Expr
+    end ++ ")";
+  top.type = castAdd(e1.type, e2.type); }
+production exprLet top::Expr ::= bs::Binds e::Expr                              ^\label{line:prod-exprLet}^
 { existsScope s_var;
   bs.s = top.s; bs.s_last = s_var;
   e.s = s_var;
-  top.type = e.type;
   top.errs = bs.errs ++ e.errs;
-  top.ocaml = bs.ocaml ++ e.ocaml; }
-production exprVar
+  top.ocaml = bs.ocaml ++ e.ocaml;
+  top.type = e.type; }
+production exprVar                                                              ^\label{line:prod-exprVar}^
 top::Expr ::= x::String
-{ local vars::[Decorated Scope with LMLabels] =
+{ local vars::[Decorated Scope with LMLabels] =                                 ^\label{line:vars-exprVar}^
     query(`lex*`imp?`var, isDatumVar(x), top.s);
-  local bindNode::Decorated Bind with {s, isSeqLet} =
+  local bindNode::Decorated Bind with {s, inSeqLet} =                           ^\label{line:bindNode-exprVar}^
     if length(vars) == 1 then getDecoratedBind(head(vars))
                          else defaultErrorBind;
-  top.type = bindNode.type;
   top.errs = assert(singleton(vars), "err resolving " ++ x);
-  top.ocaml = if !bindNode.isSeqLet
-              then "(Lazy.force " ++ x ++ ")" else x; }
+  top.ocaml = if !bindNode.inSeqLet                                             ^\label{line:bindNode-inSeqLet-exprVar}^
+              then "(Lazy.force " ++ x ++ ")" else x;
+  top.type = bindNode.type; }                                                   ^\label{line:bindNode-type-exprVar}^
 
 production seqBindsLast top::Binds ::= s::Bind
 { existsScope s_var;
   newScope top.s_last;
   top.s_last -[ lex ]-> top.s;
-  s.isSeqLet = false; s.s = top.s;
-  s.s_def = top.s_last; s.s_dcl = s_var; 
+  s.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsLast}^
+  s.s = top.s; s.s_def = top.s_last; s.s_dcl = s_var; 
   top.errs = s.errs;
   top.ocaml = "let " ++ s.ocaml ++ " in "; }
 production seqBindsCons top::Binds ::= s::Bind ss::Binds
 { existsScope s_dcl;
   newScope s_next;
   s_next -[ lex ]-> top.s;
-  s.isSeqLet = true;
+  s.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsCons}^
   s.s = top.s; s.s_def = s_next; s.s_dcl = s_dcl;
   ss.s = s_next; ss.s_last = top.s_last;
   top.errs = s.errs ++ ss.errs;
   top.ocaml = "let " ++ s.ocaml ++ " in " ++ ss.ocaml; }
 
-production bind top::Bind ::= x::String e::Expr
+production bind top::Bind ::= x::String tyann::Type e::Expr
 { newScope top.s_dcl -> datumVar(x, top);
   top.s_def -[ var ]-> top.s_dcl;
   e.s = top.s;
-  top.type = e.type;
-  top.errs = e.errs;
+  top.type = tyann;                                                             ^\label{line:type-bind}^
+  top.errs = assert(tyann == e.type, "bad type of " ++ x)
+             ++ e.errs;
   top.ocaml = x ++ " = " ++
-    if top.isSeqLet then e.ocaml
+    if top.inSeqLet then e.ocaml
                     else "lazy (" ++ e.ocaml ++ ")"; }
 -- { exprLetExample }
 
@@ -510,7 +510,7 @@ top::ParBinds ::= s::Bind
 
   top.errs = s.errs;
 
-  s.isSeqLet = false;
+  s.inSeqLet = false;
 
   top.ocaml =
     (if top.isFirst then "let " else " and ") ++
@@ -531,7 +531,7 @@ top::ParBinds ::= s::Bind ss::ParBinds
 
   top.errs = s.errs ++ ss.errs;
 
-  s.isSeqLet = false;
+  s.inSeqLet = false;
 
   top.ocaml = 
     (if top.isFirst then "let rec " else " and ") ++
@@ -569,7 +569,7 @@ top::Bind ::= tyann::Type x::String e::Expr
 
   top.ocaml = 
     x ++ ": " ++ tyann.ocaml ++ " = " ++ 
-    if !top.isSeqLet
+    if !top.inSeqLet
     then "lazy (" ++ e.ocaml ++ ")"
     else e.ocaml;
 }
@@ -690,15 +690,15 @@ fun isDatumVar (Boolean ::= Datum) ::= x::String =
     end
 ;
 
-fun getDecoratedBind Decorated Bind with {s, isSeqLet} ::= s::Decorated Scope with LMLabels =
+fun getDecoratedBind Decorated Bind with {s, inSeqLet} ::= s::Decorated Scope with LMLabels =
   case s.datum of
   | datumVar(_, n) -> n
   | _ -> error("Used extractBind on a scope not using datumVar!")
   end
 ;
 
-global defaultErrorBind::Decorated Bind with {s, isSeqLet} =
-  decorate bindArgDcl("", tErr(), location=bogusLoc()) with {s=deadScope; isSeqLet=true;};
+global defaultErrorBind::Decorated Bind with {s, inSeqLet} =
+  decorate bindArgDcl("", tErr(), location=bogusLoc()) with {s=deadScope; inSeqLet=true;};
 
 fun addable Boolean ::= t::Type =
   t == tInt() || t == tFloat() || t == tErr()
