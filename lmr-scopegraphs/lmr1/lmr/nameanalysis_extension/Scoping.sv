@@ -31,11 +31,11 @@ attribute inSeqLet occurs on Bind;                      ^\label{line:occ-inSeqLe
 
 synthesized attribute type::Type occurs on Expr, Bind;
 
-scope labels lex, var, mod, imp as LMLabels;
-scope attribute s occurs on Expr, Binds, Bind;
-scope attribute s_last occurs on Binds;
-scope attribute s_def occurs on Bind;
-scope attribute s_dcl occurs on Bind;
+scope labels lex, var, mod, imp as LMLabels;            ^\label{line:scope-labels}^
+scope attribute s occurs on Expr, Binds, Bind;          ^\label{line:scope-attribute-s}^
+scope attribute s_last occurs on Binds;                 ^\label{line:scope-attribute-last}^
+scope attribute s_def occurs on Bind;                   ^\label{line:scope-attribute-def}^
+scope attribute s_dcl occurs on Bind;                   ^\label{line:scope-attribute-dcl}^
 -- { nonterminalsAttrs }
 
 --------------------------------------------------
@@ -405,7 +405,7 @@ top::Expr ::= bs::ParBinds e::Expr
 
 -- { exprLetExample }
 production exprAdd top::Expr ::= e1::Expr e2::Expr                              ^\label{line:prod-exprAdd}^
-{ e1.s = top.s; e2.s = top.s;
+{ e1.s = top.s; e2.s = top.s;                                                   ^\label{line:s-exprAdd}^
   local msgLeft::[String] = assert(addable(e1.type),                            ^\label{line:msgLeft-exprAdd}^
     "(+) LHS type not int/float, is " ++ e1.type.pp);                     
   local msgRight::[String] = assert(addable(e2.type),                           ^\label{line:msgRight-exprAdd}^
@@ -419,12 +419,12 @@ production exprAdd top::Expr ::= e1::Expr e2::Expr                              
     | tInt(), tFloat() ->
       "(float_of_int " ++ e1.ocaml ++ ") +. " ++ e2.ocaml
     | _, _ -> e1.ocaml ++ " + " ++ e2.ocaml
-    end ++ ")";
+    end ++ ")";                                                                 ^\label{line:ocaml-exprAdd-end}^
   top.type = castAdd(e1.type, e2.type); }
 production exprLet top::Expr ::= bs::Binds e::Expr                              ^\label{line:prod-exprLet}^
-{ existsScope s_var;
-  bs.s = top.s; bs.s_last = s_var;
-  e.s = s_var;
+{ existsScope s_let;                                                            ^\label{line:s_let-exprLet}^
+  bs.s = top.s; bs.s_last = s_let;
+  e.s = s_let;                                                                  ^\label{line:s-exprLet}^
   top.errs = bs.errs ++ e.errs;
   top.ocaml = bs.ocaml ++ e.ocaml;
   top.type = e.type; }
@@ -442,16 +442,16 @@ top::Expr ::= x::String
 
 production seqBindsLast top::Binds ::= s::Bind
 { existsScope s_var;
-  newScope top.s_last;
-  top.s_last -[ lex ]-> top.s;
+  newScope top.s_last;                                                          ^\label{line:s_last-seqBindsLast}^
+  top.s_last -[ lex ]-> top.s;                                                  ^\label{line:edge-lex-seqBindsLast}^
   s.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsLast}^
   s.s = top.s; s.s_def = top.s_last; s.s_dcl = s_var; 
   top.errs = s.errs;
   top.ocaml = "let " ++ s.ocaml ++ " in "; }
 production seqBindsCons top::Binds ::= s::Bind ss::Binds
 { existsScope s_dcl;
-  newScope s_next;
-  s_next -[ lex ]-> top.s;
+  newScope s_next;                                                              ^\label{line:snext-seqBindsCons}^
+  s_next -[ lex ]-> top.s;                                                      ^\label{line:edge-lex-seqBindsCons}^
   s.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsCons}^
   s.s = top.s; s.s_def = s_next; s.s_dcl = s_dcl;
   ss.s = s_next; ss.s_last = top.s_last;
@@ -459,8 +459,8 @@ production seqBindsCons top::Binds ::= s::Bind ss::Binds
   top.ocaml = "let " ++ s.ocaml ++ " in " ++ ss.ocaml; }
 
 production bind top::Bind ::= x::String tyann::Type e::Expr
-{ newScope top.s_dcl -> datumVar(x, top);
-  top.s_def -[ var ]-> top.s_dcl;
+{ newScope top.s_dcl -> datumVar(x, top);                                       ^\label{line:sdcl-bind}^
+  top.s_def -[ var ]-> top.s_dcl;                                               ^\label{line:edge-var-bind}^
   e.s = top.s;
   top.type = tyann;                                                             ^\label{line:type-bind}^
   top.errs = assert(tyann == e.type, "bad type of " ++ x)
