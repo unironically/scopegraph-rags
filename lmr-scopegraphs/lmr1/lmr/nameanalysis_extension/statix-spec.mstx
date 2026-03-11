@@ -105,8 +105,12 @@ expr(s, e, ty) :- e match                           ^\label{line:expr-predicate}
   { ExprInt(_) -> ty == TInt()                      ^\label{line:expr-int-ty}^
   | ExprAdd(e1, e2) -> {tyL, tyR}                   ^\label{line:expr-add-exists}^
       expr(s, e1, tyL), expr(s, e2, tyR),
-      tyL match {INT() -> true | FLOAT() -> true | _ -> false}, ^\label{line:expr-tyL-match}^
-      tyR match {INT() -> true | FLOAT() -> true | _ -> false}, ^\label{line:expr-tyR-match}^
+      tyL match { INT() -> true                      ^\label{line:expr-tyL-match}^
+                | FLOAT() -> true
+                | _ -> false}, 
+      tyR match { INT() -> true                      ^\label{line:expr-tyR-match}^
+                | FLOAT() -> true
+                | _ -> false}, 
       castAdd(tyL, tyR, ty)
   | ExprLet(bs, e) -> {s_let}                       ^\label{line:expr-s_let-assert}^
       seqBinds(s, bs, s_let),

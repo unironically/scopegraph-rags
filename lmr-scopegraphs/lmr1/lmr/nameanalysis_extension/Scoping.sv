@@ -20,20 +20,20 @@ attribute ocaml occurs on
 --------------------------------------------------
 
 -- { nonterminalsAttrs }
-nonterminal Expr; nonterminal VarRef; nonterminal Type;
+nonterminal Expr; nonterminal Type;
 nonterminal Bind; nonterminal Binds;
 
 synthesized attribute errs::[String] occurs on
-  Expr, Binds, Bind, VarRef;
+  Expr, Binds, Bind;
 synthesized attribute ocaml::String occurs on
-  Expr, Binds, Bind, VarRef;
+  Expr, Binds, Bind;
 inherited attribute isSeqLet::Boolean occurs on Bind;
 
 synthesized attribute type::Type occurs on
-  Expr, Bind, VarRef;
+  Expr, Bind;
 
 scope labels lex, var, mod, imp as LMLabels;
-scope attribute s occurs on Expr, Binds, Bind, VarRef;
+scope attribute s occurs on Expr, Binds, Bind;
 scope attribute s_last occurs on Binds;
 scope attribute s_def occurs on Bind;
 scope attribute s_dcl occurs on Bind;
@@ -200,18 +200,6 @@ top::Expr ::=
   top.errs = [];
 
   top.ocaml = "false";
-}
-
-production exprVar
-top::Expr ::= r::VarRef
-{
-  r.s = top.s;
-
-  top.type = r.type;
-
-  top.errs = r.errs;
-
-  top.ocaml = r.ocaml;
 }
 
 production exprAnd
@@ -427,31 +415,43 @@ production exprAdd top::Expr ::= e1::Expr e2::Expr
   top.type = castAdd(e1.type, e2.type);
   top.ocaml = "(" ++
     case e1.type, e2.type of
-    | tFloat(), tFloat() ->
-      e1.ocaml ++ " +. " ++ e2.ocaml
+    | tFloat(), tFloat() -> e1.ocaml ++ " +. " ++ e2.ocaml
     | tFloat(), tInt() ->
       e1.ocaml ++ " +. (float_of_int " ++ e2.ocaml ++ ")"
     | tInt(), tFloat() ->
       "(float_of_int " ++ e1.ocaml ++ ") +. " ++ e2.ocaml
-    | _, _ ->
-      e1.ocaml ++ " + " ++ e2.ocaml
+    | _, _ -> e1.ocaml ++ " + " ++ e2.ocaml
     end ++ ")"; }
 production exprLet top::Expr ::= bs::Binds e::Expr
 { existsScope s_var;
   bs.s = top.s; bs.s_last = s_var;
   e.s = s_var;
-  top.type = e.type; top.errs = bs.errs ++ e.errs;
+  top.type = e.type;
+  top.errs = bs.errs ++ e.errs;
   top.ocaml = bs.ocaml ++ e.ocaml; }
+production exprVar
+top::Expr ::= x::String
+{ local vars::[Decorated Scope with LMLabels] =
+    query(`lex*`imp?`var, isDatumVar(x), top.s);
+  local bindNode::Decorated Bind with {s, isSeqLet} =
+    if length(vars) == 1 then getDecoratedBind(head(vars))
+                         else defaultErrorBind;
+  top.type = bindNode.type;
+  top.errs = assert(singleton(vars), "err resolving " ++ x);
+  top.ocaml = if !bindNode.isSeqLet
+              then "(Lazy.force " ++ x ++ ")" else x; }
 
 production seqBindsLast top::Binds ::= s::Bind
-{ existsScope s_var; newScope top.s_last;
+{ existsScope s_var;
+  newScope top.s_last;
   top.s_last -[ lex ]-> top.s;
   s.isSeqLet = false; s.s = top.s;
   s.s_def = top.s_last; s.s_dcl = s_var; 
   top.errs = s.errs;
   top.ocaml = "let " ++ s.ocaml ++ " in "; }
 production seqBindsCons top::Binds ::= s::Bind ss::Binds
-{ existsScope s_dcl; newScope s_next;
+{ existsScope s_dcl;
+  newScope s_next;
   s_next -[ lex ]-> top.s;
   s.isSeqLet = true;
   s.s = top.s; s.s_def = s_next; s.s_dcl = s_dcl;
@@ -463,21 +463,11 @@ production bind top::Bind ::= x::String e::Expr
 { newScope top.s_dcl -> datumVar(x, top);
   top.s_def -[ var ]-> top.s_dcl;
   e.s = top.s;
-  top.type = e.type; top.errs = e.errs;
+  top.type = e.type;
+  top.errs = e.errs;
   top.ocaml = x ++ " = " ++
     if top.isSeqLet then e.ocaml
                     else "lazy (" ++ e.ocaml ++ ")"; }
-
-production varRef top::VarRef ::= x::String
-{ local vars::[Decorated Scope with LMLabels] =
-    query(`lex*`imp?`var, isDatumVar(x), top.s);
-  local bindNode::Decorated Bind with {s, isSeqLet} =
-    if length(vars) == 1 then getDecoratedBind(head(vars))
-                         else defaultErrorBind;
-  top.type = bindNode.type;
-  top.errs = assert(singleton(vars), "err resolving " ++ x);
-  top.ocaml = if !bindNode.isSeqLet
-              then "(Lazy.force " ++ x ++ ")" else x;}
 -- { exprLetExample }
 
 annotation location occurs on Binds;
@@ -691,8 +681,6 @@ top::ModRef ::= x::String
 }
 
 --------------------------------------------------
-
-annotation location occurs on VarRef;
 
 fun isDatumVar (Boolean ::= Datum) ::= x::String =
   \d::Datum ->
