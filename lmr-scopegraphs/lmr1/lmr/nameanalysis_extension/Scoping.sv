@@ -431,7 +431,9 @@ production exprLet top::Expr ::= bs::Binds e::Expr                              
 production exprVar                                                              ^\label{line:prod-exprVar}^
 top::Expr ::= x::String
 { local vars::[Decorated Scope with LMLabels] =                                 ^\label{line:vars-exprVar}^
-    query(`lex*`imp?`var, isDatumVar(x), top.s);
+    query(`lex*`imp?`var,                                                       ^\label{line:query-exprVar}^^\label{line:regex-exprVar}^
+          `lex > `imp, `lex > `var, `imp > `var,                                ^\label{line:order-exprVar}^
+          isDatumVar(x), top.s);                                                ^\label{line:predicate-exprVar}^
   local bindNode::Decorated Bind with {s, inSeqLet} =                           ^\label{line:bindNode-exprVar}^
     if length(vars) == 1 then getDecoratedBind(head(vars))
                          else defaultErrorBind;
@@ -451,7 +453,7 @@ production seqBindsLast top::Binds ::= s::Bind
 production seqBindsCons top::Binds ::= s::Bind ss::Binds
 { existsScope s_dcl;
   newScope s_next;                                                              ^\label{line:snext-seqBindsCons}^
-  newEdge s_next -[ lex ]-> top.s;                                                      ^\label{line:edge-lex-seqBindsCons}^
+  newEdge s_next -[ lex ]-> top.s;                                              ^\label{line:edge-lex-seqBindsCons}^
   s.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsCons}^
   s.s = top.s; s.s_def = s_next; s.s_dcl = s_dcl;
   ss.s = s_next; ss.s_last = top.s_last;
