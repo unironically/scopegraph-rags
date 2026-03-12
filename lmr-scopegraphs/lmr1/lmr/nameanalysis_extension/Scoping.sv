@@ -29,7 +29,7 @@ inherited @attribute@ inSeqLet::Boolean                   ^\label{line:attr-inSe
 @attribute@ errs, ocaml @occurs on@ Expr, Binds, Bind;      ^\label{line:occ-errs-ocaml}^
 @attribute@ inSeqLet @occurs on@ Bind;                      ^\label{line:occ-inSeqLet}^
 
-synthesized @attribute@ type::Type @occurs on@ Expr, Bind;
+synthesized @attribute@ type::Type @occurs on@ Expr, Bind; ^\label{line:attr-type}^
 
 scope labels lex, var, mod, imp as LMLabels;            ^\label{line:scope-labels}^
 scope &attribute& s &occurs on& Expr, Binds, Bind;          ^\label{line:scope-attribute-s}^
