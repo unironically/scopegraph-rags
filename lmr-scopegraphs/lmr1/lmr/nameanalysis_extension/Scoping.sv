@@ -23,19 +23,19 @@ attribute ocaml occurs on
 nonterminal Expr; nonterminal Type;  ^\label{line:nts-start}^
 nonterminal Bind; nonterminal Binds; ^\label{line:nts-end}^
 
-synthesized attribute errs::[String];                   ^\label{line:attr-errs}^
-synthesized attribute ocaml::String;                    ^\label{line:attr-ocaml}^
-inherited attribute inSeqLet::Boolean                   ^\label{line:attr-inSeqLet}^
-attribute errs, ocaml occurs on Expr, Binds, Bind;      ^\label{line:occ-errs-ocaml}^
-attribute inSeqLet occurs on Bind;                      ^\label{line:occ-inSeqLet}^
+synthesized @attribute@ errs::[String];                   ^\label{line:attr-errs}^
+synthesized @attribute@ ocaml::String;                    ^\label{line:attr-ocaml}^
+inherited @attribute@ inSeqLet::Boolean                   ^\label{line:attr-inSeqLet}^
+@attribute@ errs, ocaml @occurs on@ Expr, Binds, Bind;      ^\label{line:occ-errs-ocaml}^
+@attribute@ inSeqLet @occurs on@ Bind;                      ^\label{line:occ-inSeqLet}^
 
-synthesized attribute type::Type occurs on Expr, Bind;
+synthesized @attribute@ type::Type @occurs on@ Expr, Bind;
 
 scope labels lex, var, mod, imp as LMLabels;            ^\label{line:scope-labels}^
-scope attribute s occurs on Expr, Binds, Bind;          ^\label{line:scope-attribute-s}^
-scope attribute s_last occurs on Binds;                 ^\label{line:scope-attribute-last}^
-scope attribute s_def occurs on Bind;                   ^\label{line:scope-attribute-def}^
-scope attribute s_dcl occurs on Bind;                   ^\label{line:scope-attribute-dcl}^
+scope &attribute& s &occurs on& Expr, Binds, Bind;          ^\label{line:scope-attribute-s}^
+scope &attribute& s_last &occurs on& Binds;                 ^\label{line:scope-attribute-last}^
+scope &attribute& s_def &occurs on& Bind;                   ^\label{line:scope-attribute-def}^
+scope &attribute& s_dcl &occurs on& Bind;                   ^\label{line:scope-attribute-dcl}^
 -- { nonterminalsAttrs }
 
 --------------------------------------------------
@@ -443,7 +443,7 @@ top::Expr ::= x::String
 production seqBindsLast top::Binds ::= s::Bind
 { existsScope s_var;
   newScope top.s_last;                                                          ^\label{line:s_last-seqBindsLast}^
-  top.s_last -[ lex ]-> top.s;                                                  ^\label{line:edge-lex-seqBindsLast}^
+  newEdge top.s_last -[ lex ]-> top.s;                                                  ^\label{line:edge-lex-seqBindsLast}^
   s.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsLast}^
   s.s = top.s; s.s_def = top.s_last; s.s_dcl = s_var; 
   top.errs = s.errs;
@@ -451,7 +451,7 @@ production seqBindsLast top::Binds ::= s::Bind
 production seqBindsCons top::Binds ::= s::Bind ss::Binds
 { existsScope s_dcl;
   newScope s_next;                                                              ^\label{line:snext-seqBindsCons}^
-  s_next -[ lex ]-> top.s;                                                      ^\label{line:edge-lex-seqBindsCons}^
+  newEdge s_next -[ lex ]-> top.s;                                                      ^\label{line:edge-lex-seqBindsCons}^
   s.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsCons}^
   s.s = top.s; s.s_def = s_next; s.s_dcl = s_dcl;
   ss.s = s_next; ss.s_last = top.s_last;
@@ -460,7 +460,7 @@ production seqBindsCons top::Binds ::= s::Bind ss::Binds
 
 production bind top::Bind ::= x::String tyann::Type e::Expr
 { newScope top.s_dcl -> datumVar(x, top);                                       ^\label{line:sdcl-bind}^
-  top.s_def -[ var ]-> top.s_dcl;                                               ^\label{line:edge-var-bind}^
+  newEdge top.s_def -[ var ]-> top.s_dcl;                                               ^\label{line:edge-var-bind}^
   e.s = top.s;
   top.type = tyann;                                                             ^\label{line:type-bind}^
   top.errs = assert(tyann == e.type, "bad type of " ++ x)
