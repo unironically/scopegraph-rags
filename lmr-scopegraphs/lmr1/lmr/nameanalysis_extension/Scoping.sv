@@ -34,7 +34,6 @@ synthesized @attribute@ type::Type @occurs on@ Expr, Bind; ^\label{line:attr-typ
 scope labels lex, var, mod, imp as LMLabels;            ^\label{line:scope-labels}^
 scope &attribute& s &occurs on& Expr, Binds, Bind;          ^\label{line:scope-attribute-s}^
 scope &attribute& s_last &occurs on& Binds;                 ^\label{line:scope-attribute-last}^
-scope &attribute& s_def &occurs on& Bind;                   ^\label{line:scope-attribute-def}^
 scope &attribute& s_dcl &occurs on& Bind;                   ^\label{line:scope-attribute-dcl}^
 -- { nonterminalsAttrs }
 
@@ -428,48 +427,59 @@ production exprLet top::Expr ::= bs::Binds e::Expr                              
   top.errs = bs.errs ++ e.errs;
   top.ocaml = bs.ocaml ++ e.ocaml;
   top.type = e.type; }
-production exprVar                                                              ^\label{line:prod-exprVar}^
-top::Expr ::= x::String
-{ local vars::[Decorated Scope with LMLabels] =                                 ^\label{line:vars-exprVar}^
-    query(`lex*`imp?`var,                                                       ^\label{line:query-exprVar}^^\label{line:regex-exprVar}^
+production exprVar top::Expr ::= x::String                                      ^\label{line:prod-exprVar}^
+{ local exact::[Decorated Scope with LMLabels] =                                 ^\label{line:vars-exprVar}^
+    query(`lex*`imp?`var,                                                       ^\label{line:query-exprVar-1}^ ^\label{line:regex-exprVar}^
           `lex > `imp, `lex > `var, `imp > `var,                                ^\label{line:order-exprVar}^
-          isDatumVar(x), top.s);                                                ^\label{line:predicate-exprVar}^
+          isVarCalled(x), top.s);                                               ^\label{line:predicate-exprVar}^ ^\label{line:query-exprVar-1-end}^
+  local close::[Decorated Scope with LMLabels] =
+    query(`lex*imp?(`var|`mod),                                                 ^\label{line:query-exprVar-2}^
+          `lex > `imp, `lex > `var, `lex > mod,                                 ^\label{line:order-exprVar-2}^
+          `imp > `var, `imp > `mod,                                             ^\label{line:order-exprVar-2-end}^
+          editDistanceAtMost(1, x), top.s);                                     ^\label{line:query-exprVar-2-end}^
   local bindNode::Decorated Bind with {s, inSeqLet} =                           ^\label{line:bindNode-exprVar}^
-    if length(vars) == 1 then getDecoratedBind(head(vars))
-                         else defaultErrorBind;
-  top.errs = assert(singleton(vars), "err resolving " ++ x);
+    if singleton(exact) then getBind(head(exact))
+                        else defaultErrBind;
+  local closeNames::[String] = getDclNames(vars);
+  top.errs = case exact, close of                                               ^\label{line:exprVar-errs}^
+             | [_], [] -> []
+             | _::_, _ -> [x ++ " ambiguous"]
+             | [], [] -> [x ++ " unresolvable"]
+             | _, cs -> [x ++ " unresolvable, close to: "                       ^\label{line:exprVar-errs-close}^
+                         ++ implode(", ", vs)] end;                             ^\label{line:exprVar-errs-end}^
   top.ocaml = if !bindNode.inSeqLet                                             ^\label{line:bindNode-inSeqLet-exprVar}^
-              then "(Lazy.force " ++ x ++ ")" else x;
+              then "(Lazy.force " ++ x ++ ")" else x;                           ^\label{line:bindNode-inSeqLet-exprVar-end}^
   top.type = bindNode.type; }                                                   ^\label{line:bindNode-type-exprVar}^
 
 production seqBindsLast top::Binds ::= s::Bind
-{ existsScope s_var;
+{ existsScope s_dcl;
   newScope top.s_last;                                                          ^\label{line:s_last-seqBindsLast}^
-  newEdge top.s_last -[ lex ]-> top.s;                                                  ^\label{line:edge-lex-seqBindsLast}^
+  newEdge top.s_last -[ lex ]-> top.s;                                          ^\label{line:edge-lex-seqBindsLast}^
+  newEdge top.s_last -[ var ]-> s_dcl;                                          ^\label{line:edge-var-seqBindsLast}^
   s.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsLast}^
-  s.s = top.s; s.s_def = top.s_last; s.s_dcl = s_var; 
+  s.s = top.s; s.s_dcl = s_dcl; 
   top.errs = s.errs;
   top.ocaml = "let " ++ s.ocaml ++ " in "; }
 production seqBindsCons top::Binds ::= s::Bind ss::Binds
 { existsScope s_dcl;
   newScope s_next;                                                              ^\label{line:snext-seqBindsCons}^
   newEdge s_next -[ lex ]-> top.s;                                              ^\label{line:edge-lex-seqBindsCons}^
+  newEdge s_next -[ var ]-> s_dcl;                                              ^\label{line:edge-var-bind}^
   s.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsCons}^
-  s.s = top.s; s.s_def = s_next; s.s_dcl = s_dcl;
+  s.s = top.s; s.s_dcl = s_dcl;
   ss.s = s_next; ss.s_last = top.s_last;
   top.errs = s.errs ++ ss.errs;
   top.ocaml = "let " ++ s.ocaml ++ " in " ++ ss.ocaml; }
 
-production bind top::Bind ::= x::String tyann::Type e::Expr
+production bind top::Bind ::= x::String anno::Type e::Expr
 { newScope top.s_dcl -> datumVar(x, top);                                       ^\label{line:sdcl-bind}^
-  newEdge top.s_def -[ var ]-> top.s_dcl;                                               ^\label{line:edge-var-bind}^
   e.s = top.s;
-  top.type = tyann;                                                             ^\label{line:type-bind}^
-  top.errs = assert(tyann == e.type, "bad type of " ++ x)
+  top.type = if e.type == anno then anno else tErr();                           ^\label{line:type-bind}^
+  top.errs = assert(anno == e.type, "bad type of " ++ x)
              ++ e.errs;
   top.ocaml = x ++ " = " ++
-    if top.inSeqLet then e.ocaml
-                    else "lazy (" ++ e.ocaml ++ ")"; }
+    if top.inSeqLet
+    then e.ocaml else "lazy (" ++ e.ocaml ++ ")"; }
 -- { exprLetExample }
 
 annotation location occurs on Binds;

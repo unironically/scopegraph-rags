@@ -105,16 +105,13 @@ expr(s, e, ty) :- e match                           ^\label{line:expr-predicate}
   { ExprInt(_) -> ty == TInt()                      ^\label{line:expr-int-ty}^
   | ExprAdd(e1, e2) -> {tyL, tyR}                   ^\label{line:expr-add-exists}^
       expr(s, e1, tyL), expr(s, e2, tyR),
-      tyL match { INT() -> true                      ^\label{line:expr-tyL-match}^
-                | FLOAT() -> true
+      tyL match { INT() -> true | FLOAT() -> true                      ^\label{line:expr-tyL-match}^
                 | _ -> false}, 
-      tyR match { INT() -> true                      ^\label{line:expr-tyR-match}^
-                | FLOAT() -> true
+      tyR match { INT() -> true | FLOAT() -> true                      ^\label{line:expr-tyR-match}^
                 | _ -> false}, 
       castAdd(tyL, tyR, ty)
   | ExprLet(bs, e) -> {s_let}                       ^\label{line:expr-s_let-assert}^
-      seqBinds(s, bs, s_let),
-      expr(s_let, e, ty)                            ^\label{line:expr-s_let}^
+      seqBinds(s, bs, s_let), expr(s_let, e, ty)                            ^\label{line:expr-s_let}^
   | ExprVar(x) -> {vs, vs', vs'', p, s_tgt}
       query s `LEX*`IMP?`VAR as vs,                 ^\label{line:expr-query}^
       filter vs (DatumVar(x', _) where x' == x) vs',^\label{line:expr-filter}^
@@ -124,17 +121,18 @@ expr(s, e, ty) :- e match                           ^\label{line:expr-predicate}
       datumOf(s_tgt, DatumVar(x, ty))               ^\label{line:expr-datumOf}^
   | ... }.                                          ^\label{line:expr-predicate-end}^
 seqBinds(s, bs, s_last) :- bs match                 ^\label{line:seqBinds-predicate}^
-  { SeqBindsLast(b) -> {s_var}
-      new s_last, s_last -[ `LEX ]-> s,             ^\label{line:new-s_last}^ ^\label{line:edge-s_last}^
-      bind(s, s_last, b, s_var)
-  | SeqBindsCons(b, bs) -> {s_next, s_var}
-      new s_next, s_next -[ `LEX ]-> s,             ^\label{line:new-s_next}^ ^\label{line:edge-s_next}^
-      bind(s, s_next, b, s_var),
+  { SeqBindsLast(b) -> {s_dcl}
+      new s_last,             ^\label{line:new-s_last}^ 
+      s_last -[ `LEX ]-> s, s_last -[ `VAR ]-> s_dcl, ^\label{line:edge-s_last-lex}^ ^\label{line:edge-s_last-var}^
+      bind(s, b, s_dcl)
+  | SeqBindsCons(b, bs) -> {s_next, s_dcl}
+      new s_next,             ^\label{line:new-s_next}^ 
+      s_next -[ `LEX ]-> s, s_next -[ `VAR ]-> s_dcl, ^\label{line:edge-s_next}^ ^\label{line:edge-s_def}^
+      bind(s, b, s_dcl),
       seqBinds(s_next, bs, s_last) }.
-bind(s, s_def, b, s_dcl) :- b match                 ^\label{line:bind-predicate}^
+bind(s, b, s_dcl) :- b match                 ^\label{line:bind-predicate}^
   { Bind(x, e) -> {ty}
       new s_dcl -> DatumVar(x, ty),                 ^\label{line:new-s_dcl}^
-      s_def -[ `VAR ]-> s_dcl,                      ^\label{line:edge-s_def}^
       expr(s, e, ty) }.
 // { exprLetExample }
 
