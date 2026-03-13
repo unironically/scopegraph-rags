@@ -420,13 +420,6 @@ production exprAdd top::Expr ::= e1::Expr e2::Expr                              
     | _, _ -> e1.ocaml ++ " + " ++ e2.ocaml
     end ++ ")";                                                                 ^\label{line:ocaml-exprAdd-end}^
   top.type = castAdd(e1.type, e2.type); }
-production exprLet top::Expr ::= bs::Binds e::Expr                              ^\label{line:prod-exprLet}^
-{ exists scope s_let;                                                            ^\label{line:s_let-exprLet}^
-  bs.s = top.s; bs.s_last = s_let;
-  e.s = s_let;                                                                  ^\label{line:s-exprLet}^
-  top.errs = bs.errs ++ e.errs;
-  top.ocaml = bs.ocaml ++ e.ocaml;
-  top.type = e.type; }
 production exprVar top::Expr ::= x::String                                      ^\label{line:prod-exprVar}^
 { local exact::[Decorated Scope with LMLabels] =                                 ^\label{line:vars-exprVar}^
     query(`lex*`imp?`var,                                                       ^\label{line:query-exprVar-1}^ ^\label{line:regex-exprVar}^
@@ -451,22 +444,31 @@ production exprVar top::Expr ::= x::String                                      
               then "(Lazy.force " ++ x ++ ")" else x;                           ^\label{line:bindNode-inSeqLet-exprVar-end}^
   top.type = bindNode.type; }                                                   ^\label{line:bindNode-type-exprVar}^
 
+production exprLet top::Expr ::= bs::Binds e::Expr                              ^\label{line:prod-exprLet}^
+{ exists scope s_let;                                                            ^\label{line:s_let-exprLet}^
+  bs.s = top.s; bs.s_last = s_let; 
+  e.s = s_let;                                                                  ^\label{line:s-exprLet}^
+  top.errs = bs.errs ++ e.errs;
+  top.ocaml = bs.ocaml ++ e.ocaml;
+  top.type = e.type; }
+
 production seqBindsLast top::Binds ::= b::Bind
 { exists scope s_dcl;
   scope top.s_last;                                                          ^\label{line:s_last-seqBindsLast}^
   edge top.s_last -[ lex ]-> top.s;                                          ^\label{line:edge-lex-seqBindsLast}^
   edge top.s_last -[ var ]-> s_dcl;                                          ^\label{line:edge-var-seqBindsLast}^
-  b.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsLast}^
+  b.inSeqLet = true;                                                           ^\label{line:inSeqLet-seqBindsLast}^
   b.s = top.s; b.s_dcl = s_dcl; 
   top.errs = b.errs;
   top.ocaml = "let " ++ b.ocaml ++ " in "; }
+
 production seqBindsCons top::Binds ::= b::Bind bs::Binds
 { exists scope s_dcl;
   scope s_next;                                                              ^\label{line:snext-seqBindsCons}^
   edge s_next -[ lex ]-> top.s;                                              ^\label{line:edge-lex-seqBindsCons}^
   edge s_next -[ var ]-> s_dcl;                                              ^\label{line:edge-var-bind}^
-  b.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsCons}^
-  b.s = top.s; b.s_dcl = s_dcl;
+  b.inSeqLet = true;                                                           ^\label{line:inSeqLet-seqBindsCons}^
+  b.s = top.s;  b.s_dcl = s_dcl;
   bs.s = s_next; bs.s_last = top.s_last;
   top.errs = b.errs ++ bs.errs;
   top.ocaml = "let " ++ b.ocaml ++ " in " ++ bs.ocaml; }
