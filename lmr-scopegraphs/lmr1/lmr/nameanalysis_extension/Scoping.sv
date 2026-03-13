@@ -440,13 +440,13 @@ production exprVar top::Expr ::= x::String                                      
   local bindNode::Decorated Bind with {s, inSeqLet} =                           ^\label{line:bindNode-exprVar}^
     if singleton(exact) then getBind(head(exact))
                         else defaultErrBind;
-  local closeNames::[String] = getDclNames(vars);
-  top.errs = case exact, close of                                               ^\label{line:exprVar-errs}^
+  local closeNames::[String] = getDclNames(close);
+  top.errs = case exact, closeNames of                                               ^\label{line:exprVar-errs}^
              | [_], [] -> []
              | _::_, _ -> [x ++ " ambiguous"]
              | [], [] -> [x ++ " unresolvable"]
              | _, cs -> [x ++ " unresolvable, close to: "                       ^\label{line:exprVar-errs-close}^
-                         ++ implode(", ", vs)] end;                             ^\label{line:exprVar-errs-end}^
+                         ++ implode(", ", cs)] end;                             ^\label{line:exprVar-errs-end}^
   top.ocaml = if !bindNode.inSeqLet                                             ^\label{line:bindNode-inSeqLet-exprVar}^
               then "(Lazy.force " ++ x ++ ")" else x;                           ^\label{line:bindNode-inSeqLet-exprVar-end}^
   top.type = bindNode.type; }                                                   ^\label{line:bindNode-type-exprVar}^
