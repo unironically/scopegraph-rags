@@ -44,8 +44,8 @@ nonterminal Main with location;
 production program
 top::Main ::= ds::Decls
 {
-  newScope glob;
-  newScope deadScope;
+  scope glob;
+  scope deadScope;
 
   ds.s = glob;
   ds.s_module = deadScope;
@@ -62,7 +62,7 @@ nonterminal Decls with location;
 production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
-  newScope seqScope;
+  scope seqScope;
 
   seqScope -[ lex ]-> top.s;
 
@@ -118,7 +118,7 @@ top::Decl ::= mr::ModRef
 production declDef
 top::Decl ::= b::Bind
 {
-  existsScope s_dcl;
+  exists scope s_dcl;
 
   b.s = top.s;
   b.s_def = top.s_module;
@@ -141,7 +141,7 @@ nonterminal Module with location;
 production module
 top::Module ::= x::String ds::Decls
 {
-  newScope modScope -> datumMod(x, top);
+  scope modScope -> datumMod(x, top);
 
   modScope -[ lex ]-> top.s;
   top.s_def    -[ mod ]-> modScope;
@@ -254,9 +254,9 @@ top::Expr ::= e1::Expr e2::Expr
 production exprFun
 top::Expr ::= b::Bind e::Expr
 {
-  existsScope s_dcl;
+  exists scope s_dcl;
 
-  newScope s_fun;
+  scope s_fun;
 
   s_fun -[ lex ]-> top.s;
 
@@ -361,7 +361,7 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
 production exprLetRec
 top::Expr ::= bs::ParBinds e::Expr
 {
-  newScope s_let;
+  scope s_let;
 
   s_let -[ lex ]-> top.s;
 
@@ -382,7 +382,7 @@ top::Expr ::= bs::ParBinds e::Expr
 production exprLetPar
 top::Expr ::= bs::ParBinds e::Expr
 {
-  newScope s_let;
+  scope s_let;
 
   s_let -[ lex ]-> top.s;
 
@@ -421,7 +421,7 @@ production exprAdd top::Expr ::= e1::Expr e2::Expr                              
     end ++ ")";                                                                 ^\label{line:ocaml-exprAdd-end}^
   top.type = castAdd(e1.type, e2.type); }
 production exprLet top::Expr ::= bs::Binds e::Expr                              ^\label{line:prod-exprLet}^
-{ existsScope s_let;                                                            ^\label{line:s_let-exprLet}^
+{ exists scope s_let;                                                            ^\label{line:s_let-exprLet}^
   bs.s = top.s; bs.s_last = s_let;
   e.s = s_let;                                                                  ^\label{line:s-exprLet}^
   top.errs = bs.errs ++ e.errs;
@@ -451,28 +451,28 @@ production exprVar top::Expr ::= x::String                                      
               then "(Lazy.force " ++ x ++ ")" else x;                           ^\label{line:bindNode-inSeqLet-exprVar-end}^
   top.type = bindNode.type; }                                                   ^\label{line:bindNode-type-exprVar}^
 
-production seqBindsLast top::Binds ::= s::Bind
-{ existsScope s_dcl;
-  newScope top.s_last;                                                          ^\label{line:s_last-seqBindsLast}^
-  newEdge top.s_last -[ lex ]-> top.s;                                          ^\label{line:edge-lex-seqBindsLast}^
-  newEdge top.s_last -[ var ]-> s_dcl;                                          ^\label{line:edge-var-seqBindsLast}^
-  s.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsLast}^
-  s.s = top.s; s.s_dcl = s_dcl; 
-  top.errs = s.errs;
-  top.ocaml = "let " ++ s.ocaml ++ " in "; }
-production seqBindsCons top::Binds ::= s::Bind ss::Binds
-{ existsScope s_dcl;
-  newScope s_next;                                                              ^\label{line:snext-seqBindsCons}^
-  newEdge s_next -[ lex ]-> top.s;                                              ^\label{line:edge-lex-seqBindsCons}^
-  newEdge s_next -[ var ]-> s_dcl;                                              ^\label{line:edge-var-bind}^
-  s.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsCons}^
-  s.s = top.s; s.s_dcl = s_dcl;
-  ss.s = s_next; ss.s_last = top.s_last;
-  top.errs = s.errs ++ ss.errs;
-  top.ocaml = "let " ++ s.ocaml ++ " in " ++ ss.ocaml; }
+production seqBindsLast top::Binds ::= b::Bind
+{ exists scope s_dcl;
+  scope top.s_last;                                                          ^\label{line:s_last-seqBindsLast}^
+  edge top.s_last -[ lex ]-> top.s;                                          ^\label{line:edge-lex-seqBindsLast}^
+  edge top.s_last -[ var ]-> s_dcl;                                          ^\label{line:edge-var-seqBindsLast}^
+  b.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsLast}^
+  b.s = top.s; b.s_dcl = s_dcl; 
+  top.errs = b.errs;
+  top.ocaml = "let " ++ b.ocaml ++ " in "; }
+production seqBindsCons top::Binds ::= b::Bind bs::Binds
+{ exists scope s_dcl;
+  scope s_next;                                                              ^\label{line:snext-seqBindsCons}^
+  edge s_next -[ lex ]-> top.s;                                              ^\label{line:edge-lex-seqBindsCons}^
+  edge s_next -[ var ]-> s_dcl;                                              ^\label{line:edge-var-bind}^
+  b.inSeqLet = false;                                                           ^\label{line:inSeqLet-seqBindsCons}^
+  b.s = top.s; b.s_dcl = s_dcl;
+  bs.s = s_next; bs.s_last = top.s_last;
+  top.errs = b.errs ++ bs.errs;
+  top.ocaml = "let " ++ b.ocaml ++ " in " ++ bs.ocaml; }
 
 production bind top::Bind ::= x::String anno::Type e::Expr
-{ newScope top.s_dcl -> datumVar(x, top);                                       ^\label{line:sdcl-bind}^
+{ scope top.s_dcl -> datumVar(x, top);                                       ^\label{line:sdcl-bind}^
   e.s = top.s;
   top.type = if e.type == anno then anno else tErr();                           ^\label{line:type-bind}^
   top.errs = assert(anno == e.type, "bad type of " ++ x)
@@ -487,7 +487,7 @@ annotation location occurs on Binds;
 production seqBindsNil
 top::Binds ::=
 {
-  newScope top.s_last;
+  scope top.s_last;
 
   top.s_last -[ lex ]-> top.s;
 
@@ -514,7 +514,7 @@ top::ParBinds ::=
 production parBindsOne
 top::ParBinds ::= s::Bind
 {
-  existsScope s_dcl;
+  exists scope s_dcl;
 
   s.s = top.s;
   s.s_def = top.s_def;
@@ -532,7 +532,7 @@ top::ParBinds ::= s::Bind
 production parBindsCons
 top::ParBinds ::= s::Bind ss::ParBinds
 {
-  existsScope s_dcl;
+  exists scope s_dcl;
 
   s.s = top.s;
   s.s_def = top.s_def;
@@ -559,7 +559,7 @@ annotation location occurs on Bind;
 production bindTyped
 top::Bind ::= tyann::Type x::String e::Expr
 {
-  newScope top.s_dcl -> datumVar(x, top);
+  scope top.s_dcl -> datumVar(x, top);
 
   top.s_def -[ var ]-> top.s_dcl;
 
@@ -589,7 +589,7 @@ top::Bind ::= tyann::Type x::String e::Expr
 production bindArgDcl
 top::Bind ::= x::String tyann::Type
 {
-  newScope top.s_dcl -> datumVar(x, top);
+  scope top.s_dcl -> datumVar(x, top);
 
   top.s_def -[ var ]-> top.s_dcl;
 
