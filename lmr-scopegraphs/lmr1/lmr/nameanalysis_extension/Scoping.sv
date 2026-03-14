@@ -472,10 +472,10 @@ production seqBindsLast top::Binds ::= b::Bind
   top.errs = b.errs;
   top.ocaml = "let " ++ b.ocaml ++ " in "; }
 
-production bind top::Bind ::= x::String anno::Type e::Expr
+production bind top::Bind ::= x::String  e::Expr
 { scope top.s_dcl -> datumVar(x, top);                                       ^\label{line:sdcl-bind}^
   e.s = top.s;
-  top.type = if e.type == anno then anno else tErr();                           ^\label{line:type-bind}^
+  top.type = e.type;                                                         ^\label{line:type-bind}^
   top.errs = assert(anno == e.type, "bad type of " ++ x)
              ++ e.errs;
   top.ocaml = x ++ " = " ++
