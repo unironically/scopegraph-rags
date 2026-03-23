@@ -42,7 +42,7 @@ public class Compiler {
 			Program p = (Program)parser.parse(scanner);
 			reader.close();
 			
-			System.out.println("Wazzaaaaaaaaaaaa " + (p.ok() ? "good" : "bad"));
+			System.out.println("Analysis result: " + (p.ok() ? "ok" : "not ok"));
 
 			//System.out.println(p.prettyPrint());
 		} catch (IOException e) {

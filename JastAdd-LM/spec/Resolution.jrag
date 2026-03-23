@@ -11,9 +11,7 @@ aspect Resolution {
     
     // Follow VAR edge
     for (Scope s: this.var()) {
-      System.out.println("Following a VAR");
       res.addAll(s.varQuery(name));
-      System.out.println("Returning from VAR");
     }
 
     // Done if we found VAR resolutions
@@ -21,9 +19,7 @@ aspect Resolution {
 
     // Follow LEX edge
     for (Scope s: this.lex()) {
-      System.out.println("Following a LEX");
       res.addAll(s.varQuery(name));
-      System.out.println("Returning from LEX");
     }
 
     return res;
@@ -34,8 +30,7 @@ aspect Resolution {
   
     ArrayList<Scope> res = new ArrayList<Scope>();
   
-    if (name.equals(this.getd().b().getid())) {
-      System.out.println("Found declaration of '" + name + "' ('" + this.getd().b().getid() + "')!");
+    if (name.equals(this.getid())) {
       res.add(this);
     }
     

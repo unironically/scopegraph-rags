@@ -1,4 +1,4 @@
-Program ::= ds:Decls /globalScope:MkScope/;
+Program ::= ds:Decls ;
 
 abstract Decls;
 DeclsNil: Decls ::= ;
@@ -14,7 +14,11 @@ ExprTrue: Expr ::= ;
 ExprFalse: Expr ::= ;
 ExprAdd: Expr  ::= l:Expr r:Expr;
 
-Bind ::= <id:String> ty:Type e:Expr /s_var:MkScopeVar/;
+/* Have to define nta varScope as a child here to avoid build error, which is 
+ * odd, since this is not the case for the scope-typed nta's on Program and
+ * DeclsCons used in Scoping.jrag
+ */
+Bind ::= <id:String> ty:Type e:Expr /varScope:Scope/;
 
 VarRef ::= <id:String>;
 

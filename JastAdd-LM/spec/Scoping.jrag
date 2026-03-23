@@ -2,16 +2,14 @@ import java.util.*;
 
 aspect Scoping {
 
-  syn lazy ArrayList<Scope> ASTNode.vars();
-  eq ASTNode.vars() { return new ArrayList<Scope>(); }
+  ////////////
+  inh lazy ArrayList<Scope> Scope.lex();
+  inh lazy ArrayList<Scope> Scope.var();
+  ////////////
 
   /*---------- Program ---------*/
 
-  syn nta lazy MkScope Program.globalScope() { 
-    MkScope g = new MkScope();
-    this.setChild(g, 1); // why do I have to do this?
-    return g;
-  }
+  syn nta lazy MkScope Program.globalScope() = new MkScope();
   eq Program.globalScope().lex() { return new ArrayList<Scope>(); }
   eq Program.globalScope().var() { return getds().vars(); }
 
@@ -23,15 +21,17 @@ aspect Scoping {
 
   inh lazy Scope Decls.scope();
   syn lazy Boolean Decls.ok();
+  syn lazy ArrayList<Scope> Decls.vars();
+
+  syn nta MkScope DeclsCons.nextScope() = new MkScope();
+  eq DeclsCons.nextScope().lex() { ArrayList<Scope> lexes = new ArrayList<Scope>(); lexes.add(this.scope()); return lexes; }
+  eq DeclsCons.nextScope().var() { return getd().vars(); }
 
   eq DeclsCons.getd().scope()  { return this.scope(); }
-  eq DeclsCons.getds().scope() { return this.scope(); }
+  eq DeclsCons.getds().scope() { return this.nextScope(); }
 
   eq DeclsCons.vars() {
-    ArrayList<Scope> combVars = new ArrayList<Scope>();
-    combVars.addAll(getd().vars()); 
-    combVars.addAll(getds().vars());
-    return combVars;
+    return new ArrayList<Scope>();
   }
 
   eq DeclsCons.ok() { return getd().ok() && getds().ok(); }
@@ -45,7 +45,7 @@ aspect Scoping {
   /*---------- Def Decl ----------*/
 
   syn lazy Boolean Decl.ok();
-
+  syn lazy ArrayList<Scope> Decl.vars();
   inh lazy Scope Decl.scope();
 
   eq DeclDef.getb().scope() { return this.scope(); }
@@ -57,25 +57,30 @@ aspect Scoping {
   /*---------- Expr ----------*/
 
   inh lazy Scope Expr.scope();
+  syn lazy ArrayList<Scope> Expr.vars();
   syn lazy Boolean Expr.ok();
   syn lazy Type Expr.type();
 
   // ExprInt
   eq ExprInt.ok() { return true; }
   eq ExprInt.type() { return new IntType(); }
+  eq ExprInt.vars() { return new ArrayList<Scope>(); }
 
   // ExprTrue
   eq ExprTrue.ok() { return true; }
   eq ExprTrue.type() { return new BoolType(); }
+  eq ExprTrue.vars() { return new ArrayList<Scope>(); }
 
   // ExprFalse
   eq ExprFalse.ok() { return true; }
   eq ExprFalse.type() { return new BoolType(); }
+  eq ExprFalse.vars() { return new ArrayList<Scope>(); }
 
   // ExprVar
   eq ExprVar.getr().scope() { return this.scope(); }
   eq ExprVar.ok() { return getr().ok(); }
   eq ExprVar.type() { return getr().type(); }
+  eq ExprVar.vars() { return new ArrayList<Scope>(); }
 
   // Add
   eq ExprAdd.getl().scope() { return this.scope(); }
@@ -84,25 +89,20 @@ aspect Scoping {
                            getl().type().sameType(getr().type()) &&
                            getl().ok() && getr().ok(); }
   eq ExprAdd.type() { return new IntType(); }
+  eq ExprAdd.vars() { return new ArrayList<Scope>(); }
 
-  /*---------- Bind ----------*/
+  /*---------- Bind -----------*/
 
   inh lazy Scope Bind.scope();
+  syn lazy ArrayList<Scope> Bind.vars();
   syn lazy Boolean Bind.ok();
   syn lazy Type Bind.type();
 
-  syn nta lazy MkScopeVar Bind.s_var() {
-    return new MkScopeVar(new DatumVar(this));
-  } 
+  syn nta lazy MkScopeVar Bind.varScope() = new MkScopeVar(getid(), getty());
+  eq Bind.varScope().lex() = new ArrayList<Scope>();
+  eq Bind.varScope().var() = new ArrayList<Scope>();
 
-  eq Bind.s_var().lex() { return new ArrayList<Scope>(); }
-  eq Bind.s_var().var() { return new ArrayList<Scope>(); }
-
-  eq Bind.vars () {
-    ArrayList<Scope> varEdges = new ArrayList<Scope>();
-    varEdges.add(this.s_var());
-    return varEdges;
-  }
+  eq Bind.gete().scope() { return this.scope(); }
 
   eq Bind.ok() {
     return getty().sameType(gete().type()) && gete().ok();
@@ -113,9 +113,16 @@ aspect Scoping {
     return new ErrType();
   }
 
+  eq Bind.vars() {
+    ArrayList<Scope> vs = new ArrayList<Scope>();
+    vs.add(this.varScope());
+    return vs;
+  }
+
   /*---------- VarRef ----------*/
 
   inh lazy Scope VarRef.scope();
+  syn lazy ArrayList<Scope> VarRef.vars();
   syn lazy Boolean VarRef.ok();
   syn lazy Type VarRef.type();
 
@@ -123,9 +130,11 @@ aspect Scoping {
   eq VarRef.type() {
     ArrayList<Scope> resScopes = this.scope().varQuery(this.getid());
     if (resScopes.size() != 1) return new ErrType();
-    MkScopeVar varScope = (MkScopeVar) resScopes.get(0);
-    return varScope.getd().b().type();
+    MkScopeVar v = (MkScopeVar) resScopes.get(0);
+    return v.getty();
   }
+
+  eq VarRef.vars() { return new ArrayList<Scope>(); }
 
   /*---------- Type ----------*/
 

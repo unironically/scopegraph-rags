@@ -1,9 +1,0 @@
-abstract DFA ::= /sinkState:State/ /finalState:State/ 
-                 /lexState:State/ /impState:State/;
-ModDFA: DFA ::= ;
-VarDFA: DFA ::= ;
-
-State ::= ;
-ModState: State ::= ;
-SinkState: State ::= ;
-FinalState: State ::= ;

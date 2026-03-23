@@ -1,5 +1,0 @@
-aspect Program {
-  
-  public static Boolean Program.debug = false;
-
-}
