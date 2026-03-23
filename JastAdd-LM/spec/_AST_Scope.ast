@@ -1,0 +1,7 @@
+abstract Scope;
+MkScope: Scope    ::= ;
+MkScopeVar: Scope ::= d:DatumVar;
+
+abstract Datum;
+DatumVar: Datum  ::= bc:Bind /b:Bind/;
+DatumNone: Datum ::= ;

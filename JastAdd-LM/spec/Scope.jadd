@@ -1,0 +1,10 @@
+aspect Scope {
+  
+  /*public boolean Scope.equals(Object o) {
+    if (!(o instanceof Scope)) return false;
+    Scope other = (Scope) o;
+    boolean b = other.hashCode() == this.hashCode();
+    return false;
+  }*/
+
+}

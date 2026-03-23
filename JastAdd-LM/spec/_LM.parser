@@ -1,0 +1,39 @@
+Program goal =
+    decls                                   {: return new Program(decls); :}
+  ;
+
+
+Decls decls =
+                                            {: return new DeclsNil(); :}
+  | decl decls                              {: return new DeclsCons(decl, decls); :}
+  ;
+
+
+Decl decl =
+    DEF par_bind                            {: return new DeclDef(par_bind); :}
+  ;
+
+
+Expr expr =
+    TRUE                                    {: return new ExprTrue(); :} 
+  | FALSE                                   {: return new ExprFalse(); :}
+  | INTEGER                                 {: return new ExprInt(Integer.valueOf(INTEGER)); :}
+  | varRef                                  {: return new ExprVar(varRef); :}
+  | expr.a PLUS expr.b                      {: return new ExprAdd(a, b); :}
+  ;
+
+
+Type type =
+    INTTY                                   {: return new IntType(); :}
+  | BOOLTY                                  {: return new BoolType(); :}
+  ;
+
+
+Bind par_bind =
+    IDENTIFIER COLON type ASSIGN expr       {: return new Bind(IDENTIFIER, type, expr); :}
+  ;
+
+
+VarRef varRef = 
+    IDENTIFIER                              {: return new VarRef(IDENTIFIER); :}
+  ;

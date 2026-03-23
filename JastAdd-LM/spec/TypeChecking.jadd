@@ -1,0 +1,13 @@
+aspect TypeChecking {
+  
+  public Boolean Type.sameType(Type t) { return false; }
+  public Boolean IntType.sameType(Type t) { return t instanceof IntType; }
+  public Boolean BoolType.sameType(Type t) { return t instanceof BoolType; }
+
+  public Boolean Type.isIntType() { return false; }
+  public Boolean IntType.isIntType() { return true; }
+
+  public Boolean Type.isBoolType() { return false; }
+  public Boolean BoolType.isBoolType() { return true; }
+
+}

@@ -1,0 +1,27 @@
+abstract Scope ::= ;
+MkScope: Scope ::= ;
+MkScopeVar: Scope ::= <id:String> t:Type;
+MkScopeMod: Scope ::= <id:String>;
+
+abstract Datum ::= ;
+DatumVar: Datum ::= <id:String> t:Type;
+DatumMod: Datum ::= <id:String>;
+DatumNone: Datum ::= ;
+
+abstract Ref ::= <id:String>;
+MkVarRef: Ref ::= /dfa:VarDFA/ ;
+MkModRef: Ref ::= /dfa:ModDFA/ ;
+
+Resolution ::= /ref:Ref/ /path:Path/;
+
+abstract Path ::= ;
+PathCons: Path ::= h:Edge t:Path;
+PathNil: Path ::= ;
+
+abstract Edge ::= /tgt:Scope/;
+LexEdge: Edge ::= /src:Scope/;
+LexEdgeRef: Edge ::= /src:Ref/;
+ImpEdge: Edge ::= /src:Scope/;
+ModEdge: Edge ::= /src:Scope/;
+VarEdge: Edge ::= /src:Scope/;
+ImpTentEdge: Edge ::= /src:Scope/;

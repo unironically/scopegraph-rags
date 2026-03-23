@@ -1,0 +1,27 @@
+import java.util.*;
+
+aspect Scope {
+
+  inh lazy ArrayList<Scope> Scope.lex();
+  inh lazy ArrayList<Scope> Scope.var();
+
+  /*---------- Scope ----------*/
+
+  syn lazy Datum Scope.datum();
+
+  eq Scope.datum() {
+    Datum dNone = new DatumNone();
+    return dNone;
+  }
+
+  eq MkScopeVar.datum() {
+    return this.getd();
+  }
+
+  /*---------- Datum ----------*/
+  
+  syn nta lazy Bind DatumVar.b() {
+    return this.getbc();
+  }
+
+}

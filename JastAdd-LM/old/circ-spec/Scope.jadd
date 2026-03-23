@@ -1,0 +1,60 @@
+aspect Scope {
+  
+  public static int Scope.scopeCount = 0;
+
+  public boolean Ref.equals(Object o) {
+    System.out.println("This should never be called");
+    return false;
+  }
+
+  public boolean MkVarRef.equals(Object o) {
+    if (!(o instanceof MkVarRef)) return false;
+    MkVarRef other = (MkVarRef) o;
+    // System.out.println("MkVarRef About to check equality of hashcodes for " + this.pp() + " and " + other.pp());
+    boolean b = other.hashCode() == this.hashCode();
+    // System.out.println("Result was " + Boolean.toString(b));
+    return b;
+  }
+
+  public boolean MkModRef.equals(Object o) {
+    if (!(o instanceof MkModRef)) return false;
+    MkModRef other = (MkModRef) o;
+    // System.out.println("MkModRef About to check equality of hashcodes for " + this.pp() + " and " + other.pp());
+    boolean b = other.hashCode() == this.hashCode();
+    // System.out.println("Result was " + Boolean.toString(b));
+    return b;
+  }
+
+  public boolean Scope.equals(Object o) {
+    // System.out.println("This should never be called");
+    return false;
+  }
+
+  public boolean MkScope.equals(Object o) {
+    if (!(o instanceof MkScope)) return false;
+    MkScope other = (MkScope) o;
+    // System.out.println("MkScope About to check equality of hashcodes for " + this.pp() + " and " + other.pp());
+    boolean b = other.hashCode() == this.hashCode();
+    // System.out.println("Result was " + Boolean.toString(b));
+    return b;
+  }
+
+  public boolean MkScopeVar.equals(Object o) {
+    if (!(o instanceof MkScopeVar)) return false;
+    MkScopeVar other = (MkScopeVar) o;
+    // System.out.println("MkScopeVar About to check equality of hashcodes for " + this.pp() + " and " + other.pp());
+    boolean b = other.hashCode() == this.hashCode();
+    // System.out.println("Result was " + Boolean.toString(b));
+    return b;
+  }
+
+  public boolean MkScopeMod.equals(Object o) {
+    if (!(o instanceof MkScopeMod)) return false;
+    MkScopeMod other = (MkScopeMod) o;
+    // System.out.println("MkScopeMod About to check equality of hashcodes for " + this.pp() + " and " + other.pp());
+    boolean b = other.hashCode() == this.hashCode();
+    // System.out.println("Result was " + Boolean.toString(b));
+    return b;
+  }
+
+}

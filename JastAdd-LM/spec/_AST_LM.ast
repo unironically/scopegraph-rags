@@ -1,0 +1,24 @@
+Program ::= ds:Decls /globalScope:MkScope/;
+
+abstract Decls;
+DeclsNil: Decls ::= ;
+DeclsCons: Decls ::= d:Decl ds:Decls;
+
+abstract Decl;
+DeclDef: Decl ::= b:Bind;
+
+abstract Expr;
+ExprVar: Expr  ::= r:VarRef;
+ExprInt: Expr  ::= <v:Integer>;
+ExprTrue: Expr ::= ;
+ExprFalse: Expr ::= ;
+ExprAdd: Expr  ::= l:Expr r:Expr;
+
+Bind ::= <id:String> ty:Type e:Expr /s_var:MkScopeVar/;
+
+VarRef ::= <id:String>;
+
+abstract Type;
+IntType: Type ::= ;
+BoolType: Type ::= ;
+ErrType: Type ::= ;
