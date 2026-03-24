@@ -1,0 +1,83 @@
+import java.util.*;
+
+aspect ImportResolution {
+
+  // TODO: Clean this up and merge with VariableResolution.jrag
+
+  // Import resolution `lex* `imp? `mod
+
+  syn ArrayList<MkScopeMod> Scope.queryModState1(String name) {
+
+    queryEnterLog();
+
+    ArrayList<MkScopeMod> res = new ArrayList<MkScopeMod>();
+
+    // Follow MOD edge
+    for (MkScopeMod s: this.mod()) {
+      queryFollowLog("MOD", s);
+      res.addAll(s.queryModState3(name));
+      queryReturnLog();
+    }
+
+    // Follow IMP edge
+    if (res.size() < 1) {
+      for (Scope s: this.imp()) {
+        queryFollowLog("IMP", s);
+        res.addAll(s.queryModState2(name));
+        queryReturnLog();
+      }
+    }
+
+    // Follow LEX edge
+    if (res.size() < 1) {
+      for (Scope s: this.lex()) {
+        queryFollowLog("LEX", s);
+        res.addAll(s.queryModState1(name));
+        queryReturnLog();
+      }
+    }
+
+    queryLeaveLog();
+
+    return res;
+
+  }
+
+  syn ArrayList<MkScopeMod> Scope.queryModState2(String name) {
+
+    queryEnterLog();
+
+    ArrayList<MkScopeMod> res = new ArrayList<MkScopeMod>();
+
+    // Follow MOD edge
+    for (MkScopeMod s: this.mod()) {
+      queryFollowLog("MOD", s);
+      res.addAll(s.queryModState3(name));
+      queryReturnLog();
+    }
+
+    queryLeaveLog();
+
+    return res;
+
+  }
+
+  syn ArrayList<MkScopeMod> MkScopeMod.queryModState3(String name) {
+    
+    queryEnterLog();
+
+    ArrayList<MkScopeMod> res = new ArrayList<MkScopeMod>();
+    
+    if (name.equals(this.getnode().getid())) {
+      queryGoodResLog(name);
+      res.add(this);
+    }
+    else queryBadResLog(name);
+
+    queryLeaveLog();
+
+    return res;
+
+  }
+
+}

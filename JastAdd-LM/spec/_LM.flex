@@ -43,11 +43,16 @@ Integer = 0|[1-9][0-9]*
 "="           { return sym(Terminals.ASSIGN); }
 
 "def"         { return sym(Terminals.DEF); }
+"mod"         { return sym(Terminals.MODULE); }
+"imp"         { return sym(Terminals.IMPORT); }
 
 "="           { return sym(Terminals.ASSIGN); }
 "+"           { return sym(Terminals.PLUS); }
 
 ":"           { return sym(Terminals.COLON); }
+
+"{"           { return sym(Terminals.LBRACE); }
+"}"           { return sym(Terminals.RBRACE); }
 
 "bool"        { return sym(Terminals.BOOLTY); }
 "int"         { return sym(Terminals.INTTY); }

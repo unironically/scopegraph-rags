@@ -3,40 +3,4 @@ import java.util.*;
 
 aspect Resolution {
 
-  // Variable resolution `lex*`var
-
-  syn ArrayList<Scope> Scope.varQuery(String name) {
-    
-    ArrayList<Scope> res = new ArrayList<Scope>();
-    
-    // Follow VAR edge
-    for (Scope s: this.var()) {
-      res.addAll(s.varQuery(name));
-    }
-
-    // Done if we found VAR resolutions
-    if (res.size() > 0) return res;
-
-    // Follow LEX edge
-    for (Scope s: this.lex()) {
-      res.addAll(s.varQuery(name));
-    }
-
-    return res;
-
-  }
-
-  syn ArrayList<Scope> MkScopeVar.varQuery(String name) {
-  
-    ArrayList<Scope> res = new ArrayList<Scope>();
-  
-    if (name.equals(this.getid())) {
-      res.add(this);
-    }
-    
-    return res;
-  
-  }
-
 }
-

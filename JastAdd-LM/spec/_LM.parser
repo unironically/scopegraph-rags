@@ -10,9 +10,14 @@ Decls decls =
 
 
 Decl decl =
-    DEF par_bind                            {: return new DeclDef(par_bind); :}
+    DEF parbind                             {: return new DeclDef(parbind); :}
+  | modDcl                                  {: return new DeclMod(modDcl); :}
+  | IMPORT impRef                           {: return new DeclImp(impRef); :}
   ;
 
+Module modDcl =
+    MODULE IDENTIFIER LBRACE decls RBRACE   {: return new Module(IDENTIFIER, decls); :}
+  ;
 
 Expr expr =
     TRUE                                    {: return new ExprTrue(); :} 
@@ -29,11 +34,15 @@ Type type =
   ;
 
 
-Bind par_bind =
+Bind parbind =
     IDENTIFIER COLON type ASSIGN expr       {: return new Bind(IDENTIFIER, type, expr); :}
   ;
 
 
 VarRef varRef = 
     IDENTIFIER                              {: return new VarRef(IDENTIFIER); :}
+  ;
+
+ModRef impRef =
+    IDENTIFIER                              {: return new ModRef(IDENTIFIER); :}
   ;

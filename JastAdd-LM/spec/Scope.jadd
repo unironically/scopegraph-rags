@@ -1,10 +1,40 @@
 aspect Scope {
   
-  /*public boolean Scope.equals(Object o) {
-    if (!(o instanceof Scope)) return false;
-    Scope other = (Scope) o;
-    boolean b = other.hashCode() == this.hashCode();
-    return false;
-  }*/
+  //public static Boolean Scope.queryDebug = true;
+  public static Integer Scope.querySpace = 0;
+
+  public static String Scope.queryTab() {
+    StringBuilder s = new StringBuilder();
+    for (int i = 0; i < querySpace; i++) s.append("  ");
+    return s.toString();
+  }
+
+  public void Scope.queryEnterLog() {
+    System.out.println(queryTab() + "Entering " + this.pp());
+    querySpace++;
+  }
+
+  public void Scope.queryLeaveLog() {
+    querySpace--;
+    System.out.println(queryTab() + "Leaving " + this.pp());
+  }
+
+  public void Scope.queryFollowLog(String lab, Scope tgt) {
+    System.out.println(queryTab() + "Following " + lab + " to " + tgt.pp());
+    querySpace++;
+  }
+
+  public void Scope.queryReturnLog() {
+    querySpace--;
+    System.out.println(queryTab() + "Returned to " + this.pp());
+  }
+
+  public void Scope.queryGoodResLog(String name) {
+    System.out.println(queryTab() + "Good resolution for '" + name + "' at " + this.pp());
+  }
+
+  public void Scope.queryBadResLog(String name) {
+    System.out.println(queryTab() + "Not good resolution for '" + name + "' at " + this.pp());
+  }
 
 }

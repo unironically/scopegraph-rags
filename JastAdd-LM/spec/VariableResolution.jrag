@@ -1,0 +1,83 @@
+import java.util.*;
+
+aspect VariableResolution {
+
+  // TODO: Clean this up and merge with ImportResolution.jrag
+
+  // Variable resolution `lex* `imp? `var
+
+  syn ArrayList<MkScopeVar> Scope.queryVarState1(String name) {
+
+    queryEnterLog();
+
+    ArrayList<MkScopeVar> res = new ArrayList<MkScopeVar>();
+
+    // Follow VAR edge
+    for (MkScopeVar s: this.var()) {
+      queryFollowLog("VAR", s);
+      res.addAll(s.queryVarState3(name));
+      queryReturnLog();
+    }
+
+    // Follow IMP edge
+    if (res.size() < 1) {
+      for (Scope s: this.imp()) {
+        queryFollowLog("IMP", s);
+        res.addAll(s.queryVarState2(name));
+        queryReturnLog();
+      }
+    }
+
+    // Follow LEX edge
+    if (res.size() < 1) {
+      for (Scope s: this.lex()) {
+        queryFollowLog("LEX", s);
+        res.addAll(s.queryVarState1(name));
+        queryReturnLog();
+      }
+    }
+
+    queryLeaveLog();
+
+    return res;
+
+  }
+
+  syn ArrayList<MkScopeVar> Scope.queryVarState2(String name) {
+
+    queryEnterLog();
+
+    ArrayList<MkScopeVar> res = new ArrayList<MkScopeVar>();
+
+    // Follow VAR edge
+    for (MkScopeVar s: this.var()) {
+      queryFollowLog("VAR", s);
+      res.addAll(s.queryVarState3(name));
+      queryReturnLog();
+    }
+
+    queryLeaveLog();
+
+    return res;
+
+  }
+
+  syn ArrayList<MkScopeVar> MkScopeVar.queryVarState3(String name) {
+    
+    queryEnterLog();
+
+    ArrayList<MkScopeVar> res = new ArrayList<MkScopeVar>();
+    
+    if (name.equals(this.getnode().getid())) {
+      queryGoodResLog(name);
+      res.add(this);
+    }
+    else queryBadResLog(name);
+
+    queryLeaveLog();
+
+    return res;
+
+  }
+
+}

@@ -2,85 +2,140 @@ import java.util.*;
 
 aspect Scoping {
 
-  ////////////
-  inh lazy ArrayList<Scope> Scope.lex();
-  inh lazy ArrayList<Scope> Scope.var();
-  ////////////
-
   /*---------- Program ---------*/
 
-  syn nta lazy MkScope Program.globalScope() = new MkScope();
+  syn lazy Boolean Program.ok();
+  syn nta lazy MkScope Program.globalScope();
+
+  eq Program.globalScope() = new MkScope();
   eq Program.globalScope().lex() { return new ArrayList<Scope>(); }
-  eq Program.globalScope().var() { return getds().vars(); }
-
+  eq Program.globalScope().var() { return new ArrayList<MkScopeVar>(); }
+  eq Program.globalScope().mod() { return new ArrayList<MkScopeMod>(); }
+  eq Program.globalScope().imp() { return new ArrayList<MkScopeMod>(); }
   eq Program.getds().scope() { return globalScope(); }
-
-  syn lazy Boolean Program.ok() { return getds().ok(); }
+  eq Program.getds().moduleScope() { return new MkScope(); } // dead scope
+  eq Program.ok() { return getds().ok(); }
 
   /*---------- Decls ----------*/
 
   inh lazy Scope Decls.scope();
+  inh lazy Scope Decls.moduleScope();
   syn lazy Boolean Decls.ok();
-  syn lazy ArrayList<Scope> Decls.vars();
+  syn lazy ArrayList<MkScopeVar> Decls.vars();
+  syn lazy ArrayList<MkScopeVar> Decls.moduleScopeVars();
+  syn lazy ArrayList<MkScopeMod> Decls.mods();
+  syn lazy ArrayList<MkScopeMod> Decls.moduleScopeMods();
 
-  syn nta MkScope DeclsCons.nextScope() = new MkScope();
-  eq DeclsCons.nextScope().lex() { ArrayList<Scope> lexes = new ArrayList<Scope>(); lexes.add(this.scope()); return lexes; }
+  syn nta lazy MkScope DeclsCons.nextScope();
+
+  eq DeclsCons.nextScope() = new MkScope();
+  eq DeclsCons.nextScope().lex() { ArrayList<Scope> lexes = new ArrayList<Scope>();
+                                   lexes.add(this.scope()); return lexes; }
   eq DeclsCons.nextScope().var() { return getd().vars(); }
+  eq DeclsCons.nextScope().mod() { return getd().mods(); }
+  eq DeclsCons.nextScope().imp() { return getd().imps(); }
 
-  eq DeclsCons.getd().scope()  { return this.scope(); }
+  eq DeclsCons.getd().scope() { return this.scope(); }
   eq DeclsCons.getds().scope() { return this.nextScope(); }
 
-  eq DeclsCons.vars() {
-    return new ArrayList<Scope>();
-  }
+  eq DeclsCons.vars() { return new ArrayList<MkScopeVar>(); }
+  eq DeclsCons.moduleScopeVars() { ArrayList<MkScopeVar> vars = new ArrayList<MkScopeVar>();
+                                   vars.addAll(getd().vars()); vars.addAll(getds().vars());
+                                   return vars; }
+
+  eq DeclsCons.mods() { return new ArrayList<MkScopeMod>(); }
+  eq DeclsCons.moduleScopeMods() { ArrayList<MkScopeMod> mods = new ArrayList<MkScopeMod>();
+                                   mods.addAll(getd().mods()); mods.addAll(getds().mods());
+                                   return mods; }
 
   eq DeclsCons.ok() { return getd().ok() && getds().ok(); }
 
-  eq DeclsNil.vars() {
-    return new ArrayList<Scope>();
-  }
-
+  eq DeclsNil.vars() { return new ArrayList<MkScopeVar>(); }
+  eq DeclsNil.mods() { return new ArrayList<MkScopeMod>(); }
+  eq DeclsNil.moduleScopeVars() { return new ArrayList<MkScopeVar>(); }
+  eq DeclsNil.moduleScopeMods() { return new ArrayList<MkScopeMod>(); }
   eq DeclsNil.ok() { return true; }
 
   /*---------- Def Decl ----------*/
 
   syn lazy Boolean Decl.ok();
-  syn lazy ArrayList<Scope> Decl.vars();
+  syn lazy ArrayList<MkScopeVar> Decl.vars();
+  syn lazy ArrayList<MkScopeMod> Decl.mods();
+  syn lazy ArrayList<MkScopeMod> Decl.imps();
   inh lazy Scope Decl.scope();
 
   eq DeclDef.getb().scope() { return this.scope(); }
-
   eq DeclDef.vars() { return getb().vars(); }
-
+  eq DeclDef.mods() = new ArrayList<MkScopeMod>();
+  eq DeclDef.imps() = new ArrayList<MkScopeMod>();
   eq DeclDef.ok() { return getb().ok(); }
+
+  /*---------- Module Decl ----------*/
+
+  syn lazy ArrayList<MkScopeMod> DeclMod.mods();
+
+  eq DeclMod.m().scope() { return this.scope(); }
+  eq DeclMod.mods() = getm().mods();
+  eq DeclMod.vars() = new ArrayList<MkScopeVar>();
+  eq DeclMod.imps() = new ArrayList<MkScopeMod>();
+  eq DeclMod.ok() = getm().ok();
+
+  /*---------- Import Decl ----------*/
+
+  syn lazy ArrayList<MkScopeMod> DeclMod.imps();
+
+  eq DeclImp.r().scope() = this.scope();
+  eq DeclImp.imps() = getr().imps();
+  eq DeclImp.vars() = new ArrayList<MkScopeVar>();
+  eq DeclImp.mods() = new ArrayList<MkScopeMod>();
+  eq DeclImp.ok() = getr().ok();
+
+  /*---------- Module ----------*/
+
+  inh lazy Scope Module.scope();
+  syn lazy Boolean Module.ok();
+  syn lazy ArrayList<MkScopeMod> Module.mods();
+
+  syn nta lazy MkScopeMod Module.modScope() = new MkScopeMod(this);
+  eq Module.modScope().lex() { ArrayList<Scope> lexes = new ArrayList<Scope>();
+                               lexes.add(this.scope()); return lexes; }
+  eq Module.modScope().var() { return getds().moduleScopeVars(); }
+
+  eq Module.getds().scope() { return this.scope(); }
+  eq Module.getds().moduleScope() { return this.modScope(); }
+
+  eq Module.mods() { ArrayList<MkScopeMod> mods = new ArrayList<MkScopeMod>();
+                     mods.add(this.modScope()); return mods; }
+  
+  eq Module.ok() = getds().ok();
 
   /*---------- Expr ----------*/
 
   inh lazy Scope Expr.scope();
-  syn lazy ArrayList<Scope> Expr.vars();
+  syn lazy ArrayList<MkScopeVar> Expr.vars();
   syn lazy Boolean Expr.ok();
   syn lazy Type Expr.type();
 
   // ExprInt
   eq ExprInt.ok() { return true; }
   eq ExprInt.type() { return new IntType(); }
-  eq ExprInt.vars() { return new ArrayList<Scope>(); }
+  eq ExprInt.vars() { return new ArrayList<MkScopeVar>(); }
 
   // ExprTrue
   eq ExprTrue.ok() { return true; }
   eq ExprTrue.type() { return new BoolType(); }
-  eq ExprTrue.vars() { return new ArrayList<Scope>(); }
+  eq ExprTrue.vars() { return new ArrayList<MkScopeVar>(); }
 
   // ExprFalse
   eq ExprFalse.ok() { return true; }
   eq ExprFalse.type() { return new BoolType(); }
-  eq ExprFalse.vars() { return new ArrayList<Scope>(); }
+  eq ExprFalse.vars() { return new ArrayList<MkScopeVar>(); }
 
   // ExprVar
   eq ExprVar.getr().scope() { return this.scope(); }
   eq ExprVar.ok() { return getr().ok(); }
   eq ExprVar.type() { return getr().type(); }
-  eq ExprVar.vars() { return new ArrayList<Scope>(); }
+  eq ExprVar.vars() { return new ArrayList<MkScopeVar>(); }
 
   // Add
   eq ExprAdd.getl().scope() { return this.scope(); }
@@ -89,18 +144,20 @@ aspect Scoping {
                            getl().type().sameType(getr().type()) &&
                            getl().ok() && getr().ok(); }
   eq ExprAdd.type() { return new IntType(); }
-  eq ExprAdd.vars() { return new ArrayList<Scope>(); }
+  eq ExprAdd.vars() { return new ArrayList<MkScopeVar>(); }
 
   /*---------- Bind -----------*/
 
   inh lazy Scope Bind.scope();
-  syn lazy ArrayList<Scope> Bind.vars();
+  syn lazy ArrayList<MkScopeVar> Bind.vars();
   syn lazy Boolean Bind.ok();
   syn lazy Type Bind.type();
 
-  syn nta lazy MkScopeVar Bind.varScope() = new MkScopeVar(getid(), getty());
+  syn nta lazy MkScopeVar Bind.varScope() = new MkScopeVar(this);
   eq Bind.varScope().lex() = new ArrayList<Scope>();
-  eq Bind.varScope().var() = new ArrayList<Scope>();
+  eq Bind.varScope().var() = new ArrayList<MkScopeVar>();
+  eq Bind.varScope().mod() = new ArrayList<MkScopeMod>();
+  eq Bind.varScope().imp() = new ArrayList<MkScopeMod>();
 
   eq Bind.gete().scope() { return this.scope(); }
 
@@ -114,7 +171,7 @@ aspect Scoping {
   }
 
   eq Bind.vars() {
-    ArrayList<Scope> vs = new ArrayList<Scope>();
+    ArrayList<MkScopeVar> vs = new ArrayList<MkScopeVar>();
     vs.add(this.varScope());
     return vs;
   }
@@ -122,19 +179,28 @@ aspect Scoping {
   /*---------- VarRef ----------*/
 
   inh lazy Scope VarRef.scope();
-  syn lazy ArrayList<Scope> VarRef.vars();
   syn lazy Boolean VarRef.ok();
   syn lazy Type VarRef.type();
 
-  eq VarRef.ok() { return true; }
+  eq VarRef.ok() { return !(type() instanceof ErrType); }
   eq VarRef.type() {
-    ArrayList<Scope> resScopes = this.scope().varQuery(this.getid());
+    ArrayList<MkScopeVar> resScopes = this.scope().queryVar(this.getid());
     if (resScopes.size() != 1) return new ErrType();
-    MkScopeVar v = (MkScopeVar) resScopes.get(0);
-    return v.getty();
+    return resScopes.get(0).getnode().getty();
   }
 
-  eq VarRef.vars() { return new ArrayList<Scope>(); }
+  /*---------- ModRef ----------*/
+
+  inh lazy Scope ModRef.scope();
+  syn lazy Boolean ModRef.ok();
+  syn lazy ArrayList<MkScopeMod> ModRef.imps();
+
+  eq ModRef.ok() { return imps().size() == 1; }
+  eq ModRef.imps() {
+    ArrayList<MkScopeMod> resScopes = this.scope().queryMod(this.getid());
+    if (resScopes.size() != 1) return new ArrayList<MkScopeMod>();
+    return resScopes;
+  }
 
   /*---------- Type ----------*/
 

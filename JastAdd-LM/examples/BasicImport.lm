@@ -1,0 +1,8 @@
+mod a {
+  def x:int = 1
+}
+
+mod d {
+  imp a
+  def z:int = x
+}

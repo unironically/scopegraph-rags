@@ -1,3 +1,4 @@
 abstract Scope;
 MkScope: Scope    ::= ;
-MkScopeVar: Scope ::= <id:String> ty:Type;
+MkScopeVar: Scope ::= node:Bind;
+MkScopeMod: Scope ::= node:Module;
