@@ -1,8 +1,0 @@
-abstract Scope;
-
-MkScope: Scope ::= ;
-
-abstract MkScopeDcl: Scope ::= ;
-
-MkScopeVar: MkScopeDcl ::= node:Bind;
-MkScopeMod: MkScopeDcl ::= node:Module;

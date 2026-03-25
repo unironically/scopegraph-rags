@@ -1,0 +1,82 @@
+aspect VariableResolution {
+
+  /* "Generated" (pretending) from following spec
+    query varQuery(String name):
+      regex = LEX* IMP? VAR,
+      order = LEX < VAR, LEX < IMP, IMP < VAR,
+      predicate = varPredicate(name);
+  */
+
+  // predicate = varPredicate(name);
+  public Boolean MkScopeVar.varPredicate(String name) {
+    return this.getname().equals(name);
+  }
+
+  // DFA state 1 for regex = LEX* IMP? VAR
+  public void Scope.state1VAR(String name, ArrayList<MkScopeVar> acc) {
+    
+    queryEnterLog();
+  
+    // Follow VAR
+    for (MkScopeVar sd: var()) {
+      queryFollowLog("VAR", sd);
+      sd.state3VAR(name, acc);
+      queryReturnLog();
+    }
+
+    // Follow IMP if no resolutions found by VAR
+    if (acc.size() == 0) {
+      for (MkScopeMod sn: imp()) {
+        queryFollowLog("IMP", sn);
+        sn.state2VAR(name, acc);
+        queryReturnLog();
+      }
+    }
+
+    // Follow LEX if no resolutions found by IMP
+    if (acc.size() == 0) {
+      for (Scope sn: lex()) {
+        queryFollowLog("LEX", sn);
+        sn.state1VAR(name, acc);
+        queryReturnLog();
+      }
+    }
+
+    queryLeaveLog();
+
+  }
+
+  // DFA state 2 for regex = LEX* IMP? VAR
+  public void MkScopeMod.state2VAR(String name, ArrayList<MkScopeVar> acc) {
+
+    queryEnterLog();
+
+    // Follow VAR
+    for (MkScopeVar sd: var()) {
+      queryFollowLog("VAR", sd);
+      sd.state3VAR(name, acc);
+      queryReturnLog();
+    }
+
+    queryLeaveLog();
+
+  }
+
+  // // DFA state 3 for regex = LEX* IMP? VAR
+  public void MkScopeVar.state3VAR(String name, ArrayList<MkScopeVar> acc) {
+    
+    queryEnterLog();
+
+    // Use of varPredicate - name equality
+    if (varPredicate(getname())) {
+      queryGoodResLog(name);
+      acc.add(this);
+    } else {
+      queryBadResLog(name);
+    }
+
+    queryLeaveLog();
+
+  }
+
+}

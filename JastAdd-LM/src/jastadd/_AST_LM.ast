@@ -1,0 +1,28 @@
+Program ::= ds:Decls;
+
+abstract Decls;
+DeclsNil: Decls ::= ;
+DeclsCons: Decls ::= d:Decl ds:Decls;
+
+abstract Decl;
+DeclDef: Decl ::= b:Bind;
+DeclMod: Decl ::= m:Module;
+DeclImp: Decl ::= r:ModRef;
+
+Bind ::= <id:String> ty:Type e:Expr;
+VarRef ::= <id:String>;
+
+Module ::= <id:String> ds:Decls;
+ModRef ::= <id:String>;
+
+abstract Expr;
+ExprVar: Expr  ::= r:VarRef;
+ExprInt: Expr  ::= <NUMERAL>;
+ExprTrue: Expr ::= ;
+ExprFalse: Expr ::= ;
+ExprAdd: Expr  ::= l:Expr r:Expr;
+
+abstract Type;
+IntType: Type ::= ;
+BoolType: Type ::= ;
+ErrType: Type ::= ;

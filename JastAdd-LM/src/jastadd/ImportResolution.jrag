@@ -1,0 +1,82 @@
+aspect ImportResolution {
+
+  /* "Generated" (pretending) from following spec
+    query impQuery(String name):
+      regex = LEX* IMP? MOD,
+      order = LEX < MOD, LEX < IMP, IMP < MOD,
+      predicate = modPredicate(name);
+  */
+
+  // predicate = modPredicate(name);
+  public Boolean MkScopeMod.modPredicate(String name) {
+    return this.getname().equals(name);
+  }
+
+  // DFA state 1 for regex = LEX* IMP? MOD
+  public void Scope.state1MOD(String name, ArrayList<MkScopeMod> acc) {
+    
+    queryEnterLog();
+  
+    // Follow MOD
+    for (MkScopeMod sd: mod()) {
+      queryFollowLog("MOD", sd);
+      sd.state3MOD(name, acc);
+      queryReturnLog();
+    }
+
+    // Follow IMP if no resolutions found by MOD
+    if (acc.size() == 0) {
+      for (MkScopeMod sn: imp()) {
+        queryFollowLog("IMP", sn);
+        sn.state2MOD(name, acc);
+        queryReturnLog();
+      }
+    }
+
+    // Follow LEX if no resolutions found by IMP
+    if (acc.size() == 0) {
+      for (Scope sn: lex()) {
+        queryFollowLog("LEX", sn);
+        sn.state1MOD(name, acc);
+        queryReturnLog();
+      }
+    }
+
+    queryLeaveLog();
+
+  }
+
+  // DFA state 2 for regex = LEX* IMP? MOD
+  public void MkScopeMod.state2MOD(String name, ArrayList<MkScopeMod> acc) {
+
+    queryEnterLog();
+
+    // Follow MOD
+    for (MkScopeMod sd: mod()) {
+      queryFollowLog("MOD", sd);
+      sd.state3MOD(name, acc);
+      queryReturnLog();
+    }
+
+    queryLeaveLog();
+
+  }
+
+  // // DFA state 3 for regex = LEX* IMP? MOD
+  public void MkScopeMod.state3MOD(String name, ArrayList<MkScopeMod> acc) {
+    
+    queryEnterLog();
+
+    // Use of modPredicate - name equality
+    if (modPredicate(getname())) {
+      queryGoodResLog(name);
+      acc.add(this);
+    } else {
+      queryBadResLog(name);
+    }
+
+    queryLeaveLog();
+
+  }
+
+}

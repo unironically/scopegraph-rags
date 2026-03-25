@@ -1,0 +1,71 @@
+%class "LMParser";
+%package "lm.ast";
+
+%embed {:
+    static public class SyntaxError extends RuntimeException { public SyntaxError(String msg) {super(msg);}}
+    // Disable syntax error recovery
+    protected void recoverFromError(Symbol token, TokenStream in) {
+        throw new SyntaxError("Cannot recover from the syntax error");
+    }
+:};
+
+%terminals TRUE, FALSE, ASSIGN, DEF, MODULE, IMPORT, PLUS, COLON, LBRACE, 
+           RBRACE, BOOLTY, INTTY, IDENTIFIER, INTEGER;
+
+%typeof program = "Program";
+%typeof decls = "Decls";
+%typeof decl = "Decl";
+%typeof module = "Module";
+%typeof expr = "Expr";
+%typeof type = "Type";
+%typeof bind = "Bind";
+%typeof varRef = "VarRef";
+%typeof modRef = "ModRef";
+
+%left PLUS;
+
+%goal program;
+
+program = 
+    decls {: return new Program(decls); :}
+  ;
+
+decls =
+               {: return new DeclsNil(); :}
+  | decl decls {: return new DeclsCons(decl, decls); :}
+  ;
+
+decl =
+    DEF bind      {: return new DeclDef(bind); :}
+  | module        {: return new DeclMod(module); :}
+  | IMPORT modRef {: return new DeclImp(modRef); :}
+  ;
+
+module =
+    MODULE IDENTIFIER LBRACE decls RBRACE {: return new Module(IDENTIFIER, decls); :}
+  ;
+
+expr =
+    TRUE                                    {: return new ExprTrue(); :} 
+  | FALSE                                   {: return new ExprFalse(); :}
+  | INTEGER.num                             {: return new ExprInt(num); :}
+  | varRef                                  {: return new ExprVar(varRef); :}
+  | expr.a PLUS expr.b                      {: return new ExprAdd(a, b); :}
+  ;
+
+type =
+    INTTY                                   {: return new IntType(); :}
+  | BOOLTY                                  {: return new BoolType(); :}
+  ;
+
+bind =
+    IDENTIFIER COLON type ASSIGN expr       {: return new Bind(IDENTIFIER, type, expr); :}
+  ;
+
+varRef = 
+    IDENTIFIER                              {: return new VarRef(IDENTIFIER); :}
+  ;
+
+modRef =
+    IDENTIFIER                              {: return new ModRef(IDENTIFIER); :}
+  ;

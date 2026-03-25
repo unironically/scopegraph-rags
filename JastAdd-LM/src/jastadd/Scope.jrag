@@ -2,10 +2,16 @@ import java.util.*;
 
 aspect Scope {
 
+  // SG edge attributes
+
+  inh lazy ArrayList<Scope> Scope.lex();
+  inh lazy ArrayList<MkScopeVar> Scope.var();
+  inh lazy ArrayList<MkScopeMod> Scope.mod();
+  inh lazy ArrayList<MkScopeMod> Scope.imp();
+
   // PP
 
   syn String Scope.pp() = "Scope('" + this.hashCode() + "')";
-  syn String MkScope.pp() = "MkScope('" + this.hashCode() + "')";
   syn String MkScopeVar.pp() = "MkScopeVar('" + this.hashCode() + "' |-> '" + this.getnode().getid() + "')";
   syn String MkScopeMod.pp() = "MkScopeMod('" + this.hashCode() + "' |-> '" + this.getnode().getid() + "')";
 
@@ -13,9 +19,9 @@ aspect Scope {
 
   syn ArrayList<MkScopeVar> Scope.queryVar(String name) {
     ArrayList<MkScopeVar> res = new ArrayList<MkScopeVar>();
-    beginQueryLog(name);
-    //new Query().state1(this, name, res, new MkScopeVar(null));
-    endQueryLog(name, res);
+    beginQueryLog(name, "varQuery");
+    state1VAR(name, res);
+    endQueryLog(name, res, "impQuery");
     return res;
   }
 
@@ -23,9 +29,9 @@ aspect Scope {
 
   syn ArrayList<MkScopeMod> Scope.queryMod(String name) {
     ArrayList<MkScopeMod> res = new ArrayList<MkScopeMod>();
-    beginQueryLog(name);
-    //new Query().state1(this, name, res, new MkScopeMod(null));
-    endQueryLog(name, res);
+    beginQueryLog(name, "impQuery");
+    state1MOD(name, res);
+    endQueryLog(name, res, "impQuery");
     return res;
   }
 

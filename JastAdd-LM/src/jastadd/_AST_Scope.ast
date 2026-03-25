@@ -1,0 +1,10 @@
+// Scopes nodes - no data
+Scope ::= ;
+
+abstract MkScopeDcl: Scope ::= <name:String>;
+
+// Variable declaration nodes
+MkScopeVar: MkScopeDcl ::= node:Bind;
+
+// Module declaration nodes
+MkScopeMod: MkScopeDcl ::= node:Module;

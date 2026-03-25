@@ -1,0 +1,62 @@
+aspect QueryLogging {
+  
+  // Set to true for query logs
+  public static final Boolean Scope.queryDebug = true;
+
+  // Tab string for query logs
+  public static final String Scope.tabStr = "  ";
+
+  // Starting number of tabs for query logs
+  public static Integer Scope.querySpace = 0;
+
+  public static String Scope.queryTab() {
+    StringBuilder s = new StringBuilder();
+    for (int i = 0; i < querySpace; i++) s.append(tabStr);
+    return s.toString();
+  }
+
+  public void Scope.queryEnterLog() {
+    queryLogMessage("Entering " + this.pp());
+    querySpace++;
+  }
+
+  public void Scope.queryLeaveLog() {
+    querySpace--;
+    queryLogMessage("Leaving " + this.pp());
+  }
+
+  public void Scope.queryFollowLog(String lab, Scope tgt) {
+    queryLogMessage("Following " + lab + " to " + tgt.pp());
+    querySpace++;
+  }
+
+  public void Scope.queryReturnLog() {
+    querySpace--;
+    queryLogMessage("Returned to " + this.pp());
+  }
+
+  public void Scope.queryGoodResLog(String name) {
+    queryLogMessage("Good resolution for '" + name + "' at " + this.pp());
+  }
+
+  public void Scope.queryBadResLog(String name) {
+    queryLogMessage("Not good resolution for '" + name + "' at " + this.pp());
+  }
+
+  public void Scope.beginQueryLog(String name, String kind) {
+    queryLogMessage("Beginning " + kind + " for '" + name + "' from " + pp());
+    querySpace++;
+  }
+
+  public void Scope.endQueryLog(String name, ArrayList<?> res, String kind) {
+    querySpace--;
+    int num = res.size();
+    queryLogMessage("Ending " + kind + " for '" + name + "' from " + pp() + 
+                        ", found " + num + ((num == 1) ? " resolution" : " resolutions"));
+  }
+
+  public void Scope.queryLogMessage(String msg) {
+    if (queryDebug) System.out.println(queryTab() + msg);
+  }
+
+}

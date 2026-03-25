@@ -1,0 +1,113 @@
+aspect DeclarationResolution {
+
+  /* "Generated" (pretending) from following spec
+    query dclQuery(String name):
+      regex = LEX* IMP? (VAR | MOD),
+      order = LEX < VAR, LEX < IMP, IMP < VAR, LEX < MOD, IMP < MOD,
+      predicate = dclPredicate(name);
+  */
+
+  // predicate = dclPredicate(name);
+  public Boolean MkScopeDcl.dclPredicate(String name) {
+    return this.getname().equals(name);
+  }
+
+  // DFA state 1 for regex = LEX* IMP? (VAR | MOD)
+  public void Scope.state1DCL(String name, ArrayList<MkScopeDcl> acc) {
+    
+    queryEnterLog();
+  
+    // Follow VAR
+    for (MkScopeVar sd: var()) {
+      queryFollowLog("VAR", sd);
+      sd.state3DCL(name, acc);
+      queryReturnLog();
+    }
+
+    // Follow MOD
+    for (MkScopeMod sd: mod()) {
+      queryFollowLog("MOD", sd);
+      sd.state3DCL(name, acc);
+      queryReturnLog();
+    }
+
+    // Follow IMP if no resolutions found by VAR or MOD
+    if (acc.size() == 0) {
+      for (MkScopeMod sn: imp()) {
+        queryFollowLog("IMP", sn);
+        sn.state2DCL(name, acc);
+        queryReturnLog();
+      }
+    }
+
+    // Follow LEX if no resolutions found by IMP
+    if (acc.size() == 0) {
+      for (Scope sn: lex()) {
+        queryFollowLog("LEX", sn);
+        sn.state1DCL(name, acc);
+        queryReturnLog();
+      }
+    }
+
+    queryLeaveLog();
+
+  }
+
+  // DFA state 2 for regex = LEX* IMP? (VAR | MOD)
+  public void MkScopeMod.state2DCL(String name, ArrayList<MkScopeDcl> acc) {
+
+    queryEnterLog();
+
+    // Follow VAR
+    for (MkScopeVar sd: var()) {
+      queryFollowLog("VAR", sd);
+      sd.state3DCL(name, acc);
+      queryReturnLog();
+    }
+
+    // Follow MOD
+    for (MkScopeMod sd: mod()) {
+      queryFollowLog("MOD", sd);
+      sd.state3DCL(name, acc);
+      queryReturnLog();
+    }
+
+    queryLeaveLog();
+
+  }
+
+  // // DFA state 3 for regex = LEX* IMP? (VAR | MOD)
+  public void MkScopeVar.state3DCL(String name, ArrayList<MkScopeDcl> acc) {
+    
+    queryEnterLog();
+
+    // Use of varPredicate - name equality
+    if (dclPredicate(getname())) {
+      queryGoodResLog(name);
+      acc.add(this);
+    } else {
+      queryBadResLog(name);
+    }
+
+    queryLeaveLog();
+
+  }
+
+  // // DFA state 4 for regex = LEX* IMP? (VAR | MOD)
+  public void MkScopeMod.state3DCL(String name, ArrayList<MkScopeDcl> acc) {
+    
+    queryEnterLog();
+
+    // Use of varPredicate - name equality
+    if (dclPredicate(getname())) {
+      queryGoodResLog(name);
+      acc.add(this);
+    } else {
+      queryBadResLog(name);
+    }
+
+    queryLeaveLog();
+
+  }
+
+}
