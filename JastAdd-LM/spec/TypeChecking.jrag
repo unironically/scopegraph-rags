@@ -1,0 +1,117 @@
+import java.util.*;
+
+aspect TypeChecking {
+
+  /*---------- Checking funs ----------*/
+
+  public Boolean Type.sameType(Type t) { return false; }
+  public Boolean IntType.sameType(Type t) { return t instanceof IntType; }
+  public Boolean BoolType.sameType(Type t) { return t instanceof BoolType; }
+
+  public Boolean Type.isIntType() { return false; }
+  public Boolean IntType.isIntType() { return true; }
+
+  public Boolean Type.isBoolType() { return false; }
+  public Boolean BoolType.isBoolType() { return true; }
+
+  /*---------- Program ---------*/
+
+  syn lazy Boolean Program.ok();
+
+  eq Program.ok() { return getds().ok(); }
+
+  /*---------- Decls ----------*/
+
+  syn lazy Boolean Decls.ok();
+
+  eq DeclsCons.ok() { return getd().ok() && getds().ok(); }
+
+  eq DeclsNil.ok() { return true; }
+
+  /*---------- Def Decl ----------*/
+
+  syn lazy Boolean Decl.ok();
+
+  eq DeclDef.ok() { return getb().ok(); }
+
+  /*---------- Module Decl ----------*/
+
+  eq DeclMod.ok() = getm().ok();
+
+  /*---------- Import Decl ----------*/
+
+  eq DeclImp.ok() = getr().ok();
+
+  /*---------- Module ----------*/
+
+  syn lazy Boolean Module.ok();
+
+  eq Module.ok() = getds().ok();
+
+  /*---------- Expr ----------*/
+
+  syn lazy Boolean Expr.ok();
+  syn lazy Type Expr.type();
+
+  // ExprInt
+  eq ExprInt.ok() { return true; }
+  eq ExprInt.type() { return new IntType(); }
+
+  // ExprTrue
+  eq ExprTrue.ok() { return true; }
+  eq ExprTrue.type() { return new BoolType(); }
+
+  // ExprFalse
+  eq ExprFalse.ok() { return true; }
+  eq ExprFalse.type() { return new BoolType(); }
+
+  // ExprVar
+  eq ExprVar.ok() { return getr().ok(); }
+  eq ExprVar.type() { return getr().type(); }
+
+  // Add
+  eq ExprAdd.ok() { return getl().type().isIntType() &&
+                           getl().type().sameType(getr().type()) &&
+                           getl().ok() && getr().ok(); }
+  eq ExprAdd.type() { return new IntType(); }
+
+  /*---------- Bind -----------*/
+
+  syn lazy Boolean Bind.ok();
+  syn lazy Type Bind.type();
+
+  eq Bind.ok() {
+    return getty().sameType(gete().type()) && gete().ok();
+  }
+
+  eq Bind.type() {
+    if (this.ok()) return getty();
+    return new ErrType();
+  }
+
+  /*---------- VarRef ----------*/
+
+  syn lazy Boolean VarRef.ok();
+  syn lazy Type VarRef.type();
+
+  eq VarRef.ok() { return !(type() instanceof ErrType); }
+  eq VarRef.type() {
+    ArrayList<MkScopeVar> resScopes = this.scope().queryVar(this.getid());
+    if (resScopes.size() != 1) return new ErrType();
+    return resScopes.get(0).getnode().getty();
+  }
+
+  /*---------- ModRef ----------*/
+
+  syn lazy Boolean ModRef.ok();
+
+  eq ModRef.ok() { return imps().size() == 1; }
+
+  /*---------- Type ----------*/
+
+  syn lazy String Type.pp();
+  eq Type.pp() { return "<ERR>"; }
+  eq IntType.pp() { return "INT"; }
+  eq BoolType.pp() { return "BOOL"; }
+
+}

@@ -4,7 +4,6 @@ aspect Scoping {
 
   /*---------- Program ---------*/
 
-  syn lazy Boolean Program.ok();
   syn nta lazy MkScope Program.globalScope();
 
   eq Program.globalScope() = new MkScope();
@@ -14,13 +13,11 @@ aspect Scoping {
   eq Program.globalScope().imp() { return new ArrayList<MkScopeMod>(); }
   eq Program.getds().scope() { return globalScope(); }
   eq Program.getds().moduleScope() { return new MkScope(); } // dead scope
-  eq Program.ok() { return getds().ok(); }
 
   /*---------- Decls ----------*/
 
   inh lazy Scope Decls.scope();
   inh lazy Scope Decls.moduleScope();
-  syn lazy Boolean Decls.ok();
   syn lazy ArrayList<MkScopeVar> Decls.vars();
   syn lazy ArrayList<MkScopeVar> Decls.moduleScopeVars();
   syn lazy ArrayList<MkScopeMod> Decls.mods();
@@ -48,17 +45,13 @@ aspect Scoping {
                                    mods.addAll(getd().mods()); mods.addAll(getds().moduleScopeMods());
                                    return mods; }
 
-  eq DeclsCons.ok() { return getd().ok() && getds().ok(); }
-
   eq DeclsNil.vars() { return new ArrayList<MkScopeVar>(); }
   eq DeclsNil.mods() { return new ArrayList<MkScopeMod>(); }
   eq DeclsNil.moduleScopeVars() { return new ArrayList<MkScopeVar>(); }
   eq DeclsNil.moduleScopeMods() { return new ArrayList<MkScopeMod>(); }
-  eq DeclsNil.ok() { return true; }
 
   /*---------- Def Decl ----------*/
 
-  syn lazy Boolean Decl.ok();
   syn lazy ArrayList<MkScopeVar> Decl.vars();
   syn lazy ArrayList<MkScopeMod> Decl.mods();
   syn lazy ArrayList<MkScopeMod> Decl.imps();
@@ -68,7 +61,6 @@ aspect Scoping {
   eq DeclDef.vars() { return getb().vars(); }
   eq DeclDef.mods() = new ArrayList<MkScopeMod>();
   eq DeclDef.imps() = new ArrayList<MkScopeMod>();
-  eq DeclDef.ok() { return getb().ok(); }
 
   /*---------- Module Decl ----------*/
 
@@ -78,7 +70,6 @@ aspect Scoping {
   eq DeclMod.mods() = getm().mods();
   eq DeclMod.vars() = new ArrayList<MkScopeVar>();
   eq DeclMod.imps() = new ArrayList<MkScopeMod>();
-  eq DeclMod.ok() = getm().ok();
 
   /*---------- Import Decl ----------*/
 
@@ -88,12 +79,10 @@ aspect Scoping {
   eq DeclImp.imps() = getr().imps();
   eq DeclImp.vars() = new ArrayList<MkScopeVar>();
   eq DeclImp.mods() = new ArrayList<MkScopeMod>();
-  eq DeclImp.ok() = getr().ok();
 
   /*---------- Module ----------*/
 
   inh lazy Scope Module.scope();
-  syn lazy Boolean Module.ok();
   syn lazy ArrayList<MkScopeMod> Module.mods();
 
   syn nta lazy MkScopeMod Module.modScope() = new MkScopeMod(this);
@@ -107,51 +96,33 @@ aspect Scoping {
   eq Module.mods() { ArrayList<MkScopeMod> mods = new ArrayList<MkScopeMod>();
                      mods.add(this.modScope()); return mods; }
   
-  eq Module.ok() = getds().ok();
-
   /*---------- Expr ----------*/
 
   inh lazy Scope Expr.scope();
   syn lazy ArrayList<MkScopeVar> Expr.vars();
-  syn lazy Boolean Expr.ok();
-  syn lazy Type Expr.type();
 
   // ExprInt
-  eq ExprInt.ok() { return true; }
-  eq ExprInt.type() { return new IntType(); }
   eq ExprInt.vars() { return new ArrayList<MkScopeVar>(); }
 
   // ExprTrue
-  eq ExprTrue.ok() { return true; }
-  eq ExprTrue.type() { return new BoolType(); }
   eq ExprTrue.vars() { return new ArrayList<MkScopeVar>(); }
 
   // ExprFalse
-  eq ExprFalse.ok() { return true; }
-  eq ExprFalse.type() { return new BoolType(); }
   eq ExprFalse.vars() { return new ArrayList<MkScopeVar>(); }
 
   // ExprVar
   eq ExprVar.getr().scope() { return this.scope(); }
-  eq ExprVar.ok() { return getr().ok(); }
-  eq ExprVar.type() { return getr().type(); }
   eq ExprVar.vars() { return new ArrayList<MkScopeVar>(); }
 
   // Add
   eq ExprAdd.getl().scope() { return this.scope(); }
   eq ExprAdd.getr().scope() { return this.scope(); }
-  eq ExprAdd.ok() { return getl().type().isIntType() &&
-                           getl().type().sameType(getr().type()) &&
-                           getl().ok() && getr().ok(); }
-  eq ExprAdd.type() { return new IntType(); }
   eq ExprAdd.vars() { return new ArrayList<MkScopeVar>(); }
 
   /*---------- Bind -----------*/
 
   inh lazy Scope Bind.scope();
   syn lazy ArrayList<MkScopeVar> Bind.vars();
-  syn lazy Boolean Bind.ok();
-  syn lazy Type Bind.type();
 
   syn nta lazy MkScopeVar Bind.varScope() = new MkScopeVar(this);
   eq Bind.varScope().lex() = new ArrayList<Scope>();
@@ -161,14 +132,6 @@ aspect Scoping {
 
   eq Bind.gete().scope() { return this.scope(); }
 
-  eq Bind.ok() {
-    return getty().sameType(gete().type()) && gete().ok();
-  }
-
-  eq Bind.type() {
-    if (this.ok()) return getty();
-    return new ErrType();
-  }
 
   eq Bind.vars() {
     ArrayList<MkScopeVar> vs = new ArrayList<MkScopeVar>();
@@ -179,34 +142,16 @@ aspect Scoping {
   /*---------- VarRef ----------*/
 
   inh lazy Scope VarRef.scope();
-  syn lazy Boolean VarRef.ok();
-  syn lazy Type VarRef.type();
-
-  eq VarRef.ok() { return !(type() instanceof ErrType); }
-  eq VarRef.type() {
-    ArrayList<MkScopeVar> resScopes = this.scope().queryVar(this.getid());
-    if (resScopes.size() != 1) return new ErrType();
-    return resScopes.get(0).getnode().getty();
-  }
 
   /*---------- ModRef ----------*/
 
   inh lazy Scope ModRef.scope();
-  syn lazy Boolean ModRef.ok();
   syn lazy ArrayList<MkScopeMod> ModRef.imps();
 
-  eq ModRef.ok() { return imps().size() == 1; }
   eq ModRef.imps() {
     ArrayList<MkScopeMod> resScopes = this.scope().queryMod(this.getid());
     if (resScopes.size() != 1) return new ArrayList<MkScopeMod>();
     return resScopes;
   }
-
-  /*---------- Type ----------*/
-
-  syn lazy String Type.pp();
-  eq Type.pp() { return "<ERR>"; }
-  eq IntType.pp() { return "INT"; }
-  eq BoolType.pp() { return "BOOL"; }
 
 }
