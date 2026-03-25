@@ -40,12 +40,12 @@ aspect Scoping {
 
   eq DeclsCons.vars() { return new ArrayList<MkScopeVar>(); }
   eq DeclsCons.moduleScopeVars() { ArrayList<MkScopeVar> vars = new ArrayList<MkScopeVar>();
-                                   vars.addAll(getd().vars()); vars.addAll(getds().vars());
+                                   vars.addAll(getd().vars()); vars.addAll(getds().moduleScopeVars());
                                    return vars; }
 
   eq DeclsCons.mods() { return new ArrayList<MkScopeMod>(); }
   eq DeclsCons.moduleScopeMods() { ArrayList<MkScopeMod> mods = new ArrayList<MkScopeMod>();
-                                   mods.addAll(getd().mods()); mods.addAll(getds().mods());
+                                   mods.addAll(getd().mods()); mods.addAll(getds().moduleScopeMods());
                                    return mods; }
 
   eq DeclsCons.ok() { return getd().ok() && getds().ok(); }

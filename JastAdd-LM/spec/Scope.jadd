@@ -1,40 +1,62 @@
 aspect Scope {
   
-  //public static Boolean Scope.queryDebug = true;
+  // Set to true for query logs
+  public static final Boolean Scope.queryDebug = true;
+
+  // Tab string for query logs
+  public static final String Scope.tabStr = "  ";
+
+  // Starting number of tabs for query logs
   public static Integer Scope.querySpace = 0;
 
   public static String Scope.queryTab() {
     StringBuilder s = new StringBuilder();
-    for (int i = 0; i < querySpace; i++) s.append("  ");
+    for (int i = 0; i < querySpace; i++) s.append(tabStr);
     return s.toString();
   }
 
   public void Scope.queryEnterLog() {
-    System.out.println(queryTab() + "Entering " + this.pp());
+    queryLogMessage("Entering " + this.pp());
     querySpace++;
   }
 
   public void Scope.queryLeaveLog() {
     querySpace--;
-    System.out.println(queryTab() + "Leaving " + this.pp());
+    queryLogMessage("Leaving " + this.pp());
   }
 
   public void Scope.queryFollowLog(String lab, Scope tgt) {
-    System.out.println(queryTab() + "Following " + lab + " to " + tgt.pp());
+    queryLogMessage("Following " + lab + " to " + tgt.pp());
     querySpace++;
   }
 
   public void Scope.queryReturnLog() {
     querySpace--;
-    System.out.println(queryTab() + "Returned to " + this.pp());
+    queryLogMessage("Returned to " + this.pp());
   }
 
   public void Scope.queryGoodResLog(String name) {
-    System.out.println(queryTab() + "Good resolution for '" + name + "' at " + this.pp());
+    queryLogMessage("Good resolution for '" + name + "' at " + this.pp());
   }
 
   public void Scope.queryBadResLog(String name) {
-    System.out.println(queryTab() + "Not good resolution for '" + name + "' at " + this.pp());
+    queryLogMessage("Not good resolution for '" + name + "' at " + this.pp());
+  }
+
+  public void Scope.beginQueryLog(String name) {
+    queryLogMessage("Beginning query for '" + name + "' from " + pp());
+    querySpace++;
+  }
+
+  public void Scope.endQueryLog(String name, ArrayList<?> res) {
+    querySpace--;
+    int num = res.size();
+    queryLogMessage("Ending query for '" + name + "' from " + pp() + 
+                        ", found " + num + ((num == 1) ? " resolution" : " resolutions"));
+  }
+
+  public void Scope.queryLogMessage(String msg) {
+    if (queryDebug) System.out.println(queryTab() + msg);
   }
 
 }

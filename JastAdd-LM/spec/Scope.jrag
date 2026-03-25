@@ -20,12 +20,9 @@ aspect Scope {
 
   syn ArrayList<MkScopeVar> Scope.queryVar(String name) {
     ArrayList<MkScopeVar> res = new ArrayList<MkScopeVar>();
-    System.out.println("Beginning variable resolution for '" + name + "'");
-    querySpace++;
-    res = queryVarState1(name);
-    querySpace--;
-    System.out.println("Ended variable resolution for '" + name + "', found " +
-                       Integer.toString(res.size()) + " resolutions");
+    beginQueryLog(name);
+    new Query().state1(this, name, res, new MkScopeVar(null));
+    endQueryLog(name, res);
     return res;
   }
 
@@ -33,12 +30,9 @@ aspect Scope {
 
   syn ArrayList<MkScopeMod> Scope.queryMod(String name) {
     ArrayList<MkScopeMod> res = new ArrayList<MkScopeMod>();
-    System.out.println("Beginning import resolution for '" + name + "'");
-    querySpace++;
-    res = queryModState1(name);
-    querySpace--;
-    System.out.println("Ended import resolution for '" + name + "', found " +
-                       Integer.toString(res.size()) + " resolutions");
+    beginQueryLog(name);
+    new Query().state1(this, name, res, new MkScopeMod(null));
+    endQueryLog(name, res);
     return res;
   }
 
