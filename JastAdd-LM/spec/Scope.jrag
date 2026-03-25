@@ -2,13 +2,6 @@ import java.util.*;
 
 aspect Scope {
 
-  // Edges
-
-  inh lazy ArrayList<Scope> Scope.lex();
-  inh lazy ArrayList<MkScopeVar> Scope.var();
-  inh lazy ArrayList<MkScopeMod> Scope.mod();
-  inh lazy ArrayList<MkScopeMod> Scope.imp();
-
   // PP
 
   syn String Scope.pp() = "Scope('" + this.hashCode() + "')";
@@ -21,7 +14,7 @@ aspect Scope {
   syn ArrayList<MkScopeVar> Scope.queryVar(String name) {
     ArrayList<MkScopeVar> res = new ArrayList<MkScopeVar>();
     beginQueryLog(name);
-    new Query().state1(this, name, res, new MkScopeVar(null));
+    //new Query().state1(this, name, res, new MkScopeVar(null));
     endQueryLog(name, res);
     return res;
   }
@@ -31,7 +24,7 @@ aspect Scope {
   syn ArrayList<MkScopeMod> Scope.queryMod(String name) {
     ArrayList<MkScopeMod> res = new ArrayList<MkScopeMod>();
     beginQueryLog(name);
-    new Query().state1(this, name, res, new MkScopeMod(null));
+    //new Query().state1(this, name, res, new MkScopeMod(null));
     endQueryLog(name, res);
     return res;
   }

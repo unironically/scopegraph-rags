@@ -2,17 +2,25 @@ import java.util.*;
 
 aspect Scoping {
 
-  /*---------- Program ---------*/
+  // SG edge attributes
 
-  syn nta lazy MkScope Program.globalScope();
+  inh lazy ArrayList<MkScope> Scope.lex();
+  inh lazy ArrayList<MkScopeVar> Scope.var();
+  inh lazy ArrayList<MkScopeMod> Scope.mod();
+  inh lazy ArrayList<MkScopeMod> Scope.imp();
 
-  eq Program.globalScope() = new MkScope();
-  eq Program.globalScope().lex() { return new ArrayList<Scope>(); }
-  eq Program.globalScope().var() { return new ArrayList<MkScopeVar>(); }
-  eq Program.globalScope().mod() { return new ArrayList<MkScopeMod>(); }
-  eq Program.globalScope().imp() { return new ArrayList<MkScopeMod>(); }
-  eq Program.getds().scope() { return globalScope(); }
-  eq Program.getds().moduleScope() { return new MkScope(); } // dead scope
+  /*---------- Root ---------*/
+
+  syn nta lazy MkScope Root.globalScope();
+
+  eq Root.globalScope() = new MkScope();
+  eq Root.globalScope().lex() { return new ArrayList<MkScope>(); }
+  eq Root.globalScope().var() { return new ArrayList<MkScopeVar>(); }
+  eq Root.globalScope().mod() { return new ArrayList<MkScopeMod>(); }
+  eq Root.globalScope().imp() { return new ArrayList<MkScopeMod>(); }
+
+  eq Root.getds().scope() { return globalScope(); }
+  eq Root.getds().moduleScope() { return new MkScope(); } // 'dead' scope
 
   /*---------- Decls ----------*/
 
@@ -26,7 +34,7 @@ aspect Scoping {
   syn nta lazy MkScope DeclsCons.nextScope();
 
   eq DeclsCons.nextScope() = new MkScope();
-  eq DeclsCons.nextScope().lex() { ArrayList<Scope> lexes = new ArrayList<Scope>();
+  eq DeclsCons.nextScope().lex() { ArrayList<MkScope> lexes = new ArrayList<MkScope>();
                                    lexes.add(this.scope()); return lexes; }
   eq DeclsCons.nextScope().var() { return getd().vars(); }
   eq DeclsCons.nextScope().mod() { return getd().mods(); }
@@ -86,7 +94,7 @@ aspect Scoping {
   syn lazy ArrayList<MkScopeMod> Module.mods();
 
   syn nta lazy MkScopeMod Module.modScope() = new MkScopeMod(this);
-  eq Module.modScope().lex() { ArrayList<Scope> lexes = new ArrayList<Scope>();
+  eq Module.modScope().lex() { ArrayList<MkScope> lexes = new ArrayList<MkScope>();
                                lexes.add(this.scope()); return lexes; }
   eq Module.modScope().var() { return getds().moduleScopeVars(); }
 
@@ -125,7 +133,7 @@ aspect Scoping {
   syn lazy ArrayList<MkScopeVar> Bind.vars();
 
   syn nta lazy MkScopeVar Bind.varScope() = new MkScopeVar(this);
-  eq Bind.varScope().lex() = new ArrayList<Scope>();
+  eq Bind.varScope().lex() = new ArrayList<MkScope>();
   eq Bind.varScope().var() = new ArrayList<MkScopeVar>();
   eq Bind.varScope().mod() = new ArrayList<MkScopeMod>();
   eq Bind.varScope().imp() = new ArrayList<MkScopeMod>();

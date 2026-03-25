@@ -7,7 +7,7 @@ aspect Resolution {
   // State 1 -VAR-> State 3
   // State 1 -IMP-> State 2
   // State 1 -LEX-> State 1
-  public class Query<T extends SGDecl> {
+  /*public class Query<T extends SGDecl> {
 
     public void state1(Scope s, String name, ArrayList<T> acc, T dclType) {
       
@@ -194,7 +194,7 @@ aspect Resolution {
 
   public void Scope.queryLogMessage(String msg) {
     if (queryDebug) System.out.println(queryTab() + msg);
-  }
+  }*/
 
   
 }

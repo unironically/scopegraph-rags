@@ -39,7 +39,7 @@ public class Compiler {
 			LMParser parser = new LMParser();
 			Reader reader = new FileReader(args[0]);
 			LMScanner scanner = new LMScanner(new BufferedReader(reader));
-			Program p = (Program)parser.parse(scanner);
+			Root p = (Root)parser.parse(scanner);
 			reader.close();
 			
 			System.out.println("Analysis result: " + (p.ok() ? "ok" : "not ok"));
