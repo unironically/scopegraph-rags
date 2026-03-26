@@ -17,7 +17,7 @@ aspect Scope {
 
   // Variable resolution
 
-  syn ArrayList<MkScopeVar> Scope.queryVar(String name) {
+  syn ArrayList<MkScopeVar> Scope.varQuery(String name) {
     ArrayList<MkScopeVar> res = new ArrayList<MkScopeVar>();
     beginQueryLog(name, "varQuery");
     state1VAR(name, res);
@@ -27,11 +27,19 @@ aspect Scope {
 
   // Import resolution
 
-  syn ArrayList<MkScopeMod> Scope.queryMod(String name) {
+  syn ArrayList<MkScopeMod> Scope.modQuery(String name) {
     ArrayList<MkScopeMod> res = new ArrayList<MkScopeMod>();
     beginQueryLog(name, "impQuery");
     state1MOD(name, res);
     endQueryLog(name, res, "impQuery");
+    return res;
+  }
+
+  syn ArrayList<MkScopeDcl> Scope.dclQuery(String name) {
+    ArrayList<MkScopeDcl> res = new ArrayList<MkScopeDcl>();
+    beginQueryLog(name, "dclQuery");
+    state1DCL(name, res);
+    endQueryLog(name, res, "dclQuery");
     return res;
   }
 

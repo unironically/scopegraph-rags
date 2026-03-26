@@ -96,7 +96,7 @@ aspect TypeChecking {
 
   eq VarRef.ok() { return !(type() instanceof ErrType); }
   eq VarRef.type() {
-    ArrayList<MkScopeVar> resScopes = this.scope().queryVar(this.getid());
+    ArrayList<MkScopeVar> resScopes = this.scope().varQuery(this.getid());
     if (resScopes.size() != 1) return new ErrType();
     return resScopes.get(0).getnode().getty();
   }
