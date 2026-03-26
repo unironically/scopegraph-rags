@@ -11,7 +11,7 @@ aspect Scoping {
   eq Program.globalScope().imp() { return new ArrayList<MkScopeMod>(); }
 
   eq Program.getds().scope() { return globalScope(); }
-  eq Program.getds().moduleScope() { return new MkScopeMod(); } // 'dead' scope
+  eq Program.getds().moduleScope() { return new Scope(); } // 'dead' scope
 
   /*---------- Decls ----------*/
 
@@ -82,7 +82,7 @@ aspect Scoping {
   inh lazy Scope Module.scope();
   syn lazy ArrayList<MkScopeMod> Module.mods();
 
-  syn nta lazy MkScopeMod Module.modScope() = new MkScopeMod(getid(), this);
+  syn nta lazy MkScopeMod Module.modScope() = new MkScopeMod(this);
   eq Module.modScope().lex() { ArrayList<Scope> lexes = new ArrayList<Scope>();
                                lexes.add(this.scope()); return lexes; }
   eq Module.modScope().var() { return getds().moduleScopeVars(); }
@@ -121,7 +121,7 @@ aspect Scoping {
   inh lazy Scope Bind.scope();
   syn lazy ArrayList<MkScopeVar> Bind.vars();
 
-  syn nta lazy MkScopeVar Bind.varScope() = new MkScopeVar(getid(), this);
+  syn nta lazy MkScopeVar Bind.varScope() = new MkScopeVar(this);
   eq Bind.varScope().lex() = new ArrayList<Scope>();
   eq Bind.varScope().var() = new ArrayList<MkScopeVar>();
   eq Bind.varScope().mod() = new ArrayList<MkScopeMod>();

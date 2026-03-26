@@ -38,7 +38,7 @@ aspect Scope {
   syn ArrayList<MkScopeDcl> Scope.dclQuery(String name) {
     ArrayList<MkScopeDcl> res = new ArrayList<MkScopeDcl>();
     beginQueryLog(name, "dclQuery");
-    state1DCL(name, res);
+    new Query().state1DCL(this, name, res, new MkScopeVar(), new MkScopeMod());
     endQueryLog(name, res, "dclQuery");
     return res;
   }

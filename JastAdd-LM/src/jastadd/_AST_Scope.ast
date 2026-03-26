@@ -1,10 +1,8 @@
 // Builtin scopes node type
 Scope ::= ;
 
-// Declaration nodes
-abstract MkScopeDcl: Scope ::= <name:String>;
-
 // Variable declaration nodes
-MkScopeVar: MkScopeDcl ::= node:Bind;
+MkScopeVar: Scope ::= node:Bind;
+
 // Module declaration nodes
-MkScopeMod: MkScopeDcl ::= node:Module;
+MkScopeMod: Scope ::= node:Module;
