@@ -2,7 +2,7 @@
 Scope ::= ;
 
 // Variable declaration nodes
-MkScopeVar: Scope ::= node:Bind;
+SGVarNode: Scope ::= node:Bind;
 
 // Module declaration nodes
-MkScopeMod: Scope ::= node:Module;
+SGModNode: Scope ::= node:Module;

@@ -1,6 +1,6 @@
 aspect DeclarationResolution {
 
-  class Query<T extends MkScopeDcl> {
+  class Query<T extends SGDclNode> {
 
     // DFA state 1 for regex = LEX* IMP? VAR
     public void state1DCL(Scope cur, String name, ArrayList<T> acc, T dclTypeVar, T dclTypeMod) {
@@ -25,7 +25,7 @@ aspect DeclarationResolution {
 
       // Follow IMP if no resolutions found by VAR or MOD
       if (acc.size() == 0) {
-        for (MkScopeMod sn: cur.imp()) {
+        for (SGModNode sn: cur.imp()) {
           cur.queryFollowLog("IMP", sn);
           state2DCL(sn, name, acc, dclTypeVar, dclTypeMod);
           cur.queryReturnLog();
@@ -95,9 +95,9 @@ aspect DeclarationResolution {
 
 /*
  */
-aspect MkScopeDcl {
+aspect SGDclNode {
 
-  interface MkScopeDcl<T extends Scope> {
+  interface SGDclNode<T extends Scope> {
     public String getname();
     public Boolean dclPredicate(String name);
     public ArrayList<T> demandEdge(Scope s);
@@ -107,19 +107,19 @@ aspect MkScopeDcl {
 
 /*
  */
-aspect MkScopeVarAsDcl {
+aspect SGVarNodeAsDcl {
 
-  MkScopeVar implements MkScopeDcl;
+  SGVarNode implements SGDclNode;
 
-  public String MkScopeVar.getname() {
+  public String SGVarNode.getname() {
     return this.getnode().getid();
   }
 
-  public Boolean MkScopeVar.dclPredicate(String name) {
+  public Boolean SGVarNode.dclPredicate(String name) {
     return name.equals(getname());
   }
 
-  public ArrayList<MkScopeVar> MkScopeVar.demandEdge(Scope s) {
+  public ArrayList<SGVarNode> SGVarNode.demandEdge(Scope s) {
     return s.var();
   }
 
@@ -127,19 +127,19 @@ aspect MkScopeVarAsDcl {
 
 /*
  */
-aspect MkScopeModAsDcl {
+aspect SGModNodeAsDcl {
   
-  MkScopeMod implements MkScopeDcl;
+  SGModNode implements SGDclNode;
   
-  public String MkScopeMod.getname() {
+  public String SGModNode.getname() {
     return this.getnode().getid();
   }
 
-  public Boolean MkScopeMod.dclPredicate(String name) {
+  public Boolean SGModNode.dclPredicate(String name) {
     return name.equals(getname());
   }
 
-  public ArrayList<MkScopeMod> MkScopeMod.demandEdge(Scope s) {
+  public ArrayList<SGModNode> SGModNode.demandEdge(Scope s) {
     return s.mod();
   }
 

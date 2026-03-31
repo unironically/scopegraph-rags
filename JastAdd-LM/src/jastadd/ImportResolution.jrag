@@ -8,17 +8,17 @@ aspect ImportResolution {
   */
 
   // predicate = modPredicate(name);
-  public Boolean MkScopeMod.modPredicate(String name) {
+  public Boolean SGModNode.modPredicate(String name) {
     return this.getname().equals(name);
   }
 
   // DFA state 1 for regex = LEX* IMP? MOD
-  public void Scope.state1MOD(String name, ArrayList<MkScopeMod> acc) {
+  public void Scope.state1MOD(String name, ArrayList<SGModNode> acc) {
     
     queryEnterLog();
   
     // Follow MOD
-    for (MkScopeMod sd: mod()) {
+    for (SGModNode sd: mod()) {
       queryFollowLog("MOD", sd);
       sd.state3MOD(name, acc);
       queryReturnLog();
@@ -26,7 +26,7 @@ aspect ImportResolution {
 
     // Follow IMP if no resolutions found by MOD
     if (acc.size() == 0) {
-      for (MkScopeMod sn: imp()) {
+      for (SGModNode sn: imp()) {
         queryFollowLog("IMP", sn);
         sn.state2MOD(name, acc);
         queryReturnLog();
@@ -47,12 +47,12 @@ aspect ImportResolution {
   }
 
   // DFA state 2 for regex = LEX* IMP? MOD
-  public void MkScopeMod.state2MOD(String name, ArrayList<MkScopeMod> acc) {
+  public void SGModNode.state2MOD(String name, ArrayList<SGModNode> acc) {
 
     queryEnterLog();
 
     // Follow MOD
-    for (MkScopeMod sd: mod()) {
+    for (SGModNode sd: mod()) {
       queryFollowLog("MOD", sd);
       sd.state3MOD(name, acc);
       queryReturnLog();
@@ -63,7 +63,7 @@ aspect ImportResolution {
   }
 
   // // DFA state 3 for regex = LEX* IMP? MOD
-  public void MkScopeMod.state3MOD(String name, ArrayList<MkScopeMod> acc) {
+  public void SGModNode.state3MOD(String name, ArrayList<SGModNode> acc) {
     
     queryEnterLog();
 

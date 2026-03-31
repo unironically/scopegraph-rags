@@ -8,17 +8,17 @@ aspect VariableResolution {
   */
 
   // predicate = varPredicate(name);
-  public Boolean MkScopeVar.varPredicate(String name) {
+  public Boolean SGVarNode.varPredicate(String name) {
     return this.getname().equals(name);
   }
 
   // DFA state 1 for regex = LEX* IMP? VAR
-  public void Scope.state1VAR(String name, ArrayList<MkScopeVar> acc) {
+  public void Scope.state1VAR(String name, ArrayList<SGVarNode> acc) {
     
     queryEnterLog();
   
     // Follow VAR
-    for (MkScopeVar sd: var()) {
+    for (SGVarNode sd: var()) {
       queryFollowLog("VAR", sd);
       sd.state3VAR(name, acc);
       queryReturnLog();
@@ -26,7 +26,7 @@ aspect VariableResolution {
 
     // Follow IMP if no resolutions found by VAR
     if (acc.size() == 0) {
-      for (MkScopeMod sn: imp()) {
+      for (SGModNode sn: imp()) {
         queryFollowLog("IMP", sn);
         sn.state2VAR(name, acc);
         queryReturnLog();
@@ -47,12 +47,12 @@ aspect VariableResolution {
   }
 
   // DFA state 2 for regex = LEX* IMP? VAR
-  public void MkScopeMod.state2VAR(String name, ArrayList<MkScopeVar> acc) {
+  public void SGModNode.state2VAR(String name, ArrayList<SGVarNode> acc) {
 
     queryEnterLog();
 
     // Follow VAR
-    for (MkScopeVar sd: var()) {
+    for (SGVarNode sd: var()) {
       queryFollowLog("VAR", sd);
       sd.state3VAR(name, acc);
       queryReturnLog();
@@ -63,7 +63,7 @@ aspect VariableResolution {
   }
 
   // // DFA state 3 for regex = LEX* IMP? VAR
-  public void MkScopeVar.state3VAR(String name, ArrayList<MkScopeVar> acc) {
+  public void SGVarNode.state3VAR(String name, ArrayList<SGVarNode> acc) {
     
     queryEnterLog();
 

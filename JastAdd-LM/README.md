@@ -34,35 +34,37 @@ To cleanup:
 Scopes:
 
 ```
-scope MkScopeLex;
-scope MkScopeVar -> node:Bind;
-scope MkScopeMod -> node:Module;
+scope SGLexNode;
+scope SGVarNode -> node:Bind;
+scope SGModNode -> node:Module;
 ```
 
 Relationships:
 
 ```
-abstract scope MkScopeDcl -> name:String;
+abstract scope SGDclNode -> name:String;
 
-MkScopeVar isa MkScopeDcl;
-MkScopeMod isa MkScopeDcl;
+SGVarNode is SGDclNode;
+
+SGModNode is SGDclNode;
+SGModNode is SGLexNode;
 ```
 
 Edges:
 
 ```
-edge -[ LEX ]-> MkScopeLex;
-edge -[ VAR ]-> MkScopeVar;
-edge -[ MOD ]-> MkScopeMod;
-edge -[ IMP ]-> MkScopeMod;
+edge -[ LEX ]-> SGLexNode;
+edge -[ VAR ]-> SGVarNode;
+edge -[ MOD ]-> SGModNode;
+edge -[ IMP ]-> SGModNode;
 ```
 
 Predicates:
 
 ```
-varPredicate = \name::String v::MkScopeVar -> v.name == name;
-modPredicate = \name::String v::MkScopeMod -> v.name == name;
-dclPredicate = \name::String v::MkScopeDcl -> v.name == name;
+varPredicate = \name::String v::SGVarNode -> v.name == name;
+modPredicate = \name::String v::SGModNode -> v.name == name;
+dclPredicate = \name::String v::SGDclNode -> v.name == name;
 ```
 
 Queries:
@@ -94,28 +96,28 @@ query dclQuery:
 abstract scope ::= ;
 ```
 
-#### MkScopeLex
+#### SGLexNode
 
 ```
-scope MkScopeLex;
+scope SGLexNode;
 ```
 
-No `isa` relationship for `MkScopeLex`, and it has no data, so it is the same 
+No `isa` relationship for `SGLexNode`, and it has no data, so it is the same 
 as the builtin `Scope` root type. Essentially becomes an alias.
 
-#### MkScopeDcl
+#### SGDclNode
 
-- [MkScopeDcl interface](./src/jastadd/DeclarationResolution.jrag).
+- [SGDclNode interface](./src/jastadd/DeclarationResolution.jrag).
 
 ```
-abstract scope MkScopeDcl -> name:String;
+abstract scope SGDclNode -> name:String;
 ```
 
 Makes new interface:
 
 ```java
-aspect MkScopeDcl {
-  interface MkScopeDcl<T extends Scope> {
+aspect SGDclNode {
+  interface SGDclNode<T extends Scope> {
     public String getname();
     public Boolean dclPredicate(String name);
     public ArrayList<T> demandEdge(Scope s);
@@ -124,67 +126,67 @@ aspect MkScopeDcl {
 ```
 
 Where `getname()` returns the name of the `Bind` or `Module` tree decl. Each
-must have a `name` child of type `String`, since `MkScopeDcl` is declarted to
+must have a `name` child of type `String`, since `SGDclNode` is declarted to
 have data `name:String`.
 
-#### MkScopeVar
+#### SGVarNode
 
-- [MkScopeVar as MkScopeDcl](./src/jastadd/DeclarationResolution.jrag).
+- [SGVarNode as SGDclNode](./src/jastadd/DeclarationResolution.jrag).
 
 ```
-scope MkScopeVar -> b:Bind;
-MkScopeVar isa MkScopeDcl;
+scope SGVarNode -> b:Bind;
+SGVarNode isa SGDclNode;
 ```
 
-`MkScopeVar isa MkScopeDcl` means `MkScopeVar` implements the `MkScopeDcl`
+`SGVarNode isa SGDclNode` means `SGVarNode` implements the `SGDclNode`
 interface as below:
 
 ```java
-aspect MkScopeVarAsDcl {
+aspect SGVarNodeAsDcl {
 
-  MkScopeVar implements MkScopeDcl;
+  SGVarNode implements SGDclNode;
 
-  public String MkScopeVar.getname() {
+  public String SGVarNode.getname() {
     return this.getnode().getid();
   }
 
-  public Boolean MkScopeVar.dclPredicate(String name) {
+  public Boolean SGVarNode.dclPredicate(String name) {
     return name.equals(getname());
   }
 
-  public ArrayList<MkScopeVar> MkScopeVar.demandEdge(Scope s) {
+  public ArrayList<SGVarNode> SGVarNode.demandEdge(Scope s) {
     return s.var();
   }
 
 }
 ```
 
-#### MkScopeMod
+#### SGModNode
 
-- [MkScopeMod as MkScopeDcl](./src/jastadd/DeclarationResolution.jrag).
+- [SGModNode as SGDclNode](./src/jastadd/DeclarationResolution.jrag).
 
 ```
-scope MkScopeMod -> m:Module;
-MkScopeMod isa MkScopeDcl;
+scope SGModNode -> m:Module;
+SGModNode isa SGDclNode;
 ```
 
-`MkScopeMod isa MkScopeDcl` means `MkScopeMod` implements the `MkScopeDcl`
+`SGModNode isa SGDclNode` means `SGModNode` implements the `SGDclNode`
 interface as below:
 
 ```java
-aspect MkScopeModAsDcl {
+aspect SGModNodeAsDcl {
   
-  MkScopeMod implements MkScopeDcl;
+  SGModNode implements SGDclNode;
   
-  public String MkScopeMod.getname() {
+  public String SGModNode.getname() {
     return this.getnode().getid();
   }
 
-  public Boolean MkScopeMod.dclPredicate(String name) {
+  public Boolean SGModNode.dclPredicate(String name) {
     return name.equals(getname());
   }
 
-  public ArrayList<MkScopeMod> MkScopeMod.demandEdge(Scope s) {
+  public ArrayList<SGModNode> SGModNode.demandEdge(Scope s) {
     return s.mod();
   }
 
@@ -199,10 +201,10 @@ aspect MkScopeModAsDcl {
 #### LEX
 
 ```
-edge -[ LEX ]-> MkScopeLex;
+edge -[ LEX ]-> SGLexNode;
 ```
 
-Recall `MkScopeLex` is an alias for `Scope`. Generates inherited attribute:
+Recall `SGLexNode` is an alias for `Scope`. Generates inherited attribute:
 
 ```
 inh lazy ArrayList<Scope> Scope.lex();
@@ -211,37 +213,37 @@ inh lazy ArrayList<Scope> Scope.lex();
 #### VAR
 
 ```
-edge -[ VAR ]-> MkScopeVar;
+edge -[ VAR ]-> SGVarNode;
 ```
 
 Generates inherited attribute:
 
 ```
-inh lazy ArrayList<MkScopeVar> Scope.var();
+inh lazy ArrayList<SGVarNode> Scope.var();
 ```
 
 #### MOD
 
 ```
-edge -[ MOD ]-> MkScopeMod;
+edge -[ MOD ]-> SGModNode;
 ```
 
 Generates inherited attribute:
 
 ```
-inh lazy ArrayList<MkScopeMod> Scope.mod();
+inh lazy ArrayList<SGModNode> Scope.mod();
 ```
 
 #### IMP
 
 ```
-edge -[ IMP ]-> MkScopeMod;
+edge -[ IMP ]-> SGModNode;
 ```
 
 Generates inherited attribute:
 
 ```
-inh lazy ArrayList<MkScopeMod> Scope.imp();
+inh lazy ArrayList<SGModNode> Scope.imp();
 ```
 
 ### Queries/Predicates
@@ -253,7 +255,7 @@ inh lazy ArrayList<MkScopeMod> Scope.imp();
 
 
 ```
-varPredicate = \name::String v::MkScopeVar -> v.name == name;
+varPredicate = \name::String v::SGVarNode -> v.name == name;
 
 query varQuery(String name):
   regex = LEX* IMP? VAR,
@@ -265,8 +267,8 @@ Generates the following aspect
 
 ```java
 aspect Scope {
-  syn ArrayList<MkScopeVar> Scope.varQuery(String name) {
-    ArrayList<MkScopeVar> res = new ArrayList<MkScopeVar>();
+  syn ArrayList<SGVarNode> Scope.varQuery(String name) {
+    ArrayList<SGVarNode> res = new ArrayList<SGVarNode>();
     beginQueryLog(name, "varQuery");
     state1VAR(name, res);
     endQueryLog(name, res, "impQuery");
@@ -278,17 +280,17 @@ aspect Scope {
 aspect VariableResolution {
 
   // predicate = varPredicate(name);
-  public Boolean MkScopeVar.varPredicate(String name) {
+  public Boolean SGVarNode.varPredicate(String name) {
     return this.getname().equals(name);
   }
 
   // DFA state 1 for regex = LEX* IMP? VAR
-  public void Scope.state1VAR(String name, ArrayList<MkScopeVar> acc) {
+  public void Scope.state1VAR(String name, ArrayList<SGVarNode> acc) {
     
     queryEnterLog();
   
     // Follow VAR
-    for (MkScopeVar sd: var()) {
+    for (SGVarNode sd: var()) {
       queryFollowLog("VAR", sd);
       sd.state3VAR(name, acc);
       queryReturnLog();
@@ -296,7 +298,7 @@ aspect VariableResolution {
 
     // Follow IMP if no resolutions found by VAR
     if (acc.size() == 0) {
-      for (MkScopeMod sn: imp()) {
+      for (SGModNode sn: imp()) {
         queryFollowLog("IMP", sn);
         sn.state2VAR(name, acc);
         queryReturnLog();
@@ -317,12 +319,12 @@ aspect VariableResolution {
   }
 
   // DFA state 2 for regex = LEX* IMP? VAR
-  public void MkScopeMod.state2VAR(String name, ArrayList<MkScopeVar> acc) {
+  public void SGModNode.state2VAR(String name, ArrayList<SGVarNode> acc) {
 
     queryEnterLog();
 
     // Follow VAR
-    for (MkScopeVar sd: var()) {
+    for (SGVarNode sd: var()) {
       queryFollowLog("VAR", sd);
       sd.state3VAR(name, acc);
       queryReturnLog();
@@ -333,7 +335,7 @@ aspect VariableResolution {
   }
 
   // // DFA state 3 for regex = LEX* IMP? VAR
-  public void MkScopeVar.state3VAR(String name, ArrayList<MkScopeVar> acc) {
+  public void SGVarNode.state3VAR(String name, ArrayList<SGVarNode> acc) {
     
     queryEnterLog();
 
@@ -358,7 +360,7 @@ aspect VariableResolution {
 - [Import query call](./src/jastadd/Scope.jrag).
 
 ```
-modPredicate = \name::String v::MkScopeMod -> v.name == name;
+modPredicate = \name::String v::SGModNode -> v.name == name;
 
 query impQuery: 
   regex = LEX* IMP? MOD,
@@ -370,8 +372,8 @@ Generates the following aspect:
 
 ```java
 aspect Scope {
-  syn ArrayList<MkScopeMod> Scope.modQuery(String name) {
-    ArrayList<MkScopeMod> res = new ArrayList<MkScopeMod>();
+  syn ArrayList<SGModNode> Scope.modQuery(String name) {
+    ArrayList<SGModNode> res = new ArrayList<SGModNode>();
     beginQueryLog(name, "impQuery");
     state1MOD(name, res);
     endQueryLog(name, res, "impQuery");
@@ -383,17 +385,17 @@ aspect Scope {
 aspect ImportResolution {
 
   // predicate = modPredicate(name);
-  public Boolean MkScopeMod.modPredicate(String name) {
+  public Boolean SGModNode.modPredicate(String name) {
     return this.getname().equals(name);
   }
 
   // DFA state 1 for regex = LEX* IMP? MOD
-  public void Scope.state1MOD(String name, ArrayList<MkScopeMod> acc) {
+  public void Scope.state1MOD(String name, ArrayList<SGModNode> acc) {
     
     queryEnterLog();
   
     // Follow MOD
-    for (MkScopeMod sd: mod()) {
+    for (SGModNode sd: mod()) {
       queryFollowLog("MOD", sd);
       sd.state3MOD(name, acc);
       queryReturnLog();
@@ -401,7 +403,7 @@ aspect ImportResolution {
 
     // Follow IMP if no resolutions found by MOD
     if (acc.size() == 0) {
-      for (MkScopeMod sn: imp()) {
+      for (SGModNode sn: imp()) {
         queryFollowLog("IMP", sn);
         sn.state2MOD(name, acc);
         queryReturnLog();
@@ -422,12 +424,12 @@ aspect ImportResolution {
   }
 
   // DFA state 2 for regex = LEX* IMP? MOD
-  public void MkScopeMod.state2MOD(String name, ArrayList<MkScopeMod> acc) {
+  public void SGModNode.state2MOD(String name, ArrayList<SGModNode> acc) {
 
     queryEnterLog();
 
     // Follow MOD
-    for (MkScopeMod sd: mod()) {
+    for (SGModNode sd: mod()) {
       queryFollowLog("MOD", sd);
       sd.state3MOD(name, acc);
       queryReturnLog();
@@ -438,7 +440,7 @@ aspect ImportResolution {
   }
 
   // // DFA state 3 for regex = LEX* IMP? MOD
-  public void MkScopeMod.state3MOD(String name, ArrayList<MkScopeMod> acc) {
+  public void SGModNode.state3MOD(String name, ArrayList<SGModNode> acc) {
     
     queryEnterLog();
 
@@ -463,7 +465,7 @@ aspect ImportResolution {
 - [Import query call](./src/jastadd/Scope.jrag).
 
 ```
-dclPredicate = \name::String v::MkScopeDcl -> v.name == name;
+dclPredicate = \name::String v::SGDclNode -> v.name == name;
 
 query dclQuery:
   regex = LEX* IMP? (VAR | MOD)
@@ -475,10 +477,10 @@ Generates the following aspect:
 
 ```java
 aspect Scope {
-  syn ArrayList<MkScopeDcl> Scope.dclQuery(String name) {
-    ArrayList<MkScopeDcl> res = new ArrayList<MkScopeDcl>();
+  syn ArrayList<SGDclNode> Scope.dclQuery(String name) {
+    ArrayList<SGDclNode> res = new ArrayList<SGDclNode>();
     beginQueryLog(name, "dclQuery");
-    new Query().state1DCL(this, name, res, new MkScopeVar(), new MkScopeMod());
+    new Query().state1DCL(this, name, res, new SGVarNode(), new SGModNode());
     endQueryLog(name, res, "dclQuery");
     return res;
   }
@@ -487,7 +489,7 @@ aspect Scope {
 
 aspect DeclarationResolution {
 
-  class Query<T extends MkScopeDcl> {
+  class Query<T extends SGDclNode> {
 
     // DFA state 1 for regex = LEX* IMP? VAR
     public void state1DCL(Scope cur, String name, ArrayList<T> acc, T dclTypeVar, T dclTypeMod) {
@@ -512,7 +514,7 @@ aspect DeclarationResolution {
 
       // Follow IMP if no resolutions found by VAR or MOD
       if (acc.size() == 0) {
-        for (MkScopeMod sn: cur.imp()) {
+        for (SGModNode sn: cur.imp()) {
           cur.queryFollowLog("IMP", sn);
           state2DCL(sn, name, acc, dclTypeVar, dclTypeMod);
           cur.queryReturnLog();
