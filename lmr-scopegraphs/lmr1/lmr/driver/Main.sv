@@ -3,7 +3,7 @@ grammar lmr1:lmr:driver;
 imports sg_lib3:src;
 
 imports lmr1:lmr:concretesyntax;
-imports lmr1:lmr:nameanalysis_extension;
+imports lmr1:lmr:nameanalysis5;
 
 parser parse :: Main_c {
   lmr1:lmr:concretesyntax;
@@ -33,16 +33,18 @@ IO<Integer> ::= largs::[String]
               then do {
                 print("[✔] Parse success\n");
                 res::Integer <- 
-                  if null(ast.errs)
-                  then do {
+                  if ast.ok
+                  then 
+                  do {
                     print("[✔] Semantic check successful\n");
-                    mkdir("out");
-                    writeFile("out/" ++ fileName ++ ".ml", ast.ocaml);
+                    --mkdir("out");
+                    --writeFile("out/" ++ fileName ++ ".ml", ast.ocaml);
                     return 0;
                   }
                   else do {
-                    print("[✗] Semantic check failed with the following errors:\n" ++
-                          concat(ast.errs));
+                  --  print("[✗] Semantic check failed with the following errors:\n" ++
+                  --        concat(ast.errs));
+                    print("[✗] Semantic check failed\n");
                     return -1;
                   };
                 return res;

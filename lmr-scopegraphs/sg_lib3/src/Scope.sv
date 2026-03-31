@@ -1,6 +1,7 @@
 grammar sg_lib3:src;
 
 --
+
 fun main IO<Integer> ::= args::[String] = do {
   return 0;
 };

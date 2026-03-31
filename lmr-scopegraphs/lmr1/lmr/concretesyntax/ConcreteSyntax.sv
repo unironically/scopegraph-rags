@@ -1,6 +1,6 @@
 grammar lmr1:lmr:concretesyntax;
 
-imports lmr1:lmr:nameanalysis_extension;
+imports lmr1:lmr:nameanalysis5;
 
 --------------------------------------------------
 
@@ -193,7 +193,7 @@ top::ParBinds_c ::=
 concrete production parBindsOne_c
 top::ParBinds_c ::= s::Bind_c
 { 
-  top.ast = parBindsOne(s.ast, location=top.location);
+  top.ast = parBindsCons(s.ast, parBindsNil(location=top.location), location=top.location);
 }
 
 concrete production parBindsCons_c
