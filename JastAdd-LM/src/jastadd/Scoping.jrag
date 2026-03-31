@@ -11,7 +11,7 @@ aspect Scoping {
   eq Program.globalScope().imp() { return new ArrayList<SGModNode>(); }
 
   eq Program.getds().scope() { return globalScope(); }
-  eq Program.getds().moduleScope() { return new Scope(); } // 'dead' scope
+  eq Program.getds().moduleScope() { return new SGModNode(); } // 'dead' scope
 
   /*---------- Decls ----------*/
 
@@ -82,7 +82,7 @@ aspect Scoping {
   inh lazy Scope Module.scope();
   syn lazy ArrayList<SGModNode> Module.mods();
 
-  syn nta lazy SGModNode Module.modScope() = new SGModNode(this);
+  syn nta lazy SGModNode Module.modScope() = new SGModNode(getid(), this);
   eq Module.modScope().lex() { ArrayList<Scope> lexes = new ArrayList<Scope>();
                                lexes.add(this.scope()); return lexes; }
   eq Module.modScope().var() { return getds().moduleScopeVars(); }
@@ -121,7 +121,7 @@ aspect Scoping {
   inh lazy Scope Bind.scope();
   syn lazy ArrayList<SGVarNode> Bind.vars();
 
-  syn nta lazy SGVarNode Bind.varScope() = new SGVarNode(this);
+  syn nta lazy SGVarNode Bind.varScope() = new SGVarNode(getid(), this);
   eq Bind.varScope().lex() = new ArrayList<Scope>();
   eq Bind.varScope().var() = new ArrayList<SGVarNode>();
   eq Bind.varScope().mod() = new ArrayList<SGModNode>();

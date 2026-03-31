@@ -38,7 +38,7 @@ aspect Scope {
   syn ArrayList<SGDclNode> Scope.dclQuery(String name) {
     ArrayList<SGDclNode> res = new ArrayList<SGDclNode>();
     beginQueryLog(name, "dclQuery");
-    new Query().state1DCL(this, name, res, new SGVarNode(), new SGModNode());
+    state1DCL(name, res);
     endQueryLog(name, res, "dclQuery");
     return res;
   }

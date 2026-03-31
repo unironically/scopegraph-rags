@@ -44,10 +44,8 @@ Relationships:
 ```
 abstract scope SGDclNode -> name:String;
 
-SGVarNode is SGDclNode;
-
-SGModNode is SGDclNode;
-SGModNode is SGLexNode;
+SGVarNode isa SGDclNode;
+SGModNode isa SGDclNode;
 ```
 
 Edges:
@@ -107,91 +105,42 @@ as the builtin `Scope` root type. Essentially becomes an alias.
 
 #### SGDclNode
 
-- [SGDclNode interface](./src/jastadd/DeclarationResolution.jrag).
-
 ```
 abstract scope SGDclNode -> name:String;
 ```
 
-Makes new interface:
+Makes new abstract nonterminal:
 
-```java
-aspect SGDclNode {
-  interface SGDclNode<T extends Scope> {
-    public String getname();
-    public Boolean dclPredicate(String name);
-    public ArrayList<T> demandEdge(Scope s);
-  }
-}
+```
+abstract SGDclNode: Scope ::= <name:String>;
 ```
 
-Where `getname()` returns the name of the `Bind` or `Module` tree decl. Each
-must have a `name` child of type `String`, since `SGDclNode` is declarted to
-have data `name:String`.
-
 #### SGVarNode
-
-- [SGVarNode as SGDclNode](./src/jastadd/DeclarationResolution.jrag).
 
 ```
 scope SGVarNode -> b:Bind;
 SGVarNode isa SGDclNode;
 ```
 
-`SGVarNode isa SGDclNode` means `SGVarNode` implements the `SGDclNode`
-interface as below:
+`SGVarNode isa SGDclNode` means that `SGVarNode` is typed as `MkScoepDcl`
+instead of `Scope`. Makes new AST nonterminal:
 
-```java
-aspect SGVarNodeAsDcl {
-
-  SGVarNode implements SGDclNode;
-
-  public String SGVarNode.getname() {
-    return this.getnode().getid();
-  }
-
-  public Boolean SGVarNode.dclPredicate(String name) {
-    return name.equals(getname());
-  }
-
-  public ArrayList<SGVarNode> SGVarNode.demandEdge(Scope s) {
-    return s.var();
-  }
-
-}
+```
+SGVarNode: SGDclNode ::= node:Bind;
 ```
 
 #### SGModNode
-
-- [SGModNode as SGDclNode](./src/jastadd/DeclarationResolution.jrag).
 
 ```
 scope SGModNode -> m:Module;
 SGModNode isa SGDclNode;
 ```
 
-`SGModNode isa SGDclNode` means `SGModNode` implements the `SGDclNode`
-interface as below:
+`SGModNode isa SGDclNode` means that `SGModNode` is typed as `MkScoepDcl`
+instead of `Scope`. Makes new AST nonterminal:
 
-```java
-aspect SGModNodeAsDcl {
-  
-  SGModNode implements SGDclNode;
-  
-  public String SGModNode.getname() {
-    return this.getnode().getid();
-  }
-
-  public Boolean SGModNode.dclPredicate(String name) {
-    return name.equals(getname());
-  }
-
-  public ArrayList<SGModNode> SGModNode.demandEdge(Scope s) {
-    return s.mod();
-  }
-
-}
-
+```
+SGModNode: SGDclNode ::= node:Module;
 ```
 
 ### Edges
@@ -480,7 +429,7 @@ aspect Scope {
   syn ArrayList<SGDclNode> Scope.dclQuery(String name) {
     ArrayList<SGDclNode> res = new ArrayList<SGDclNode>();
     beginQueryLog(name, "dclQuery");
-    new Query().state1DCL(this, name, res, new SGVarNode(), new SGModNode());
+    state1DCL(name, res);
     endQueryLog(name, res, "dclQuery");
     return res;
   }
@@ -489,94 +438,106 @@ aspect Scope {
 
 aspect DeclarationResolution {
 
-  class Query<T extends SGDclNode> {
+  // predicate = dclPredicate(name);
+  public Boolean SGDclNode.dclPredicate(String name) {
+    return this.getname().equals(name);
+  }
 
-    // DFA state 1 for regex = LEX* IMP? VAR
-    public void state1DCL(Scope cur, String name, ArrayList<T> acc, T dclTypeVar, T dclTypeMod) {
-      
-      cur.queryEnterLog();
+  // DFA state 1 for regex = LEX* IMP? (VAR | MOD)
+  public void Scope.state1DCL(String name, ArrayList<SGDclNode> acc) {
     
-      // Follow VAR
-      ArrayList<T> sdsVar = dclTypeVar.demandEdge(cur);
-      for (T sd: sdsVar) {
-        cur.queryFollowLog("VAR", (Scope) sd);
-        state3DCL(sd, name, acc);
-        cur.queryReturnLog();
-      }
-
-      // Follow MOD
-      ArrayList<T> sdsMod = dclTypeMod.demandEdge(cur);
-      for (T sd: sdsMod) {
-        cur.queryFollowLog("MOD", (Scope) sd);
-        state3DCL(sd, name, acc);
-        cur.queryReturnLog();
-      }
-
-      // Follow IMP if no resolutions found by VAR or MOD
-      if (acc.size() == 0) {
-        for (SGModNode sn: cur.imp()) {
-          cur.queryFollowLog("IMP", sn);
-          state2DCL(sn, name, acc, dclTypeVar, dclTypeMod);
-          cur.queryReturnLog();
-        }
-      }
-
-      // Follow LEX if no resolutions found by IMP
-      if (acc.size() == 0) {
-        for (Scope sn: cur.lex()) {
-          cur.queryFollowLog("LEX", sn);
-          state1DCL(sn, name, acc, dclTypeVar, dclTypeMod);
-          cur.queryReturnLog();
-        }
-      }
-
-      cur.queryLeaveLog();
-
+    queryEnterLog();
+  
+    // Follow VAR
+    for (SGVarNode sd: var()) {
+      queryFollowLog("VAR", sd);
+      sd.state3DCL(name, acc);
+      queryReturnLog();
     }
 
-    // DFA state 2 for regex = LEX* IMP? VAR
-    public void state2DCL(Scope cur, String name, ArrayList<T> acc, T dclTypeVar, T dclTypeMod) {
-
-      cur.queryEnterLog();
-
-      // Follow VAR
-      ArrayList<T> sdsVar = dclTypeVar.demandEdge(cur);
-      for (T sd: sdsVar) {
-        cur.queryFollowLog("VAR", (Scope) sd);
-        state3DCL(sd, name, acc);
-        cur.queryReturnLog();
-      }
-
-      // Follow MOD
-      ArrayList<T> sdsMod = dclTypeMod.demandEdge(cur);
-      for (T sd: sdsMod) {
-        cur.queryFollowLog("MOD", (Scope) sd);
-        state3DCL(sd, name, acc);
-        cur.queryReturnLog();
-      }
-
-      cur.queryLeaveLog();
-
+    // Follow MOD
+    for (SGModNode sd: mod()) {
+      queryFollowLog("MOD", sd);
+      sd.state3DCL(name, acc);
+      queryReturnLog();
     }
 
-    // // DFA state 3 for regex = LEX* IMP? DCL
-    public void state3DCL(T cur, String name, ArrayList<T> acc) {
-      
-      Scope s = (Scope) cur;
-
-      s.queryEnterLog();
-
-      // Use of varPredicate - name equality
-      if (cur.dclPredicate(name)) {
-        s.queryGoodResLog(name);
-        acc.add(cur);
-      } else {
-        s.queryBadResLog(name);
+    // Follow IMP if no resolutions found by VAR or MOD
+    if (acc.size() == 0) {
+      for (SGModNode sn: imp()) {
+        queryFollowLog("IMP", sn);
+        sn.state2DCL(name, acc);
+        queryReturnLog();
       }
-
-      s.queryLeaveLog();
-
     }
+
+    // Follow LEX if no resolutions found by IMP
+    if (acc.size() == 0) {
+      for (Scope sn: lex()) {
+        queryFollowLog("LEX", sn);
+        sn.state1DCL(name, acc);
+        queryReturnLog();
+      }
+    }
+
+    queryLeaveLog();
+
+  }
+
+  // DFA state 2 for regex = LEX* IMP? (VAR | MOD)
+  public void SGModNode.state2DCL(String name, ArrayList<SGDclNode> acc) {
+
+    queryEnterLog();
+
+    // Follow VAR
+    for (SGVarNode sd: var()) {
+      queryFollowLog("VAR", sd);
+      sd.state3DCL(name, acc);
+      queryReturnLog();
+    }
+
+    // Follow MOD
+    for (SGModNode sd: mod()) {
+      queryFollowLog("MOD", sd);
+      sd.state3DCL(name, acc);
+      queryReturnLog();
+    }
+
+    queryLeaveLog();
+
+  }
+
+  // // DFA state 3 for regex = LEX* IMP? (VAR | MOD)
+  public void SGVarNode.state3DCL(String name, ArrayList<SGDclNode> acc) {
+    
+    queryEnterLog();
+
+    // Use of varPredicate - name equality
+    if (dclPredicate(getname())) {
+      queryGoodResLog(name);
+      acc.add(this);
+    } else {
+      queryBadResLog(name);
+    }
+
+    queryLeaveLog();
+
+  }
+
+  // // DFA state 4 for regex = LEX* IMP? (VAR | MOD)
+  public void SGModNode.state3DCL(String name, ArrayList<SGDclNode> acc) {
+    
+    queryEnterLog();
+
+    // Use of varPredicate - name equality
+    if (dclPredicate(getname())) {
+      queryGoodResLog(name);
+      acc.add(this);
+    } else {
+      queryBadResLog(name);
+    }
+
+    queryLeaveLog();
 
   }
 

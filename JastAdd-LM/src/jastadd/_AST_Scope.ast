@@ -1,8 +1,10 @@
 // Builtin scopes node type
 Scope ::= ;
 
-// Variable declaration nodes
-SGVarNode: Scope ::= node:Bind;
+// Declaration nodes
+abstract SGDclNode: Scope ::= <name:String>;
 
+// Variable declaration nodes
+SGVarNode: SGDclNode ::= node:Bind;
 // Module declaration nodes
-SGModNode: Scope ::= node:Module;
+SGModNode: SGDclNode ::= node:Module;
