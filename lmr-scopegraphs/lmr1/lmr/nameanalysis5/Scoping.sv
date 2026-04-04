@@ -39,7 +39,7 @@ top::Main ::= ds::Decls
   globScope.lex := []; globScope.var := [];
   globScope.mod := []; globScope.imp := [];
 
-  ds.s = globScope.asReg;
+  ds.s = globScope.asSGRegNode;
   ds.s_module = error("ds.s_module - where ds is child of program - shouldn't be demanded");
 }
 
@@ -63,10 +63,10 @@ top::Decls ::= d::Decl ds::Decls
   seqScope.imp := d.IMP_s_def;
 
   d.s = top.s;
-  d.s_def = seqScope.asReg;
+  d.s_def = seqScope.asSGRegNode;
   d.s_module = top.s_module;
 
-  ds.s = seqScope.asReg;
+  ds.s = seqScope.asSGRegNode;
   ds.s_module = top.s_module;
 
   top.VAR_s_module := d.VAR_s_module ++ ds.VAR_s_module;
@@ -136,7 +136,7 @@ top::Decl ::= b::Bind
 
 --------------------------------------------------
 
-nonterminal Module with location;
+nonterminal Module with location, name;
 
 attribute ok occurs on Module;
 propagate ok on Module;
@@ -148,11 +148,13 @@ attribute s_module, VAR_s_module, MOD_s_module occurs on Module;
 production module
 top::Module ::= id::String ds::Decls
 {
-  production attribute modScope::SGModNode = sgModNode(id, top);
+  production attribute modScope::SGModNode = sgModNode(top);
   modScope.lex := [top.s];
   modScope.var := ds.VAR_s_module;
   modScope.mod := ds.MOD_s_module;
   modScope.imp := [];
+
+  top.name = id;
 
   top.VAR_s_def := [];
   top.MOD_s_def := [modScope];
@@ -162,7 +164,7 @@ top::Module ::= id::String ds::Decls
   top.MOD_s_module := [modScope];
 
   ds.s = top.s;
-  ds.s_module = modScope.asReg;
+  ds.s_module = modScope.asSGRegNode;
 }
 
 --------------------------------------------------
@@ -274,10 +276,8 @@ top::Expr ::= c::Expr e1::Expr e2::Expr
 production exprLet
 top::Expr ::= bs::Binds e::Expr
 {
-  production attribute letScope::Decorated SGRegNode = bs.lastScope;
-
   bs.s = top.s;
-  e.s = letScope;
+  e.s = bs.lastScope;
 
   top.type = e.type;
 }
@@ -292,10 +292,10 @@ top::Expr ::= bs::ParBinds e::Expr
   letScope.imp := [];
 
 
-  bs.s = letScope.asReg;
-  bs.s_def = letScope.asReg;
+  bs.s = letScope.asSGRegNode;
+  bs.s_def = letScope.asSGRegNode;
 
-  e.s = letScope.asReg;
+  e.s = letScope.asSGRegNode;
 
   top.type = e.type;
 }
@@ -310,9 +310,9 @@ top::Expr ::= bs::ParBinds e::Expr
   letScope.imp := [];
 
   bs.s = top.s;
-  bs.s_def = letScope.asReg;
+  bs.s_def = letScope.asSGRegNode;
 
-  e.s = letScope.asReg;
+  e.s = letScope.asSGRegNode;
 
   top.type = e.type;
 }
@@ -343,9 +343,9 @@ top::Binds ::= s::Bind
   sbScope.imp := [];
 
   s.s = top.s;
-  s.s_def = sbScope.asReg;
+  s.s_def = sbScope.asSGRegNode;
 
-  top.lastScope = sbScope.asReg;
+  top.lastScope = sbScope.asSGRegNode;
 }
 
 production seqBindsCons
@@ -358,9 +358,9 @@ top::Binds ::= s::Bind ss::Binds
   sbScope.imp := [];
 
   s.s = top.s;
-  s.s_def = sbScope.asReg;
+  s.s_def = sbScope.asSGRegNode;
 
-  ss.s = sbScope.asReg;
+  ss.s = sbScope.asSGRegNode;
 
   top.lastScope = ss.lastScope;
 }
@@ -396,7 +396,7 @@ top::ParBinds ::= s::Bind ss::ParBinds
 
 --------------------------------------------------
 
-nonterminal Bind with location;
+nonterminal Bind with location, name, type;
 
 attribute ok occurs on Bind;
 propagate ok on Bind;
@@ -407,24 +407,28 @@ attribute s_def, VAR_s_def occurs on Bind;
 production bind
 top::Bind ::= id::String e::Expr
 {
-  production attribute varScope::SGVarNode = sgVarNode(id, top);
+  production attribute varScope::SGVarNode = sgVarNode(top);
   varScope.lex := []; varScope.var := [];
   varScope.mod := []; varScope.imp := [];
 
   e.s = top.s;
 
+  top.name = id;
+  top.type = e.type;
   top.VAR_s_def := [varScope];
 }
 
 production bindTyped
 top::Bind ::= ty::Type id::String e::Expr
 {
-  production attribute varScope::SGVarNode = sgVarNode(id, top);
+  production attribute varScope::SGVarNode = sgVarNode(top);
   varScope.lex := []; varScope.var := [];
   varScope.mod := []; varScope.imp := [];
 
   e.s = top.s;
 
+  top.name = id;
+  top.type = ^ty;
   top.ok <- e.type == ^ty;
   top.VAR_s_def := [varScope];
 }
@@ -432,6 +436,8 @@ top::Bind ::= ty::Type id::String e::Expr
 production bindArgDcl
 top::Bind ::= id::String ty::Type
 {
+  top.name = id;
+  top.type = ^ty;
   top.VAR_s_def := []; -- todo
 }
 
@@ -485,24 +491,13 @@ attribute s, type occurs on VarRef;
 production varRef
 top::VarRef ::= x::String
 {
-  {-local xvars_::[LMScope] = visible(isName(x), varRx(), labelOrd, top.s);
+  local vars::[Decorated SGVarNode with LMInhs] =
+    varQuery(varPredicate(x), top.s);
 
-  local okAndRes::(Boolean, Type) = 
-    if length(xvars_) < 1
-    then unsafeTracePrint((false, tErr()), "[✗] " ++ top.location.unparse ++ 
-                          ": error: unresolvable variable reference '" ++ x ++ "'\n")
-    else if length(xvars_) > 1
-    then unsafeTracePrint((false, tErr()), "[✗] " ++ top.location.unparse ++ 
-                          ": error: ambiguous variable reference '" ++ x ++ "'\n")
-    else case head(xvars_).datum of
-         | datumVar(_, ty) -> (true, ^ty)
-         | _ -> (false, tErr())
-         end;
-
-  top.ok <- okAndRes.1;
-  top.type = okAndRes.2;-}
+  local onlyVar::Maybe<Decorated Bind> =
+    if length(vars) == 1 then just(head(vars).astBnd) else nothing();
   
-  top.type = tErr();
+  top.type = mapOrElse(tErr(), (.type), onlyVar);
 }
 
 --------------------------------------------------
@@ -518,21 +513,9 @@ attribute s_def, IMP_s_def occurs on ModRef;
 production modRef
 top::ModRef ::= x::String
 {
-  {-local xmods_::[LMScope] = visible(isName(x), modRx(), labelOrd, top.s);
+  local mods::[Decorated SGModNode with LMInhs] =
+    modQuery(modPredicate(x), top.s);
 
-  local okAndRes::(Boolean, Maybe<LMScope>) = 
-    if length(xmods_) < 1
-    then unsafeTracePrint((false, nothing()), "[✗] " ++ top.location.unparse ++ 
-                          ": error: unresolvable module reference '" ++ x ++ "'\n")
-    else if length(xmods_) > 1
-    then unsafeTracePrint((false, nothing()), "[✗] " ++ top.location.unparse ++ 
-                          ": error: ambiguous module reference '" ++ x ++ "'\n")
-    else case head(xmods_).datum of
-         | datumMod(_) -> (true, just(head(xmods_)))
-         | _ -> (false, nothing())
-         end;
-  top.ok <- okAndRes.1;
-  top.IMP_s_def := if top.ok then [okAndRes.2.fromJust] else [];-}
-
-  top.IMP_s_def := [];
+  top.IMP_s_def :=
+    if length(mods) == 1 then [head(mods)] else [];
 }

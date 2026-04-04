@@ -2,87 +2,46 @@ grammar lmr1:lmr:nameanalysis5;
 
 --
 
---type LMScope = Decorated Scope with ScopeInhs;
---type ScopeInhs = {lex, var, mod, imp};
+type LMInhs = {lex, var, imp, mod};
 
-inherited attribute lex::[Decorated SGRegNode] with ++;-- with ++ occurs on Scope;
-inherited attribute var::[Decorated SGVarNode] with ++;-- with ++ occurs on Scope;
-inherited attribute mod::[Decorated SGModNode] with ++;-- with ++ occurs on Scope;
-inherited attribute imp::[Decorated SGModNode] with ++;-- with ++ occurs on Scope;
+inherited attribute lex::[Decorated SGRegNode] with ++;
+inherited attribute var::[Decorated SGVarNode] with ++;
+inherited attribute mod::[Decorated SGModNode] with ++;
+inherited attribute imp::[Decorated SGModNode] with ++;
 
 synthesized attribute name::String;
-synthesized attribute astBind::Decorated Bind;
-synthesized attribute astModule::Decorated Module;
 
-synthesized attribute asDcl::Decorated SGDclNode;
-synthesized attribute asReg::Decorated SGRegNode;
+synthesized attribute astBnd::Decorated Bind;
+synthesized attribute astMod::Decorated Module;
 
---------------------------------------------------------------------------------
-
-{-nonterminal Scope;
-
-production scopeNoData
-top::Scope ::=
-{}
-
-production scopeVar
-top::Scope ::= name::String ty::Type
-{}
-
-production scopeMod
-top::Scope ::= name::String
-{}-}
+synthesized attribute asSGRegNode::Decorated SGRegNode with LMInhs;
+synthesized attribute asSGDclNode::Decorated SGDclNode with LMInhs;
 
 --------------------------------------------------------------------------------
 -- classes
 
+-- Any scope (most general)
+
 class 
-  attribute lex occurs on a, 
-  attribute var occurs on a, 
-  attribute mod occurs on a, 
-  attribute imp occurs on a =>
+  attribute lex occurs on a, attribute var occurs on a,
+  attribute mod occurs on a, attribute imp occurs on a =>
 SGScope a {
-}
-
--- LEX
-
-class
-  SGScope a =>
-SGLex a {
 }
 
 -- DCL
 
 class
   SGScope a,
-  attribute name {} occurs on a,
-  attribute asDcl {} occurs on a =>
-SGDcl a {
-}
+  attribute asSGDclNode {} occurs on a,
+  attribute name {} occurs on a =>
+SGDclTgt a {}
 
 -- REG
 
 class
   SGScope a,
-  attribute asReg {} occurs on a =>
-SGReg a {
-}
-
--- VAR
-
-class
-  SGDcl a,
-  attribute astBind {} occurs on a =>
-SGVar a {
-}
-
--- MOD
-
-class
-  SGDcl a,
-  attribute astModule {} occurs on a =>
-SGMod a {
-}
+  attribute asSGRegNode {} occurs on a =>
+SGRegTgt a {}
 
 --------------------------------------------------------------------------------
 -- instances
@@ -90,68 +49,76 @@ SGMod a {
 ------
 -- lex
 
-nonterminal SGLexNode with lex, var, mod, imp, asReg;
+nonterminal SGLexNode with lex, var, mod, imp, asSGRegNode;
+
+instance SGScope SGLexNode {}
+instance SGRegTgt SGLexNode {}
 
 production sgLexNode
 top::SGLexNode ::=
 {
-  top.asReg = decorate sgRegNode(top) with
-              {lex = top.lex; var = top.var; mod = top.mod; imp = top.imp;};
+  top.asSGRegNode = decorate sgRegNode(top) with {
+    lex = top.lex; var = top.var;
+    mod = top.mod; imp = top.imp;
+  };
 }
-
-instance SGScope SGLexNode {}
-instance SGReg SGLexNode {}
-instance SGLex SGLexNode {}
 
 ------
 -- var
 
-nonterminal SGVarNode with name, astBind, lex, var, mod, imp, asDcl;
-
-production sgVarNode
-top::SGVarNode ::= name::String astBind::Decorated Bind
-{
-  top.name = name;
-  top.astBind = astBind;
-  top.asDcl = decorate sgDclNode(top) with
-              {lex = top.lex; var = top.var; mod = top.mod; imp = top.imp;};
-}
+nonterminal SGVarNode with lex, var, mod, imp, name, astBnd, asSGDclNode;
 
 instance SGScope SGVarNode {}
-instance SGDcl SGVarNode {}
-instance SGVar SGVarNode {}
+instance SGDclTgt SGVarNode {}
+
+production sgVarNode
+top::SGVarNode ::= astBnd::Decorated Bind
+{
+  top.name = astBnd.name;
+  top.astBnd = astBnd;
+
+  top.asSGDclNode = decorate sgDclNode(top) with {
+    lex = top.lex; var = top.var;
+    mod = top.mod; imp = top.imp;
+  };
+}
 
 ------
 -- mod
 
-nonterminal SGModNode with name, astModule, lex, var, mod, imp, asDcl, asReg;
-
-production sgModNode
-top::SGModNode ::= name::String astModule::Decorated Module
-{
-  top.name = name;
-  top.astModule = astModule;
-  top.asDcl = decorate sgDclNode(top) with
-              {lex = top.lex; var = top.var; mod = top.mod; imp = top.imp;};
-  top.asReg = decorate sgRegNode(top) with
-              {lex = top.lex; var = top.var; mod = top.mod; imp = top.imp;};
-}
+nonterminal SGModNode with lex, var, mod, imp, name, astMod, asSGDclNode, asSGRegNode;
 
 instance SGScope SGModNode {}
-instance SGDcl SGModNode {}
-instance SGReg SGModNode {}
-instance SGMod SGModNode {}
+instance SGDclTgt SGModNode {}
+instance SGRegTgt SGModNode {}
+
+production sgModNode
+top::SGModNode ::= astMod::Decorated Module
+{
+  top.name = astMod.name;
+  top.astMod = astMod;
+
+  top.asSGRegNode = decorate sgRegNode(top) with {
+    lex = top.lex; var = top.var;
+    mod = top.mod; imp = top.imp;
+  };
+
+  top.asSGDclNode = decorate sgDclNode(top) with {
+    lex = top.lex; var = top.var;
+    mod = top.mod; imp = top.imp;
+  };
+}
 
 ------
 -- dcl
 
-nonterminal SGDclNode with name, lex, var, mod, imp;
+nonterminal SGDclNode with lex, var, imp, mod, name;
 
 production sgDclNode
-SGDcl a =>
-top::SGDclNode ::= node::Decorated a with {lex, var, mod, imp}
+SGDclTgt a =>
+top::SGDclNode ::= node::Decorated a with LMInhs
 {
-  top.name = node.name; -- causes error if run with mwda
+  top.name = node.name;
 }
 
 instance SGScope SGDclNode {}
@@ -162,8 +129,9 @@ instance SGScope SGDclNode {}
 nonterminal SGRegNode with lex, var, mod, imp;
 
 production sgRegNode
-SGReg a =>
-top::SGRegNode ::= node::Decorated a with {lex, var, mod, imp}
-{}
+SGRegTgt a =>
+top::SGRegNode ::= node::Decorated a with LMInhs
+{
+}
 
 instance SGScope SGRegNode {}
