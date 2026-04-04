@@ -8,17 +8,17 @@ import silver:langutil; -- for location.unparse
 
 monoid attribute ok::Boolean with true, &&;
 
-inherited attribute s::Decorated SGRegNode;
+inherited attribute s::SGRegNode;
 --monoid attribute VAR_s::[LMScope] with [], ++;
 --monoid attribute MOD_s::[LMScope] with [], ++;
 --monoid attribute IMP_s::[LMScope] with [], ++;
 
-inherited attribute s_def::Decorated SGRegNode;
+inherited attribute s_def::SGRegNode;
 monoid attribute VAR_s_def::[Decorated SGVarNode] with [], ++;
 monoid attribute MOD_s_def::[Decorated SGModNode] with [], ++;
 monoid attribute IMP_s_def::[Decorated SGModNode] with [], ++;
 
-inherited attribute s_module::Decorated SGRegNode;
+inherited attribute s_module::SGRegNode;
 monoid attribute VAR_s_module::[Decorated SGVarNode] with [], ++;
 monoid attribute MOD_s_module::[Decorated SGModNode] with [], ++;
 --monoid attribute IMP_s_module::[LMScope] with [], ++;
@@ -325,7 +325,7 @@ attribute ok, s, lastScope occurs on Binds;
 
 propagate ok on Binds;
 
-synthesized attribute lastScope::Decorated SGRegNode;
+synthesized attribute lastScope::SGRegNode;
 
 production seqBindsNil
 top::Binds ::=
@@ -492,7 +492,10 @@ production varRef
 top::VarRef ::= x::String
 {
   local vars::[Decorated SGVarNode with LMInhs] =
-    varQuery(varPredicate(x), top.s);
+    varQuery(
+      varPredicate(x),
+      top.s
+    );
 
   local onlyVar::Maybe<Decorated Bind> =
     if length(vars) == 1 then just(head(vars).astBnd) else nothing();
@@ -514,7 +517,10 @@ production modRef
 top::ModRef ::= x::String
 {
   local mods::[Decorated SGModNode with LMInhs] =
-    modQuery(modPredicate(x), top.s);
+    modQuery(
+      modPredicate(x),
+      top.s
+    );
 
   top.IMP_s_def :=
     if length(mods) == 1 then [head(mods)] else [];

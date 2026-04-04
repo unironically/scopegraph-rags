@@ -11,24 +11,28 @@ fun varPredicate PredicateVar ::= name::String =
 -- LEX < VAR, LEX < IMP, IMP < VAR
 
 fun varQuery
-SGScope a =>
 [Decorated SGVarNode with LMInhs] ::=
   p::PredicateVar
-  s::Decorated a with LMInhs =
+  s::SGRegNode =
     queryVarS1(p, s);
 
 -- DFA state 1
 fun queryVarS1
-SGScope a =>
 [Decorated SGVarNode with LMInhs] ::=
   p::PredicateVar
-  s::Decorated a with LMInhs =
+  s::SGRegNode =
     -- Follow VAR, move to state 3
-    let varRes::[Decorated SGVarNode with LMInhs] = concat(map (queryVarS3(p, _), s.var)) in
+    let varRes::[Decorated SGVarNode with LMInhs] = 
+      concat (map (queryVarS3(p, _), s.varWrap))
+    in
     -- Follow IMP, move to state 2
-    let impRes::[Decorated SGVarNode with LMInhs] = concat(map (queryVarS2(p, _), s.mod)) in
+    let impRes::[Decorated SGVarNode with LMInhs] = 
+      concat (map (queryVarS2(p, _), s.impWrap))
+    in
     -- Follow LEX, move to state 1
-    let lexRes::[Decorated SGVarNode with LMInhs] = concat(map (queryVarS1(p, _), s.lex)) in
+    let lexRes::[Decorated SGVarNode with LMInhs] = 
+      concat (map (queryVarS1(p, _), s.lexWrap))
+    in
       if !null(varRes) then varRes
       else if !null(impRes) then impRes
       else lexRes
@@ -36,12 +40,11 @@ SGScope a =>
 
 -- DFA state 2
 fun queryVarS2
-SGScope a =>
 [Decorated SGVarNode with LMInhs] ::=
   p::PredicateVar
-  s::Decorated a with LMInhs =
+  s::Decorated SGModNode with LMInhs =
     -- Follow VAR, move to state 3
-    concat(map (queryVarS3(p, _), s.var));
+    concat (map (queryVarS3(p, _), s.var));
 
 -- DFA state 3
 fun queryVarS3
@@ -59,24 +62,28 @@ fun modPredicate PredicateMod ::= name::String =
   \sm::Decorated SGModNode with LMInhs -> sm.name == name;
 
 fun modQuery
-SGScope a =>
 [Decorated SGModNode with LMInhs] ::=
   p::PredicateMod
-  s::Decorated a with LMInhs =
+  s::SGRegNode =
   queryModS1(p, s);
 
 -- DFA state 1
 fun queryModS1
-SGScope a =>
 [Decorated SGModNode with LMInhs] ::=
   p::PredicateMod
-  s::Decorated a with LMInhs =
+  s::SGRegNode =
     -- Follow MOD, move to state 3
-    let modRes::[Decorated SGModNode with LMInhs] = concat(map (queryModS3(p, _), s.mod)) in
+    let modRes::[Decorated SGModNode with LMInhs] = 
+      concat (map (queryModS3(p, _), s.modWrap))
+    in
     -- Follow IMP, move to state 2
-    let impRes::[Decorated SGModNode with LMInhs] = concat(map (queryModS2(p, _), s.imp)) in
+    let impRes::[Decorated SGModNode with LMInhs] = 
+      concat (map (queryModS2(p, _), s.impWrap))
+    in
     -- Follow LEX, move to state 1
-    let lexRes::[Decorated SGModNode with LMInhs] = concat(map (queryModS1(p, _), s.lex)) in
+    let lexRes::[Decorated SGModNode with LMInhs] = 
+      concat (map (queryModS1(p, _), s.lexWrap))
+    in
     if !null(modRes) then modRes
     else if !null(impRes) then impRes
     else lexRes
@@ -84,10 +91,9 @@ SGScope a =>
 
 -- DFA state 2
 fun queryModS2
-SGScope a =>
 [Decorated SGModNode with LMInhs] ::=
   p::PredicateMod
-  s::Decorated a with LMInhs =
+  s::Decorated SGModNode with LMInhs =
     -- Follow MOD, move to state 3
     concat(map (queryModS3(p, _), s.mod));
 
@@ -102,35 +108,40 @@ fun queryModS3
 ------
 -- DCL
 
-{-
-
 -- Cannot define constraints for type definitions in Silver
 -- Have to define the DCL predicate over SGDclNode instead
-type PredicateDcl = (Boolean ::= Decorated SGDclNode with LMInhs);
+type PredicateDcl = (Boolean ::= SGDclNode);
 fun dclPredicate PredicateDcl ::= name::String =
-  \sd::Decorated SGDclNode with LMInhs -> sd.name == name;
+  \sd::SGDclNode -> sd.name == name;
 
 fun dclQuery
 SGScope a =>
-[Decorated SGDclNode with LMInhs] ::=
+[SGDclNode] ::=
   p::PredicateDcl
-  s::Decorated a with LMInhs =
+  s::SGRegNode =
   queryDclS1(p, s);
 
 -- DFA state 1
 fun queryDclS1
-SGScope a =>
-[Decorated SGDclNode with LMInhs] ::=
+[SGDclNode] ::=
   p::PredicateDcl
-  s::Decorated a with LMInhs =
+  s::SGRegNode =
     -- Follow VAR, move to state 3
-    let varRes::[Decorated SGDclNode with LMInhs] = concat(map (queryDclS3(p, _), s.var)) in
+    let varRes::[SGDclNode] = 
+      concat (map (queryDclS3(p, _), s.modWrap))
+    in
     -- Follow MOD, move to state 3
-    let modRes::[Decorated SGDclNode with LMInhs] = concat(map (queryDclS3(p, _), s.mod)) in
+    let modRes::[SGDclNode] = 
+      concat (map (queryDclS3(p, _), s.modWrap))
+    in
     -- Follow IMP, move to state 2
-    let impRes::[Decorated SGDclNode with LMInhs] = concat(map (queryDclS2(p, _), s.imp)) in
+    let impRes::[SGDclNode] = 
+      concat (map (queryDclS2(p, _), s.impWrap))
+    in
     -- Follow LEX, move to state 1
-    let lexRes::[Decorated SGDclNode with LMInhs] = concat(map (queryDclS1(p, _), s.lex)) in
+    let lexRes::[SGDclNode] = 
+      concat (map (queryDclS1(p, _), s.lexWrap))
+    in
     if !null(modRes) || !null(modRes) then varRes ++ modRes
     else if !null(impRes) then impRes
     else lexRes
@@ -138,10 +149,9 @@ SGScope a =>
 
 -- DFA state 2
 fun queryDclS2
-SGScope a =>
-[Decorated SGDclNode with LMInhs] ::=
+[SGDclNode] ::=
   p::PredicateDcl
-  s::Decorated a with LMInhs =
+  s::Decorated SGModNode with LMInhs =
     -- Follow VAR, move to state 3
     concat(map (queryDclS3(p, _), s.var)) ++
     -- Follow MOD, move to state 3
@@ -150,9 +160,7 @@ SGScope a =>
 -- DFA state 3
 fun queryDclS3
 SGDclTgt a =>
-[Decorated SGDclNode with LMInhs] ::=
+[SGDclNode] ::=
   p::PredicateDcl
   sm::Decorated a with LMInhs =
-    if p(sm.asDcl) then [sm.asDcl] else [];
-
--}
+    if p(sm.asSGDclNode) then [sm.asSGDclNode] else [];
