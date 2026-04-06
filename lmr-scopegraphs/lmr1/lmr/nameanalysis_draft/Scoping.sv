@@ -13,7 +13,7 @@ abstract scope type SGRegNode ->;
 
 -- Scope type for scoping 'region' SG nodes with no attributes
 -- SGLexNode is a subtype of SGRegNode, gets no new attributes
-scope type (SGRegNode) => SGLexNode;
+scope type (SGRegNode) => SGLexNode ->;
 
 -- Scope type for variable declaration have astBind attribute
 -- SGVarNode is a subtype of SGDclNode, gets name attribute
@@ -25,10 +25,10 @@ scope type (SGDclNode) => SGVarNode -> astBind::Decorated Bind;
 scope type (SGDclNode, SGRegNode) => SGModNode -> astMod::Decorated Module;
 
 -- Alternative way of specifying subtyping:
-SGVarNode is SGDclNode
-SGModNode is SGDclNode
-SGModNode is SGRegNode
-SGLexNode is SGRegNode
+SGVarNode is SGDclNode;
+SGModNode is SGDclNode;
+SGModNode is SGRegNode;
+SGLexNode is SGRegNode;
 
 -- lex (lexical parent) edges lead to SGRegNodes
 edge type -[ lex ]-> SGRegNode;
@@ -43,16 +43,16 @@ edge type -[ imp ]-> SGModNode;
 -- type therefore must be (Boolean ::= SGVarNode). `String name` arg for this
 -- query used in predicate. Args for including information query should use
 query varQuery(String name) as
-  regex = `lex* `imp? `var
-  order = `lex > `imp, `lex > `var, `imp > `var
+  regex = `lex* `imp? `var,
+  order = `lex > `imp, `lex > `var, `imp > `var,
   predicate = \sv::SGVarNode -> sv.astBind.name == name;
                              -- sv.name == name; -- could also do this
 
 -- Last label in good path for modquery is mod, targetting SGModNode. Predicate
 -- type therefore must be (Boolean ::= SGModNode)
 query modQuery(String name) as
-  regex = `lex* `imp? `mod
-  order = `lex > `imp, `lex > `mod, `imp > `mod
+  regex = `lex* `imp? `mod,
+  order = `lex > `imp, `lex > `mod, `imp > `mod,
   predicate = \sm::SGModNode -> sm.astMod.name == name;
                              -- sm.name == name; -- could also do this
 
@@ -61,7 +61,7 @@ query modQuery(String name) as
 -- so this is a query for SGDclNodes. Predicate must be typed accordingly, and
 -- only be able to access attributes on SGDclNode
 query dclQuery(String name) as
-  regex = `lex* `imp? (`mod | `var)
+  regex = `lex* `imp? (`mod | `var),
   order = `lex > `imp, `lex > `mod, `lex > `var, `imp > `mod, `imp > `var,
   predicate = \sd::SGDclNode -> editDistanceAtMost(1, name sd.name);
 
@@ -658,7 +658,7 @@ production modRef
 top::ModRef ::= x::String
 {
   -- does ministatix query, filter and min-refs constraints
-  local mods::[Decorated SGModNode] = top.s.modQuery(x);
+  local mods::[SGModNode] = top.s.modQuery(x);
 
   -- Draw IMP edge from top.s_def to either the scope found by successful import
   -- query, or to deadScope otherwise
@@ -682,7 +682,7 @@ production varRef
 top::VarRef ::= x::String
 {
   -- Find the SG nodes corresponding to variable declarations whose name matches x
-  local exact::[Decorated SGVarNode] = top.s.varQuery(x);
+  local exact::[SGVarNode] = top.s.varQuery(x);
 
   -- Find the SG module or variable declaration nodes whose name is close to x
   local close::[SGDclNode] = top.s.dclQuery(x);
