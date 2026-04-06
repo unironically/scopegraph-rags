@@ -4,20 +4,80 @@ grammar lmr1:lmr:nameanalysis_draft;
 --------------------------------------------------
 -- Scope labels spec
 
--- Our scope graphs have lex, var, mod and imp edges - set is called LMLabels
-scope labels lex, var, mod, imp as LMLabels;
+-- 'Abstract' type for [non-buildable] declaration scopes with name attribute
+-- Purpose of abstract scope types is to act as a parent for multiple different
+-- scope types, which become subtypes of the abstract one
+abstract scope type SGDclNode -> name::String;
+-- 'Abstract' type for [non-buildable] 'region' scopes with no attributes
+abstract scope type SGRegNode ->;
+
+-- Scope type for scoping 'region' SG nodes with no attributes
+-- SGLexNode is a subtype of SGRegNode, gets no new attributes
+scope type (SGRegNode) => SGLexNode;
+
+-- Scope type for variable declaration have astBind attribute
+-- SGVarNode is a subtype of SGDclNode, gets name attribute
+scope type (SGDclNode) => SGVarNode -> astBind::Decorated Bind;
+
+-- Scope type for module declaration has astMod attribute
+-- SGModNode is a subtype of SGDclNode, gets name attribute
+-- SGModNode is a subtype of SGRegNode, gets no new attributes
+scope type (SGDclNode, SGRegNode) => SGModNode -> astMod::Decorated Module;
+
+-- Alternative way of specifying subtyping:
+SGVarNode is SGDclNode
+SGModNode is SGDclNode
+SGModNode is SGRegNode
+SGLexNode is SGRegNode
+
+-- lex (lexical parent) edges lead to SGRegNodes
+edge type -[ lex ]-> SGRegNode;
+-- var (variable decl) edges lead to SGVarNodes
+edge type -[ var ]-> SGVarNode;
+-- mod (module decl) edges lead to SGModNodes
+edge type -[ mod ]-> SGModNode;
+-- imp (import) edges lead to SGModNodes
+edge type -[ imp ]-> SGModNode;
+
+-- Last label in good path for modquery is var, targetting SGVarNode. Predicate
+-- type therefore must be (Boolean ::= SGVarNode). `String name` arg for this
+-- query used in predicate. Args for including information query should use
+query varQuery(String name) as
+  regex = `lex* `imp? `var
+  order = `lex > `imp, `lex > `var, `imp > `var
+  predicate = \sv::SGVarNode -> sv.astBind.name == name;
+                             -- sv.name == name; -- could also do this
+
+-- Last label in good path for modquery is mod, targetting SGModNode. Predicate
+-- type therefore must be (Boolean ::= SGModNode)
+query modQuery(String name) as
+  regex = `lex* `imp? `mod
+  order = `lex > `imp, `lex > `mod, `imp > `mod
+  predicate = \sm::SGModNode -> sm.astMod.name == name;
+                             -- sm.name == name; -- could also do this
+
+-- Last labels in good path for dclQuery are mod and var which target SGVarNodes
+-- and SGModNodes respectively. Both are SGDclNode (closest common ancestor),
+-- so this is a query for SGDclNodes. Predicate must be typed accordingly, and
+-- only be able to access attributes on SGDclNode
+query dclQuery(String name) as
+  regex = `lex* `imp? (`mod | `var)
+  order = `lex > `imp, `lex > `mod, `lex > `var, `imp > `mod, `imp > `var,
+  predicate = \sd::SGDclNode -> editDistanceAtMost(1, name sd.name);
 
 
 --------------------------------------------------
 -- Scope (inherited) attributes
 
 -- Scope passed down as a lookup scope for most nodes
-scope attribute s occurs on Decls, Decl, Module, Expr, Binds, Bind, RecBinds, ModRef;
+scope attribute s::SGRegNode 
+  occurs on Decls, Decl, Module, Expr, Binds, Bind, RecBinds, ModRef;
 
 -- The enclosing module scope for a declaration, passed down so that the prod
 -- for a var or mod declaration can assert an edge from s_module to the newly
 -- built declaration scope graph node
-scope attribute s_module occurs on Decls, Decl, Module;
+scope attribute s_module::SGModNode
+  occurs on Decls, Decl, Module;
 
 -- The scope passed down to module, binder and module reference AST nodes so
 -- that corresponding MOD, VAR or IMP edges can be drawn from this to the newly
@@ -26,15 +86,18 @@ scope attribute s_module occurs on Decls, Decl, Module;
 -- that def from both s_module (above) and s_def. Allows an importing scope to
 -- access defs in a module, and allows subsequent defs in the same module to
 -- resolve to previous ones
-scope attribute s_def occurs on RecBinds, Module, Decl, ModRef;
+scope attribute s_def::SGLexNode
+  occurs on RecBinds, Module, Decl, ModRef;
 
 -- The last scope built in a sequential binder list, which can then be passed
 -- down to the RHS of the sequential let definition
-scope attribute s_last occurs on Binds;
+scope attribute s_last::SGLexNode
+  occurs on Binds;
 
 -- The scope graph declaration node built for a binder, VAR edge drawn to it in
 -- the declDef, seqBindsCons and seqBindsLast productions
-scope attribute s_dcl occurs on Bind;
+scope attribute s_dcl::SGVarNode
+  occurs on Bind;
 
 
 --------------------------------------------------
@@ -68,16 +131,16 @@ production program
 top::Program ::= ds::Decls
 {
   -- Global lexical scope
-  scope glob;
+  scope glob::SGLexNode;
 
   -- Unreachable scope passed down as s_module; top-level definitions are not in
   -- a module that we can resolve to using an import reference
-  scope deadScope;
+  scope blankScope::SGLexNode;
 
   -- Pass down global scope as top-level lookup scope for Decls
   ds.s = glob;
   -- Dead scope receives VAR and MOD edges from Decls, but is not reachable
-  ds.s_module = deadScope;
+  ds.s_module = blankScope;
 
   top.errs = ds.errs;
   top.ocaml = ds.ocaml;
@@ -93,7 +156,7 @@ production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
   -- The next sequential scope in a nested declaration scoping structure
-  scope seqScope;
+  scope seqScope::SGLexNode;
 
   -- Draw a lex edge to the previous sequential scope
   seqScope -[ lex ]-> top.s;
@@ -155,7 +218,7 @@ top::Decl ::= b::Bind
 {
   -- Assert the existence of an SG node s_dcl, that is built down in b
   -- with `scope top.s_dcl -> ...;`
-  exists scope s_dcl;
+  exists scope s_dcl::SGVarNode;
 
   -- Propagate s, s_def
   b.s = top.s;
@@ -182,7 +245,7 @@ production module
 top::Module ::= x::String ds::Decls
 {
   -- Create a new scope for a module, data points back to this AST node
-  scope modScope -> datumMod(x, top);
+  scope modScope::SGModNode -> { name = x, astBind = top };
 
   -- Lexical parent of the module scope is corresponding sequential Decls scope
   modScope -[ lex ]-> top.s;
@@ -254,14 +317,20 @@ top::Expr ::=
 
 production exprAdd top::Expr ::= e1::Expr e2::Expr
 { 
+  local addable (Boolean ::= t::Type) = \t::Type ->
+    t == tInt() || t == tFloat() || t == tErr();
+
+  local addType (Boolean ::= Type Type) \tl::Type tr::Type ->
+    if tl == tFloat() || tr == tFloat() then tFloat() else tInt();
+
   local msgs::[String] =
-    assert(floatOrInt(e1.type), "(+) LHS type not int/float, is " ++ e1.type.ocaml) ++
-    assert(floatOrInt(e2.type), "(+) RHS type not int/float, is " ++ e2.type.ocaml);
+    assert(addable(e1.type), "(+) LHS type not int/float, is " ++ e1.type.ocaml) ++
+    assert(addable(e2.type), "(+) RHS type not int/float, is " ++ e2.type.ocaml);
     
   e1.s = top.s;
   e2.s = top.s;
   
-  top.type = castAdd(e1.type, e2.type);
+  top.type = if null(msgs) then addType(e1.type, e2.type) else tErr();
   top.errs = msgs ++ e1.errs ++ e2.errs;
   top.ocaml =
     case e1.type, e2.type of
@@ -291,7 +360,7 @@ production exprLet top::Expr ::= bs::Binds e::Expr
 { 
   -- Assert the existence of s_let (the last nested scope for a sequential let)
   -- that is built down in bs as top.s_last
-  exists scope s_let;
+  exists scope s_let::SGLexNode;
   
   -- Queries from sequential binds resolve in top.s if answer not already found
   bs.s = top.s;
@@ -310,7 +379,7 @@ production exprLetRec
 top::Expr ::= bs::RecBinds e::Expr
 {
   -- Create new scope s_let as the recursive let binds scope
-  scope s_let;
+  scope s_let::SGLexNode;
 
   -- Lexical parent of s_let is top.s 
   s_let -[ lex ]-> top.s;
@@ -334,7 +403,7 @@ production exprLetPar
 top::Expr ::= bs::RecBinds e::Expr
 {
   -- Create new scope s_let as the parallel let binds scope
-  scope s_let;
+  scope s_let::SGLexNode;
 
   -- Lexical parent of s_let is top.s 
   s_let -[ lex ]-> top.s;
@@ -363,11 +432,11 @@ nonterminal Binds with location;
 production seqBindsCons top::Binds ::= b::Bind bs::Binds
 { 
   -- Assert the existence of a scope s_dcl, build down in b as top.s_dcl
-  exists scope s_dcl;
+  exists scope s_dcl::SGVarNode;
 
   -- Construct new scope s_next with no data, the next scope in a sequential
   -- binding structure
-  scope s_next;
+  scope s_next::SGLexNode;
 
   -- The next scope in a sequential binding structure has the previous as its
   -- lexical parent
@@ -394,10 +463,10 @@ production seqBindsCons top::Binds ::= b::Bind bs::Binds
 production seqBindsLast top::Binds ::= b::Bind
 { 
   -- Assert the existence of a scope s_dcl, build down in b as top.s_dcl
-  exists scope s_dcl;
+  exists scope s_dcl::SGVarNode;
 
   -- Construct top.s_last with no data
-  scope top.s_last;
+  scope top.s_last::SGLexNode;
   
   -- Last scope in sequential binding gets lex edge to previous scope
   edge top.s_last -[ lex ]-> top.s;
@@ -419,7 +488,7 @@ production seqBindsNil
 top::Binds ::=
 {
   -- Construct scope top.s_last with no data
-  scope top.s_last;
+  scope top.s_last::SGLexNode;
 
   -- Last scope in sequential binding gets lex edge to previous scope
   top.s_last -[ lex ]-> top.s;
@@ -445,7 +514,7 @@ production recBindsOne
 top::RecBinds ::= b::Bind
 {
   -- Assert the existence of a scope s_dcl, build down in b as top.s_dcl
-  exists scope s_dcl;
+  exists scope s_dcl::SGVarNode;
 
   -- Draw var edge from top.s_def to SG node s_dcl constructed down in b
   top.s_def -[ var ]-> s_dcl;
@@ -466,7 +535,7 @@ production recBindsCons
 top::RecBinds ::= b::Bind bs::RecBinds
 {
   -- Assert the existence of a scope s_dcl, build down in b as top.s_dcl
-  exists scope s_dcl;
+  exists scope s_dcl::SGVarNode;
 
   -- Draw var edge from top.s_def to SG node s_dcl constructed down in b
   top.s_def -[ var ]-> s_dcl;
@@ -499,7 +568,7 @@ nonterminal Bind with location;
 production bind top::Bind ::= x::String  e::Expr
 { 
   -- Construct SG node top.s_dcl with data pointing back to this AST node
-  scope top.s_dcl -> datumVar(x, top);
+  scope top.s_dcl::SGVarNode -> { name = x, astBind = top };
 
   -- Lookup variable references in e from top.s
   e.s = top.s;
@@ -514,7 +583,7 @@ production bindTyped
 top::Bind ::= tyann::Type x::String e::Expr
 {
   -- Construct SG node top.s_dcl with data pointing back to this AST node
-  scope top.s_dcl -> datumVar(x, top);
+  scope top.s_dcl::SGVarNode -> { name = x, astBind = top };
 
   -- Lookup variable references in e from top.s
   e.s = top.s;
@@ -589,12 +658,7 @@ production modRef
 top::ModRef ::= x::String
 {
   -- does ministatix query, filter and min-refs constraints
-  local mods::[Decorated Scope with LMLabels] =
-    query(
-      `lex*`imp?`mod,                        -- query path regex
-      `lex > `imp, `lex > `var, `imp > `var, -- label ordering, shadowing
-      isModCalled(x),                        -- data predicate
-      top.s);
+  local mods::[Decorated SGModNode] = top.s.modQuery(x);
 
   -- Draw IMP edge from top.s_def to either the scope found by successful import
   -- query, or to deadScope otherwise
@@ -618,69 +682,33 @@ production varRef
 top::VarRef ::= x::String
 {
   -- Find the SG nodes corresponding to variable declarations whose name matches x
-  local exact::[Scope] =
-    query(
-      `lex*`imp?`var,                        -- query path regex
-      `lex > `imp, `lex > `var, `imp > `var, -- label ordering, shadowing
-      isVarCalled(x),                        -- data predicate
-      top.s);
+  local exact::[Decorated SGVarNode] = top.s.varQuery(x);
 
   -- Find the SG module or variable declaration nodes whose name is close to x
-  local close::[Scope] =
-    query(
-      `lex*imp?(`var|`mod),                 -- query path regex
-      `lex > `imp, `lex > `var, `lex > mod, -- label ordering, shadowing
-      `imp > `var, `imp > `mod,
-      editDistanceAtMost(1, x),             -- data predicate
-      top.s);
+  local close::[SGDclNode] = top.s.dclQuery(x);
 
   -- Either the Bind AST node associated with an SG declaration node resolved to
   -- with the above `exact` query, or a default error Bind node
-  local bindNode::Decorated Bind with {s, inSeqLet} =
-    if singleton(exact) then getBind(head(exact)) else defaultErrBind;
+  local bindNode::Decorated Bind =
+    if length(exact) == 1 
+    then head(exact).astBind
+    else decorate bindTyped("", tErr(), tInt(0), location=bogusLoc())
+         with { s = deadScope; inSeqLet = true; };
   
-  top.errs =
-    case exact, getDclNames(close) of
-    | [_], [] -> []
-    | _::_, _ -> [x ++ " ambiguous"]
-    | [], []  -> [x ++ " unresolvable"]
-    | _, cs   -> [x ++ " unresolvable, close to: " ++ implode(", ", cs)]
-    end;
-  top.ocaml = if !bindNode.inSeqLet then "(Lazy.force " ++ x ++ ")" else x;
   top.type = bindNode.type;
+  top.errs =
+    case exact, map((.name), close) of
+    | [_], [] -> []
+    | _::_, _ -> [err(x ++ " ambiguous", top.location)]
+    | [], []  -> [err(x ++ " unresolvable", top.location)]
+    | _, cs   -> [err(x ++ " unresolvable, close to: " ++ implode(", ", cs), top.location)]
+    end;
+  top.ocaml = if bindNode.inSeqLet then x else "(Lazy.force " ++ x ++ ")";
 }
 
 
 --------------------------------------------------
--- Some helper functions
+-- Helpers
 
--- Query predicate for variable lookup
-fun isVarCalled (Boolean ::= Datum) ::= x::String =
-  \d::Datum -> case d of
-               | datumVar(dx, _) -> x == dx
-               | _ -> false
-               end;
-
--- Extract the Bind node from the data of variable declaration SG nodes
-fun getBind Decorated Bind with {s, inSeqLet} ::= s::Decorated Scope with LMLabels =
-  case s.datum of
-  | datumVar(_, n) -> n
-  | _ -> error("Used extractBind on a scope not using datumVar!")
-  end;
-
--- For type checking arithmetic operations on floats, ints
-fun floatOrInt Boolean ::= t::Type =
-  t == tInt() || t == tFloat() || t == tErr();
-
--- Get the string names of all variable declaration SG nodes in a list
-fun getDclNames [String] ::= ss::[Scope] =
-  filterMap(
-    \s::Scope -> case s.datum of datumVar(id, _) -> just(id) | _ -> nothing() end, 
-    ss);
-
---------------------------------------------------
--- Default Bind SG node to use in varRef
-
-global defaultErrBind::Decorated Bind with {s, inSeqLet} =
-  decorate bindArgDcl("", tErr(), location=bogusLoc()) with { s = deadScope;
-                                                              inSeqLet = true; };
+fun err String ::= msg::String loc::Location =
+  loc.unparse ++ ": error: " ++ msg ++ "\n"; 
