@@ -1,6 +1,6 @@
 grammar lmr1:lmr:concretesyntax;
 
-imports lmr1:lmr:nameanalysis5;
+imports lmr1:lmr:nameanalysis_extension;
 
 --------------------------------------------------
 

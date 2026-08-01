@@ -9,7 +9,7 @@ grammar lmr1:lmr:nameanalysis_draft;
 -- scope types, which become subtypes of the abstract one
 abstract scope type SGDclNode -> name::String;
 -- 'Abstract' type for [non-buildable] 'region' scopes with no attributes
-abstract scope type SGRegNode ->;
+abstract scope type SGRegNode;
 
 -- Scope type for scoping 'region' SG nodes with no attributes
 -- SGLexNode is a subtype of SGRegNode, gets no new attributes
@@ -23,12 +23,6 @@ scope type (SGDclNode) => SGVarNode -> astBind::Decorated Bind;
 -- SGModNode is a subtype of SGDclNode, gets name attribute
 -- SGModNode is a subtype of SGRegNode, gets no new attributes
 scope type (SGDclNode, SGRegNode) => SGModNode -> astMod::Decorated Module;
-
--- Alternative way of specifying subtyping:
-SGVarNode is SGDclNode;
-SGModNode is SGDclNode;
-SGModNode is SGRegNode;
-SGLexNode is SGRegNode;
 
 -- lex (lexical parent) edges lead to SGRegNodes
 edge type -[ lex ]-> SGRegNode;
