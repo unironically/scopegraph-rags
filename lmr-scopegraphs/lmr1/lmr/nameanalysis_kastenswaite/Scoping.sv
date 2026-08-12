@@ -143,9 +143,14 @@ top::Expr ::= e1::Expr e2::Expr
   e1.env = top.env;
   e2.env = top.env;
   
-  top.type = tInt();
-  top.ok = e1.ok && e2.ok &&
-           e1.type == tInt() && e2.type == tInt();
+  top.type = case e1.type, e2.type of
+               tInt(), tInt() -> tInt()
+             | tInt(), tFloat() -> tInt()
+             | tFloat(), tInt() -> tInt()
+             | tFloat(), tFloat() -> tFloat()
+             | _, _ -> tErr()
+             end;
+  top.ok = e1.ok && e2.ok && top.type != tErr();
 }
 
 production exprAnd
