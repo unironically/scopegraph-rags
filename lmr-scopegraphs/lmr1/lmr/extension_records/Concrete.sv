@@ -44,6 +44,10 @@ concrete production exprRecord_c
 top::Expr_c ::= name::Id_t '{' flds::FieldExprs_c '}'
 { top.ast = exprRecord(name.lexeme, flds.ast, location=top.location); }
 
+concrete production exprRecordAccess_c
+top::Expr_c ::= r::RecAccess_c
+{ top.ast = exprRecordAccess(r.ast, location=top.location); }
+
 --------------------------------------------------
 
 nonterminal FieldExprs_c with ast<FieldExprs>, location;
