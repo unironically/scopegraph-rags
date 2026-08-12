@@ -1,11 +1,11 @@
-def y = 10
-
-def z = 10
+def x = 1
+def y = x
+def z = y
 
 def a =
   letpar
-    x = y,
-    y = z,
-    z = 1
+    a = x,
+    b = a,      // should fail
+    c = z
   in
-    x + y + z
+    a + b + c

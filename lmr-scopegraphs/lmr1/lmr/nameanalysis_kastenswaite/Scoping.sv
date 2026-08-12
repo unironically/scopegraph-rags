@@ -18,7 +18,7 @@ nonterminal Main with location, ok;
 production program
 top::Main ::= ds::Decls
 {
-  top.ok = true;
+  top.ok = ds.ok;
 
   ds.env = newEnv();
 }
@@ -75,6 +75,7 @@ production declDef
 top::Decl ::= b::Bind
 {
   b.env = top.env;
+  b.bindEnv = top.env;
 
   top.outEnv = b.outEnv;
 
@@ -173,8 +174,9 @@ production exprFun
 top::Expr ::= b::Bind e::Expr
 {
   b.env = top.env;
+  b.bindEnv = newScope(top.env);
 
-  e.env = newScope(b.outEnv);
+  e.env = b.outEnv;
 
   top.type = tFun(b.type, e.type);
   top.ok = b.ok && e.ok;
@@ -225,8 +227,8 @@ top::Expr ::= bs::ParBinds e::Expr
 {
   nondecorated local bindEnv::Env = newScope(top.env);
 
-  bs.env = bindEnv;
-  bs.bindEnv = bindEnv;
+  bs.env = bs.outEnv;
+  bs.bindEnv = newScope(top.env);
 
   e.env = bs.outEnv;
 
@@ -240,7 +242,7 @@ top::Expr ::= bs::ParBinds e::Expr
   nondecorated local bindEnv::Env = newScope(top.env);
 
   bs.env = top.env;
-  bs.bindEnv = bindEnv;
+  bs.bindEnv = newScope(top.env);
 
   e.env = newScope(bs.outEnv);
 
@@ -283,7 +285,7 @@ top::Binds ::=
 
 --------------------------------------------------
 
-nonterminal ParBinds with location, ok, env, bindEnv, outEnv;
+nonterminal ParBinds with location, ok, env, outEnv, bindEnv;
 
 production parBindsCons
 top::ParBinds ::= b::Bind bs::ParBinds
@@ -435,3 +437,4 @@ top::VarRef ::= x::String
 
   top.ok = res.isJust;
 }
+

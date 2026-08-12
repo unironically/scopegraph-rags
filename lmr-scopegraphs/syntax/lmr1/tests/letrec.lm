@@ -1,7 +1,11 @@
+def x = 1
+def y = x
+def z = y
+
 def a =
   letrec
-    x = y,
-    y = z,
-    z = 1
+    a = c,
+    b = a,
+    c = x
   in
-    x + y + z
+    a + b + c
