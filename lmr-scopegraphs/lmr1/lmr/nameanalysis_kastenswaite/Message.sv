@@ -1,6 +1,6 @@
 grammar lmr1:lmr:nameanalysis_kastenswaite;
 
-import silver:langutil; -- for location.unparse
+imports silver:langutil; -- for location.unparse
 
 --------------------------------------------------
 

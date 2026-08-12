@@ -50,14 +50,14 @@ top::Env ::= e::Env v::String ast::Decorated Bind
   top.lookupEnvVar = \x::String -> contSearch(x, v, ast, e.lookupEnvVar);
 
   -- top.lookupScopeMod = \x::String -> e.lookupScopeMod(x);
-  top.lookupEnvMod = \x::String -> nothing();
+  top.lookupEnvMod = \x::String -> e.lookupEnvMod(x);
 }
 
 production addMod
 top::Env ::= e::Env m::String ast::Decorated Module
 {
   -- top.lookupScopeVar = \x::String -> e.lookupScopeVar(x);
-  top.lookupEnvVar = \x::String -> nothing();
+  top.lookupEnvVar = \x::String -> e.lookupEnvVar(x);
 
   -- top.lookupScopeMod = \x::String -> contSearch(x, m, ast, e.lookupScopeMod);
   top.lookupEnvMod = \x::String -> contSearch(x, m, ast, e.lookupEnvMod);
@@ -66,4 +66,6 @@ top::Env ::= e::Env m::String ast::Decorated Module
 --
 
 fun contSearch Maybe<a> ::= x::String d::String ast::a cont::(Maybe<a> ::= String) =
-  if x == d then just(ast) else cont(x);
+  if x == d
+  then unsafeTracePrint(just(ast), "good match of " ++ x ++ " with dcl " ++ d ++ "\n")
+  else unsafeTracePrint(cont(x), "bad match " ++ x ++ " with dcl " ++ d ++ "\n");
