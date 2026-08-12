@@ -5,16 +5,49 @@ exports lmr1:lmr:nameanalysis_kastenswaite;
 --------------------------------------------------
 
 production declRecord
-top::Decl ::= x::String fields::Fields
-{}
+top::Decl ::= r::Record
+{
+  r.env = top.env;
+  r.bindsIn = top.bindsIn;
 
-production declRecordExt
-top::Decl ::= x::String other::String fields::Fields
-{}
+  top.outEnv = r.outEnv;
+  top.bindsOut = r.bindsOut;
+
+  top.ok = r.ok;
+}
 
 --------------------------------------------------
 
-nonterminal Fields with location;
+nonterminal Record with location, ok, env, outEnv, fields, bindsIn, bindsOut;
+
+production record
+top::Record ::= x::String fields::Fields
+{
+  fields.env = top.env;
+  fields.bindsIn = newEnv();
+
+  top.outEnv = addRec(top.env, x, top);
+  top.bindsOut = addRec(top.env, x, top);
+
+  top.fields = fields.bindsOut;
+
+  top.ok = fields.ok;
+}
+
+production recordExt
+top::Record ::= x::String par::String fields::Fields
+{
+  top.outEnv = error("TODO recordExt.outEnv");
+  top.bindsOut = error("TODO recordExt.bindsOut");
+
+  top.fields = error("TODO recordExt.fields");
+
+  top.ok = error("TODO recordExt.ok");
+}
+
+--------------------------------------------------
+
+nonterminal Fields with location, ok, env, bindsIn, bindsOut;
 
 production fieldsCons
 top::Fields ::= x::String ty::Type rest::Fields
@@ -48,12 +81,20 @@ top::FieldExprs ::= x::String e::Expr
 
 --------------------------------------------------
 
-nonterminal RecAccess with location;
+nonterminal RecAccessLHS with location;
 
-production recAccessQual
-top::RecAccess ::= r::RecAccess x::String
+production recAccessLHSQual
+top::RecAccessLHS ::= r::RecAccessLHS x::String
 {}
 
+production recAccessLHS
+top::RecAccessLHS ::= x::String
+{}
+
+--
+
+nonterminal RecAccess with location;
+
 production recAccess
-top::RecAccess ::= x::String
+top::RecAccess ::= lhs::RecAccessLHS x::String
 {}

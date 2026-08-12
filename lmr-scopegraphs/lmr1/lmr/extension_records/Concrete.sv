@@ -11,12 +11,20 @@ terminal With_t 'with' dominates { Id_t };
 --------------------------------------------------
 
 concrete production declRecord_c
-top::Decl_c ::= 'record' r::Id_t '{' flds::Fields_c '}'
-{ top.ast = declRecord(r.lexeme, flds.ast, location=top.location); }
+top::Decl_c ::= r::Record_c
+{ top.ast = declRecord(r.ast, location=top.location); }
 
-concrete production declRecordExtend_c
-top::Decl_c ::= 'record' r::Id_t 'extends' p::Id_t 'with' '{' flds::Fields_c '}'
-{ top.ast = declRecordExt(r.lexeme, p.lexeme, flds.ast, location=top.location); }
+--------------------------------------------------
+
+nonterminal Record_c with ast<Record>, location;
+
+concrete production record_c
+top::Record_c ::= 'record' r::Id_t '{' flds::Fields_c '}'
+{ top.ast = record(r.lexeme, flds.ast, location=top.location); }
+
+concrete production recordExt_c
+top::Record_c ::= 'record' r::Id_t 'extends' p::Id_t 'with' '{' flds::Fields_c '}'
+{ top.ast = recordExt(r.lexeme, p.lexeme, flds.ast, location=top.location); }
 
 --------------------------------------------------
 
@@ -50,12 +58,20 @@ top::FieldExprs_c ::= name::Id_t '=' e::Expr_c
 
 --------------------------------------------------
 
+nonterminal RecAccessLHS_c with ast<RecAccessLHS>, location;
+
+concrete production recAccessLHSQual_c
+top::RecAccessLHS_c ::= r::RecAccessLHS_c '.' x::Id_t
+{ top.ast = recAccessLHSQual(r.ast, x.lexeme, location=top.location); }
+
+concrete production recAccessLHS_c
+top::RecAccessLHS_c ::= x::Id_t
+{ top.ast = recAccessLHS(x.lexeme, location=top.location); }
+
+--
+
 nonterminal RecAccess_c with ast<RecAccess>, location;
 
-concrete production recAccessQual_c
-top::RecAccess_c ::= r::RecAccess_c '.' x::Id_t
-{ top.ast = recAccessQual(r.ast, x.lexeme, location=top.location); }
-
 concrete production recAccess_c
-top::RecAccess_c ::= x::Id_t
-{ top.ast = recAccess(x.lexeme, location=top.location); }
+top::RecAccess_c ::= lhs::RecAccessLHS_c x::Id_t
+{ top.ast = recAccess(lhs.ast, x.lexeme, location=top.location); }
