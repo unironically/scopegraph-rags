@@ -5,11 +5,14 @@ grammar lmr1:lmr:nameanalysis_kastenswaite;
 synthesized attribute pp::String;
 synthesized attribute ok::Boolean;
 
-inherited attribute env::Env;
-inherited attribute bindEnv::Env;
+inherited attribute env::Env;         -- scope to lookup in
+inherited attribute bindEnv::Env;     -- scope to add binds to
 
-synthesized attribute outEnv::Env;
-synthesized attribute type::Type;
+inherited attribute bindsIn::Env;     -- Module members threading down
+synthesized attribute bindsOut::Env;  -- Module members threading up
+
+synthesized attribute outEnv::Env;    -- Env coming up from a declaration to pass down to next
+synthesized attribute type::Type;     -- Type of an expression
 
 --------------------------------------------------
 
@@ -21,26 +24,25 @@ top::Main ::= ds::Decls
   top.ok = ds.ok;
 
   ds.env = newEnv();
-  ds.membersEnvInh = newEnv();
+  ds.bindsIn = newEnv();
 }
 
 --------------------------------------------------
 
-inherited attribute membersEnvInh::Env;
 
-nonterminal Decls with location, ok, env, outEnv, membersEnvInh, membersEnv;
+nonterminal Decls with location, ok, env, outEnv, bindsIn, bindsOut;
 
 production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
   d.env = top.env;
-  d.membersEnvInh = top.membersEnvInh;
+  d.bindsIn = top.bindsIn;
 
   ds.env = newScope(d.outEnv);
-  ds.membersEnvInh = d.membersEnv;
+  ds.bindsIn = d.bindsOut;
 
   top.outEnv = ds.outEnv;
-  top.membersEnv = ds.membersEnv;
+  top.bindsOut = ds.bindsOut;
 
   top.ok = d.ok && ds.ok;
 }
@@ -49,23 +51,23 @@ production declsNil
 top::Decls ::=
 {
   top.outEnv = top.env;
-  top.membersEnv = top.membersEnvInh;
+  top.bindsOut = top.bindsIn;
 
   top.ok = true;
 }
 
 --------------------------------------------------
 
-nonterminal Decl with location, ok, env, outEnv, membersEnvInh, membersEnv;
+nonterminal Decl with location, ok, env, outEnv, bindsIn, bindsOut;
 
 production declModule
 top::Decl ::= m::Module
 {
   m.env = top.env;
-  m.membersEnvInh = top.membersEnvInh;
+  m.bindsIn = top.bindsIn;
 
   top.outEnv = m.outEnv;
-  top.membersEnv = m.membersEnv;
+  top.bindsOut = m.bindsOut;
 
   top.ok = m.ok;
 }
@@ -76,7 +78,7 @@ top::Decl ::= mr::ModRef
   mr.env = top.env;
 
   top.outEnv = mr.outEnv;
-  top.membersEnv = top.membersEnvInh;
+  top.bindsOut = top.bindsIn;
 
   top.ok = mr.ok;
 }
@@ -86,10 +88,10 @@ top::Decl ::= b::Bind
 {
   b.env = top.env;
   b.bindEnv = top.env;
-  b.membersEnvInh = top.membersEnvInh;
+  b.bindsIn = top.bindsIn;
 
   top.outEnv = b.outEnv;
-  top.membersEnv = b.membersEnv;
+  top.bindsOut = b.bindsOut;
 
   top.ok = b.ok;
 }
@@ -97,20 +99,19 @@ top::Decl ::= b::Bind
 --------------------------------------------------
 
 synthesized attribute fields::Env;
-synthesized attribute membersEnv::Env;
 
-nonterminal Module with location, ok, env, outEnv, fields, membersEnvInh, membersEnv;
+nonterminal Module with location, ok, env, outEnv, fields, bindsIn, bindsOut;
 
 production module
 top::Module ::= x::String ds::Decls
 {
   ds.env = newScope(top.env);
-  ds.membersEnvInh = newEnv();
+  ds.bindsIn = newEnv();
 
   top.outEnv = addMod(top.env, x, top);
-  top.membersEnv = addMod(top.env, x, top);
+  top.bindsOut = addMod(top.env, x, top);
 
-  top.fields = ds.membersEnv;
+  top.fields = ds.bindsOut;
 
   top.ok = ds.ok;
 }
@@ -199,7 +200,7 @@ top::Expr ::= b::Bind e::Expr
 {
   b.env = top.env;
   b.bindEnv = newScope(top.env);
-  b.membersEnvInh = newEnv();
+  b.bindsIn = newEnv();
 
   e.env = b.outEnv;
 
@@ -284,7 +285,7 @@ top::Binds ::= b::Bind bs::Binds
 {
   b.env = top.env;
   b.bindEnv = newScope(top.env);
-  b.membersEnvInh = newEnv();
+  b.bindsIn = newEnv();
 
   bs.env = b.outEnv;
 
@@ -297,7 +298,7 @@ top::Binds ::= b::Bind
 {
   b.env = top.env;
   b.bindEnv = newScope(top.env);
-  b.membersEnvInh = newEnv();
+  b.bindsIn = newEnv();
 
   top.outEnv = b.outEnv;
   top.ok = b.ok;
@@ -319,7 +320,7 @@ top::ParBinds ::= b::Bind bs::ParBinds
 {
   b.env = top.env;
   b.bindEnv = top.bindEnv;
-  b.membersEnvInh = newEnv();
+  b.bindsIn = newEnv();
 
   bs.env = top.env;
   bs.bindEnv = b.outEnv;
@@ -333,7 +334,7 @@ top::ParBinds ::= b::Bind
 {
   b.env = top.env;
   b.bindEnv = top.bindEnv;
-  b.membersEnvInh = newEnv();
+  b.bindsIn = newEnv();
 
   top.outEnv = b.outEnv;
   top.ok = b.ok;
@@ -348,7 +349,7 @@ top::ParBinds ::=
 
 --------------------------------------------------
 
-nonterminal Bind with location, ok, env, bindEnv, outEnv, type, membersEnv, membersEnvInh;
+nonterminal Bind with location, ok, env, bindEnv, outEnv, type, bindsOut, bindsIn;
 
 production bindTyped
 top::Bind ::= tyann::Type x::String e::Expr
@@ -356,7 +357,7 @@ top::Bind ::= tyann::Type x::String e::Expr
   e.env = top.env;
 
   top.outEnv = addVar(top.bindEnv, x, top);
-  top.membersEnv = addVar(top.membersEnvInh, x, top);
+  top.bindsOut = addVar(top.bindsIn, x, top);
 
   top.type = ^tyann;
   top.ok = e.ok && ^tyann == e.type;
@@ -368,7 +369,7 @@ top::Bind ::= x::String e::Expr
   e.env =  top.env;
 
   top.outEnv = addVar(top.bindEnv, x, top);
-  top.membersEnv = addVar(top.membersEnvInh, x, top);
+  top.bindsOut = addVar(top.bindsIn, x, top);
 
   top.type = e.type;
   top.ok = e.ok;
@@ -378,7 +379,7 @@ production bindArgDcl
 top::Bind ::= x::String tyann::Type
 {
   top.outEnv = addVar(top.bindEnv, x, top);
-  top.membersEnv = addVar(top.membersEnvInh, x, top);
+  top.bindsOut = addVar(top.bindsIn, x, top);
 
   top.type = ^tyann;
   top.ok = true;

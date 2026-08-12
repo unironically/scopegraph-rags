@@ -1,12 +1,14 @@
 grammar lmr1:lmr:driver;
 
-imports sg_lib3:src;
+--imports sg_lib3:src;
 
-imports lmr1:lmr:concretesyntax;
-imports lmr1:lmr:nameanalysis_kastenswaite;
+--imports lmr1:lmr:concretesyntax;
+--imports lmr1:lmr:nameanalysis_kastenswaite;
+
+imports lmr1:lmr:extension_records;
 
 parser parse :: Main_c {
-  lmr1:lmr:concretesyntax;
+  lmr1:lmr:extension_records;
 }
 
 function main
