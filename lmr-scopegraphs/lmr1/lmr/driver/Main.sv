@@ -3,7 +3,7 @@ grammar lmr1:lmr:driver;
 imports sg_lib3:src;
 
 imports lmr1:lmr:concretesyntax;
-imports lmr1:lmr:nameanalysis_extension;
+imports lmr1:lmr:nameanalysis_kastenswaite;
 
 parser parse :: Main_c {
   lmr1:lmr:concretesyntax;
