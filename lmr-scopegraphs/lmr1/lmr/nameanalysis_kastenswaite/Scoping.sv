@@ -12,7 +12,7 @@ inherited attribute bindsIn::Env;     -- Module members threading down
 synthesized attribute bindsOut::Env;  -- Module members threading up
 
 synthesized attribute outEnv::Env;    -- Env coming up from a declaration to pass down to next
-synthesized attribute type::Decorated Type with {env}; -- Type of an expression
+synthesized attribute type::Type; -- Type of an expression
 
 --------------------------------------------------
 
@@ -133,28 +133,28 @@ production exprFloat
 top::Expr ::= f::Float
 {
   top.ok = true;
-  top.type = decTFloat();
+  top.type = tFloat();
 }
 
 production exprInt
 top::Expr ::= i::Integer
 {
   top.ok = true;
-  top.type = decTInt();
+  top.type = tInt();
 }
 
 production exprTrue
 top::Expr ::=
 {
   top.ok = true;
-  top.type = decTBool();
+  top.type = tBool();
 }
 
 production exprFalse
 top::Expr ::=
 {
   top.ok = true;
-  top.type = decTBool();
+  top.type = tBool();
 }
 
 production exprAdd
@@ -168,10 +168,10 @@ top::Expr ::= e1::Expr e2::Expr
              | tInt(), tFloat() -> e1.type
              | tFloat(), tInt() -> e2.type
              | tFloat(), tFloat() -> e1.type
-             | _, _ -> decTErr()
+             | _, _ -> tErr()
              end;
 
-  top.ok = e1.ok && e2.ok && !top.type.eq(decTErr());
+  top.ok = e1.ok && e2.ok && !top.type.eq(tErr());
 }
 
 production exprAnd
@@ -180,10 +180,10 @@ top::Expr ::= e1::Expr e2::Expr
   e1.env = top.env;
   e2.env = top.env;
   
-  top.type = decTBool();
+  top.type = tBool();
   top.ok = e1.ok && e2.ok &&
-           e1.type.eq(decTBool()) && 
-           e2.type.eq(decTBool());
+           e1.type.eq(tBool()) && 
+           e2.type.eq(tBool());
 }
 
 production exprEq
@@ -192,7 +192,7 @@ top::Expr ::= e1::Expr e2::Expr
   e1.env = top.env;
   e2.env = top.env;
   
-  top.type = decTBool();
+  top.type = tBool();
   top.ok = e1.ok && e2.ok &&
            e1.type.eq(e2.type);
 }
@@ -206,7 +206,7 @@ top::Expr ::= b::Bind e::Expr
 
   e.env = b.outEnv;
 
-  top.type = decTFun(b.type, e.type);
+  top.type = tFun(b.type, e.type);
   top.ok = b.ok && e.ok;
 }
 
@@ -217,12 +217,12 @@ top::Expr ::= e1::Expr e2::Expr
   e2.env = top.env;
 
   top.type = case e1.type of
-             | tFun(_, tOut) -> tOut
-             | _ -> decTErr()
+             | tFun(_, tOut) -> ^tOut
+             | _ -> tErr()
              end;
   top.ok = e1.ok && e2.ok &&
            case e1.type, e2.type of
-           | tFun(tIn, tOut), tArg -> tArg.eq(tIn)
+           | tFun(tIn, tOut), tArg -> tArg.eq(^tIn)
            | _, _ -> false
            end;
 }
@@ -234,9 +234,9 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
   e2.env = top.env;
   e3.env = top.env;
 
-  top.type = if e2.type.eq(e3.type) then e2.type else decTErr();
+  top.type = if e2.type.eq(e3.type) then e2.type else tErr();
   top.ok = e1.ok && e2.ok && e3.ok && 
-           e1.type.eq(decTBool()) && e2.type.eq(e3.type);
+           e1.type.eq(tBool()) && e2.type.eq(e3.type);
 }
 
 production exprLet
@@ -354,7 +354,7 @@ top::ParBinds ::=
 nonterminal Bind with location, ok, env, bindEnv, outEnv, type, bindsOut, bindsIn;
 
 production bindTyped
-top::Bind ::= tyann::Type x::String e::Expr
+top::Bind ::= tyann::TypeExpr x::String e::Expr
 {
   tyann.env = top.env;
   e.env = top.env;
@@ -362,14 +362,14 @@ top::Bind ::= tyann::Type x::String e::Expr
   top.outEnv = addVar(top.bindEnv, x, top);
   top.bindsOut = addVar(top.bindsIn, x, top);
 
-  top.type = tyann;
-  top.ok = e.ok && tyann.eq(e.type);
+  top.type = tyann.type;
+  top.ok = e.ok && tyann.type.eq(e.type);
 }
 
 production bind
 top::Bind ::= x::String e::Expr
 {
-  e.env =  top.env;
+  e.env = top.env;
 
   top.outEnv = addVar(top.bindEnv, x, top);
   top.bindsOut = addVar(top.bindsIn, x, top);
@@ -379,29 +379,51 @@ top::Bind ::= x::String e::Expr
 }
 
 production bindArgDcl
-top::Bind ::= x::String tyann::Type
+top::Bind ::= x::String tyann::TypeExpr
 {
   tyann.env = top.env;
 
   top.outEnv = addVar(top.bindEnv, x, top);
   top.bindsOut = addVar(top.bindsIn, x, top);
 
-  top.type = tyann;
+  top.type = tyann.type;
   top.ok = true;
 }
 
 --------------------------------------------------
 
-synthesized attribute eq::(Boolean ::= Decorated Type);
+nonterminal TypeExpr with location, env, type;
+
+production teFloat
+top::TypeExpr ::= 
+{ top.type = tFloat(); }
+
+production teInt
+top::TypeExpr ::= 
+{ top.type = tInt(); }
+
+production teBool
+top::TypeExpr ::= 
+{ top.type = tBool(); }
+
+production teFun
+top::TypeExpr ::= te1::TypeExpr te2::TypeExpr 
+{ top.type = tFun(te1.type, te2.type); }
+
+--------------------------------------------------
+
+synthesized attribute eq::(Boolean ::= Type);
 
 nonterminal Type with pp, eq, env;
 
 production tFun
-top::Type ::= tyann1::Decorated Type tyann2::Decorated Type
+top::Type ::= tyann1::Type tyann2::Type
 {
-  top.eq = \t::Decorated Type ->
+  propagate env;
+
+  top.eq = \t::Type ->
     case t of
-      tFun(t1, t2) -> tyann1.eq(t1) && tyann2.eq(t2)
+      tFun(t1, t2) -> tyann1.eq(^t1) && tyann2.eq(^t2)
     | _ -> false
     end;
 
@@ -415,28 +437,28 @@ top::Type ::= tyann1::Decorated Type tyann2::Decorated Type
 production tFloat
 top::Type ::=
 {
-  top.eq = \t::Decorated Type -> case t of tFloat() -> true | tErr() -> true | _ -> false end;
+  top.eq = \t::Type -> case t of tFloat() -> true | tErr() -> true | _ -> false end;
   top.pp = "float";
 }
 
 production tInt
 top::Type ::=
 {
-  top.eq = \t::Decorated Type -> case t of tInt() -> true | tErr() -> true | _ -> false end;
+  top.eq = \t::Type -> case t of tInt() -> true | tErr() -> true | _ -> false end;
   top.pp = "int";
 }
 
 production tBool
 top::Type ::=
 {
-  top.eq = \t::Decorated Type -> case t of tBool() -> true | tErr() -> true | _ -> false end;
+  top.eq = \t::Type -> case t of tBool() -> true | tErr() -> true | _ -> false end;
   top.pp = "bool";
 }
 
 production tErr
 top::Type ::=
 {
-  top.eq = \t::Decorated Type -> true;
+  top.eq = \t::Type -> false;
   top.pp = "<err>";
 }
 
@@ -481,21 +503,6 @@ top::VarRef ::= x::String
 
 --------------------------------------------------
 
-fun typeIfJust Decorated Type ::= res::Maybe<Decorated Bind> =
-  if res.isJust then res.fromJust.type else decTErr()
+fun typeIfJust Type ::= res::Maybe<Decorated Bind> =
+  if res.isJust then res.fromJust.type else tErr()
 ;
-
-fun decTInt Decorated Type ::= =
-  decorate tInt() with { env = newEnv(); };
-
-fun decTFloat Decorated Type ::= =
-  decorate tFloat() with { env = newEnv(); };
-
-fun decTBool Decorated Type ::= =
-  decorate tBool() with { env = newEnv(); };
-
-fun decTErr Decorated Type ::= =
-  decorate tErr() with { env = newEnv(); };
-
-fun decTFun Decorated Type ::= l::Decorated Type r::Decorated Type =
-  decorate tFun(l, r) with { env = newEnv(); };

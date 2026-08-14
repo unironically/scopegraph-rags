@@ -31,11 +31,11 @@ top::Record_c ::= 'record' r::Id_t 'extends' p::Id_t 'with' '{' flds::Fields_c '
 nonterminal Fields_c with ast<Fields>, location;
 
 concrete production fieldsCons_c
-top::Fields_c ::= name::Id_t ':' tyann::Type_c ',' rest::Fields_c
+top::Fields_c ::= name::Id_t ':' tyann::TypeExpr_c ',' rest::Fields_c
 { top.ast = fieldsCons(name.lexeme, tyann.ast, rest.ast, location=top.location); }
 
 concrete production fieldsOne_c
-top::Fields_c ::= name::Id_t ':' tyann::Type_c
+top::Fields_c ::= name::Id_t ':' tyann::TypeExpr_c
 { top.ast = fieldsOne(name.lexeme, tyann.ast, location=top.location); }
 
 --------------------------------------------------
@@ -83,5 +83,5 @@ top::RecAccess_c ::= lhs::RecAccessLHS_c '.' x::Id_t
 --------------------------------------------------
 
 concrete production tRecord_c
-top::Type_c ::= id::Id_t
-{ top.ast = tRecordLookup(id.lexeme); }
+top::TypeExpr_c ::= id::Id_t
+{ top.ast = teRecord(id.lexeme, location=top.location); }

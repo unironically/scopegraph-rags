@@ -32,10 +32,7 @@ top::Record ::= x::String fields::Fields
 
   top.fields = fields.bindsOut;
 
-  local recTy::Type = tRecord(x, fields.bindsOut);
-  recTy.env = top.env;
-
-  top.type = recTy;
+  top.type = tRecord(x, fields.bindsOut);
 
   top.ok = fields.ok;
 }
@@ -53,10 +50,7 @@ top::Record ::= x::String par::String fields::Fields
 
   top.fields = fields.bindsOut;
 
-  local recTy::Type = tRecord(x, fields.bindsOut);
-  recTy.env = top.env;
-
-  top.type = recTy;
+  top.type = tRecord(x, fields.bindsOut);
 
   top.ok = resPar.isJust && fields.ok;
 }
@@ -66,12 +60,12 @@ top::Record ::= x::String par::String fields::Fields
 nonterminal Fields with location, ok, env, bindsIn, bindsOut;
 
 production fieldsCons
-top::Fields ::= x::String ty::Type rest::Fields
+top::Fields ::= x::String ty::TypeExpr rest::Fields
 {
   ty.env = top.env;
 
   rest.env = top.env;
-  rest.bindsIn = addRecBind(top.bindsIn, x, ty).bindsOut;
+  rest.bindsIn = addRecBind(top.bindsIn, top.env, x, ^ty).bindsOut;
 
   top.bindsOut = rest.bindsOut;
 
@@ -80,19 +74,19 @@ top::Fields ::= x::String ty::Type rest::Fields
 }
 
 production fieldsOne
-top::Fields ::= x::String ty::Type
+top::Fields ::= x::String ty::TypeExpr
 {
   ty.env = top.env;
 
-  top.bindsOut = addRecBind(top.bindsIn, x, ty).bindsOut;
+  top.bindsOut = addRecBind(top.bindsIn, top.env, x, ^ty).bindsOut;
 
   -- todo - no dupl check
   top.ok = true;
 }
 
-fun addRecBind Decorated Bind ::= inEnv::Env x::String ty::Decorated Type =
-  let newBind::Bind = bindArgDcl(x, ^ty, location=bogusLoc()) in
-    decorate newBind with { env = ty.env; bindsIn = inEnv; bindEnv = newEnv(); }
+fun addRecBind Decorated Bind ::= fldsEnv::Env env::Env x::String ty::TypeExpr =
+  let newBind::Bind = bindArgDcl(x, ty, location=bogusLoc()) in
+    decorate newBind with { env = env; bindsIn = fldsEnv; bindEnv = newEnv(); }
   end
 ;
 
@@ -106,7 +100,7 @@ top::Expr ::= name::String flds::FieldExprs
   flds.env = top.env;
   flds.bindEnv = fieldsIfJust(res);
 
-  top.type = if res.isJust then res.fromJust.type else decTErr();
+  top.type = if res.isJust then res.fromJust.type else tErr();
 
   -- todo - check flds.defined covers all fields of resolved record
   top.ok = res.isJust && flds.ok;
@@ -136,7 +130,10 @@ top::FieldExprs ::= x::String e::Expr rest::FieldExprs
 
   local res::Maybe<Decorated Bind> = top.bindEnv.lookupEnvVar(x);
 
-  top.ok = res.isJust && e.ok && res.fromJust.type.eq(e.type) && rest.ok;
+  local resTy::Type = res.fromJust.type;
+  resTy.env = top.env;
+
+  top.ok = res.isJust && e.ok && resTy.eq(e.type) && rest.ok;
 
 }
 
@@ -146,8 +143,11 @@ top::FieldExprs ::= x::String e::Expr
   e.env = top.env;
 
   local res::Maybe<Decorated Bind> = top.bindEnv.lookupEnvVar(x);
+  
+  local resTy::Type = res.fromJust.type;
+  resTy.env = top.env;
 
-  top.ok = res.isJust && e.ok && res.fromJust.type.eq(e.type);
+  top.ok = res.isJust && e.ok && resTy.eq(e.type);
 }
 
 --------------------------------------------------
@@ -189,7 +189,7 @@ top::RecAccess ::= lhs::RecAccessLHS x::String
 
   local res::Maybe<Decorated Bind> = lhs.bindsOut.lookupEnvVar(x);
 
-  top.type = if res.isJust then res.fromJust.type else decTErr();
+  top.type = if res.isJust then res.fromJust.type else tErr();
 
   top.ok = lhs.ok && res.isJust;
 }
@@ -201,21 +201,22 @@ top::Type ::= name::String fldEnv::Env
 {
   top.pp = name;
 
-  top.eq = \t::Decorated Type ->
+  top.eq = \t::Type ->
     case t of
       tRecord(n, _) -> n == name -- todo - fields eq
-    | tErr() -> true
     | _ -> false
     end;
 }
 
-production tRecordLookup
-top::Type ::= name::String
+--------------------------------------------------
+
+production teRecord
+top::TypeExpr ::= x::String
 {
-  forwards to
-    case top.env.lookupEnvRec(name) of
-      just(r) -> tRecord(name, r.fields)
-    | _ -> tRecord("<err>", newEnv())
+  top.type = 
+    case top.env.lookupEnvRec(x) of
+      just(r) -> r.type
+    | _ -> tErr()
     end;
 }
 
@@ -229,7 +230,7 @@ fun fieldsFromRecRes Env ::= res::Maybe<Decorated Bind> env::Env =
   case res of
     just(b) ->
       case b.type of
-        tRecord(r, env) -> ^env
+        tRecord(r, e) -> ^e
       | _ -> newEnv()
       end
   | _ -> newEnv()

@@ -213,7 +213,7 @@ top::Bind_c ::= id::Id_t '=' e::Expr_c
 }
 
 concrete production bindTyped_c
-top::Bind_c ::= id::Id_t ':' ty::Type_c '=' e::Expr_c
+top::Bind_c ::= id::Id_t ':' ty::TypeExpr_c '=' e::Expr_c
 {
   top.ast = bindTyped(ty.ast, id.lexeme, e.ast, location=top.location);
 }
@@ -224,49 +224,43 @@ top::Bind_c ::= id::Id_t ':' ty::Type_c '=' e::Expr_c
 nonterminal ArgDecl_c with ast<Bind>, location;
 
 concrete production argDecl_c
-top::ArgDecl_c ::= id::Id_t ':' ty::Type_c
+top::ArgDecl_c ::= id::Id_t ':' ty::TypeExpr_c
 {
   top.ast = bindArgDcl(id.lexeme, ty.ast, location=top.location);
 }
 
 --------------------------------------------------
 
-nonterminal Type_c with ast<Type>, location;
-
---
-
-production tFunUndec
-top::Type ::= ty1::Type ty2::Type
-{ forwards to tFun(ty1, ty2); }
+nonterminal TypeExpr_c with ast<TypeExpr>, location;
 
 --
 
 concrete production tFloat_c
-top::Type_c ::= 'float'
+top::TypeExpr_c ::= 'float'
 {
-  top.ast = tFloat();
+  top.ast = teFloat(location=top.location);
 }
 
 concrete production tInt_c
-top::Type_c ::= 'int'
+top::TypeExpr_c ::= 'int'
 {
-  top.ast = tInt();
+  top.ast = teInt(location=top.location);
 }
 
 concrete production tBool_c
-top::Type_c ::= 'bool'
+top::TypeExpr_c ::= 'bool'
 {
-  top.ast = tBool();
+  top.ast = teBool(location=top.location);
 }
 
 concrete production tFun_c
-top::Type_c ::= tyann1::Type_c '->' tyann2::Type_c
+top::TypeExpr_c ::= tyann1::TypeExpr_c '->' tyann2::TypeExpr_c
 {
-  top.ast = tFunUndec(tyann1.ast, tyann2.ast);
+  top.ast = teFun(tyann1.ast, tyann2.ast, location=top.location);
 }
 
 concrete production typeParens_c
-top::Type_c ::= '(' t::Type_c ')'
+top::TypeExpr_c ::= '(' t::TypeExpr_c ')'
 {
   top.ast = t.ast;
 }
