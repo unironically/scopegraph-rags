@@ -84,4 +84,4 @@ top::RecAccess_c ::= lhs::RecAccessLHS_c '.' x::Id_t
 
 concrete production tRecord_c
 top::Type_c ::= id::Id_t
-{ top.ast = tRecord(id.lexeme); }
+{ top.ast = tRecordLookup(id.lexeme); }

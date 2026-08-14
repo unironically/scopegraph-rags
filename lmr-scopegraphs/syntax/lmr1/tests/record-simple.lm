@@ -4,6 +4,17 @@ record rec2 extends rec1 with { thing2:bool }
 
 record foo { x:int, y:bool, z:rec2 }
 
-def bar:foo = foo { x = 2, y = true, z = rec2 { thing1 = 23, thing2 = true } }
+def bar:foo = 
+  foo { 
+    x = 2,
+    y = true,
+    z = 
+      rec2 {
+        thing1 = 23, 
+        thing2 = true 
+      }
+  }
 
-def baz:bool = bar.z.thing2
+def baz:rec2 = bar.z
+
+def baz2:int = baz.thing1

@@ -233,6 +233,14 @@ top::ArgDecl_c ::= id::Id_t ':' ty::Type_c
 
 nonterminal Type_c with ast<Type>, location;
 
+--
+
+production tFunUndec
+top::Type ::= ty1::Type ty2::Type
+{ forwards to tFun(ty1, ty2); }
+
+--
+
 concrete production tFloat_c
 top::Type_c ::= 'float'
 {
@@ -254,7 +262,7 @@ top::Type_c ::= 'bool'
 concrete production tFun_c
 top::Type_c ::= tyann1::Type_c '->' tyann2::Type_c
 {
-  top.ast = tFun(tyann1.ast, tyann2.ast);
+  top.ast = tFunUndec(tyann1.ast, tyann2.ast);
 }
 
 concrete production typeParens_c
