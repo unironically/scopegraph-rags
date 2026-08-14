@@ -37,12 +37,17 @@ top::Record ::= x::String fields::Fields
 production recordExt
 top::Record ::= x::String par::String fields::Fields
 {
-  top.outEnv = error("TODO recordExt.outEnv");
-  top.bindsOut = error("TODO recordExt.bindsOut");
+  local resPar::Maybe<Decorated Record> = top.env.lookupEnvRec(par);
 
-  top.fields = error("TODO recordExt.fields");
+  fields.env = top.env;
+  fields.bindsIn = if resPar.isJust then resPar.fromJust.fields else newEnv();
 
-  top.ok = error("TODO recordExt.ok");
+  top.outEnv = addRec(top.env, x, top);
+  top.bindsOut = addRec(top.env, x, top);
+
+  top.fields = fields.bindsOut;
+
+  top.ok = resPar.isJust && fields.ok;
 }
 
 --------------------------------------------------
