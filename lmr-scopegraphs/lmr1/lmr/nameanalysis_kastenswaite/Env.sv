@@ -66,6 +66,4 @@ top::Env ::= e::Env m::String ast::Decorated Module
 --
 
 fun contSearch Maybe<a> ::= x::String d::String ast::a cont::(Maybe<a> ::= String) =
-  if x == d
-  then unsafeTracePrint(just(ast), "good match of " ++ x ++ " with dcl " ++ d ++ "\n")
-  else unsafeTracePrint(cont(x), "bad match " ++ x ++ " with dcl " ++ d ++ "\n");
+  if x == d then just(ast) else cont(x);

@@ -1,0 +1,7 @@
+record thing { thing1:int }
+
+record foo { x:int, y:bool, z:thing }
+
+def bar:foo = foo { x = 2, y = true, z = thing { thing1 = 23 } }
+
+def baz:int = bar.z.thing1

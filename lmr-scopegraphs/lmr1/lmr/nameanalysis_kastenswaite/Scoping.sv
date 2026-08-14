@@ -170,7 +170,7 @@ top::Expr ::= e1::Expr e2::Expr
              | tFloat(), tFloat() -> tFloat()
              | _, _ -> tErr()
              end;
-  top.ok = e1.ok && e2.ok && top.type != tErr();
+  top.ok = e1.ok && e2.ok && !top.type.eq(tErr());
 }
 
 production exprAnd
@@ -181,7 +181,7 @@ top::Expr ::= e1::Expr e2::Expr
   
   top.type = tBool();
   top.ok = e1.ok && e2.ok &&
-           e1.type == tBool() && e2.type == tBool();
+           e1.type.eq(tBool()) && e2.type.eq(tBool());
 }
 
 production exprEq
@@ -192,7 +192,7 @@ top::Expr ::= e1::Expr e2::Expr
   
   top.type = tBool();
   top.ok = e1.ok && e2.ok &&
-           e1.type == e2.type;
+           e1.type.eq(e2.type);
 }
 
 production exprFun
@@ -220,7 +220,7 @@ top::Expr ::= e1::Expr e2::Expr
              end;
   top.ok = e1.ok && e2.ok &&
            case e1.type, e2.type of
-           | tFun(tIn, tOut), tArg -> tArg == ^tIn
+           | tFun(tIn, tOut), tArg -> tArg.eq(^tIn)
            | _, _ -> false
            end;
 }
@@ -232,9 +232,9 @@ top::Expr ::= e1::Expr e2::Expr e3::Expr
   e2.env = top.env;
   e3.env = top.env;
 
-  top.type = if e2.type == e3.type then e2.type else tErr();
+  top.type = if e2.type.eq(e3.type) then e2.type else tErr();
   top.ok = e1.ok && e2.ok && e3.ok && 
-           e1.type == tBool() && e2.type == e3.type;
+           e1.type.eq(tBool()) && e2.type.eq(e3.type);
 }
 
 production exprLet
@@ -360,7 +360,7 @@ top::Bind ::= tyann::Type x::String e::Expr
   top.bindsOut = addVar(top.bindsIn, x, top);
 
   top.type = ^tyann;
-  top.ok = e.ok && ^tyann == e.type;
+  top.ok = e.ok && tyann.eq(e.type);
 }
 
 production bind
@@ -387,14 +387,22 @@ top::Bind ::= x::String tyann::Type
 
 --------------------------------------------------
 
-nonterminal Type with pp;
+synthesized attribute eq::(Boolean ::= Type);
+
+nonterminal Type with pp, eq;
 
 production tFun
 top::Type ::= tyann1::Type tyann2::Type
 {
+  top.eq = \t::Type ->
+    case t of
+      tFun(t1, t2) -> tyann1.eq(^t1) && tyann2.eq(^t2)
+    | _ -> false
+    end;
+
   top.pp =
     case tyann1 of
-    | tFun(_, _) -> "(" ++ tyann1.pp ++ ") -> " ++ tyann2.pp
+      tFun(_, _) -> "(" ++ tyann1.pp ++ ") -> " ++ tyann2.pp
     | _ -> tyann1.pp ++ " -> " ++ tyann2.pp
     end;
 }
@@ -402,39 +410,29 @@ top::Type ::= tyann1::Type tyann2::Type
 production tFloat
 top::Type ::=
 {
+  top.eq = \t::Type -> case t of tFloat() -> true | tErr() -> true | _ -> false end;
   top.pp = "float";
 }
 
 production tInt
 top::Type ::=
 {
+  top.eq = \t::Type -> case t of tInt() -> true | tErr() -> true | _ -> false end;
   top.pp = "int";
 }
 
 production tBool
 top::Type ::=
 {
+  top.eq = \t::Type -> case t of tBool() -> true | tErr() -> true | _ -> false end;
   top.pp = "bool";
 }
 
 production tErr
 top::Type ::=
 {
+  top.eq = \t::Type -> true;
   top.pp = "<err>";
-}
-
-fun eqType Boolean ::= t1::Type t2::Type =
-  case t1, t2 of
-  | tFloat(), tFloat() -> true
-  | tInt(), tInt() -> true
-  | tBool(), tBool() -> true
-  | tFun(t1_1, t1_2), tFun(t2_1, t2_2) -> eqType(^t1_1, ^t2_1) && eqType(^t1_2, ^t2_2)
-  | tErr(), tErr() -> true
-  | _, _ -> false
-  end;
-
-instance Eq Type {
-  eq = eqType;
 }
 
 --------------------------------------------------
