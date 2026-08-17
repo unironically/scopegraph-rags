@@ -1,0 +1,508 @@
+grammar lmr1:lmr:nameanalysis_hardcoded;
+
+--------------------------------------------------
+
+synthesized attribute pp::String;
+synthesized attribute ok::Boolean;
+
+inherited attribute env::Env;         -- scope to lookup in
+inherited attribute bindEnv::Env;     -- scope to add binds to
+
+inherited attribute bindsIn::Env;     -- Module members threading down
+synthesized attribute bindsOut::Env;  -- Module members threading up
+
+synthesized attribute outEnv::Env;    -- Env coming up from a declaration to pass down to next
+synthesized attribute type::Type; -- Type of an expression
+
+--------------------------------------------------
+
+nonterminal Main with location, ok;
+
+production program
+top::Main ::= ds::Decls
+{
+  top.ok = ds.ok;
+
+  ds.env = newEnv();
+  ds.bindsIn = newEnv();
+}
+
+--------------------------------------------------
+
+
+nonterminal Decls with location, ok, env, outEnv, bindsIn, bindsOut;
+
+production declsCons
+top::Decls ::= d::Decl ds::Decls
+{
+  d.env = top.env;
+  d.bindsIn = top.bindsIn;
+
+  ds.env = newScope(d.outEnv);
+  ds.bindsIn = d.bindsOut;
+
+  top.outEnv = ds.outEnv;
+  top.bindsOut = ds.bindsOut;
+
+  top.ok = d.ok && ds.ok;
+}
+
+production declsNil
+top::Decls ::=
+{
+  top.outEnv = top.env;
+  top.bindsOut = top.bindsIn;
+
+  top.ok = true;
+}
+
+--------------------------------------------------
+
+nonterminal Decl with location, ok, env, outEnv, bindsIn, bindsOut;
+
+production declModule
+top::Decl ::= m::Module
+{
+  m.env = top.env;
+  m.bindsIn = top.bindsIn;
+
+  top.outEnv = m.outEnv;
+  top.bindsOut = m.bindsOut;
+
+  top.ok = m.ok;
+}
+
+production declImport
+top::Decl ::= mr::ModRef
+{
+  mr.env = top.env;
+
+  top.outEnv = mr.outEnv;
+  top.bindsOut = top.bindsIn;
+
+  top.ok = mr.ok;
+}
+
+production declDef
+top::Decl ::= b::Bind
+{
+  b.env = top.env;
+  b.bindEnv = top.env;
+  b.bindsIn = top.bindsIn;
+
+  top.outEnv = b.outEnv;
+  top.bindsOut = b.bindsOut;
+
+  top.ok = b.ok;
+}
+
+--------------------------------------------------
+
+synthesized attribute fields::Env;
+
+nonterminal Module with location, ok, env, outEnv, fields, bindsIn, bindsOut;
+
+production module
+top::Module ::= x::String ds::Decls
+{
+  ds.env = newScope(top.env);
+  ds.bindsIn = newEnv();
+
+  top.outEnv = addMod(top.env, x, top);
+  top.bindsOut = addMod(top.env, x, top);
+
+  top.fields = ds.bindsOut;
+
+  top.ok = ds.ok;
+}
+
+--------------------------------------------------
+
+nonterminal Expr with location, ok, env, type;
+
+production exprVar
+top::Expr ::= r::VarRef
+{
+  r.env = top.env;
+
+  top.ok = r.ok;
+  top.type = r.type;
+}
+
+production exprFloat
+top::Expr ::= f::Float
+{
+  top.ok = true;
+  top.type = tFloat();
+}
+
+production exprInt
+top::Expr ::= i::Integer
+{
+  top.ok = true;
+  top.type = tInt();
+}
+
+production exprTrue
+top::Expr ::=
+{
+  top.ok = true;
+  top.type = tBool();
+}
+
+production exprFalse
+top::Expr ::=
+{
+  top.ok = true;
+  top.type = tBool();
+}
+
+production exprAdd
+top::Expr ::= e1::Expr e2::Expr
+{
+  e1.env = top.env;
+  e2.env = top.env;
+  
+  top.type = case e1.type, e2.type of
+               tInt(), tInt() -> e1.type
+             | tInt(), tFloat() -> e1.type
+             | tFloat(), tInt() -> e2.type
+             | tFloat(), tFloat() -> e1.type
+             | _, _ -> tErr()
+             end;
+
+  top.ok = e1.ok && e2.ok && !top.type.eq(tErr());
+}
+
+production exprAnd
+top::Expr ::= e1::Expr e2::Expr
+{
+  e1.env = top.env;
+  e2.env = top.env;
+  
+  top.type = tBool();
+  top.ok = e1.ok && e2.ok &&
+           e1.type.eq(tBool()) && 
+           e2.type.eq(tBool());
+}
+
+production exprEq
+top::Expr ::= e1::Expr e2::Expr
+{
+  e1.env = top.env;
+  e2.env = top.env;
+  
+  top.type = tBool();
+  top.ok = e1.ok && e2.ok &&
+           e1.type.eq(e2.type);
+}
+
+production exprFun
+top::Expr ::= b::Bind e::Expr
+{
+  b.env = top.env;
+  b.bindEnv = newScope(top.env);
+  b.bindsIn = newEnv();
+
+  e.env = b.outEnv;
+
+  top.type = tFun(b.type, e.type);
+  top.ok = b.ok && e.ok;
+}
+
+production exprApp
+top::Expr ::= e1::Expr e2::Expr
+{
+  e1.env = top.env;
+  e2.env = top.env;
+
+  top.type = case e1.type of
+             | tFun(_, tOut) -> ^tOut
+             | _ -> tErr()
+             end;
+  top.ok = e1.ok && e2.ok &&
+           case e1.type, e2.type of
+           | tFun(tIn, tOut), tArg -> tArg.eq(^tIn)
+           | _, _ -> false
+           end;
+}
+
+production exprIf
+top::Expr ::= e1::Expr e2::Expr e3::Expr
+{
+  e1.env = top.env;
+  e2.env = top.env;
+  e3.env = top.env;
+
+  top.type = if e2.type.eq(e3.type) then e2.type else tErr();
+  top.ok = e1.ok && e2.ok && e3.ok && 
+           e1.type.eq(tBool()) && e2.type.eq(e3.type);
+}
+
+production exprLet
+top::Expr ::= bs::Binds e::Expr
+{
+  bs.env = top.env;
+
+  e.env = bs.outEnv;
+
+  top.type = e.type;
+  top.ok = bs.ok && e.ok;
+}
+
+production exprLetRec
+top::Expr ::= bs::ParBinds e::Expr
+{
+  nondecorated local bindEnv::Env = newScope(top.env);
+
+  bs.env = bs.outEnv;
+  bs.bindEnv = newScope(top.env);
+
+  e.env = bs.outEnv;
+
+  top.type = e.type;
+  top.ok = bs.ok && e.ok;
+}
+
+production exprLetPar
+top::Expr ::= bs::ParBinds e::Expr
+{
+  nondecorated local bindEnv::Env = newScope(top.env);
+
+  bs.env = top.env;
+  bs.bindEnv = newScope(top.env);
+
+  e.env = newScope(bs.outEnv);
+
+  top.type = e.type;
+  top.ok = bs.ok && e.ok;
+}
+
+--------------------------------------------------
+
+nonterminal Binds with location, ok, env, outEnv;
+
+production seqBindsCons
+top::Binds ::= b::Bind bs::Binds
+{
+  b.env = top.env;
+  b.bindEnv = newScope(top.env);
+  b.bindsIn = newEnv();
+
+  bs.env = b.outEnv;
+
+  top.outEnv = bs.outEnv;
+  top.ok = b.ok && bs.ok;
+}
+
+production seqBindsLast
+top::Binds ::= b::Bind
+{
+  b.env = top.env;
+  b.bindEnv = newScope(top.env);
+  b.bindsIn = newEnv();
+
+  top.outEnv = b.outEnv;
+  top.ok = b.ok;
+}
+
+production seqBindsNil
+top::Binds ::=
+{
+  top.outEnv = top.env;
+  top.ok = true;
+}
+
+--------------------------------------------------
+
+nonterminal ParBinds with location, ok, env, outEnv, bindEnv;
+
+production parBindsCons
+top::ParBinds ::= b::Bind bs::ParBinds
+{
+  b.env = top.env;
+  b.bindEnv = top.bindEnv;
+  b.bindsIn = newEnv();
+
+  bs.env = top.env;
+  bs.bindEnv = b.outEnv;
+
+  top.outEnv = bs.outEnv;
+  top.ok = b.ok && bs.ok;
+}
+
+production parBindsLast
+top::ParBinds ::= b::Bind
+{
+  b.env = top.env;
+  b.bindEnv = top.bindEnv;
+  b.bindsIn = newEnv();
+
+  top.outEnv = b.outEnv;
+  top.ok = b.ok;
+}
+
+production parBindsNil
+top::ParBinds ::=
+{
+  top.outEnv = top.bindEnv;
+  top.ok = true;
+}
+
+--------------------------------------------------
+
+nonterminal Bind with location, ok, env, bindEnv, outEnv, type, bindsOut, bindsIn;
+
+production bindTyped
+top::Bind ::= tyann::TypeExpr x::String e::Expr
+{
+  tyann.env = top.env;
+  e.env = top.env;
+
+  top.outEnv = addVar(top.bindEnv, x, top);
+  top.bindsOut = addVar(top.bindsIn, x, top);
+
+  top.type = tyann.type;
+  top.ok = e.ok && tyann.type.eq(e.type);
+}
+
+production bind
+top::Bind ::= x::String e::Expr
+{
+  e.env = top.env;
+
+  top.outEnv = addVar(top.bindEnv, x, top);
+  top.bindsOut = addVar(top.bindsIn, x, top);
+
+  top.type = e.type;
+  top.ok = e.ok;
+}
+
+production bindArgDcl
+top::Bind ::= x::String tyann::TypeExpr
+{
+  tyann.env = top.env;
+
+  top.outEnv = addVar(top.bindEnv, x, top);
+  top.bindsOut = addVar(top.bindsIn, x, top);
+
+  top.type = tyann.type;
+  top.ok = true;
+}
+
+--------------------------------------------------
+
+nonterminal TypeExpr with location, env, type;
+
+production teFloat
+top::TypeExpr ::= 
+{ top.type = tFloat(); }
+
+production teInt
+top::TypeExpr ::= 
+{ top.type = tInt(); }
+
+production teBool
+top::TypeExpr ::= 
+{ top.type = tBool(); }
+
+production teFun
+top::TypeExpr ::= te1::TypeExpr te2::TypeExpr 
+{ top.type = tFun(te1.type, te2.type); }
+
+--------------------------------------------------
+
+synthesized attribute eq::(Boolean ::= Type);
+
+nonterminal Type with pp, eq, env;
+
+production tFun
+top::Type ::= tyann1::Type tyann2::Type
+{
+  propagate env;
+
+  top.eq = \t::Type ->
+    case t of
+      tFun(t1, t2) -> tyann1.eq(^t1) && tyann2.eq(^t2)
+    | _ -> false
+    end;
+
+  top.pp =
+    case tyann1 of
+      tFun(_, _) -> "(" ++ tyann1.pp ++ ") -> " ++ tyann2.pp
+    | _ -> tyann1.pp ++ " -> " ++ tyann2.pp
+    end;
+}
+
+production tFloat
+top::Type ::=
+{
+  top.eq = \t::Type -> case t of tFloat() -> true | tErr() -> true | _ -> false end;
+  top.pp = "float";
+}
+
+production tInt
+top::Type ::=
+{
+  top.eq = \t::Type -> case t of tInt() -> true | tErr() -> true | _ -> false end;
+  top.pp = "int";
+}
+
+production tBool
+top::Type ::=
+{
+  top.eq = \t::Type -> case t of tBool() -> true | tErr() -> true | _ -> false end;
+  top.pp = "bool";
+}
+
+production tErr
+top::Type ::=
+{
+  top.eq = \t::Type -> false;
+  top.pp = "<err>";
+}
+
+--------------------------------------------------
+
+nonterminal ModRef with location, ok, env, outEnv;
+
+production modRef
+top::ModRef ::= x::String
+{
+  local res::Maybe<Decorated Module> = top.env.lookupEnvMod(x);
+
+  top.outEnv = case res of
+                 just(m) -> newScope(m.fields)
+               | _ -> top.env
+               end;
+
+  top.ok =
+    unsafeTracePrint(
+      res.isJust,
+      "Resolution of module " ++ x ++ " on line " ++
+        top.location.unparse ++ (if res.isJust then " found" else " not found") ++ "\n");
+}
+
+--------------------------------------------------
+
+nonterminal VarRef with location, ok, env, type;
+
+production varRef
+top::VarRef ::= x::String
+{
+  local res::Maybe<Decorated Bind> = top.env.lookupEnvVar(x);
+
+  top.type = typeIfJust(res);
+
+  top.ok =
+    unsafeTracePrint(
+      res.isJust,
+      "Resolution of variable " ++ x ++ " on line " ++
+        top.location.unparse ++ (if res.isJust then " found" else " not found") ++ "\n");
+}
+
+--------------------------------------------------
+
+fun typeIfJust Type ::= res::Maybe<Decorated Bind> =
+  if res.isJust then res.fromJust.type else tErr()
+;
