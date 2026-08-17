@@ -118,7 +118,6 @@ top::Decls ::=
 
   top.ok = true;
 -}
-
   top.ok = true;
 
   top.s_lex := []; top.s_var := [];
@@ -551,13 +550,15 @@ top::Expr ::= bs::ParBinds e::Expr
   top.ok = bs.ok && e.ok;
 -}
   local next::Scope = scope();
-  next.lex = top.s::(bs.s_lex ++ bs.s_def_lex);
-  next.var = bs.s_var ++ bs.s_def_var;
-  next.mod = bs.s_mod ++ bs.s_def_mod;
-  next.imp = bs.s_imp ++ bs.s_def_imp;
+  next.lex = top.s::(bs.s_lex ++ bs.s_def_lex ++ e.s_lex);
+  next.var = bs.s_var ++ bs.s_def_var ++ e.s_var;
+  next.mod = bs.s_mod ++ bs.s_def_mod ++ e.s_mod;
+  next.imp = bs.s_imp ++ bs.s_def_imp ++ e.s_imp;
 
   bs.s = next;
   bs.s_def = next;
+
+  e.s = next;
 
   top.ok = bs.ok && e.ok;
   top.type = e.type;
@@ -581,16 +582,18 @@ top::Expr ::= bs::ParBinds e::Expr
   top.ok = bs.ok && e.ok;
 -}
   local next::Scope = scope();
-  next.lex = top.s::bs.s_def_lex;
-  next.var = bs.s_def_var;
-  next.mod = bs.s_def_mod;
-  next.imp = bs.s_def_imp;
+  next.lex = top.s::(bs.s_def_lex ++ e.s_lex);
+  next.var = bs.s_def_var ++ e.s_var;
+  next.mod = bs.s_def_mod ++ e.s_mod;
+  next.imp = bs.s_def_imp ++ e.s_imp;
 
   bs.s = top.s;
   top.s_lex := bs.s_lex; top.s_var := bs.s_var;
   top.s_mod := bs.s_mod; top.s_imp := bs.s_imp;
 
   bs.s_def = next;
+
+  e.s = next;
 
   top.ok = bs.ok && e.ok;
   top.type = e.type;
@@ -932,21 +935,21 @@ top::Type ::= tyann1::Type tyann2::Type
 production tFloat
 top::Type ::=
 {
-  top.eq = \t::Type -> case t of tFloat() -> true | tErr() -> true | _ -> false end;
+  top.eq = \t::Type -> case t of tFloat() -> true | _ -> false end;
   top.pp = "float";
 }
 
 production tInt
 top::Type ::=
 {
-  top.eq = \t::Type -> case t of tInt() -> true | tErr() -> true | _ -> false end;
+  top.eq = \t::Type -> case t of tInt() -> true | _ -> false end;
   top.pp = "int";
 }
 
 production tBool
 top::Type ::=
 {
-  top.eq = \t::Type -> case t of tBool() -> true | tErr() -> true | _ -> false end;
+  top.eq = \t::Type -> case t of tBool() -> true | _ -> false end;
   top.pp = "bool";
 }
 
@@ -980,6 +983,27 @@ top::ModRef ::= x::String
       "Resolution of module " ++ x ++ " on line " ++
         top.location.unparse ++ (if res.isJust then " found" else " not found") ++ "\n");
 -}
+  local res::[LMScope] = 
+    queryVisible(
+      regexCatFun(
+        regexStarFun(regexLexFun()),
+        regexCatFun(
+          regexMaybeFun(regexImpFun()),
+          regexModFun()
+        )
+      ),
+      \d::Datum -> case d of datumMod(x_, _) -> x == x_ | _ -> false end,
+      lmOrd,
+      top.s
+    );
+
+  top.ok = length(res) == 1;
+
+  top.s_lex := []; top.s_var := [];
+  top.s_mod := []; top.s_imp := [];
+
+  top.s_def_lex := []; top.s_def_var := [];
+  top.s_def_mod := []; top.s_def_imp := if top.ok then res else [];
 }
 
 --------------------------------------------------
@@ -1001,11 +1025,32 @@ top::VarRef ::= x::String
       "Resolution of variable " ++ x ++ " on line " ++
         top.location.unparse ++ (if res.isJust then " found" else " not found") ++ "\n");
 -}
+  local res::[LMScope] = 
+    queryVisible(
+      regexCatFun(
+        regexStarFun(regexLexFun()),
+        regexCatFun(
+          regexMaybeFun(regexImpFun()),
+          regexVarFun()
+        )
+      ),
+      \d::Datum -> case d of datumVar(x_, _) -> x == x_ | _ -> false end,
+      lmOrd,
+      top.s
+    );
+
+  top.ok = length(res) == 1;
+  top.type = typeIfSingleton(res);
+
+  top.s_lex := []; top.s_var := [];
+  top.s_mod := []; top.s_imp := [];
 }
 
 --------------------------------------------------
 
-{-
-fun typeIfJust Type ::= res::Maybe<Decorated Bind> =
-  if res.isJust then res.fromJust.type else tErr();
--}
+
+fun typeIfSingleton Type ::= res::[LMScope] =
+  case res of
+    [s] -> case s.datum of datumVar(_, node) -> node.type | _ -> tErr() end 
+  | _ -> tErr()
+  end;

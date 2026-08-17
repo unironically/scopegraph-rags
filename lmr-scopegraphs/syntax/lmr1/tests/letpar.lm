@@ -5,7 +5,7 @@ def z = y
 def a =
   letpar
     a = x,
-    b = a,      // should fail
+    b = y,
     c = z
   in
     a + b + c

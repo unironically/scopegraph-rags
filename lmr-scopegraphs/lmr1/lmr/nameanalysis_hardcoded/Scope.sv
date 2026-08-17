@@ -109,6 +109,22 @@ fun regexPlusFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= r::(Res
 fun regexMaybeFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= r::(ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) =
   regexOrFun(regexEpsilonFun(), r);
 
+fun regexLexFun (ResPairList<LMLabs> ::= ResPair<LMLabs>) ::= =
+  \p::ResPair<LMLabs> ->
+    map(\sf::LMScope -> (sf, "lex"::p.2), p.1.lex);
+
+fun regexVarFun (ResPairList<LMLabs> ::= ResPair<LMLabs>) ::= =
+  \p::ResPair<LMLabs> ->
+    map(\sf::LMScope -> (sf, "var"::p.2), p.1.var);
+
+fun regexModFun (ResPairList<LMLabs> ::= ResPair<LMLabs>) ::= =
+  \p::ResPair<LMLabs> ->
+    map(\sf::LMScope -> (sf, "mod"::p.2), p.1.mod);
+
+fun regexImpFun (ResPairList<LMLabs> ::= ResPair<LMLabs>) ::= =
+  \p::ResPair<LMLabs> ->
+    map(\sf::LMScope -> (sf, "imp"::p.2), p.1.imp);
+
 -- Path minimum
 
 fun min ResPairList<(i::InhSet)> ::= c::(Integer ::= String String) ps::ResPairList<(i::InhSet)> =
@@ -167,3 +183,16 @@ fun applyScopePredR Maybe<Decorated Scope with i> ::= dp::Predicate p::ResPair<(
 -- used in visibility
 fun applyScopePredV Boolean ::= dp::Predicate p::ResPair<(i::InhSet)> =
   dp(p.1.datum);
+
+---------------
+-- Util for LM
+
+fun lmOrd Integer ::= l::String r::String =
+  case l, r of
+    "lex", "lex" -> 0
+  | "lex", _ -> 1 | _, "lex" -> -1
+  | "imp", "imp" -> 0
+  | "imp", _ -> 1 | _, "imp" -> -1
+  | _, _ -> 0
+  end
+;
