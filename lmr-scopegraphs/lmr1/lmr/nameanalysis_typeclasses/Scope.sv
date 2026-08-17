@@ -1,4 +1,4 @@
-grammar lmr1:lmr:nameanalysis5;
+grammar lmr1:lmr:nameanalysis_typeclasses;
 
 --
 
