@@ -20,20 +20,28 @@ synthesized attribute eq::(Boolean ::= Type); -- Type equality
 --
 
 inherited attribute s::LMScope;
-monoid attribute s_lex::[LMScope] with [], ++; monoid attribute s_var::[LMScope] with [], ++;
-monoid attribute s_mod::[LMScope] with [], ++; monoid attribute s_imp::[LMScope] with [], ++;
+monoid attribute s_lex::[LMScope] with [], ++;
+monoid attribute s_var::[LMScope] with [], ++;
+monoid attribute s_mod::[LMScope] with [], ++;
+monoid attribute s_imp::[LMScope] with [], ++;
 
 inherited attribute s_def::LMScope;
-monoid attribute s_def_lex::[LMScope] with [], ++; monoid attribute s_def_var::[LMScope] with [], ++;
-monoid attribute s_def_mod::[LMScope] with [], ++; monoid attribute s_def_imp::[LMScope] with [], ++;
+monoid attribute s_def_lex::[LMScope] with [], ++;
+monoid attribute s_def_var::[LMScope] with [], ++;
+monoid attribute s_def_mod::[LMScope] with [], ++;
+monoid attribute s_def_imp::[LMScope] with [], ++;
 
 inherited attribute s_module::LMScope;
-monoid attribute s_module_lex::[LMScope] with [], ++; monoid attribute s_module_var::[LMScope] with [], ++;
-monoid attribute s_module_mod::[LMScope] with [], ++; monoid attribute s_module_imp::[LMScope] with [], ++;
+monoid attribute s_module_lex::[LMScope] with [], ++;
+monoid attribute s_module_var::[LMScope] with [], ++;
+monoid attribute s_module_mod::[LMScope] with [], ++;
+monoid attribute s_module_imp::[LMScope] with [], ++;
 
 inherited attribute s_final::LMScope;
-monoid attribute s_final_lex::[LMScope] with [], ++; monoid attribute s_final_var::[LMScope] with [], ++;
-monoid attribute s_final_mod::[LMScope] with [], ++; monoid attribute s_final_imp::[LMScope] with [], ++;
+monoid attribute s_final_lex::[LMScope] with [], ++;
+monoid attribute s_final_var::[LMScope] with [], ++;
+monoid attribute s_final_mod::[LMScope] with [], ++;
+monoid attribute s_final_imp::[LMScope] with [], ++;
 
 --------------------------------------------------
 

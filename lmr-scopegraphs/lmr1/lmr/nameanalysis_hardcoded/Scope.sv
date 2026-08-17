@@ -8,24 +8,28 @@ type DecScope<(i::InhSet)> = Decorated Scope<i> with i;
 
 type LMScope = DecScope<LMLabs>;
 
+production scopeDefault
+top::Scope<(i::InhSet)> ::= d::Datum
+{ top.datum = d; }
+
 production scope
 top::Scope<(i::InhSet)> ::=
-{ top.datum = datumDefault(); }
+{ forwards to scopeDefault(datumDefault()); }
 
 production scopeVar
 top::Scope<(i::InhSet)> ::= x::String node::Decorated Bind
-{ top.datum = datumVar(x, node); }
+{ forwards to scopeDefault(datumVar(x, node)); }
 
 production scopeMod
 top::Scope<(i::InhSet)> ::= x::String node::Decorated Module
-{ top.datum = datumMod(x, node); }
+{ forwards to scopeDefault(datumMod(x, node)); }
 
 ---------------
 -- Data
 
-synthesized attribute datum::Datum;
+data nonterminal Datum;
 
-nonterminal Datum;
+synthesized attribute datum::Datum;
 
 production datumDefault
 top::Datum ::= {}
@@ -55,26 +59,6 @@ inherited attribute mod<(i::InhSet)>::[DecScope<(i::InhSet)>] occurs on Scope<(i
 inherited attribute imp<(i::InhSet)>::[DecScope<(i::InhSet)>] occurs on Scope<(i::InhSet)>;
 
 type LMLabs = {lex, var, mod, imp};
-
-production label_lex
-top::Label<LMLabs> ::= 
-{ top.name = "lex";
-  top.demand = \s::DecScope<LMLabs> -> s.lex; }
-
-production label_var
-top::Label<LMLabs> ::= 
-{ top.name = "var";
-  top.demand = \s::DecScope<LMLabs> -> s.var; }
-
-production label_mod
-top::Label<LMLabs> ::= 
-{ top.name = "mod";
-  top.demand = \s::DecScope<LMLabs> -> s.mod; }
-
-production label_imp
-top::Label<LMLabs> ::= 
-{ top.name = "imp";
-  top.demand = \s::DecScope<LMLabs> -> s.imp; }
 
 ------------------
 -- Resolution Util
@@ -111,12 +95,12 @@ fun regexPlusFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= r::(Res
 fun regexMaybeFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= r::(ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) =
   regexOrFun(regexEpsilonFun(), r);
 
+--
+
 fun regexLexFun 
   LMLabs subset i => (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
   \p::ResPair<(i::InhSet)> ->
     map(\sf::DecScope<(i::InhSet)> -> (sf, "lex"::p.2), p.1.lex);
-
---
 
 fun regexVarFun 
   LMLabs subset i => (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =

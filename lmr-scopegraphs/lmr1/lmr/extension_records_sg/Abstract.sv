@@ -5,6 +5,36 @@ exports lmr1:lmr:nameanalysis_hardcoded;
 
 --------------------------------------------------
 
+{-
+
+ISSUE:
+
+Scope attributes such as `s` in the host are defined with respect to the host
+language's inherited attribute set. E.g. s_lex has type [LMScope], where:
+`type LMScope = Decorated Scope<LMLabs> with LMLabs`.
+
+So how do we tell these scope attributes about the new labels that are being
+used in this extension?
+
+-}
+
+--------------------------------------------------
+
+aspect production program
+top::Main ::= ds::Decls
+{
+  {-
+  
+  ISSUE:
+
+  Scope `glob` in the host language is defined with type Scope<LMLabs> in the
+  `program` production. So how are we to add `rec` edges to it here?
+
+  -}
+} 
+
+--------------------------------------------------
+
 production declRecord
 top::Decl ::= r::Record
 {
