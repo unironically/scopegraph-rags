@@ -3,21 +3,21 @@ grammar lmr1:lmr:nameanalysis_hardcoded;
 ---------------
 -- Scope
 
-nonterminal Scope with datum;
-type DecScope<(i::InhSet)> = Decorated Scope with i;
+nonterminal Scope<(i::InhSet)> with datum;
+type DecScope<(i::InhSet)> = Decorated Scope<i> with i;
 
 type LMScope = DecScope<LMLabs>;
 
 production scope
-top::Scope ::=
+top::Scope<(i::InhSet)> ::=
 { top.datum = datumDefault(); }
 
 production scopeVar
-top::Scope ::= x::String node::Decorated Bind
+top::Scope<(i::InhSet)> ::= x::String node::Decorated Bind
 { top.datum = datumVar(x, node); }
 
 production scopeMod
-top::Scope ::= x::String node::Decorated Module
+top::Scope<(i::InhSet)> ::= x::String node::Decorated Module
 { top.datum = datumMod(x, node); }
 
 ---------------
@@ -49,10 +49,10 @@ instance Eq Label<(i::InhSet)> {
     left.name == right.name;
 }
 
-inherited attribute lex::[DecScope<LMLabs>] occurs on Scope;
-inherited attribute var::[DecScope<LMLabs>] occurs on Scope;
-inherited attribute mod::[DecScope<LMLabs>] occurs on Scope;
-inherited attribute imp::[DecScope<LMLabs>] occurs on Scope;
+inherited attribute lex<(i::InhSet)>::[DecScope<(i::InhSet)>] occurs on Scope<(i::InhSet)>;
+inherited attribute var<(i::InhSet)>::[DecScope<(i::InhSet)>] occurs on Scope<(i::InhSet)>;
+inherited attribute mod<(i::InhSet)>::[DecScope<(i::InhSet)>] occurs on Scope<(i::InhSet)>;
+inherited attribute imp<(i::InhSet)>::[DecScope<(i::InhSet)>] occurs on Scope<(i::InhSet)>;
 
 type LMLabs = {lex, var, mod, imp};
 
@@ -80,10 +80,12 @@ top::Label<LMLabs> ::=
 -- Resolution Util
 
 type ResPath = [String];
-type ResPair<(i::InhSet)> = (Decorated Scope with i, ResPath);
+type ResPair<(i::InhSet)> = (Decorated Scope<i> with i, ResPath);
 type ResPairList<(i::InhSet)> = [ResPair<i>];
 
 type Predicate = (Boolean ::= Datum);
+
+--
 
 fun regexEpsilonFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
   \p::ResPair<i> -> [(p.1, "$"::p.2)];
@@ -109,28 +111,34 @@ fun regexPlusFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= r::(Res
 fun regexMaybeFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= r::(ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) =
   regexOrFun(regexEpsilonFun(), r);
 
-fun regexLexFun (ResPairList<LMLabs> ::= ResPair<LMLabs>) ::= =
-  \p::ResPair<LMLabs> ->
-    map(\sf::LMScope -> (sf, "lex"::p.2), p.1.lex);
+fun regexLexFun 
+  LMLabs subset i => (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
+  \p::ResPair<(i::InhSet)> ->
+    map(\sf::DecScope<(i::InhSet)> -> (sf, "lex"::p.2), p.1.lex);
 
-fun regexVarFun (ResPairList<LMLabs> ::= ResPair<LMLabs>) ::= =
-  \p::ResPair<LMLabs> ->
-    map(\sf::LMScope -> (sf, "var"::p.2), p.1.var);
+--
 
-fun regexModFun (ResPairList<LMLabs> ::= ResPair<LMLabs>) ::= =
-  \p::ResPair<LMLabs> ->
-    map(\sf::LMScope -> (sf, "mod"::p.2), p.1.mod);
+fun regexVarFun 
+  LMLabs subset i => (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
+  \p::ResPair<(i::InhSet)> ->
+    map(\sf::DecScope<(i::InhSet)> -> (sf, "var"::p.2), p.1.var);
 
-fun regexImpFun (ResPairList<LMLabs> ::= ResPair<LMLabs>) ::= =
-  \p::ResPair<LMLabs> ->
-    map(\sf::LMScope -> (sf, "imp"::p.2), p.1.imp);
+fun regexModFun 
+  LMLabs subset i => (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
+  \p::ResPair<(i::InhSet)> ->
+    map(\sf::DecScope<(i::InhSet)> -> (sf, "mod"::p.2), p.1.mod);
+
+fun regexImpFun 
+  LMLabs subset i => (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
+  \p::ResPair<(i::InhSet)> ->
+    map(\sf::DecScope<(i::InhSet)> -> (sf, "imp"::p.2), p.1.imp);
 
 -- Path minimum
 
 fun min ResPairList<(i::InhSet)> ::= c::(Integer ::= String String) ps::ResPairList<(i::InhSet)> =
   foldr(
     \rp::ResPair<i> acc::ResPairList<i> ->
-      let s::Decorated Scope with i = rp.1 in
+      let s::Decorated Scope<i> with i = rp.1 in
       let p::[String] = reverse(rp.2) in
         if null(acc)
         then [(s, p)]
@@ -166,18 +174,18 @@ fun labelsComp Integer ::= c::(Integer ::= String String) l::[String] r::[String
 
 type RegexType<(i::InhSet)> = (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>);
 
-fun queryReachable [DecScope<LMLabs>] ::= rx::RegexType<LMLabs> p::Predicate start::DecScope<LMLabs> =
+fun queryReachable [DecScope<(i::InhSet)>] ::= rx::RegexType<(i::InhSet)> p::Predicate start::DecScope<(i::InhSet)> =
   filterMap(applyScopePredR(p, _), rx((start, [])));
 
-fun queryVisible [DecScope<LMLabs>] ::= rx::RegexType<LMLabs> p::Predicate ord::(Integer ::= String String) start::DecScope<LMLabs> =
+fun queryVisible [DecScope<(i::InhSet)>] ::= rx::RegexType<(i::InhSet)> p::Predicate ord::(Integer ::= String String) start::DecScope<(i::InhSet)> =
   map(
-    \p::ResPair<LMLabs> -> p.1,
+    \p::ResPair<i> -> p.1,
     min(
       ord,
       filter(applyScopePredV(p, _), rx((start, [])))));
 
 -- used in reachability
-fun applyScopePredR Maybe<Decorated Scope with i> ::= dp::Predicate p::ResPair<(i::InhSet)> =
+fun applyScopePredR Maybe<Decorated Scope<(i::InhSet)> with i> ::= dp::Predicate p::ResPair<(i::InhSet)> =
   if dp(p.1.datum) then just(p.1) else nothing();
 
 -- used in visibility

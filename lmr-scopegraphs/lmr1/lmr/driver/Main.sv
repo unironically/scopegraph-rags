@@ -5,10 +5,11 @@ grammar lmr1:lmr:driver;
 --imports lmr1:lmr:concretesyntax;
 --imports lmr1:lmr:nameanalysis_kastenswaite;
 
-imports lmr1:lmr:extension_records_sg;
+imports lmr1:lmr:concretesyntax;
+imports lmr1:lmr:nameanalysis_hardcoded;
 
 parser parse :: Main_c {
-  lmr1:lmr:extension_records_sg;
+  lmr1:lmr:concretesyntax;
 }
 
 function main

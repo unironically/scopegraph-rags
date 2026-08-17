@@ -48,11 +48,11 @@ top::Main ::= ds::Decls
   ds.env = newEnv();
   ds.bindsIn = newEnv();
 -}
-  local glob::Scope = scope();
+  local glob::Scope<LMLabs> = scope();
   glob.lex = ds.s_lex; glob.var = ds.s_var;
   glob.mod = ds.s_mod; glob.imp = ds.s_imp;
 
-  local dead::Scope = scope();
+  local dead::Scope<LMLabs> = scope();
   dead.lex = ds.s_module_lex; dead.var = ds.s_module_var;
   dead.mod = ds.s_module_mod; dead.imp = ds.s_module_imp;
 
@@ -85,7 +85,7 @@ top::Decls ::= d::Decl ds::Decls
   top.ok = d.ok && ds.ok;
 -}
 
-  local next::Scope = scope();
+  local next::Scope<LMLabs> = scope();
   next.lex = top.s::(d.s_def_lex ++ ds.s_lex);
   next.var = d.s_def_var ++ ds.s_var;
   next.mod = d.s_def_mod ++ ds.s_mod;
@@ -230,7 +230,7 @@ top::Module ::= x::String ds::Decls
 
   top.ok = ds.ok;
 -}
-  local mod::Scope = scopeMod(x, top);
+  local mod::Scope<LMLabs> = scopeMod(x, top);
   mod.lex = top.s::ds.s_module_lex;
   mod.var = ds.s_module_var;
   mod.mod = ds.s_module_mod;
@@ -424,7 +424,7 @@ top::Expr ::= b::Bind e::Expr
   top.type = tFun(b.type, e.type);
   top.ok = b.ok && e.ok;
 -}
-  local next::Scope = scope();
+  local next::Scope<LMLabs> = scope();
   next.lex = top.s::(b.s_def_lex ++ e.s_lex);
   next.var = b.s_def_var ++ e.s_var;
   next.mod = b.s_def_mod ++ e.s_mod;
@@ -517,7 +517,7 @@ top::Expr ::= bs::Binds e::Expr
   top.type = e.type;
   top.ok = bs.ok && e.ok;
 -}
-  local final::Scope = scope();
+  local final::Scope<LMLabs> = scope();
   final.lex = bs.s_final_lex ++ e.s_lex;
   final.var = bs.s_final_var ++ e.s_var;
   final.mod = bs.s_final_mod ++ e.s_mod;
@@ -549,7 +549,7 @@ top::Expr ::= bs::ParBinds e::Expr
   top.type = e.type;
   top.ok = bs.ok && e.ok;
 -}
-  local next::Scope = scope();
+  local next::Scope<LMLabs> = scope();
   next.lex = top.s::(bs.s_lex ++ bs.s_def_lex ++ e.s_lex);
   next.var = bs.s_var ++ bs.s_def_var ++ e.s_var;
   next.mod = bs.s_mod ++ bs.s_def_mod ++ e.s_mod;
@@ -581,7 +581,7 @@ top::Expr ::= bs::ParBinds e::Expr
   top.type = e.type;
   top.ok = bs.ok && e.ok;
 -}
-  local next::Scope = scope();
+  local next::Scope<LMLabs> = scope();
   next.lex = top.s::(bs.s_def_lex ++ e.s_lex);
   next.var = bs.s_def_var ++ e.s_var;
   next.mod = bs.s_def_mod ++ e.s_mod;
@@ -618,7 +618,7 @@ top::Binds ::= b::Bind bs::Binds
   top.outEnv = bs.outEnv;
   top.ok = b.ok && bs.ok;
 -}
-  local next::Scope = scope();
+  local next::Scope<LMLabs> = scope();
   next.lex = top.s::(b.s_def_lex ++ bs.s_lex);
   next.var = b.s_def_var ++ bs.s_var;
   next.mod = b.s_def_mod ++ bs.s_mod;
@@ -783,7 +783,7 @@ top::Bind ::= tyann::TypeExpr x::String e::Expr
   top.type = tyann.type;
   top.ok = e.ok && tyann.type.eq(e.type);
 -}
-  local var::Scope = scopeVar(x, top);
+  local var::Scope<LMLabs> = scopeVar(x, top);
   var.lex = []; var.var = [];
   var.mod = []; var.imp = [];
 
@@ -816,7 +816,7 @@ top::Bind ::= x::String e::Expr
   top.type = e.type;
   top.ok = e.ok;
 -}
-  local var::Scope = scopeVar(x, top);
+  local var::Scope<LMLabs> = scopeVar(x, top);
   var.lex = []; var.var = [];
   var.mod = []; var.imp = [];
 
@@ -845,7 +845,7 @@ top::Bind ::= x::String tyann::TypeExpr
   top.type = tyann.type;
   top.ok = true;
 -}
-  local var::Scope = scopeVar(x, top);
+  local var::Scope<LMLabs> = scopeVar(x, top);
   var.lex = []; var.var = [];
   var.mod = []; var.imp = [];
 
