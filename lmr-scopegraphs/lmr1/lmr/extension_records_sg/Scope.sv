@@ -48,5 +48,53 @@ top::Env ::= e::Env r::String ast::Decorated Record
 }
 -}
 
---------------------------------------------------
+---------------
+-- Scope
 
+production scopeRec
+top::Scope ::= x::String node::Decorated Record
+{ top.datum = datumRec(x, node); }
+
+---------------
+-- Data
+
+production datumRec
+top::Datum ::= x::String node::Decorated Record {}
+
+---------------
+-- Labels
+
+type LMLabsExt = {lex, var, mod, imp, rec};
+
+inherited attribute rec::[DecScope<LMLabsExt>] occurs on Scope;
+
+production label_rec
+top::Label<LMLabsExt> ::=
+{ top.name = "rec";
+  top.demand = \s::DecScope<LMLabsExt> -> s.rec; }
+
+------------------
+-- Resolution Util
+
+fun regexRecFun (ResPairList<LMLabsExt> ::= ResPair<LMLabsExt>) ::= =
+  \p::ResPair<LMLabsExt> ->
+    map(\sf::DecScope<LMLabsExt> -> (sf, "rec"::p.2), p.1.rec);
+
+fun regexRecFun_Test
+  LMLabsExt subset i => (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
+    \p::ResPair<(i::InhSet)> ->
+      map(\sf::DecScope<(i::InhSet)> -> (sf, "rec"::p.2), p.1.rec);
+
+{-
+
+ISSUE:
+
+regexRecFun_Test is what we might like to write as regexRecFun, with the subset
+constraint allowing extensions to use this function after they extend the
+label set with new labels.
+
+problem is that we use p.1.rec as the argument to map, which has type 
+Decorated Scope with {lex, var, imp, mod, rec}, which does not take into
+account all of what the set `i` might be.
+
+-}
