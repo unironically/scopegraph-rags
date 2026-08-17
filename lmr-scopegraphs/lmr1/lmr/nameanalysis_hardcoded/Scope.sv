@@ -6,6 +6,8 @@ grammar lmr1:lmr:nameanalysis_hardcoded;
 nonterminal Scope with datum;
 type DecScope<(i::InhSet)> = Decorated Scope with i;
 
+type LMScope = DecScope<LMLabs>;
+
 production scope
 top::Scope ::=
 { top.datum = datumDefault(); }
@@ -47,10 +49,10 @@ instance Eq Label<(i::InhSet)> {
     left.name == right.name;
 }
 
-inherited attribute lex::[DecScope<LMLabs>] with ++ occurs on Scope;
-inherited attribute var::[DecScope<LMLabs>] with ++ occurs on Scope;
-inherited attribute mod::[DecScope<LMLabs>] with ++ occurs on Scope;
-inherited attribute imp::[DecScope<LMLabs>] with ++ occurs on Scope;
+inherited attribute lex::[DecScope<LMLabs>] occurs on Scope;
+inherited attribute var::[DecScope<LMLabs>] occurs on Scope;
+inherited attribute mod::[DecScope<LMLabs>] occurs on Scope;
+inherited attribute imp::[DecScope<LMLabs>] occurs on Scope;
 
 type LMLabs = {lex, var, mod, imp};
 
@@ -160,10 +162,8 @@ fun queryVisible [DecScope<LMLabs>] ::= rx::RegexType<LMLabs> p::Predicate ord::
 
 -- used in reachability
 fun applyScopePredR Maybe<Decorated Scope with i> ::= dp::Predicate p::ResPair<(i::InhSet)> =
-  if dp(p.1.datum) then just(p.1) else nothing()
-;
+  if dp(p.1.datum) then just(p.1) else nothing();
 
 -- used in visibility
 fun applyScopePredV Boolean ::= dp::Predicate p::ResPair<(i::InhSet)> =
-  dp(p.1.datum)
-;
+  dp(p.1.datum);
