@@ -2,6 +2,7 @@ grammar lmr1:lmr:extension_records_sg;
 
 --------------------------------------------------
 
+{-
 synthesized attribute lookupEnvRec::(Maybe<Decorated Record> ::= String);
 
 --------------------------------------------------
@@ -45,3 +46,7 @@ top::Env ::= e::Env r::String ast::Decorated Record
 
   top.lookupEnvVar = \x::String -> e.lookupEnvVar(x);
 }
+-}
+
+--------------------------------------------------
+
