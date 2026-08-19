@@ -169,3 +169,5 @@ fun lmOrd Integer ::= l::String r::String =
   | _, _ -> 0
   end
 ;
+
+global deadScope::Decorated Scope = decorate scope() with { edges = mapNone(); };

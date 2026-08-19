@@ -52,8 +52,12 @@ top::Env ::= e::Env r::String ast::Decorated Record
 -- Scope
 
 production scopeRec
-top::Scope<(i::InhSet)> ::= x::String node::Decorated Record
+top::Scope ::= x::String node::Decorated Record
 { forwards to scopeDefault(datumRec(x, node)); }
+
+production scopeFld
+top::Scope ::= x::String node::Decorated Fields
+{ forwards to scopeDefault(datumFld(x, node)); }
 
 ---------------
 -- Data
@@ -61,17 +65,23 @@ top::Scope<(i::InhSet)> ::= x::String node::Decorated Record
 production datumRec
 top::Datum ::= x::String node::Decorated Record {}
 
+production datumFld
+top::Datum ::= x::String node::Decorated Fields {}
+
 ---------------
 -- Labels
 
-type LMLabsExt = {lex, var, mod, imp, rec};
+--type LMLabsExt = {lex, var, mod, imp, rec};
 
-inherited attribute rec<(i::InhSet)>::[DecScope<(i::InhSet)>] occurs on Scope<(i::InhSet)>;
+--inherited attribute rec::[DecScope] occurs on Scope;
 
 ------------------
 -- Resolution Util
 
-fun regexRecFun 
-  LMLabsExt subset i => (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
-  \p::ResPair<(i::InhSet)> ->
-    map(\sf::DecScope<(i::InhSet)> -> (sf, "rec"::p.2), p.1.rec);
+fun regexRecFun (ResPairList ::= ResPair) ::= =
+  \p::ResPair ->
+    map(\sf::Decorated Scope -> (sf, "rec"::p.2), p.1.edges.lookup("rec"));
+
+fun regexFldFun (ResPairList ::= ResPair) ::= =
+  \p::ResPair ->
+    map(\sf::Decorated Scope -> (sf, "fld"::p.2), p.1.edges.lookup("fld"));

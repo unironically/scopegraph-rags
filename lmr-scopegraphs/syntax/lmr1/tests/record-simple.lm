@@ -1,4 +1,3 @@
-
 record rec1 { thing1:int }
 record rec2 extends rec1 with { thing2:bool }
 
