@@ -3,11 +3,14 @@ grammar lmr1:lmr:nameanalysis_hardcoded;
 ---------------
 -- Scope
 
-nonterminal Scope with datum;
+nonterminal Scope with id, datum;
+
+synthesized attribute id::Integer;
 
 production scopeDefault
 top::Scope ::= d::Datum
-{ top.datum = d; }
+{ top.id = genInt();
+  top.datum = d; }
 
 production scope
 top::Scope ::=
@@ -30,18 +33,23 @@ inherited attribute edges::Map<String Decorated Scope> with combineMap
 -------
 -- Data
 
-data nonterminal Datum;
+data nonterminal Datum with name;
 
 synthesized attribute datum::Datum;
 
+synthesized attribute name::String;
+
 production datumDefault
-top::Datum ::= {}
+top::Datum ::= 
+{ top.name = ""; }
 
 production datumVar
-top::Datum ::= x::String node::Decorated Bind {}
+top::Datum ::= x::String node::Decorated Bind
+{ top.name = x; }
 
 production datumMod
-top::Datum ::= x::String node::Decorated Module {}
+top::Datum ::= x::String node::Decorated Module
+{ top.name= x; }
 
 -------------
 -- Resolution

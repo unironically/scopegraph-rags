@@ -43,6 +43,11 @@ IO<Integer> ::= largs::[String]
                   then 
                   do {
                     print("[✔] Semantic check successful\n");
+                    print("Scope IDs and names:\n" ++ 
+                          implode("\n",
+                                  map(\s::Decorated Scope -> " - " ++ toString(s.id) ++ ": " ++ s.datum.name,
+                                      ast.allScopes)) ++
+                                  "\n");
                     --mkdir("out");
                     --writeFile("out/" ++ fileName ++ ".ml", ast.ocaml);
                     return 0;

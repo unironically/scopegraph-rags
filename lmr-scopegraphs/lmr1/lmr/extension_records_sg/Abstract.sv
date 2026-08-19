@@ -5,6 +5,12 @@ exports lmr1:lmr:nameanalysis_hardcoded;
 
 --------------------------------------------------
 
+attribute allScopes occurs on Record, Fields;
+
+propagate allScopes on Record, Fields;
+
+--------------------------------------------------
+
 -- inherited attribute s::Decorated Scope;
 monoid attribute s_rec::[Decorated Scope] with [], ++;
 
@@ -71,6 +77,8 @@ top::Decl ::= r::Record
   propagate s_lex, s_var, s_mod, s_imp,
             s_def_lex, s_def_var, s_def_mod, s_def_imp,
             s_module_lex, s_module_var, s_module_mod, s_module_imp;
+
+  propagate allScopes;
 }
 
 --------------------------------------------------
@@ -95,6 +103,8 @@ top::Record ::= x::String fields::Fields
 
   top.s_def_rec := [rec];
   top.s_module_rec := [rec];
+
+  top.allScopes <- [rec];
 }
 
 production recordExt
@@ -136,6 +146,8 @@ top::Record ::= x::String par::String fields::Fields
 
   top.s_def_rec := [rec];
   top.s_module_rec := [rec];
+
+  top.allScopes <- [rec];
 }
 
 --------------------------------------------------
@@ -157,6 +169,8 @@ top::Fields ::= x::String ty::TypeExpr rest::Fields
   top.type = ty.type;
 
   top.s_def_flds <- [fld];
+
+  top.allScopes <- [fld];
 }
 
 production fieldsOne
@@ -170,6 +184,8 @@ top::Fields ::= x::String ty::TypeExpr
   top.type = ty.type;
 
   top.s_def_flds <- [fld];
+
+  top.allScopes <- [fld];
 }
 
 --------------------------------------------------
@@ -213,6 +229,7 @@ top::Expr ::= x::String flds::FieldExprs
     end;
 
   propagate s_lex, s_var, s_mod, s_imp;
+  propagate allScopes;
 }
 
 production exprRecordAccess
@@ -225,6 +242,7 @@ top::Expr ::= r::RecAccess
   top.ok = r.ok;
 
   propagate s_lex, s_var, s_mod, s_imp;
+  propagate allScopes;
 }
 
 --------------------------------------------------

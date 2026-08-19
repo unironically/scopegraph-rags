@@ -2,6 +2,13 @@ grammar lmr1:lmr:nameanalysis_hardcoded;
 
 --------------------------------------------------
 
+monoid attribute allScopes::[Decorated Scope] with [], ++ occurs on
+  Main, Decls, Decl, Module, Bind, Binds, ParBinds, Expr;
+
+propagate allScopes on Main, Decls, Decl, Module, Bind, Binds, ParBinds, Expr;
+
+--------------------------------------------------
+
 synthesized attribute pp::String;
 synthesized attribute ok::Boolean;
 
@@ -70,6 +77,7 @@ top::Main ::= ds::Decls
 
   top.ok = ds.ok;
 
+  top.allScopes <- [glob];
 }
 
 --------------------------------------------------
@@ -120,6 +128,8 @@ top::Decls ::= d::Decl ds::Decls
   top.s_module_var := d.s_module_var ++ ds.s_module_var;
   top.s_module_mod := d.s_module_mod ++ ds.s_module_mod;
   top.s_module_imp := d.s_module_imp ++ ds.s_module_imp;
+
+  top.allScopes <- [next];
 }
 
 production declsNil
@@ -263,6 +273,8 @@ top::Module ::= x::String ds::Decls
 
   top.s_def_lex := []; top.s_def_var := [];
   top.s_def_mod := [mod]; top.s_def_imp := [];
+
+  top.allScopes <- [mod];
 }
 
 --------------------------------------------------
@@ -460,6 +472,8 @@ top::Expr ::= b::Bind e::Expr
 
   top.type = tFun(b.type, e.type);
   top.ok = b.ok && e.ok;
+
+  top.allScopes <- [next];
 }
 
 production exprApp
@@ -558,6 +572,8 @@ top::Expr ::= bs::Binds e::Expr
 
   top.s_lex := []; top.s_var := [];
   top.s_mod := []; top.s_imp := [];
+
+  top.allScopes <- [final];
 }
 
 production exprLetRec
@@ -594,6 +610,8 @@ top::Expr ::= bs::ParBinds e::Expr
 
   top.s_lex := []; top.s_var := [];
   top.s_mod := []; top.s_imp := [];
+
+  top.allScopes <- [next];
 }
 
 production exprLetPar
@@ -630,6 +648,8 @@ top::Expr ::= bs::ParBinds e::Expr
 
   top.ok = bs.ok && e.ok;
   top.type = e.type;
+
+  top.allScopes <- [next];
 }
 
 --------------------------------------------------
@@ -678,6 +698,8 @@ top::Binds ::= b::Bind bs::Binds
   top.s_final_imp := bs.s_final_imp;
 
   top.ok = b.ok && bs.ok;
+
+  top.allScopes <- [next];
 }
 
 production seqBindsLast
@@ -843,6 +865,8 @@ top::Bind ::= tyann::TypeExpr x::String e::Expr
 
   top.ok = e.ok && tyann.ok && tyann.type.eq(e.type);
   top.type = tyann.type;
+
+  top.allScopes <- [var];
 }
 
 production bind
@@ -876,6 +900,8 @@ top::Bind ::= x::String e::Expr
 
   top.ok = e.ok;
   top.type = e.type;
+
+  top.allScopes <- [var];
 }
 
 production bindArgDcl
@@ -909,6 +935,8 @@ top::Bind ::= x::String tyann::TypeExpr
 
   top.ok = tyann.ok;
   top.type = tyann.type;
+
+  top.allScopes <- [var];
 }
 
 --------------------------------------------------

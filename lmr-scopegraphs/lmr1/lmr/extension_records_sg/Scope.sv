@@ -15,10 +15,12 @@ top::Scope ::= x::String node::Decorated Fields
 -- Data
 
 production datumRec
-top::Datum ::= x::String node::Decorated Record {}
+top::Datum ::= x::String node::Decorated Record 
+{ top.name = x; }
 
 production datumFld
-top::Datum ::= x::String node::Decorated Fields {}
+top::Datum ::= x::String node::Decorated Fields
+{ top.name = x; }
 
 -------------
 -- Resolution
