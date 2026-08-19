@@ -23,6 +23,7 @@ monoid attribute s_final_rec::[Decorated Scope] with [], ++;
 aspect production program
 top::Main ::= ds::Decls
 {
+  -- contribute extension edges to host's global scope
   glob.edges <- mapLast("rec", ds.s_rec);
 } 
 
@@ -34,6 +35,7 @@ attribute s_module_rec occurs on Decls;
 aspect production declsCons
 top::Decls ::= d::Decl ds::Decls
 {
+  -- contribute extension edges to host's sequential decls scope
   next.edges <- mapLast("rec", d.s_def_rec ++ ds.s_rec);
 
   top.s_rec := d.s_rec;
@@ -43,8 +45,7 @@ top::Decls ::= d::Decl ds::Decls
 aspect production declsNil
 top::Decls ::=
 {
-  top.s_rec := [];
-  top.s_module_rec := [];
+  propagate s_rec, s_module_rec;
 }
 
 --------------------------------------------------
@@ -67,15 +68,9 @@ top::Decl ::= r::Record
 
   top.ok = r.ok;
 
-  top.s_lex := []; top.s_var := [];
-  top.s_mod := []; top.s_imp := [];
-
-  top.s_def_lex := []; top.s_def_var := [];
-  top.s_def_mod := []; top.s_def_imp := [];
-
-  top.s_module_lex := []; top.s_module_var := [];
-  top.s_module_mod := []; top.s_module_imp := [];
-
+  propagate s_lex, s_var, s_mod, s_imp,
+            s_def_lex, s_def_var, s_def_mod, s_def_imp,
+            s_module_lex, s_module_var, s_module_mod, s_module_imp;
 }
 
 --------------------------------------------------
@@ -105,6 +100,7 @@ top::Record ::= x::String fields::Fields
 production recordExt
 top::Record ::= x::String par::String fields::Fields
 {
+  -- lex* imp? rec
   local res::[Decorated Scope] = 
     queryVisible(
       regexCatFun(
@@ -114,7 +110,10 @@ top::Record ::= x::String par::String fields::Fields
           regexRecFun()
         )
       ),
-      \d::Datum -> case d of datumRec(x_, _) -> par == x_ | _ -> false end,
+      \d::Datum -> case d of
+                     datumRec(x_, _) -> par == x_
+                   | _ -> false
+                   end,
       lmOrd,
       top.s
     );
@@ -178,6 +177,7 @@ top::Fields ::= x::String ty::TypeExpr
 production exprRecord
 top::Expr ::= x::String flds::FieldExprs
 {
+  -- lex* imp? rec
   local res::[Decorated Scope] = 
     queryVisible(
       regexCatFun(
@@ -187,24 +187,32 @@ top::Expr ::= x::String flds::FieldExprs
           regexRecFun()
         )
       ),
-      \d::Datum -> case d of datumRec(x_, _) -> x == x_ | _ -> false end,
+      \d::Datum -> case d of
+                     datumRec(x_, _) -> x == x_
+                   | _ -> false
+                   end,
       lmOrd,
       top.s
     );
 
   flds.s = top.s;
-  flds.s_def = case res of [s] -> s | _ -> deadScope end;
+  flds.s_def = case res of
+                 [s] -> s
+               | _ -> deadScope
+               end;
 
   top.ok = length(res) == 1 && flds.ok;
 
   top.type =
     case res of
-      [s] -> case s.datum of datumRec(_, node) -> node.type | _ -> tErr() end
+      [s] -> case s.datum of
+               datumRec(_, node) -> node.type
+             | _ -> tErr()
+             end
     | _ -> tErr()
     end;
 
-  top.s_lex := []; top.s_var := [];
-  top.s_mod := []; top.s_imp := [];
+  propagate s_lex, s_var, s_mod, s_imp;
 }
 
 production exprRecordAccess
@@ -216,8 +224,7 @@ top::Expr ::= r::RecAccess
 
   top.ok = r.ok;
 
-  top.s_lex := []; top.s_var := [];
-  top.s_mod := []; top.s_imp := [];
+  propagate s_lex, s_var, s_mod, s_imp;
 }
 
 --------------------------------------------------
@@ -227,16 +234,23 @@ nonterminal FieldExprs with location, ok, s, s_def;
 production fieldExprsCons
 top::FieldExprs ::= x::String e::Expr rest::FieldExprs
 {
+  -- rec* fld
   local res::[Decorated Scope] = 
     queryReachable(
       regexCatFun(regexStarFun(regexRecFun()), regexFldFun()),
-      \d::Datum -> case d of datumFld(x_, _) -> x == x_ | _ -> false end,
+      \d::Datum -> case d of
+                     datumFld(x_, _) -> x == x_
+                   | _ -> false
+                   end,
       top.s_def
     );
 
   nondecorated local resTy::Type = 
     case res of
-      [s] -> case s.datum of datumFld(_, node) -> node.type | _ -> tErr() end
+      [s] -> case s.datum of
+               datumFld(_, node) -> node.type
+             | _ -> tErr()
+             end
     | _ -> tErr()
     end;
 
@@ -251,16 +265,23 @@ top::FieldExprs ::= x::String e::Expr rest::FieldExprs
 production fieldExprsOne
 top::FieldExprs ::= x::String e::Expr
 {
+  -- rec* fld
   local res::[Decorated Scope] = 
     queryReachable(
       regexCatFun(regexStarFun(regexRecFun()), regexFldFun()),
-      \d::Datum -> case d of datumFld(x_, _) -> x == x_ | _ -> false end,
+      \d::Datum -> case d of
+                     datumFld(x_, _) -> x == x_
+                   | _ -> false
+                   end,
       top.s_def
     );
 
   nondecorated local resTy::Type = 
     case res of
-      [s] -> case s.datum of datumFld(_, node) -> node.type | _ -> tErr() end
+      [s] -> case s.datum of
+               datumFld(_, node) -> node.type
+             | _ -> tErr()
+             end
     | _ -> tErr()
     end;
 
@@ -278,10 +299,14 @@ nonterminal RecAccessLHS with location, ok, s, s_qual;
 production recAccessLHSQual
 top::RecAccessLHS ::= r::RecAccessLHS x::String
 {
+  -- rec* fld
   local res::[Decorated Scope] = 
     queryVisible(
       regexCatFun(regexStarFun(regexRecFun()), regexFldFun()),
-      \d::Datum -> case d of datumFld(x_, _) -> x == x_ | _ -> false end,
+      \d::Datum -> case d of
+                     datumFld(x_, _) -> x == x_
+                   | _ -> false
+                   end,
       lmOrd,
       r.s_qual
     );
@@ -305,6 +330,7 @@ top::RecAccessLHS ::= r::RecAccessLHS x::String
 production recAccessLHS
 top::RecAccessLHS ::= x::String
 {
+  -- LEX* IMP? VAR
   local res::[Decorated Scope] = 
     queryVisible(
       regexCatFun(
@@ -343,10 +369,14 @@ top::RecAccess ::= lhs::RecAccessLHS x::String
 {
   lhs.s = top.s;
 
+  -- rec* fld
   local res::[Decorated Scope] = 
     queryVisible(
       regexCatFun(regexStarFun(regexRecFun()), regexFldFun()),
-      \d::Datum -> case d of datumFld(x_, _) -> x == x_ | _ -> false end,
+      \d::Datum -> case d of
+                     datumFld(x_, _) -> x == x_
+                   | _ -> false
+                   end,
       lmOrd,
       lhs.s_qual
     );
@@ -355,7 +385,10 @@ top::RecAccess ::= lhs::RecAccessLHS x::String
   
   top.type =
     case res of
-      [s] -> case s.datum of datumFld(_, node) -> node.type | _ -> tErr() end
+      [s] -> case s.datum of
+               datumFld(_, node) -> node.type
+             | _ -> tErr()
+             end
     | _ -> tErr()
     end;
 }
@@ -380,6 +413,7 @@ top::Type ::= name::String s::Decorated Scope
 production teRecord
 top::TypeExpr ::= x::String
 {
+  -- lex* imp? rec
   local res::[Decorated Scope] = 
     queryVisible(
       regexCatFun(
@@ -389,7 +423,10 @@ top::TypeExpr ::= x::String
           regexRecFun()
         )
       ),
-      \d::Datum -> case d of datumRec(x_, _) -> x == x_ | _ -> false end,
+      \d::Datum -> case d of
+                     datumRec(x_, _) -> x == x_
+                   | _ -> false
+                   end,
       lmOrd,
       top.s
     );
@@ -408,21 +445,3 @@ top::TypeExpr ::= x::String
   top.s_lex := []; top.s_var := [];
   top.s_mod := []; top.s_imp := [];
 }
-
---------------------------------------------------
-
-{-
-fun fieldsIfJust Env ::= res::Maybe<Decorated Record> =
-  if res.isJust then res.fromJust.fields else newEnv()
-;
-
-fun fieldsFromRecRes Env ::= res::Maybe<Decorated Bind> env::Env =
-  case res of
-    just(b) ->
-      case b.type of
-        tRecord(r, e) -> ^e
-      | _ -> newEnv()
-      end
-  | _ -> newEnv()
-  end;
--}

@@ -3,9 +3,7 @@ grammar lmr1:lmr:nameanalysis_hardcoded;
 ---------------
 -- Scope
 
-nonterminal Scope with datum, edges;
-
-inherited attribute edges::Map<String Decorated Scope> with combineMap;
+nonterminal Scope with datum;
 
 production scopeDefault
 top::Scope ::= d::Datum
@@ -23,7 +21,13 @@ production scopeMod
 top::Scope ::= x::String node::Decorated Module
 { forwards to scopeDefault(datumMod(x, node)); }
 
----------------
+-------------
+-- Edges attr
+
+inherited attribute edges::Map<String Decorated Scope> with combineMap
+  occurs on Scope;
+
+-------
 -- Data
 
 data nonterminal Datum;
@@ -39,17 +43,8 @@ top::Datum ::= x::String node::Decorated Bind {}
 production datumMod
 top::Datum ::= x::String node::Decorated Module {}
 
----------------
--- Labels
-
---inherited attribute lex::[Decorated Scope] occurs on Scope;
---inherited attribute var::[Decorated Scope] occurs on Scope;
---inherited attribute mod::[Decorated Scope] occurs on Scope;
---inherited attribute imp::[Decorated Scope] occurs on Scope;
---type LMLabs = {lex, var, mod, imp};
-
-------------------
--- Resolution Util
+-------------
+-- Resolution
 
 type ResPath = [String];
 type ResPair = (Decorated Scope, ResPath);
@@ -57,7 +52,7 @@ type ResPairList = [ResPair];
 
 type Predicate = (Boolean ::= Datum);
 
---
+-- Generic regex functions
 
 fun regexEpsilonFun (ResPairList ::= ResPair) ::= =
   \p::ResPair -> [(p.1, "$"::p.2)];
@@ -74,7 +69,9 @@ fun regexOrFun (ResPairList ::= ResPair) ::= l::(ResPairList ::= ResPair) r::(Re
 fun regexStarFun (ResPairList ::= ResPair) ::= r::(ResPairList ::= ResPair) =
   \p::ResPair ->
     let go::ResPairList = r(p) in
-      if null(go) then [p] else p::concat(map(regexStarFun(r), go)) 
+      if null(go)
+      then [p]
+      else p::concat(map(regexStarFun(r), go)) 
     end;
 
 fun regexPlusFun (ResPairList ::= ResPair) ::= r::(ResPairList ::= ResPair) =
@@ -83,7 +80,7 @@ fun regexPlusFun (ResPairList ::= ResPair) ::= r::(ResPairList ::= ResPair) =
 fun regexMaybeFun (ResPairList ::= ResPair) ::= r::(ResPairList ::= ResPair) =
   regexOrFun(regexEpsilonFun(), r);
 
---
+-- Language-specific regex functions
 
 fun regexLexFun (ResPairList ::= ResPair) ::= =
   \p::ResPair ->
@@ -101,7 +98,24 @@ fun regexImpFun (ResPairList ::= ResPair) ::= =
   \p::ResPair ->
     map(\sf::Decorated Scope -> (sf, "imp"::p.2), p.1.edges.lookup("imp"));
 
--- Path minimum
+-------------
+-- Query Funs
+
+type RegexF = (ResPairList ::= ResPair);
+
+fun queryReachable [Decorated Scope] ::= rx::RegexF pred::Predicate start::Decorated Scope =
+  filterMap(\r::ResPair -> if pred(r.1.datum)
+                           then just(r.1)
+                           else nothing(),
+            rx((start, [])));
+
+fun queryVisible [Decorated Scope] ::= rx::RegexF pred::Predicate ord::(Integer ::= String String) start::Decorated Scope =
+  map(\p::ResPair -> p.1,
+        min(ord,
+            filter(\r::ResPair -> pred(r.1.datum),
+                   rx((start, [])))));
+
+--
 
 fun min ResPairList ::= c::(Integer ::= String String) ps::ResPairList =
   foldr(
@@ -113,7 +127,7 @@ fun min ResPairList ::= c::(Integer ::= String String) ps::ResPairList =
         else
           let hp::[String] = head(acc).2 in
             case labelsComp(c, p, hp) of
-            | 0  -> (s, p)::acc
+              0  -> (s, p)::acc
             | -1 -> [(s, p)]
             | _  -> acc
             end
@@ -121,53 +135,30 @@ fun min ResPairList ::= c::(Integer ::= String String) ps::ResPairList =
       end end,
     [],
     ps
-  )
-;
+  );
 
 fun labelsComp Integer ::= c::(Integer ::= String String) l::[String] r::[String] =
   case l, r of
-  | [], [] -> 0
+    [], [] -> 0
   | [], _ -> 0 | _, [] -> 0
   | hl::tl, hr::tr ->
-    let compOne::Integer = c(hl, hr) in
-      if compOne == 0
-      then labelsComp(c, tl, tr)
-      else compOne
-    end
-  end
-;
+      let compOne::Integer = c(hl, hr) in
+        if compOne == 0
+        then labelsComp(c, tl, tr)
+        else compOne
+      end
+  end;
 
----------------
--- Queries
-
-type RegexType = (ResPairList ::= ResPair);
-
-fun queryReachable [Decorated Scope] ::= rx::RegexType p::Predicate start::Decorated Scope =
-  filterMap(applyScopePredR(p, _), rx((start, [])));
-
-fun queryVisible [Decorated Scope] ::= rx::RegexType p::Predicate ord::(Integer ::= String String) start::Decorated Scope =
-  map(\p::ResPair -> p.1,
-        min(ord, filter(applyScopePredV(p, _), rx((start, [])))));
-
--- used in reachability
-fun applyScopePredR Maybe<Decorated Scope> ::= dp::Predicate p::ResPair =
-  if dp(p.1.datum) then just(p.1) else nothing();
-
--- used in visibility
-fun applyScopePredV Boolean ::= dp::Predicate p::ResPair =
-  dp(p.1.datum);
-
----------------
+--------------
 -- Util for LM
 
 fun lmOrd Integer ::= l::String r::String =
   case l, r of
     "lex", "lex" -> 0
-  | "lex", _ -> 1 | _, "lex" -> -1
+  | "lex", _ -> 1 | _, "lex" -> -1 -- lex least preferred
   | "imp", "imp" -> 0
-  | "imp", _ -> 1 | _, "imp" -> -1
+  | "imp", _ -> 1 | _, "imp" -> -1 -- imp less preferred than var, mod
   | _, _ -> 0
-  end
-;
+  end;
 
 global deadScope::Decorated Scope = decorate scope() with { edges = mapNone(); };
