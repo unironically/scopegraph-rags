@@ -3,25 +3,24 @@ grammar lmr1:lmr:nameanalysis_hardcoded;
 ---------------
 -- Scope
 
-nonterminal Scope<(i::InhSet)> with datum;
-type DecScope<(i::InhSet)> = Decorated Scope<i> with i;
+nonterminal Scope with datum, edges;
 
-type LMScope = DecScope<LMLabs>;
+inherited attribute edges::Map<String Decorated Scope> with combineMap;
 
 production scopeDefault
-top::Scope<(i::InhSet)> ::= d::Datum
+top::Scope ::= d::Datum
 { top.datum = d; }
 
 production scope
-top::Scope<(i::InhSet)> ::=
+top::Scope ::=
 { forwards to scopeDefault(datumDefault()); }
 
 production scopeVar
-top::Scope<(i::InhSet)> ::= x::String node::Decorated Bind
+top::Scope ::= x::String node::Decorated Bind
 { forwards to scopeDefault(datumVar(x, node)); }
 
 production scopeMod
-top::Scope<(i::InhSet)> ::= x::String node::Decorated Module
+top::Scope ::= x::String node::Decorated Module
 { forwards to scopeDefault(datumMod(x, node)); }
 
 ---------------
@@ -43,86 +42,71 @@ top::Datum ::= x::String node::Decorated Module {}
 ---------------
 -- Labels
 
-nonterminal Label<(i::InhSet)> with name, demand<i>;
-
-synthesized attribute name::String;
-synthesized attribute demand<(i::InhSet)>::([DecScope<i>] ::= DecScope<i>);
-
-instance Eq Label<(i::InhSet)> {
-  eq = \left::Label<(i::InhSet)> right::Label<(i::InhSet)> -> 
-    left.name == right.name;
-}
-
-inherited attribute lex<(i::InhSet)>::[DecScope<(i::InhSet)>] occurs on Scope<(i::InhSet)>;
-inherited attribute var<(i::InhSet)>::[DecScope<(i::InhSet)>] occurs on Scope<(i::InhSet)>;
-inherited attribute mod<(i::InhSet)>::[DecScope<(i::InhSet)>] occurs on Scope<(i::InhSet)>;
-inherited attribute imp<(i::InhSet)>::[DecScope<(i::InhSet)>] occurs on Scope<(i::InhSet)>;
-
-type LMLabs = {lex, var, mod, imp};
+--inherited attribute lex::[Decorated Scope] occurs on Scope;
+--inherited attribute var::[Decorated Scope] occurs on Scope;
+--inherited attribute mod::[Decorated Scope] occurs on Scope;
+--inherited attribute imp::[Decorated Scope] occurs on Scope;
+--type LMLabs = {lex, var, mod, imp};
 
 ------------------
 -- Resolution Util
 
 type ResPath = [String];
-type ResPair<(i::InhSet)> = (Decorated Scope<i> with i, ResPath);
-type ResPairList<(i::InhSet)> = [ResPair<i>];
+type ResPair = (Decorated Scope, ResPath);
+type ResPairList = [ResPair];
 
 type Predicate = (Boolean ::= Datum);
 
 --
 
-fun regexEpsilonFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
-  \p::ResPair<i> -> [(p.1, "$"::p.2)];
+fun regexEpsilonFun (ResPairList ::= ResPair) ::= =
+  \p::ResPair -> [(p.1, "$"::p.2)];
 
-fun regexEmptyFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
-  \p::ResPair<i> -> [];
+fun regexEmptyFun (ResPairList ::= ResPair) ::= =
+  \p::ResPair -> [];
 
-fun regexCatFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= l::(ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) r::(ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) =
-  \p::ResPair<i> -> concat(map(r, l(p)));
+fun regexCatFun (ResPairList ::= ResPair) ::= l::(ResPairList ::= ResPair) r::(ResPairList ::= ResPair) =
+  \p::ResPair -> concat(map(r, l(p)));
 
-fun regexOrFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= l::(ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) r::(ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) =
-  \p::ResPair<i> -> l(p) ++ r(p);
+fun regexOrFun (ResPairList ::= ResPair) ::= l::(ResPairList ::= ResPair) r::(ResPairList ::= ResPair) =
+  \p::ResPair -> l(p) ++ r(p);
 
-fun regexStarFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= r::(ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) =
-  \p::ResPair<i> ->
-    let go::ResPairList<i> = r(p) in
+fun regexStarFun (ResPairList ::= ResPair) ::= r::(ResPairList ::= ResPair) =
+  \p::ResPair ->
+    let go::ResPairList = r(p) in
       if null(go) then [p] else p::concat(map(regexStarFun(r), go)) 
     end;
 
-fun regexPlusFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= r::(ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) =
+fun regexPlusFun (ResPairList ::= ResPair) ::= r::(ResPairList ::= ResPair) =
   regexCatFun(r, regexStarFun(r));
 
-fun regexMaybeFun (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= r::(ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) =
+fun regexMaybeFun (ResPairList ::= ResPair) ::= r::(ResPairList ::= ResPair) =
   regexOrFun(regexEpsilonFun(), r);
 
 --
 
-fun regexLexFun 
-  LMLabs subset i => (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
-  \p::ResPair<(i::InhSet)> ->
-    map(\sf::DecScope<(i::InhSet)> -> (sf, "lex"::p.2), p.1.lex);
+fun regexLexFun (ResPairList ::= ResPair) ::= =
+  \p::ResPair ->
+    map(\sf::Decorated Scope -> (sf, "lex"::p.2), p.1.edges.lookup("lex"));
 
-fun regexVarFun 
-  LMLabs subset i => (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
-  \p::ResPair<(i::InhSet)> ->
-    map(\sf::DecScope<(i::InhSet)> -> (sf, "var"::p.2), p.1.var);
+fun regexVarFun (ResPairList ::= ResPair) ::= =
+  \p::ResPair ->
+    map(\sf::Decorated Scope -> (sf, "var"::p.2), p.1.edges.lookup("var"));
 
-fun regexModFun 
-  LMLabs subset i => (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
-  \p::ResPair<(i::InhSet)> ->
-    map(\sf::DecScope<(i::InhSet)> -> (sf, "mod"::p.2), p.1.mod);
+fun regexModFun (ResPairList ::= ResPair) ::= =
+  \p::ResPair ->
+    map(\sf::Decorated Scope -> (sf, "mod"::p.2), p.1.edges.lookup("mod"));
 
-fun regexImpFun 
-  LMLabs subset i => (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>) ::= =
-  \p::ResPair<(i::InhSet)> ->
-    map(\sf::DecScope<(i::InhSet)> -> (sf, "imp"::p.2), p.1.imp);
+fun regexImpFun (ResPairList ::= ResPair) ::= =
+  \p::ResPair ->
+    map(\sf::Decorated Scope -> (sf, "imp"::p.2), p.1.edges.lookup("imp"));
 
 -- Path minimum
 
-fun min ResPairList<(i::InhSet)> ::= c::(Integer ::= String String) ps::ResPairList<(i::InhSet)> =
+fun min ResPairList ::= c::(Integer ::= String String) ps::ResPairList =
   foldr(
-    \rp::ResPair<i> acc::ResPairList<i> ->
-      let s::Decorated Scope<i> with i = rp.1 in
+    \rp::ResPair acc::ResPairList ->
+      let s::Decorated Scope = rp.1 in
       let p::[String] = reverse(rp.2) in
         if null(acc)
         then [(s, p)]
@@ -156,24 +140,21 @@ fun labelsComp Integer ::= c::(Integer ::= String String) l::[String] r::[String
 ---------------
 -- Queries
 
-type RegexType<(i::InhSet)> = (ResPairList<(i::InhSet)> ::= ResPair<(i::InhSet)>);
+type RegexType = (ResPairList ::= ResPair);
 
-fun queryReachable [DecScope<(i::InhSet)>] ::= rx::RegexType<(i::InhSet)> p::Predicate start::DecScope<(i::InhSet)> =
+fun queryReachable [Decorated Scope] ::= rx::RegexType p::Predicate start::Decorated Scope =
   filterMap(applyScopePredR(p, _), rx((start, [])));
 
-fun queryVisible [DecScope<(i::InhSet)>] ::= rx::RegexType<(i::InhSet)> p::Predicate ord::(Integer ::= String String) start::DecScope<(i::InhSet)> =
-  map(
-    \p::ResPair<i> -> p.1,
-    min(
-      ord,
-      filter(applyScopePredV(p, _), rx((start, [])))));
+fun queryVisible [Decorated Scope] ::= rx::RegexType p::Predicate ord::(Integer ::= String String) start::Decorated Scope =
+  map(\p::ResPair -> p.1,
+        min(ord, filter(applyScopePredV(p, _), rx((start, [])))));
 
 -- used in reachability
-fun applyScopePredR Maybe<Decorated Scope<(i::InhSet)> with i> ::= dp::Predicate p::ResPair<(i::InhSet)> =
+fun applyScopePredR Maybe<Decorated Scope> ::= dp::Predicate p::ResPair =
   if dp(p.1.datum) then just(p.1) else nothing();
 
 -- used in visibility
-fun applyScopePredV Boolean ::= dp::Predicate p::ResPair<(i::InhSet)> =
+fun applyScopePredV Boolean ::= dp::Predicate p::ResPair =
   dp(p.1.datum);
 
 ---------------

@@ -40,3 +40,13 @@ Map<k v> ::= l::Map<k v> r::Map<k v>
   | mapCons(k, v, next) -> mapCons(k, v, combineMap(^next, r))
   end
 ;
+
+
+{-
+
+glob.edges := mapCons("lex", ds.s_lex,
+                mapCons("var", ds.s_var,
+                mapCons("mod", ds.s_mod,
+                mapLast("imp", ds.s_imp))));
+
+-}

@@ -19,29 +19,29 @@ synthesized attribute eq::(Boolean ::= Type); -- Type equality
 
 --
 
-inherited attribute s::LMScope;
-monoid attribute s_lex::[LMScope] with [], ++;
-monoid attribute s_var::[LMScope] with [], ++;
-monoid attribute s_mod::[LMScope] with [], ++;
-monoid attribute s_imp::[LMScope] with [], ++;
+inherited attribute s::Decorated Scope;
+monoid attribute s_lex::[Decorated Scope] with [], ++;
+monoid attribute s_var::[Decorated Scope] with [], ++;
+monoid attribute s_mod::[Decorated Scope] with [], ++;
+monoid attribute s_imp::[Decorated Scope] with [], ++;
 
-inherited attribute s_def::LMScope;
-monoid attribute s_def_lex::[LMScope] with [], ++;
-monoid attribute s_def_var::[LMScope] with [], ++;
-monoid attribute s_def_mod::[LMScope] with [], ++;
-monoid attribute s_def_imp::[LMScope] with [], ++;
+inherited attribute s_def::Decorated Scope;
+monoid attribute s_def_lex::[Decorated Scope] with [], ++;
+monoid attribute s_def_var::[Decorated Scope] with [], ++;
+monoid attribute s_def_mod::[Decorated Scope] with [], ++;
+monoid attribute s_def_imp::[Decorated Scope] with [], ++;
 
-inherited attribute s_module::LMScope;
-monoid attribute s_module_lex::[LMScope] with [], ++;
-monoid attribute s_module_var::[LMScope] with [], ++;
-monoid attribute s_module_mod::[LMScope] with [], ++;
-monoid attribute s_module_imp::[LMScope] with [], ++;
+inherited attribute s_module::Decorated Scope;
+monoid attribute s_module_lex::[Decorated Scope] with [], ++;
+monoid attribute s_module_var::[Decorated Scope] with [], ++;
+monoid attribute s_module_mod::[Decorated Scope] with [], ++;
+monoid attribute s_module_imp::[Decorated Scope] with [], ++;
 
-inherited attribute s_final::LMScope;
-monoid attribute s_final_lex::[LMScope] with [], ++;
-monoid attribute s_final_var::[LMScope] with [], ++;
-monoid attribute s_final_mod::[LMScope] with [], ++;
-monoid attribute s_final_imp::[LMScope] with [], ++;
+inherited attribute s_final::Decorated Scope;
+monoid attribute s_final_lex::[Decorated Scope] with [], ++;
+monoid attribute s_final_var::[Decorated Scope] with [], ++;
+monoid attribute s_final_mod::[Decorated Scope] with [], ++;
+monoid attribute s_final_imp::[Decorated Scope] with [], ++;
 
 --------------------------------------------------
 
@@ -56,13 +56,14 @@ top::Main ::= ds::Decls
   ds.env = newEnv();
   ds.bindsIn = newEnv();
 -}
-  local glob::Scope<LMLabs> = scope();
-  glob.lex = ds.s_lex; glob.var = ds.s_var;
-  glob.mod = ds.s_mod; glob.imp = ds.s_imp;
+  production attribute glob::Scope = scope();
+  glob.edges := mapCons("lex", ds.s_lex,
+                mapCons("var", ds.s_var,
+                mapCons("mod", ds.s_mod,
+                mapLast("imp", ds.s_imp))));
 
-  local dead::Scope<LMLabs> = scope();
-  dead.lex = ds.s_module_lex; dead.var = ds.s_module_var;
-  dead.mod = ds.s_module_mod; dead.imp = ds.s_module_imp;
+  production attribute dead::Scope = scope();
+  dead.edges := mapNone();
 
   ds.s = glob;
   ds.s_module = dead;
@@ -93,11 +94,15 @@ top::Decls ::= d::Decl ds::Decls
   top.ok = d.ok && ds.ok;
 -}
 
-  local next::Scope<LMLabs> = scope();
-  next.lex = top.s::(d.s_def_lex ++ ds.s_lex);
-  next.var = d.s_def_var ++ ds.s_var;
-  next.mod = d.s_def_mod ++ ds.s_mod;
-  next.imp = d.s_def_imp ++ ds.s_imp;
+  local next::Scope = scope();
+  --next.lex = top.s::(d.s_def_lex ++ ds.s_lex);
+  --next.var = d.s_def_var ++ ds.s_var;
+  --next.mod = d.s_def_mod ++ ds.s_mod;
+  --next.imp = d.s_def_imp ++ ds.s_imp;
+  next.edges := mapCons("lex", top.s::(d.s_def_lex ++ ds.s_lex),
+                mapCons("var", d.s_def_var ++ ds.s_var,
+                mapCons("mod", d.s_def_mod ++ ds.s_mod,
+                mapLast("imp", d.s_def_imp ++ ds.s_imp))));
 
   d.s = top.s;
   d.s_def = next;
@@ -238,11 +243,15 @@ top::Module ::= x::String ds::Decls
 
   top.ok = ds.ok;
 -}
-  local mod::Scope<LMLabs> = scopeMod(x, top);
-  mod.lex = top.s::ds.s_module_lex;
-  mod.var = ds.s_module_var;
-  mod.mod = ds.s_module_mod;
-  mod.imp = ds.s_module_imp;
+  local mod::Scope = scopeMod(x, top);
+  --mod.lex = top.s::ds.s_module_lex;
+  --mod.var = ds.s_module_var;
+  --mod.mod = ds.s_module_mod;
+  --mod.imp = ds.s_module_imp;
+  mod.edges := mapCons("lex", top.s::ds.s_module_lex,
+               mapCons("var", ds.s_module_var,
+               mapCons("mod", ds.s_module_mod,
+               mapLast("imp", ds.s_module_imp))));
 
   ds.s = top.s;
   top.s_lex := ds.s_lex; top.s_var := ds.s_var;
@@ -432,11 +441,15 @@ top::Expr ::= b::Bind e::Expr
   top.type = tFun(b.type, e.type);
   top.ok = b.ok && e.ok;
 -}
-  local next::Scope<LMLabs> = scope();
-  next.lex = top.s::(b.s_def_lex ++ e.s_lex);
-  next.var = b.s_def_var ++ e.s_var;
-  next.mod = b.s_def_mod ++ e.s_mod;
-  next.imp = b.s_def_imp ++ e.s_imp; 
+  local next::Scope = scope();
+  --next.lex = top.s::(b.s_def_lex ++ e.s_lex);
+  --next.var = b.s_def_var ++ e.s_var;
+  --next.mod = b.s_def_mod ++ e.s_mod;
+  --next.imp = b.s_def_imp ++ e.s_imp;
+  next.edges := mapCons("lex", top.s::(b.s_def_lex ++ e.s_lex),
+                mapCons("var", b.s_def_var ++ e.s_var,
+                mapCons("mod", b.s_def_mod ++ e.s_mod,
+                mapLast("imp", b.s_def_imp ++ e.s_imp))));
 
   b.s = top.s;
   top.s_lex := b.s_lex; top.s_var := b.s_var;
@@ -525,11 +538,15 @@ top::Expr ::= bs::Binds e::Expr
   top.type = e.type;
   top.ok = bs.ok && e.ok;
 -}
-  local final::Scope<LMLabs> = scope();
-  final.lex = bs.s_final_lex ++ e.s_lex;
-  final.var = bs.s_final_var ++ e.s_var;
-  final.mod = bs.s_final_mod ++ e.s_mod;
-  final.imp = bs.s_final_imp ++ e.s_imp;
+  local final::Scope = scope();
+  --final.lex = bs.s_final_lex ++ e.s_lex;
+  --final.var = bs.s_final_var ++ e.s_var;
+  --final.mod = bs.s_final_mod ++ e.s_mod;
+  --final.imp = bs.s_final_imp ++ e.s_imp;
+  final.edges := mapCons("lex", bs.s_final_lex ++ e.s_lex,
+                 mapCons("var", bs.s_final_var ++ e.s_var,
+                 mapCons("mod", bs.s_final_mod ++ e.s_mod,
+                 mapLast("imp", bs.s_final_imp ++ e.s_imp))));
 
   bs.s = top.s;
   bs.s_final = final;
@@ -557,11 +574,15 @@ top::Expr ::= bs::ParBinds e::Expr
   top.type = e.type;
   top.ok = bs.ok && e.ok;
 -}
-  local next::Scope<LMLabs> = scope();
-  next.lex = top.s::(bs.s_lex ++ bs.s_def_lex ++ e.s_lex);
-  next.var = bs.s_var ++ bs.s_def_var ++ e.s_var;
-  next.mod = bs.s_mod ++ bs.s_def_mod ++ e.s_mod;
-  next.imp = bs.s_imp ++ bs.s_def_imp ++ e.s_imp;
+  local next::Scope = scope();
+  --next.lex = top.s::(bs.s_lex ++ bs.s_def_lex ++ e.s_lex);
+  --next.var = bs.s_var ++ bs.s_def_var ++ e.s_var;
+  --next.mod = bs.s_mod ++ bs.s_def_mod ++ e.s_mod;
+  --next.imp = bs.s_imp ++ bs.s_def_imp ++ e.s_imp;
+  next.edges := mapCons("lex", top.s::(bs.s_lex ++ bs.s_def_lex ++ e.s_lex),
+                mapCons("var", bs.s_var ++ bs.s_def_var ++ e.s_var,
+                mapCons("mod", bs.s_mod ++ bs.s_def_mod ++ e.s_mod,
+                mapLast("imp", bs.s_imp ++ bs.s_def_imp ++ e.s_imp))));
 
   bs.s = next;
   bs.s_def = next;
@@ -589,11 +610,15 @@ top::Expr ::= bs::ParBinds e::Expr
   top.type = e.type;
   top.ok = bs.ok && e.ok;
 -}
-  local next::Scope<LMLabs> = scope();
-  next.lex = top.s::(bs.s_def_lex ++ e.s_lex);
-  next.var = bs.s_def_var ++ e.s_var;
-  next.mod = bs.s_def_mod ++ e.s_mod;
-  next.imp = bs.s_def_imp ++ e.s_imp;
+  local next::Scope = scope();
+  --next.lex = top.s::(bs.s_def_lex ++ e.s_lex);
+  --next.var = bs.s_def_var ++ e.s_var;
+  --next.mod = bs.s_def_mod ++ e.s_mod;
+  --next.imp = bs.s_def_imp ++ e.s_imp;
+  next.edges := mapCons("lex", top.s::(bs.s_def_lex ++ e.s_lex),
+                mapCons("var", bs.s_def_var ++ e.s_var,
+                mapCons("mod", bs.s_def_mod ++ e.s_mod,
+                mapLast("imp", bs.s_def_imp ++ e.s_imp))));
 
   bs.s = top.s;
   top.s_lex := bs.s_lex; top.s_var := bs.s_var;
@@ -626,11 +651,15 @@ top::Binds ::= b::Bind bs::Binds
   top.outEnv = bs.outEnv;
   top.ok = b.ok && bs.ok;
 -}
-  local next::Scope<LMLabs> = scope();
-  next.lex = top.s::(b.s_def_lex ++ bs.s_lex);
-  next.var = b.s_def_var ++ bs.s_var;
-  next.mod = b.s_def_mod ++ bs.s_mod;
-  next.imp = b.s_def_imp ++ bs.s_imp;
+  local next::Scope = scope();
+  --next.lex = top.s::(b.s_def_lex ++ bs.s_lex);
+  --next.var = b.s_def_var ++ bs.s_var;
+  --next.mod = b.s_def_mod ++ bs.s_mod;
+  --next.imp = b.s_def_imp ++ bs.s_imp;
+  next.edges := mapCons("lex", top.s::(b.s_def_lex ++ bs.s_lex),
+                mapCons("var", b.s_def_var ++ bs.s_var,
+                mapCons("mod", b.s_def_mod ++ bs.s_mod,
+                mapLast("imp", b.s_def_imp ++ bs.s_imp))));
 
   b.s = top.s;
   top.s_lex := b.s_lex;
@@ -791,9 +820,13 @@ top::Bind ::= tyann::TypeExpr x::String e::Expr
   top.type = tyann.type;
   top.ok = e.ok && tyann.type.eq(e.type);
 -}
-  local var::Scope<LMLabs> = scopeVar(x, top);
-  var.lex = []; var.var = [];
-  var.mod = []; var.imp = [];
+  local var::Scope = scopeVar(x, top);
+  --var.lex = []; var.var = [];
+  --var.mod = []; var.imp = [];
+  var.edges := mapCons("lex", [],
+               mapCons("var", [],
+               mapCons("mod", [],
+               mapLast("imp", []))));
 
   top.s_def_lex := [];
   top.s_def_var := [var];
@@ -824,9 +857,13 @@ top::Bind ::= x::String e::Expr
   top.type = e.type;
   top.ok = e.ok;
 -}
-  local var::Scope<LMLabs> = scopeVar(x, top);
-  var.lex = []; var.var = [];
-  var.mod = []; var.imp = [];
+  local var::Scope = scopeVar(x, top);
+  --var.lex = []; var.var = [];
+  --var.mod = []; var.imp = [];
+  var.edges := mapCons("lex", [],
+               mapCons("var", [],
+               mapCons("mod", [],
+               mapLast("imp", []))));
 
   top.s_def_lex := [];
   top.s_def_var := [var];
@@ -853,9 +890,13 @@ top::Bind ::= x::String tyann::TypeExpr
   top.type = tyann.type;
   top.ok = true;
 -}
-  local var::Scope<LMLabs> = scopeVar(x, top);
-  var.lex = []; var.var = [];
-  var.mod = []; var.imp = [];
+  local var::Scope = scopeVar(x, top);
+  --var.lex = []; var.var = [];
+  --var.mod = []; var.imp = [];
+  var.edges := mapCons("lex", [],
+               mapCons("var", [],
+               mapCons("mod", [],
+               mapLast("imp", []))));
 
   top.s_def_lex := [];
   top.s_def_var := [var];
@@ -991,7 +1032,7 @@ top::ModRef ::= x::String
       "Resolution of module " ++ x ++ " on line " ++
         top.location.unparse ++ (if res.isJust then " found" else " not found") ++ "\n");
 -}
-  local res::[LMScope] = 
+  local res::[Decorated Scope] = 
     queryVisible(
       regexCatFun(
         regexStarFun(regexLexFun()),
@@ -1033,7 +1074,7 @@ top::VarRef ::= x::String
       "Resolution of variable " ++ x ++ " on line " ++
         top.location.unparse ++ (if res.isJust then " found" else " not found") ++ "\n");
 -}
-  local res::[LMScope] = 
+  local res::[Decorated Scope] = 
     queryVisible(
       regexCatFun(
         regexStarFun(regexLexFun()),
@@ -1057,7 +1098,7 @@ top::VarRef ::= x::String
 --------------------------------------------------
 
 
-fun typeIfSingleton Type ::= res::[LMScope] =
+fun typeIfSingleton Type ::= res::[Decorated Scope] =
   case res of
     [s] -> case s.datum of datumVar(_, node) -> node.type | _ -> tErr() end 
   | _ -> tErr()
