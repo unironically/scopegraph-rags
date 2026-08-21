@@ -1,11 +1,11 @@
 def x = 1
-def y = x
-def z = y
+def z = x
+def b = z
 
 def a =
   letpar
-    a = x,
-    b = y,
-    c = z
+    x = b,
+    y = x,
+    b = z
   in
-    a + b + c
+    x + y + b

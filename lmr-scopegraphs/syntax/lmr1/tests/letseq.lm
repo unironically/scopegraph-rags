@@ -1,7 +1,11 @@
+def x = 1
+def z = y
+def b = 1
+
 def a =
   let
-    x:float = 0.1,
-    y:int = 2,
-    z:int = 3
+    x = b,
+    y = x,
+    b = z
   in
-    x + y + z
+    x + y + b

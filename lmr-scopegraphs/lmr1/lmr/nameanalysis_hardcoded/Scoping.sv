@@ -15,15 +15,6 @@ synthesized attribute ok::Boolean;
 synthesized attribute type::Type; -- Type of an expression
 synthesized attribute eq::(Boolean ::= Type); -- Type equality
 
-
---inherited attribute env::Env;         -- scope to lookup in
---inherited attribute bindEnv::Env;     -- scope to add binds to
-
---inherited attribute bindsIn::Env;     -- Module members threading down
---synthesized attribute bindsOut::Env;  -- Module members threading up
-
---synthesized attribute outEnv::Env;    -- Env coming up from a declaration to pass down to next
-
 --
 
 inherited attribute s::Decorated Scope;

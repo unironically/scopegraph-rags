@@ -1,11 +1,11 @@
 def x = 1
-def y = x
 def z = y
+def b = 1
 
 def a =
   letrec
-    a = c,
-    b = a,
-    c = x
+    x = b,
+    y = x,
+    b = z
   in
-    a + b + c
+    x + y + b
